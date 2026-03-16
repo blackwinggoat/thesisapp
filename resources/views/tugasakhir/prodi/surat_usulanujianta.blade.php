@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Print Surat Pengusulan</title>
+    <style>
+        body {
+            height: 842px;
+            width: 595px;
+            /* to centre page on screen*/
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header img {
+            width: 75px;
+            display: inline;
+            float: left;
+        }
+
+        .header {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .textheader {
+            display: inline;
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        .headerAddress {
+            display: inline-block;
+            margin-bottom: 0px;
+            margin-top: 0px;
+            text-align: left;
+        }
+
+        .headingTitle {
+            display: inline;
+        }
+
+        .title {
+            text-align: center;
+        }
+
+        .legalitor {
+            float: right;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            /* Green */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            position: relative;
+        }
+    </style>
+    <script>
+        function prints() {
+
+            document.getElementById('btnPrint').style.display = "none";
+            window.print();
+            window.onafterprint = show();
+        }
+
+        function back() {
+            window.location = 'report';
+        }
+
+        function show() {
+            document.getElementById('btnBack').style.display = "inline";
+            document.getElementById('btnPrint').style.display = "inline";
+        }
+    </script>
+</head>
+{{-- <button id="btnBack" onclick="back()" class="button">Kembali</button> --}}
+<button id="btnPrint" onclick="prints()" class="button">Print</button>
+
+<body>
+    @php
+        $namaProdi = helper::getProgramStudiByAuthUser(Auth::user()->name);
+        $kaprodi = helper::getKaprodiByProdiAndTanggal($namaProdi, $tgl ?? null);
+        $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'gambar/stempelprodi.png' : 'gambar/stempelprodi_si.png';
+        $tinggiTtdKaprodi = $namaProdi == 'Teknik Informatika' ? '70px' : '120px';
+        $styleTtdKaprodi = $namaProdi == 'Teknik Informatika' ? 'position: absolute; right: 90px' : 'position: absolute; right: 20px; top: -10px';
+    @endphp
+    <div class="header"
+        style="position: relative; display: flex; align-items: center; justify-content: space-between; page-break-before: always !important;">
+        <div style="display: flex; align-items: center; margin-right: 30px !important;">
+            <img src="{{ asset('umi.png') }}" alt="Logo Institusi"
+                style="width: 50px; height: auto; margin-right: 10px;" />
+            <img src="{{ asset('fikom-logo.png') }}" alt="Logo Institusi" style="width: 150px; height: auto;" />
+        </div>
+        <div style="text-align: left;">
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI {{ strtoupper($namaProdi) }}</h4><br>
+        </div>
+    </div>
+    <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
+    <span style="border: solid 1.5px; width: 100%; display: block; margin-top: 2px;"></span>
+    <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
+        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
+        Fax (0411) - 453009 Makassar 90231
+        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+    </div>
+    <div class="title" style="text-align: center; margin-top: 20px;">
+        <i>
+            <h4 style="display: inline; font-weight bold;">Bismillahir Rahmanir Rahiim</h4>
+        </i>
+        <br><br>
+    </div>
+    <div>
+
+        <table>
+            <tr>
+                <td>Nomor</td>
+                <td>:</td>
+                <td>{{ $nomor }}</td>
+            </tr>
+            <tr>
+                <td>Lampiran</td>
+                <td>:</td>
+                <td>1 Lembar</td>
+            </tr>
+            <tr>
+                <td>Hal</td>
+                <td>:</td>
+                <td>{{ $perihal }}</td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <p align="justify">
+        Kpd. Yth.,<br>
+        <b>Bapak Dekan Fakultas Ilmu Komputer</b><br>
+        Di, - <br>
+        Makassar <br><br>
+        Assalamualaikum Wr. Wb.<br>
+        Dengan Rahmat Allah S.W.T, Saya yang bertanda tangan dibawah ini sesuai peraturan Akademik Universitas Muslim
+        Indonesia
+        tentang penyesuain Tugas Akhir Mahasiswa, Ketua Program Studi {{ $namaProdi }} mengusulkan Calon Pembimbing
+        Tugas Akhir.
+        <br><br>
+        Menunjuk saudara yang tercantum namanya untuk membimbing atau membina mahasiswa dalam penyusunan tugas akhir
+        atas nama
+        mahasiswa yang namanya terlampir dalam lampiran surat penunjukan.
+        <br><br>
+        Demikian surat penunjukan ini diuusulkan untuk dibuatkan surat penugasan kepada yang bersangkutan untuk
+        dilaksanakan
+        dengan penuh rasa amanah.
+        <br><br>
+    </p>
+    <div class="legalitor">
+        Makassar, {{ $tgl }}
+    </div>
+    <br>
+    <div style="text-align: center; position: relative">
+        <img src="{{ asset($stempelKaprodi) }}" alt="" height="100px"
+            style="position: absolute; right: 140px">
+        <br>
+        <img src="{{ asset('gambar/' . $kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
+            style="{{ $styleTtdKaprodi }}">
+    </div>
+    <br><br><br><br>
+    <div class="legalitor">
+        {{ $kaprodi->nama }}
+    </div>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    <h4>Lampiran Surat Penunjukan No {{ $nomor }}</h4>
+    <table border="1" style="border-collapse: collapse;">
+        <tr>
+            <th>No</th>
+            <th>Stambuk/ Nama Mahasiswa</th>
+            <th>Pembimbing Utama</th>
+            <th>Pembimbing Pendamping</th>
+            <th>Judul Penelitian</th>
+        </tr>
+
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        @endforeach
+    </table>
+</body>
+
+</html>

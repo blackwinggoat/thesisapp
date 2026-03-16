@@ -1,0 +1,48 @@
+@extends('tugasakhir.index')
+@section('isi')
+<!-- BEGIN PAGE CONTENT -->
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Begin page heading -->
+        <h1 class="page-heading">Sistem Informasi Program Studi <small> TUGAS AKHIR</small></h1>
+        <!-- End page heading -->
+
+        <!-- Begin breadcrumb -->
+        <ol class="breadcrumb default square rsaquo sm">
+            <li><a href="index.html"><i class="fa fa-home"></i></a></li>
+            <li><a href="#fakelink">Home</a></li>
+            <li class="active">Form Ubah Note</li>
+        </ol>
+        <!-- End breadcrumb -->
+
+        <!-- BEGIN DATA TABLE -->
+        <h3 class="page-heading">Form Ubah Judul</h3>
+        <!-- BEGIN DATA TABLE -->
+        <div class="the-box">
+            <form method="post" action="{{url('mhs/ubah_judul')}}/{{$data[0]->topik_id}}" enctype="multipart/form-data">
+                {{ csrf_field() }}
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label">Judul Topik</label>
+                        <div class="col-lg-5">
+                            <input type="text" class="form-control bold-border" name="topik" value="{{$data[0]->topik}}"/>
+                        </div>
+                    </div>
+                    <br><br>
+                    <div class="form-group">
+                            <label class="col-lg-2 control-label"></label>
+                            <div class="col-lg-10 mb-5">
+                                Terakhir Kali Diubah : <span class="badge badge-primary">{{$data[0]->updated_at}}</span>
+                            </div>
+                    </div>
+                    <div class="form-group mt-2">
+                        <div class="col-lg-12" align="right">
+                            <button class="btn btn-primary btn-perspective" type="submit">Ubah</button>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div><!-- /.the-box -->
+    </div><!-- /.container-fluid -->
+</div>
+@endsection

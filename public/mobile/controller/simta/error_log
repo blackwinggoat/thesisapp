@@ -1,0 +1,1002 @@
+[19-Aug-2022 05:59:08 UTC] PHP Notice:  Undefined index: nidn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 22
+[19-Aug-2022 06:00:08 UTC] PHP Notice:  Undefined index: nidn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 22
+[19-Aug-2022 06:00:29 UTC] PHP Notice:  Undefined index: nidn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 22
+[19-Aug-2022 06:01:38 UTC] PHP Notice:  Undefined index: nidn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 22
+[19-Aug-2022 06:01:46 UTC] PHP Notice:  Undefined index: nidn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 22
+[19-Aug-2022 06:10:19 UTC] PHP Notice:  Array to string conversion in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 40
+[19-Aug-2022 06:10:39 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:40
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 40
+[19-Aug-2022 06:10:40 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:40
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 40
+[19-Aug-2022 06:10:47 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:40
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 40
+[19-Aug-2022 06:34:43 UTC] PHP Notice:  Undefined index: nidn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[19-Aug-2022 06:35:00 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:35:00 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:35:00 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:35:00 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:35:00 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:35:02 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:35:02 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:35:02 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:35:02 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:35:02 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:35:13 UTC] PHP Notice:  Undefined index: nidn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[19-Aug-2022 06:39:20 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:39:20 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:39:20 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:39:20 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:39:20 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:39:53 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 3
+[19-Aug-2022 06:39:55 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 3
+[19-Aug-2022 06:40:30 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:30 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:30 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:30 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:40:30 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:40:31 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:31 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:31 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:31 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:40:31 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:40:32 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:32 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:32 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:32 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:40:32 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:40:52 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:52 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:52 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:52 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:40:52 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:40:53 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:53 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:53 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:40:53 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:40:53 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:41:16 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:41:16 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:41:16 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:41:16 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:41:16 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:41:17 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:41:17 UTC] PHP Warning:  include(../ConSimtas.php): failed to open stream: No such file or directory in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:41:17 UTC] PHP Warning:  include(): Failed opening '../ConSimtas.php' for inclusion (include_path='.:/opt/alt/php74/usr/share/pear') in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 12
+[19-Aug-2022 06:41:17 UTC] PHP Notice:  Undefined variable: conn in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:41:17 UTC] PHP Fatal error:  Uncaught Error: Call to a member function stmt_init() on null in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:17
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 17
+[19-Aug-2022 06:43:32 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 06:44:58 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:32
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 32
+[19-Aug-2022 06:48:35 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 06:51:14 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 06:53:19 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 06:54:01 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 06:54:04 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 06:54:13 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 06:57:24 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 06:57:26 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 07:01:48 UTC] PHP Parse error:  syntax error, unexpected '=' in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:05:50 UTC] PHP Parse error:  syntax error, unexpected ';', expecting ']' in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 32
+[19-Aug-2022 07:06:09 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:32
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 32
+[19-Aug-2022 07:11:23 UTC] PHP Notice:  Trying to get property 'stb' of non-object in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 39
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:12:42 UTC] PHP Notice:  Trying to access array offset on value of type bool in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 30
+[19-Aug-2022 07:13:48 UTC] PHP Notice:  Undefined variable: responses in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 40
+[19-Aug-2022 07:21:07 UTC] PHP Fatal error:  Uncaught Error: Function name must be a string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:39
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 39
+[19-Aug-2022 07:21:08 UTC] PHP Fatal error:  Uncaught Error: Function name must be a string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:39
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 39
+[19-Aug-2022 07:22:51 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 07:22:52 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[19-Aug-2022 07:23:08 UTC] PHP Fatal error:  Uncaught Error: Object of class Bimbingan could not be converted to string in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php:31
+Stack trace:
+#0 {main}
+  thrown in /home2/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 31
+[16-May-2023 13:08:36 UTC] PHP Warning:  mysqli_stmt::close(): Couldn't fetch mysqli_stmt in /home2/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 93
+[16-May-2023 13:08:36 UTC] PHP Warning:  mysqli::close(): Couldn't fetch mysqli in /home2/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 94
+[29-Nov-2024 04:49:32 UTC] PHP Warning:  mysqli::__construct(): (HY000/1044): Access denied for user 'thesisapp_U51mt4db'@'localhost' to database 'thesisapp_51mt4db' in /home/thesisapp/public_html/public/mobile/controller/ConSimta.php on line 2
+[29-Nov-2024 04:50:19 UTC] PHP Warning:  mysqli::__construct(): (HY000/1044): Access denied for user 'thesisapp_U51mt4db'@'localhost' to database 'thesisapp_51mt4db' in /home/thesisapp/public_html/public/mobile/controller/ConSimta.php on line 2
+[29-Nov-2024 04:50:20 UTC] PHP Warning:  mysqli::__construct(): (HY000/1044): Access denied for user 'thesisapp_U51mt4db'@'localhost' to database 'thesisapp_51mt4db' in /home/thesisapp/public_html/public/mobile/controller/ConSimta.php on line 2
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 04:06:10 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 04:06:11 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 04:06:12 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 04:06:12 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 04:06:12 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 04:06:12 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 04:06:12 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 04:06:13 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 04:06:13 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 04:06:13 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 04:06:13 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 04:06:13 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 04:06:14 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 04:06:14 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 04:06:14 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 04:06:14 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 04:06:14 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 04:06:14 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 04:50:55 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 04:50:55 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 04:53:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 04:53:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 04:53:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 04:53:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 04:53:38 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 04:57:39 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:00:11 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:05:29 UTC] PHP Notice:  Undefined index: p1 in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:05:29 UTC] PHP Notice:  Undefined index: p2 in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:07:31 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 05:07:31 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 05:07:32 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:07:32 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:07:34 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:07:35 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:07:37 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:07:38 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:07:39 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:07:40 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:07:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:07:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:07:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:08:12 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:08:13 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:08:17 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:08:21 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:08:27 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:08:30 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 05:08:30 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 05:08:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:08:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:08:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:08:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:08:31 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 05:08:31 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 05:08:31 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 05:08:31 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:08:37 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:08:38 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:08:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:08:45 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:08:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 05:08:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 05:08:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 05:08:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 05:10:18 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 05:10:18 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 05:11:09 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 05:11:09 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 05:11:09 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:11:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:11:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:11:10 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:11:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:11:10 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:11:33 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:11:39 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:11:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 05:11:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 05:11:57 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 05:11:58 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:11:58 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:12:26 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:12:39 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 05:12:39 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 05:12:39 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 05:12:39 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 05:18:28 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 05:18:28 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 05:18:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:18:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:18:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 05:18:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 05:18:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:18:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:18:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:18:47 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:19:15 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 05:19:15 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 05:19:19 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 05:19:19 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 05:19:31 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:19:35 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:19:47 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:20:02 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:20:11 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 05:20:15 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 05:20:18 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 05:20:18 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 05:20:18 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 05:20:18 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 05:20:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 05:20:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 05:20:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 05:20:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 05:20:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:20:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:20:29 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:20:29 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:20:33 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:20:51 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:28:21 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:28:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 05:28:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 05:28:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 05:28:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 05:28:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:28:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:28:22 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:28:22 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:28:23 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:28:23 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:28:23 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:28:23 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 05:28:23 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 05:28:23 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 05:28:24 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:28:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:28:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:28:24 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:28:24 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:28:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 05:28:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 05:28:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 05:28:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 05:28:25 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:28:25 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:28:26 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 05:28:26 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:28:26 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 05:28:26 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 05:28:27 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 05:28:27 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 05:28:30 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 05:28:30 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 05:32:51 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 05:32:51 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 05:32:51 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 05:32:51 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 05:35:57 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 05:39:44 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:39:44 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:41:06 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:43:19 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:43:19 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:57:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 05:57:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 05:57:26 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:57:27 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 05:57:28 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 05:57:28 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 05:57:28 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 05:57:28 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 05:57:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 05:57:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 05:57:34 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 05:57:34 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 05:57:39 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 05:57:39 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 05:59:15 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 05:59:23 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:31 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:31 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:31 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:31 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:32 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:32 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:32 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:32 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:32 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:32 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:33 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:34 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:35 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:35 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:35 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:35 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:35 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:36 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:36 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:36 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:37 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:38 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:39 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:39 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:42 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:44 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:44 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:44 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:44 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:45 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:48 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:49 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:50 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:04:51 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:04:51 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:04:51 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:04:51 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:04:52 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:53 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:04:53 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:04:53 UTC] PHP Notice:  Undefined index: filename in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 9
+[25-Mar-2025 06:04:53 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 9
+[25-Mar-2025 06:04:53 UTC] PHP Notice:  Undefined index: filename in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 10
+[25-Mar-2025 06:04:53 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 10
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:55 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:04:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:04:56 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:05:03 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:05:03 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:05:04 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:05:04 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:05:04 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:05:04 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:05:04 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:05:05 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:05:05 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:05:05 UTC] PHP Notice:  Undefined index: filename in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 9
+[25-Mar-2025 06:05:05 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 9
+[25-Mar-2025 06:05:05 UTC] PHP Notice:  Undefined index: filename in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 10
+[25-Mar-2025 06:05:05 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 10
+[25-Mar-2025 06:05:06 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:05:07 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:05:07 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:05:07 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:05:08 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:05:08 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:05:08 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:05:08 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:05:08 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:05:08 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:05:08 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:05:08 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:05:08 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:05:09 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:05:09 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 20
+[25-Mar-2025 06:05:10 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 06:05:12 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:05:12 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:05:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:05:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:05:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:05:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:05:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:05:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:05:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:05:13 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:05:14 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[25-Mar-2025 06:05:14 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[25-Mar-2025 06:05:14 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:05:15 UTC] PHP Notice:  Undefined index: filename in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 9
+[25-Mar-2025 06:05:15 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 9
+[25-Mar-2025 06:05:15 UTC] PHP Notice:  Undefined index: filename in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 10
+[25-Mar-2025 06:05:15 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 10
+[25-Mar-2025 06:05:15 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:05:16 UTC] PHP Notice:  Undefined index: filename in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 9
+[25-Mar-2025 06:05:16 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 9
+[25-Mar-2025 06:05:16 UTC] PHP Notice:  Undefined index: filename in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 10
+[25-Mar-2025 06:05:16 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 10
+[25-Mar-2025 06:13:15 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 06:13:15 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 06:13:15 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 06:13:15 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 06:13:25 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 06:13:25 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 06:13:25 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 06:14:43 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 06:14:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 06:14:43 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 06:14:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 06:14:47 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 06:15:06 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 07:31:14 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[25-Mar-2025 07:31:14 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[25-Mar-2025 07:31:14 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[25-Mar-2025 07:31:14 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[25-Mar-2025 07:35:04 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[25-Mar-2025 07:35:04 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[25-Mar-2025 07:49:17 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[25-Mar-2025 07:49:17 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[25-Mar-2025 07:54:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[25-Mar-2025 07:54:24 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[25-Mar-2025 08:11:18 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[25-Mar-2025 08:14:25 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[25-Mar-2025 08:17:11 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 08:25:36 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjianMhs.php on line 14
+[25-Mar-2025 11:43:58 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[25-Mar-2025 11:44:05 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[26-Mar-2025 19:43:02 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[26-Mar-2025 19:43:02 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 19
+[26-Mar-2025 19:43:02 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetLevel.php on line 25
+[27-Mar-2025 21:57:28 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[27-Mar-2025 21:57:37 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[30-Mar-2025 08:29:14 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[30-Mar-2025 08:29:14 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[03-Apr-2025 20:48:07 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[03-Apr-2025 20:48:15 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[08-Apr-2025 03:52:59 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[08-Apr-2025 03:52:59 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[08-Apr-2025 03:53:00 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[08-Apr-2025 03:53:00 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[08-Apr-2025 03:53:07 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[08-Apr-2025 03:53:08 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[08-Apr-2025 03:53:11 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[08-Apr-2025 03:53:12 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[08-Apr-2025 03:53:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[08-Apr-2025 03:53:21 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[08-Apr-2025 03:53:22 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[08-Apr-2025 03:53:22 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[08-Apr-2025 03:53:25 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[08-Apr-2025 03:53:25 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[08-Apr-2025 03:53:26 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[08-Apr-2025 03:53:26 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[08-Apr-2025 03:53:29 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[08-Apr-2025 03:53:29 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[08-Apr-2025 03:53:29 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[08-Apr-2025 03:53:29 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[08-Apr-2025 03:53:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[08-Apr-2025 03:53:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[08-Apr-2025 03:53:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[08-Apr-2025 03:53:30 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[08-Apr-2025 03:53:33 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[08-Apr-2025 03:53:34 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[09-Apr-2025 06:25:19 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[09-Apr-2025 06:25:19 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[09-Apr-2025 06:25:36 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[09-Apr-2025 06:25:39 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[09-Apr-2025 06:25:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[09-Apr-2025 06:25:46 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[09-Apr-2025 06:25:46 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[09-Apr-2025 06:25:46 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[09-Apr-2025 06:26:02 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[09-Apr-2025 06:26:03 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[09-Apr-2025 06:26:03 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[09-Apr-2025 06:26:03 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[09-Apr-2025 06:26:03 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[01-May-2025 13:25:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[01-May-2025 13:25:34 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[01-May-2025 13:25:35 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[01-May-2025 13:25:35 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[01-May-2025 13:25:41 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[01-May-2025 13:25:42 UTC] PHP Notice:  Undefined index: nidn in /home/thesisapp/public_html/public/mobile/controller/simta/GetJadwalUjian.php on line 14
+[01-May-2025 13:25:44 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[01-May-2025 13:25:45 UTC] PHP Notice:  Undefined index: stb in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataDosenBimbingan.php on line 21
+[01-May-2025 13:25:52 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[01-May-2025 13:25:52 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[01-May-2025 13:25:53 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[01-May-2025 13:25:53 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[01-May-2025 13:25:56 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[01-May-2025 13:25:56 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[01-May-2025 13:25:57 UTC] PHP Notice:  Undefined index: id1 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 25
+[01-May-2025 13:25:57 UTC] PHP Notice:  Undefined index: id2 in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataKonsultasi.php on line 26
+[01-May-2025 13:25:59 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[01-May-2025 13:25:59 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[01-May-2025 13:25:59 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[01-May-2025 13:25:59 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[01-May-2025 13:26:00 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 14
+[01-May-2025 13:26:00 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 15
+[01-May-2025 13:26:00 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 16
+[01-May-2025 13:26:00 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/KirimPesan.php on line 17
+[01-May-2025 13:26:02 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[01-May-2025 13:26:03 UTC] PHP Notice:  Undefined variable: response in /home/thesisapp/public_html/public/mobile/controller/simta/UploadFileKonsultasi.php on line 101
+[20-May-2025 19:42:59 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[20-May-2025 19:42:59 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[20-May-2025 19:43:00 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 14
+[20-May-2025 19:43:00 UTC] PHP Notice:  Trying to access array offset on value of type null in /home/thesisapp/public_html/public/mobile/controller/simta/GetDetailJadwalUjian.php on line 15
+[07-Jul-2025 14:04:03 UTC] PHP Notice:  Undefined index: p1 in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 14
+[07-Jul-2025 14:04:03 UTC] PHP Notice:  Undefined index: p2 in /home/thesisapp/public_html/public/mobile/controller/simta/UpdateStsBacaPesan.php on line 15
+[27-Dec-2025 11:31:11 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
+[27-Dec-2025 11:31:14 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
+[27-Dec-2025 11:31:18 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
+[27-Dec-2025 11:31:24 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
+[27-Dec-2025 11:50:50 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
+[30-Dec-2025 00:36:50 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
+[01-Jan-2026 12:52:48 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
+[20-Jan-2026 10:44:34 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
+[25-Feb-2026 01:49:03 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
+[26-Feb-2026 05:57:18 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/thesisapp/public_html/public/mobile/controller/simta/GetDataBimbingan.php on line 28
