@@ -1,0 +1,7 @@
+---
+deployment:
+  tasks:
+    - export APPPATH=/home/thesisapp/repositories/thesisapp
+    - export DEPLOYPATH=/home/thesisapp/staging_thesisapp
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/cp -R $APPPATH/public/* $DEPLOYPATH/
