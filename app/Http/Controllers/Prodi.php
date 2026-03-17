@@ -30,6 +30,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -1803,12 +1804,21 @@ class prodi extends Controller
         $nimLike = $reportContext['nim_like'];
         $statusProdi = $reportContext['status_prodi'];
 
-        $statusCounts = DB::table('trt_bimbingan')
-            ->select('status_bimbingan', DB::raw('COUNT(DISTINCT C_NPM) as total'))
-            ->where('C_NPM', 'LIKE', $nimLike)
-            ->groupBy('status_bimbingan')
-            ->pluck('total', 'status_bimbingan')
-            ->toArray();
+        $reportWarnings = [];
+
+        $statusCounts = $this->safeReportSection(
+            'status_bimbingan',
+            function () use ($nimLike) {
+                return DB::table('trt_bimbingan')
+                    ->select('status_bimbingan', DB::raw('COUNT(DISTINCT C_NPM) as total'))
+                    ->where('C_NPM', 'LIKE', $nimLike)
+                    ->groupBy('status_bimbingan')
+                    ->pluck('total', 'status_bimbingan')
+                    ->toArray();
+            },
+            [],
+            $reportWarnings
+        );
 
         $statusBimbinganChart = [
             ['label' => 'Persiapan Proposal', 'value' => (int) ($statusCounts[0] ?? 0)],
@@ -1817,13 +1827,20 @@ class prodi extends Controller
             ['label' => 'Non Aktif', 'value' => (int) ($statusCounts[4] ?? 0)],
         ];
 
-        $topikCounts = DB::table('trt_topik')
-            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_topik.C_NPM')
-            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
-            ->select('trt_topik.status', DB::raw('COUNT(*) as total'))
-            ->groupBy('trt_topik.status')
-            ->pluck('total', 'trt_topik.status')
-            ->toArray();
+        $topikCounts = $this->safeReportSection(
+            'status_topik',
+            function () use ($nimLike) {
+                return DB::table('trt_topik')
+                    ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_topik.C_NPM')
+                    ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+                    ->select('trt_topik.status', DB::raw('COUNT(*) as total'))
+                    ->groupBy('trt_topik.status')
+                    ->pluck('total', 'trt_topik.status')
+                    ->toArray();
+            },
+            [],
+            $reportWarnings
+        );
 
         $topikStatusChart = [
             ['label' => 'Belum dikonfirmasi', 'value' => (int) ($topikCounts[0] ?? 0)],
@@ -1831,120 +1848,237 @@ class prodi extends Controller
             ['label' => 'Ditolak', 'value' => (int) ($topikCounts[2] ?? 0)],
         ];
 
-        $bidangIlmuRaw = DB::table('trt_topik')
-            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_topik.C_NPM')
-            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
-            ->where('trt_topik.status', 1)
-            ->select('trt_topik.bidang_ilmu_peminatan', DB::raw('COUNT(*) as total'))
-            ->groupBy('trt_topik.bidang_ilmu_peminatan')
-            ->get();
+        $bidangIlmuChart = $this->safeReportSection(
+            'bidang_ilmu',
+            function () use ($nimLike) {
+                $bidangIlmuRaw = DB::table('trt_topik')
+                    ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_topik.C_NPM')
+                    ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+                    ->where('trt_topik.status', 1)
+                    ->select('trt_topik.bidang_ilmu_peminatan', DB::raw('COUNT(*) as total'))
+                    ->groupBy('trt_topik.bidang_ilmu_peminatan')
+                    ->get();
 
-        $bidangIlmuChart = $bidangIlmuRaw
-            ->groupBy(function ($item) {
-                $label = trim((string) $item->bidang_ilmu_peminatan);
-                return $label === '' ? 'Belum diisi' : $label;
-            })
-            ->map(function ($items, $label) {
-                return (object) [
-                    'y' => $label,
-                    'total' => $items->sum('total'),
-                ];
-            })
-            ->sortByDesc('total')
+                return $bidangIlmuRaw
+                    ->groupBy(function ($item) {
+                        $label = trim((string) $item->bidang_ilmu_peminatan);
+                        return $label === '' ? 'Belum diisi' : $label;
+                    })
+                    ->map(function ($items, $label) {
+                        return (object) [
+                            'y' => $label,
+                            'total' => $items->sum('total'),
+                        ];
+                    })
+                    ->sortByDesc('total')
+                    ->take(10)
+                    ->values()
+                    ->map(function ($item) {
+                        return [
+                            'y' => $this->shortenChartLabel($item->y, 28),
+                            'total' => (int) $item->total,
+                            'full_label' => $item->y,
+                        ];
+                    })
+                    ->values()
+                    ->all();
+            },
+            [],
+            $reportWarnings
+        );
+
+        $dosenPembimbingChart = $this->safeReportSection(
+            'dosen_pembimbing',
+            function () use ($nimLike) {
+                $rows = DB::select(
+                    "
+                    SELECT
+                        pembimbing.kode_dosen,
+                        COALESCE(td.NAMA_DOSEN, md.NAMA_DOSEN, pembimbing.kode_dosen) AS nama_dosen,
+                        SUM(CASE WHEN pembimbing.status_bimbingan IN (0,1,2) THEN 1 ELSE 0 END) AS aktif,
+                        SUM(CASE WHEN pembimbing.status_bimbingan = 3 THEN 1 ELSE 0 END) AS lulus
+                    FROM (
+                        SELECT pembimbing_I_id AS kode_dosen, status_bimbingan
+                        FROM trt_bimbingan
+                        WHERE C_NPM LIKE ? AND pembimbing_I_id IS NOT NULL AND pembimbing_I_id <> ''
+
+                        UNION ALL
+
+                        SELECT pembimbing_II_id AS kode_dosen, status_bimbingan
+                        FROM trt_bimbingan
+                        WHERE C_NPM LIKE ? AND pembimbing_II_id IS NOT NULL AND pembimbing_II_id <> ''
+                    ) AS pembimbing
+                    LEFT JOIN t_mst_dosen td ON td.C_KODE_DOSEN = pembimbing.kode_dosen
+                    LEFT JOIN mig_t_mst_dosen md ON md.C_KODE_DOSEN = pembimbing.kode_dosen
+                    GROUP BY pembimbing.kode_dosen, td.NAMA_DOSEN, md.NAMA_DOSEN
+                    HAVING aktif > 0 OR lulus > 0
+                    ORDER BY aktif DESC, lulus DESC, nama_dosen ASC
+                    LIMIT 10
+                    ",
+                    [$nimLike, $nimLike]
+                );
+
+                return collect($rows)
+                    ->map(function ($item) {
+                        $namaDosen = trim((string) $item->nama_dosen);
+
+                        return [
+                            'y' => $this->shortenChartLabel($namaDosen, 24),
+                            'aktif' => (int) $item->aktif,
+                            'lulus' => (int) $item->lulus,
+                            'full_label' => $namaDosen,
+                            'kode_dosen' => $item->kode_dosen,
+                        ];
+                    })
+                    ->all();
+            },
+            [],
+            $reportWarnings
+        );
+
+        $lamaBimbinganPerDosen = $this->safeReportSection(
+            'lama_bimbingan_dosen',
+            function () use ($nimLike) {
+                $rows = DB::select(
+                    "
+                    SELECT
+                        pembimbing.kode_dosen,
+                        COALESCE(td.NAMA_DOSEN, md.NAMA_DOSEN, pembimbing.kode_dosen) AS nama_dosen,
+                        ROUND(AVG(pembimbing.lama_hari), 1) AS rata_hari,
+                        COUNT(*) AS total_lulus
+                    FROM (
+                        SELECT
+                            tb.pembimbing_I_id AS kode_dosen,
+                            DATEDIFF(DATE(tb.last_update), sk.tgl_sk_penetapan) AS lama_hari
+                        FROM trt_bimbingan tb
+                        INNER JOIN (
+                            SELECT bimbingan_id, MIN(created_at) AS tgl_sk_penetapan
+                            FROM mst_sk_pembimbing
+                            GROUP BY bimbingan_id
+                        ) sk ON sk.bimbingan_id = tb.bimbingan_id
+                        WHERE tb.C_NPM LIKE ?
+                          AND tb.status_bimbingan = 3
+                          AND tb.pembimbing_I_id IS NOT NULL
+                          AND tb.pembimbing_I_id <> ''
+                          AND DATE(tb.last_update) >= sk.tgl_sk_penetapan
+
+                        UNION ALL
+
+                        SELECT
+                            tb.pembimbing_II_id AS kode_dosen,
+                            DATEDIFF(DATE(tb.last_update), sk.tgl_sk_penetapan) AS lama_hari
+                        FROM trt_bimbingan tb
+                        INNER JOIN (
+                            SELECT bimbingan_id, MIN(created_at) AS tgl_sk_penetapan
+                            FROM mst_sk_pembimbing
+                            GROUP BY bimbingan_id
+                        ) sk ON sk.bimbingan_id = tb.bimbingan_id
+                        WHERE tb.C_NPM LIKE ?
+                          AND tb.status_bimbingan = 3
+                          AND tb.pembimbing_II_id IS NOT NULL
+                          AND tb.pembimbing_II_id <> ''
+                          AND DATE(tb.last_update) >= sk.tgl_sk_penetapan
+                    ) AS pembimbing
+                    LEFT JOIN t_mst_dosen td ON td.C_KODE_DOSEN = pembimbing.kode_dosen
+                    LEFT JOIN mig_t_mst_dosen md ON md.C_KODE_DOSEN = pembimbing.kode_dosen
+                    GROUP BY pembimbing.kode_dosen, td.NAMA_DOSEN, md.NAMA_DOSEN
+                    HAVING total_lulus > 0
+                    ORDER BY rata_hari DESC, nama_dosen ASC
+                    ",
+                    [$nimLike, $nimLike]
+                );
+
+                return collect($rows)
+                    ->map(function ($item) {
+                        $namaDosen = trim((string) $item->nama_dosen);
+                        $rataHari = (float) $item->rata_hari;
+
+                        return [
+                            'kode_dosen' => $item->kode_dosen,
+                            'nama_dosen' => $namaDosen,
+                            'rata_hari' => $rataHari,
+                            'rata_label' => $this->formatAverageDurationDays($rataHari),
+                            'total_lulus' => (int) $item->total_lulus,
+                        ];
+                    })
+                    ->all();
+            },
+            [],
+            $reportWarnings
+        );
+
+        $lamaBimbinganChart = collect($lamaBimbinganPerDosen)
             ->take(10)
-            ->values()
             ->map(function ($item) {
                 return [
-                    'y' => $this->shortenChartLabel($item->y, 28),
-                    'total' => (int) $item->total,
-                    'full_label' => $item->y,
+                    'y' => $this->shortenChartLabel($item['nama_dosen'], 24),
+                    'rata_hari' => (float) $item['rata_hari'],
+                    'full_label' => $item['nama_dosen'],
                 ];
             })
             ->values()
             ->all();
 
-        $dosenPembimbingChart = Dosen::select('C_KODE_DOSEN', 'NAMA_DOSEN')
-            ->selectRaw(
-                "(
-                    (SELECT COUNT(*) FROM trt_bimbingan WHERE trt_bimbingan.C_NPM LIKE ? AND trt_bimbingan.pembimbing_I_id = t_mst_dosen.C_KODE_DOSEN AND trt_bimbingan.status_bimbingan IN (0,2))
-                    +
-                    (SELECT COUNT(*) FROM trt_bimbingan WHERE trt_bimbingan.C_NPM LIKE ? AND trt_bimbingan.pembimbing_II_id = t_mst_dosen.C_KODE_DOSEN AND trt_bimbingan.status_bimbingan IN (0,2))
-                ) as aktif",
-                [$nimLike, $nimLike]
-            )
-            ->selectRaw(
-                "(
-                    (SELECT COUNT(*) FROM trt_bimbingan WHERE trt_bimbingan.C_NPM LIKE ? AND trt_bimbingan.pembimbing_I_id = t_mst_dosen.C_KODE_DOSEN AND trt_bimbingan.status_bimbingan = 3)
-                    +
-                    (SELECT COUNT(*) FROM trt_bimbingan WHERE trt_bimbingan.C_NPM LIKE ? AND trt_bimbingan.pembimbing_II_id = t_mst_dosen.C_KODE_DOSEN AND trt_bimbingan.status_bimbingan = 3)
-                ) as lulus",
-                [$nimLike, $nimLike]
-            )
-            ->get()
-            ->filter(function ($item) {
-                return ((int) $item->aktif + (int) $item->lulus) > 0;
-            })
-            ->sortByDesc(function ($item) {
-                return (((int) $item->aktif) * 1000) + (int) $item->lulus;
-            })
-            ->take(10)
-            ->values()
-            ->map(function ($item) {
-                return [
-                    'y' => $this->shortenChartLabel($item->NAMA_DOSEN, 24),
-                    'aktif' => (int) $item->aktif,
-                    'lulus' => (int) $item->lulus,
-                    'full_label' => $item->NAMA_DOSEN,
-                ];
-            })
-            ->all();
+        $periodePesertaChart = $this->safeReportSection(
+            'periode_peserta',
+            function () use ($statusProdi) {
+                $periodePesertaRaw = DB::table('mst_pendaftaran')
+                    ->whereIn('tipe_ujian', [0, 2])
+                    ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                        $query->where('status_prodi', $statusProdi);
+                    })
+                    ->orderBy('created_at', 'asc')
+                    ->get(['nama_periode', 'tipe_ujian', 'jml_peserta']);
 
-        $periodePesertaRaw = DB::table('mst_pendaftaran')
-            ->whereIn('tipe_ujian', [0, 2])
-            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
-                $query->where('status_prodi', $statusProdi);
-            })
-            ->orderBy('created_at', 'asc')
-            ->get(['nama_periode', 'tipe_ujian', 'jml_peserta']);
+                $periodePesertaMap = [];
+                foreach ($periodePesertaRaw as $item) {
+                    if (!isset($periodePesertaMap[$item->nama_periode])) {
+                        $periodePesertaMap[$item->nama_periode] = [
+                            'y' => $this->shortenChartLabel($item->nama_periode, 22),
+                            'proposal' => 0,
+                            'ujian_meja' => 0,
+                            'full_label' => $item->nama_periode,
+                        ];
+                    }
 
-        $periodePesertaMap = [];
-        foreach ($periodePesertaRaw as $item) {
-            if (!isset($periodePesertaMap[$item->nama_periode])) {
-                $periodePesertaMap[$item->nama_periode] = [
-                    'y' => $this->shortenChartLabel($item->nama_periode, 22),
-                    'proposal' => 0,
-                    'ujian_meja' => 0,
-                    'full_label' => $item->nama_periode,
-                ];
-            }
+                    if ((int) $item->tipe_ujian === 0) {
+                        $periodePesertaMap[$item->nama_periode]['proposal'] = (int) $item->jml_peserta;
+                    }
 
-            if ((int) $item->tipe_ujian === 0) {
-                $periodePesertaMap[$item->nama_periode]['proposal'] = (int) $item->jml_peserta;
-            }
+                    if ((int) $item->tipe_ujian === 2) {
+                        $periodePesertaMap[$item->nama_periode]['ujian_meja'] = (int) $item->jml_peserta;
+                    }
+                }
 
-            if ((int) $item->tipe_ujian === 2) {
-                $periodePesertaMap[$item->nama_periode]['ujian_meja'] = (int) $item->jml_peserta;
-            }
-        }
+                return array_slice(array_values($periodePesertaMap), -10);
+            },
+            [],
+            $reportWarnings
+        );
 
-        $periodePesertaChart = array_slice(array_values($periodePesertaMap), -10);
-
-        $nilaiRataRaw = DB::table('trt_hasil')
-            ->join('trt_reg', 'trt_reg.reg_id', '=', 'trt_hasil.reg_id')
-            ->where('trt_reg.C_NPM', 'LIKE', $nimLike)
-            ->whereIn('trt_reg.status', [0, 2])
-            ->selectRaw('
-                trt_reg.status as status,
-                AVG(trt_hasil.nilai_1) as nilai_1,
-                AVG(trt_hasil.nilai_2) as nilai_2,
-                AVG(trt_hasil.nilai_3) as nilai_3,
-                AVG(trt_hasil.nilai_4) as nilai_4,
-                AVG(trt_hasil.nilai_5) as nilai_5,
-                AVG(trt_hasil.nilai_1 + trt_hasil.nilai_2 + trt_hasil.nilai_3 + trt_hasil.nilai_4 + trt_hasil.nilai_5) as rata_total
-            ')
-            ->groupBy('trt_reg.status')
-            ->get()
-            ->keyBy('status');
+        $nilaiRataRaw = $this->safeReportSection(
+            'nilai_komponen',
+            function () use ($nimLike) {
+                return DB::table('trt_hasil')
+                    ->join('trt_reg', 'trt_reg.reg_id', '=', 'trt_hasil.reg_id')
+                    ->where('trt_reg.C_NPM', 'LIKE', $nimLike)
+                    ->whereIn('trt_reg.status', [0, 2])
+                    ->selectRaw('
+                        trt_reg.status as status,
+                        AVG(trt_hasil.nilai_1) as nilai_1,
+                        AVG(trt_hasil.nilai_2) as nilai_2,
+                        AVG(trt_hasil.nilai_3) as nilai_3,
+                        AVG(trt_hasil.nilai_4) as nilai_4,
+                        AVG(trt_hasil.nilai_5) as nilai_5,
+                        AVG(trt_hasil.nilai_1 + trt_hasil.nilai_2 + trt_hasil.nilai_3 + trt_hasil.nilai_4 + trt_hasil.nilai_5) as rata_total
+                    ')
+                    ->groupBy('trt_reg.status')
+                    ->get()
+                    ->keyBy('status');
+            },
+            collect(),
+            $reportWarnings
+        );
 
         $proposalNilai = $nilaiRataRaw->get(0);
         $ujianMejaNilai = $nilaiRataRaw->get(2);
@@ -1957,10 +2091,54 @@ class prodi extends Controller
             ['y' => 'Komponen 5', 'proposal' => round((float) ($proposalNilai->nilai_5 ?? 0), 2), 'ujian_meja' => round((float) ($ujianMejaNilai->nilai_5 ?? 0), 2)],
         ];
 
-        $dokumenProposalChart = $this->getSyaratStatusChart($nimLike, 0);
-        $dokumenUjianMejaChart = $this->getSyaratStatusChart($nimLike, 2);
-        $skPembimbingChart = $this->getSkStatusChart($nimLike, 'mst_sk_pembimbing');
-        $skPenugasanChart = $this->getSkStatusChart($nimLike, 'mst_sk_penugasan');
+        $dokumenProposalChart = $this->safeReportSection(
+            'dokumen_proposal',
+            function () use ($nimLike) {
+                return $this->getSyaratStatusChart($nimLike, 0);
+            },
+            [
+                ['label' => 'Diterima', 'value' => 0],
+                ['label' => 'Ditolak', 'value' => 0],
+                ['label' => 'Menunggu', 'value' => 0],
+            ],
+            $reportWarnings
+        );
+        $dokumenUjianMejaChart = $this->safeReportSection(
+            'dokumen_ujian_meja',
+            function () use ($nimLike) {
+                return $this->getSyaratStatusChart($nimLike, 2);
+            },
+            [
+                ['label' => 'Diterima', 'value' => 0],
+                ['label' => 'Ditolak', 'value' => 0],
+                ['label' => 'Menunggu', 'value' => 0],
+            ],
+            $reportWarnings
+        );
+        $skPembimbingChart = $this->safeReportSection(
+            'sk_pembimbing',
+            function () use ($nimLike) {
+                return $this->getSkStatusChart($nimLike, 'mst_sk_pembimbing');
+            },
+            [
+                ['label' => 'Menunggu WD', 'value' => 0],
+                ['label' => 'Menunggu Dekan', 'value' => 0],
+                ['label' => 'Selesai', 'value' => 0],
+            ],
+            $reportWarnings
+        );
+        $skPenugasanChart = $this->safeReportSection(
+            'sk_penugasan',
+            function () use ($nimLike) {
+                return $this->getSkStatusChart($nimLike, 'mst_sk_penugasan');
+            },
+            [
+                ['label' => 'Menunggu WD', 'value' => 0],
+                ['label' => 'Menunggu Dekan', 'value' => 0],
+                ['label' => 'Selesai', 'value' => 0],
+            ],
+            $reportWarnings
+        );
 
         $summaryCards = [
             ['label' => 'Persiapan Proposal', 'value' => (int) ($statusCounts[0] ?? 0), 'class' => 'success', 'icon' => 'fa-file-text-o'],
@@ -1972,7 +2150,14 @@ class prodi extends Controller
         $queueCards = [
             [
                 'label' => 'Total Mahasiswa TA',
-                'value' => DB::table('trt_bimbingan')->where('C_NPM', 'LIKE', $nimLike)->distinct()->count('C_NPM'),
+                'value' => $this->safeReportSection(
+                    'summary_total_mahasiswa_ta',
+                    function () use ($nimLike) {
+                        return DB::table('trt_bimbingan')->where('C_NPM', 'LIKE', $nimLike)->distinct()->count('C_NPM');
+                    },
+                    0,
+                    $reportWarnings
+                ),
                 'icon' => 'fa-users',
             ],
             [
@@ -1982,30 +2167,47 @@ class prodi extends Controller
             ],
             [
                 'label' => 'Antrian Proposal',
-                'value' => TrtPengajuanDokumen::join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_pengajuan_dokumen.C_NPM')
-                    ->where('type', 0)
-                    ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
-                    ->count(),
+                'value' => $this->safeReportSection(
+                    'queue_proposal',
+                    function () use ($nimLike) {
+                        return TrtPengajuanDokumen::join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_pengajuan_dokumen.C_NPM')
+                            ->where('type', 0)
+                            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+                            ->count();
+                    },
+                    0,
+                    $reportWarnings
+                ),
                 'icon' => 'fa-upload',
             ],
             [
                 'label' => 'Antrian Ujian Meja',
-                'value' => TrtPengajuanDokumen::join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_pengajuan_dokumen.C_NPM')
-                    ->where('type', 2)
-                    ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
-                    ->count(),
+                'value' => $this->safeReportSection(
+                    'queue_ujian_meja',
+                    function () use ($nimLike) {
+                        return TrtPengajuanDokumen::join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_pengajuan_dokumen.C_NPM')
+                            ->where('type', 2)
+                            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+                            ->count();
+                    },
+                    0,
+                    $reportWarnings
+                ),
                 'icon' => 'fa-folder-open-o',
             ],
         ];
 
         return view('tugasakhir.prodi.report', compact(
             'reportContext',
+            'reportWarnings',
             'summaryCards',
             'queueCards',
             'statusBimbinganChart',
             'topikStatusChart',
             'bidangIlmuChart',
             'dosenPembimbingChart',
+            'lamaBimbinganChart',
+            'lamaBimbinganPerDosen',
             'periodePesertaChart',
             'nilaiKomponenChart',
             'dokumenProposalChart',
@@ -2013,6 +2215,24 @@ class prodi extends Controller
             'skPembimbingChart',
             'skPenugasanChart'
         ));
+    }
+
+    protected function safeReportSection($section, callable $callback, $fallback, array &$warnings = [])
+    {
+        try {
+            return $callback();
+        } catch (\Throwable $e) {
+            $warnings[] = $section;
+            Log::error('Report Prodi gagal memuat section', [
+                'section' => $section,
+                'user' => optional(auth()->user())->email,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return $fallback;
+        }
     }
 
     protected function getReportContext()
@@ -2091,6 +2311,29 @@ class prodi extends Controller
         }
 
         return substr($text, 0, $limit - 3) . '...';
+    }
+
+    protected function formatAverageDurationDays($days)
+    {
+        $days = (int) round((float) $days);
+
+        if ($days <= 0) {
+            return '0 hari';
+        }
+
+        $months = (int) floor($days / 30);
+        $remainingDays = $days % 30;
+        $parts = [];
+
+        if ($months > 0) {
+            $parts[] = $months . ' bulan';
+        }
+
+        if ($remainingDays > 0 || empty($parts)) {
+            $parts[] = $remainingDays . ' hari';
+        }
+
+        return implode(' ', $parts);
     }
 
     public function persyaratan_proposal()

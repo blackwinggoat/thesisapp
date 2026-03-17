@@ -53,6 +53,27 @@
             border: none;
             color: black;
         }
+
+        .password-group {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 20px;
+        }
+
+        .password-field {
+            padding: 2px;
+            border: 1px solid #ccc;
+        }
+
+        .toggle-password {
+            margin-left: 6px;
+            padding: 2px 8px;
+            border: 1px solid #cfcfcf;
+            background: #ffffff;
+            color: #333333;
+            cursor: pointer;
+            line-height: 1.2;
+        }
     </style>
 </head>
 
@@ -64,11 +85,36 @@
             <label style="color:white;margin-top:280px;margin-left:102px;" for="">USERNAME</label>
             <input required placeholder="Enter username" style="margin-left:24px;padding:2px;" name="email" ><br>    
             <label style="color:white;margin-left:102px;" for="">PASSWORD</label>
-            <input required style="margin-left:20px;padding:2px;" name="password"  placeholder="Enter password" type="password"><br>
+            <span class="password-group">
+                <input required id="password" class="password-field" name="password" placeholder="Enter password" type="password">
+                <button type="button" id="togglePassword" class="toggle-password" aria-label="Show password" title="Show password">
+                    <span id="togglePasswordText">Show</span>
+                </button>
+            </span><br>
             <button type="submit" class="button-login">Login</button>
         </form>
     </div>
 </body>
 <script src="{{ asset('js/app.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var passwordInput = document.getElementById('password');
+        var togglePassword = document.getElementById('togglePassword');
+        var togglePasswordText = document.getElementById('togglePasswordText');
+
+        if (!passwordInput || !togglePassword) {
+            return;
+        }
+
+        togglePassword.addEventListener('click', function () {
+            var showPassword = passwordInput.getAttribute('type') === 'password';
+
+            passwordInput.setAttribute('type', showPassword ? 'text' : 'password');
+            togglePassword.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
+            togglePassword.setAttribute('title', showPassword ? 'Hide password' : 'Show password');
+            togglePasswordText.textContent = showPassword ? 'Hide' : 'Show';
+        });
+    });
+</script>
 
 </html>

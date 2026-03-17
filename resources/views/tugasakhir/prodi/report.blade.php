@@ -14,6 +14,12 @@
             Dashboard report ini otomatis memfilter data untuk <strong>{{ $reportContext['label'] }}</strong> berdasarkan akun prodi yang sedang login.
         </div>
 
+        @if (!empty($reportWarnings))
+            <div class="alert alert-warning square fade in">
+                Sebagian data report belum bisa dimuat dari server. Halaman tetap ditampilkan dengan data yang tersedia.
+            </div>
+        @endif
+
         <div class="row">
             @foreach ($summaryCards as $card)
                 <div class="col-sm-3">
@@ -63,6 +69,52 @@
                     <h4 class="small-title">Top 10 Beban Dosen Pembimbing</h4>
                     <p class="text-muted">Perbandingan mahasiswa aktif dibimbing dan mahasiswa yang sudah lulus.</p>
                     <div id="report-dosen-pembimbing" style="height: 360px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="the-box">
+                    <h4 class="small-title">Rata-rata Lama Proses Bimbingan per Dosen</h4>
+                    <p class="text-muted">Dihitung dari tanggal SK pembimbing hingga mahasiswa dinyatakan lulus.</p>
+                    <div id="report-lama-bimbingan-dosen" style="height: 360px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="the-box">
+                    <h4 class="small-title">Detail Rata-rata Lama Proses Bimbingan</h4>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Dosen</th>
+                                    <th>Rata-rata</th>
+                                    <th>Rata-rata (Hari)</th>
+                                    <th>Jumlah Mahasiswa Lulus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($lamaBimbinganPerDosen as $key => $item)
+                                    <tr>
+                                        <td>{{ $key + 1 }}</td>
+                                        <td>{{ $item['nama_dosen'] }}</td>
+                                        <td>{{ $item['rata_label'] }}</td>
+                                        <td>{{ $item['rata_hari'] }}</td>
+                                        <td>{{ $item['total_lulus'] }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center">Belum ada data dosen dengan mahasiswa yang sudah lulus.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -132,6 +184,7 @@
     const statusBimbinganChart = {!! json_encode($statusBimbinganChart) !!};
     const topikStatusChart = {!! json_encode($topikStatusChart) !!};
     const dosenPembimbingChart = {!! json_encode($dosenPembimbingChart) !!};
+    const lamaBimbinganChart = {!! json_encode($lamaBimbinganChart) !!};
     const periodePesertaChart = {!! json_encode($periodePesertaChart) !!};
     const bidangIlmuChart = {!! json_encode($bidangIlmuChart) !!};
     const nilaiKomponenChart = {!! json_encode($nilaiKomponenChart) !!};
@@ -178,6 +231,22 @@
         });
     } else {
         renderNoData('report-dosen-pembimbing', 'Belum ada data dosen pembimbing');
+    }
+
+    if (hasSeriesData(lamaBimbinganChart, ['rata_hari'])) {
+        Morris.Bar({
+            element: 'report-lama-bimbingan-dosen',
+            data: lamaBimbinganChart,
+            xkey: 'y',
+            ykeys: ['rata_hari'],
+            labels: ['Rata-rata hari'],
+            barColors: ['#967ADC'],
+            xLabelAngle: 35,
+            hideHover: 'auto',
+            resize: true
+        });
+    } else {
+        renderNoData('report-lama-bimbingan-dosen', 'Belum ada data lama proses bimbingan');
     }
 
     if (hasSeriesData(periodePesertaChart, ['proposal', 'ujian_meja'])) {
