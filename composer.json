@@ -48,6 +48,7 @@
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php scripts/normalize-composer-installed.php",
             "@php artisan package:discover"
         ],
         "post-install-cmd": [

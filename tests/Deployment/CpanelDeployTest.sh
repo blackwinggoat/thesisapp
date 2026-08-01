@@ -30,6 +30,7 @@ mkdir -p \
 cp "${PROJECT_ROOT}/scripts/deploy-cpanel.sh" "${APP_PATH}/scripts/deploy-cpanel.sh"
 cp "${PROJECT_ROOT}/scripts/deploy-excludes.txt" "${APP_PATH}/scripts/deploy-excludes.txt"
 cp "${PROJECT_ROOT}/scripts/sync-release.php" "${APP_PATH}/scripts/sync-release.php"
+cp "${PROJECT_ROOT}/scripts/normalize-composer-installed.php" "${APP_PATH}/scripts/normalize-composer-installed.php"
 
 printf 'new source\n' > "${APP_PATH}/app/version.php"
 printf '<?php return [];\n' > "${APP_PATH}/bootstrap/app.php"
@@ -65,8 +66,9 @@ done
 printf '%s\n' \
     '#!/usr/bin/env bash' \
     'set -e' \
-    'mkdir -p vendor' \
+    'mkdir -p vendor/composer' \
     "printf 'fixture vendor\\n' > vendor/autoload.php" \
+    "printf '%s\\n' '{\"packages\":[{\"name\":\"fixture/package\",\"extra\":{\"laravel\":[]}}],\"dev\":false}' > vendor/composer/installed.json" \
     > "${BIN_PATH}/composer"
 
 chmod +x "${BIN_PATH}/composer" "${APP_PATH}/artisan"
@@ -125,6 +127,8 @@ assert_line "OFFICIAL_ASSET_PATH=${SHARED_PATH}/official-assets" "${DEPLOY_PATH}
 [[ -L "${DEPLOY_PATH}/public/storage" ]]
 [[ ! -e "${DEPLOY_PATH}/storage/framework/down" ]]
 [[ ! -e "${SHARED_PATH}/deploy-approved-commit" ]]
+php -r '$installed = json_decode(file_get_contents($argv[1]), true); exit(isset($installed[0]["name"]) && $installed[0]["name"] === "fixture/package" ? 0 : 1);' \
+    "${APP_PATH}/vendor/composer/installed.json"
 assert_line 'old source' "${SHARED_PATH}"/deploy-backups/*/app/version.php
 [[ -z "$(find "${SHARED_PATH}/deploy-backups" -type f -name '*.zip' -print -quit)" ]]
 

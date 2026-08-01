@@ -10,6 +10,7 @@ OFFICIAL_PATH="${OFFICIAL_PATH:-${SHARED_PATH}/official-assets}"
 APPROVAL_FILE="${APPROVAL_FILE:-${SHARED_PATH}/deploy-approved-commit}"
 EXCLUDE_FILE="${EXCLUDE_FILE:-${APP_PATH}/scripts/deploy-excludes.txt}"
 SYNC_SCRIPT="${SYNC_SCRIPT:-${APP_PATH}/scripts/sync-release.php}"
+NORMALIZE_COMPOSER_SCRIPT="${NORMALIZE_COMPOSER_SCRIPT:-${APP_PATH}/scripts/normalize-composer-installed.php}"
 BACKUP_ROOT="${BACKUP_ROOT:-${SHARED_PATH}/deploy-backups}"
 LOCK_PATH="${LOCK_PATH:-${SHARED_PATH}/deploy.lock}"
 MANAGED_MANIFEST="${MANAGED_MANIFEST:-${SHARED_PATH}/managed-files.json}"
@@ -36,6 +37,7 @@ fi
 [[ -f "${APP_PATH}/composer.lock" ]] || fail 'Repository does not contain composer.lock.'
 [[ -f "$EXCLUDE_FILE" ]] || fail 'Deployment exclusion file is missing.'
 [[ -f "$SYNC_SCRIPT" ]] || fail 'Deployment synchronization script is missing.'
+[[ -f "$NORMALIZE_COMPOSER_SCRIPT" ]] || fail 'Composer compatibility script is missing.'
 [[ -f "${DEPLOY_PATH}/.env" ]] || fail 'Production .env is missing.'
 [[ -d "${DEPLOY_PATH}/storage" ]] || fail 'Production storage directory is missing.'
 [[ -d "$OFFICIAL_PATH" ]] || fail 'Persistent official asset directory is missing.'
@@ -76,6 +78,8 @@ printf 'Preparing dependencies for %s\n' "$CURRENT_COMMIT"
         --no-interaction \
         --optimize-autoloader \
         --no-scripts
+
+    "$PHP_BIN" "$NORMALIZE_COMPOSER_SCRIPT"
 )
 
 printf 'Backing up current production source to %s\n' "$BACKUP_PATH"
