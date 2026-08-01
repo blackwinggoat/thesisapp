@@ -71,13 +71,15 @@ class RouteIntegrityTest extends TestCase
         }
     }
 
-    public function testExecutivePasswordRoutesAreRegistered()
+    public function testRolePasswordRoutesAreRegistered()
     {
         $expectedRoutes = [
             'GET dekan/ubah_password' => 'App\\Http\\Controllers\\Dekan@ubah_password',
             'POST dekan/ubah_password' => 'App\\Http\\Controllers\\Dekan@ubah_password_post',
             'GET wakildekan/ubah_password' => 'App\\Http\\Controllers\\WakilDekan@ubah_password',
             'POST wakildekan/ubah_password' => 'App\\Http\\Controllers\\WakilDekan@ubah_password_post',
+            'GET keuanganfakultas/ubah_password' => 'App\\Http\\Controllers\\KeuanganFakultas@ubah_password',
+            'POST keuanganfakultas/ubah_password' => 'App\\Http\\Controllers\\KeuanganFakultas@ubah_password_post',
         ];
         $actualRoutes = [];
 

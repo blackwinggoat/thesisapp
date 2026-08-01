@@ -14,7 +14,7 @@
                         <br /><strong>Keuangan Fakultas</strong>
                     </h4>
                     <a style="display: inline-block; width: 30px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;"
-                        href="{{ url('dsn/ubah_password') }}" class="btn btn-success btn-xs"><i
+                        href="{{ url('keuanganfakultas/ubah_password') }}" class="btn btn-success btn-xs"><i
                             class="fa fa-cog"></i></a>
                     <a style="display: inline-block; width: 80px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;"
                         class="btn btn-danger btn-xs" href="{{ route('logout') }}"
@@ -35,7 +35,7 @@
                 Home
             </a>
         </li>
-        <li class="static">MENU DOSEN</li>
+        <li class="static">MENU KEUANGAN FAKULTAS</li>
         <li>
             <a href="{{ route('master_pembayaran_home') }}">
                 <i class="fa fa-money icon-sidebar"></i>

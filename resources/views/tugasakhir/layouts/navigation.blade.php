@@ -26,7 +26,7 @@ BEGIN PAGE
 
             <!-- Begin Logo brand -->
             <div class="logo-brand">
-                <a href="index.html"><img src="{{ asset('master/assets/img/logo_primary.png')}}" alt="Sentir logo"></a>
+                <a href="{{ url('/') }}"><img src="{{ asset('master/assets/img/logo_primary.png')}}" alt="Sentir logo"></a>
             </div><!-- /.logo-brand -->
             <!-- End Logo brand -->
 
@@ -88,6 +88,8 @@ BEGIN PAGE
                                 <li><a href="{{ url('dsn/ubah_password/')}}">Change password</a></li>
                             @elseif(Auth::user()->level==8)
                                 <li><a href="{{ url('mhs/ubah_password/')}}">Change password</a></li>
+                            @elseif(Auth::user()->level==9)
+                                <li><a href="{{ url('keuanganfakultas/ubah_password')}}">Change password</a></li>
                             @endif
                             <li class="divider"></li>
                             <li>
@@ -117,6 +119,5 @@ BEGIN PAGE
         </div><!-- /.top-navbar-inner -->
     </div><!-- /.top-navbar -->
     <!-- END TOP NAV -->
-
 
 

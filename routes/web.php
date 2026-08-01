@@ -582,6 +582,9 @@ Route::group(['middleware' => 'mhs'], function () {
 
 // Route Group untuk Keuangan Fakultas
 Route::group(['middleware' => 'keuangan_fakultas'], function () {
+    Route::get('/keuanganfakultas/ubah_password', 'KeuanganFakultas@ubah_password');
+    Route::post('/keuanganfakultas/ubah_password', 'KeuanganFakultas@ubah_password_post');
+
     Route::group(['prefix' => 'master_pembayaran'], function () {
         Route::get('/', 'KeuanganFakultas@master_pembayaran_home')->name('master_pembayaran_home');
         Route::post('/add', 'KeuanganFakultas@master_pembayaran_store')->name('master_pembayaran_store');

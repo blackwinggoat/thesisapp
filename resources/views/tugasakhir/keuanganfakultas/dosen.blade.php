@@ -5,7 +5,7 @@
             <h1 class="page-heading">Sistem Informasi Program Studi <small>Tugas Akhir</small></h1>
 
             <ol class="breadcrumb default square rsaquo sm">
-                <li><a href="index.html"><i class="fa fa-home"></i></a></li>
+                <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
                 <li><a href="{{ url('/') }}">Home</a></li>
                 <li class="active">Dosen Pembimbing</li>
             </ol>

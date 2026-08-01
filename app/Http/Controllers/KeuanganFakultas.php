@@ -5,9 +5,31 @@ namespace App\Http\Controllers;
 use App\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class KeuanganFakultas extends Controller
 {
+    public function ubah_password()
+    {
+        return view('tugasakhir.fakultas.ubah_password', [
+            'passwordAction' => url('keuanganfakultas/ubah_password'),
+        ]);
+    }
+
+    public function ubah_password_post(Request $request)
+    {
+        if (!Hash::check($request->password_lama, auth()->user()->password)) {
+            return redirect()->back()->with('error', 'Password lama tidak sesuai');
+        }
+
+        if ($request->password_baru == $request->ulangi_password) {
+            DB::update('update users set password = ? where id = ?', [Hash::make($request->password_baru), auth()->id()]);
+            return redirect()->back()->with('success', 'Password Berhasil Diubah');
+        }
+
+        return redirect()->back()->with('error', 'Password Tidak Sama');
+    }
+
     public function master_pembayaran_home()
     {
         $data = DB::table('mst_pembayaran_honorarium')->get();
