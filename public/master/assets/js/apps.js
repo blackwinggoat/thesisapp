@@ -194,6 +194,9 @@ $(document).ready(function () {
 	if ($('#detail_bimbingan').length > 0) {
 		$('#detail_bimbingan').DataTable({
 			dom: 'Bfrtip',
+			language: {
+				emptyTable: 'Belum ada data mahasiswa pada status ini.'
+			},
 			buttons: [
 				'excelHtml5', 'pdfHtml5'
 			]

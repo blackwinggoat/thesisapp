@@ -29,9 +29,7 @@ class DataTableMarkupTest extends TestCase
 
     public function testDetailTableDefinesItsEmptyStateThroughDataTables()
     {
-        $script = file_get_contents(
-            __DIR__ . '/../../resources/views/tugasakhir/layouts/apps.js'
-        );
+        $script = file_get_contents(__DIR__ . '/../../public/master/assets/js/apps.js');
 
         $this->assertContains(
             "emptyTable: 'Belum ada data mahasiswa pada status ini.'",
