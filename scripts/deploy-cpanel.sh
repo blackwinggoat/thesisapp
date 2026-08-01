@@ -115,6 +115,7 @@ set +e
 
     ln -sfn "${DEPLOY_PATH}/storage/app/public" "${DEPLOY_PATH}/public/storage"
     chmod -R u+rwX "${DEPLOY_PATH}/storage" "${DEPLOY_PATH}/bootstrap/cache"
+    find "${DEPLOY_PATH}/bootstrap/cache" -maxdepth 1 -type f -name '*.php' -delete
 
     "$PHP_BIN" artisan package:discover --ansi
     "$PHP_BIN" artisan config:clear

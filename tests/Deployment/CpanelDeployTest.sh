@@ -43,6 +43,8 @@ printf '%s\n' \
     '    touch("storage/framework/down");' \
     '} elseif ($command === "up") {' \
     '    @unlink("storage/framework/down");' \
+    '} elseif ($command === "package:discover" && is_file("bootstrap/cache/stale.php")) {' \
+    '    exit(43);' \
     '} elseif ($command === "package:discover" && getenv("FAIL_DISCOVER") === "1") {' \
     '    exit(42);' \
     '}' \
@@ -51,6 +53,7 @@ cp "${APP_PATH}/artisan" "${DEPLOY_PATH}/artisan"
 printf '{}\n' > "${APP_PATH}/composer.lock"
 printf 'old source\n' > "${DEPLOY_PATH}/app/version.php"
 printf 'remove me\n' > "${DEPLOY_PATH}/app/obsolete.php"
+printf '<?php return ["stale-provider"];\n' > "${DEPLOY_PATH}/bootstrap/cache/stale.php"
 printf 'APP_ENV=production\nOFFICIAL_ASSET_PATH=%s/official-assets\n' "$SHARED_PATH" > "${DEPLOY_PATH}/.env"
 printf 'user upload\n' > "${DEPLOY_PATH}/public/gambar/user-upload.png"
 printf 'user document\n' > "${DEPLOY_PATH}/public/dokumen/user-document.pdf"
@@ -126,6 +129,7 @@ assert_line 'server archive' "${DEPLOY_PATH}/public/public_html.zip"
 assert_line "OFFICIAL_ASSET_PATH=${SHARED_PATH}/official-assets" "${DEPLOY_PATH}/.env"
 [[ -L "${DEPLOY_PATH}/public/storage" ]]
 [[ ! -e "${DEPLOY_PATH}/storage/framework/down" ]]
+[[ ! -e "${DEPLOY_PATH}/bootstrap/cache/stale.php" ]]
 [[ ! -e "${SHARED_PATH}/deploy-approved-commit" ]]
 php -r '$installed = json_decode(file_get_contents($argv[1]), true); exit(isset($installed[0]["name"]) && $installed[0]["name"] === "fixture/package" ? 0 : 1);' \
     "${APP_PATH}/vendor/composer/installed.json"
