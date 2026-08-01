@@ -13,6 +13,15 @@ public/public_html.zip
 # Uploads written to the duplicated public path by legacy relative paths.
 /public/public/gambar/
 
+# Runtime documents uploaded by users.
+/dokumen/
+/public/dokumen/
+/public/public/dokumen/
+
+# Runtime files uploaded by the legacy mobile API. Keep its access guard.
+/public/mobile/controller/simta/uploadedFiles/*
+!/public/mobile/controller/simta/uploadedFiles/index.php
+
 # Generated document accidentally stored with public images.
 /public/gambar/Print Surat Pengusulan.pdf
 
