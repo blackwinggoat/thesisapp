@@ -1,8 +1,4 @@
 ---
 deployment:
   tasks:
-    - export APPPATH=/home/thesisapp/repositories/thesisapp
-    - export DEPLOYPATH=/home/thesisapp/public_html
-    - /bin/mkdir -p $DEPLOYPATH
-    - /bin/find $DEPLOYPATH -mindepth 1 -maxdepth 1 ! -name '.well-known' -exec rm -rf {} \;
-    - /bin/cp -R $APPPATH/public/* $DEPLOYPATH/
+    - /bin/bash /home/thesisapp/repositories/thesisapp/scripts/deploy-cpanel.sh
