@@ -58,8 +58,9 @@ done
 cd "$PROJECT_ROOT"
 [[ -z "$(git status --porcelain)" ]] || fail 'The local worktree is not clean.'
 
-git fetch origin "$DEPLOY_BRANCH"
-RELEASE_SHA=$(git rev-parse "origin/${DEPLOY_BRANCH}")
+REMOTE_TRACKING_REF="refs/remotes/origin/${DEPLOY_BRANCH}"
+git fetch origin "refs/heads/${DEPLOY_BRANCH}:${REMOTE_TRACKING_REF}"
+RELEASE_SHA=$(git rev-parse "$REMOTE_TRACKING_REF")
 
 if [[ "$MODE" == release ]]; then
     TARGET_SHA=$RELEASE_SHA
@@ -90,17 +91,19 @@ MODE=$3
 REMOTE_REPOSITORY=$4
 REMOTE_SHARED=$5
 APPROVAL_FILE="${REMOTE_SHARED}/deploy-approved-commit"
+REMOTE_TRACKING_REF="refs/remotes/origin/${DEPLOY_BRANCH}"
 
 [[ ! -e "${REMOTE_SHARED}/deploy.lock" ]] \
     || { printf 'REMOTE DEPLOY BLOCKED: deployment lock exists.\n' >&2; exit 1; }
 
-git -C "$REMOTE_REPOSITORY" fetch --depth=100 origin "$DEPLOY_BRANCH"
-RELEASE_SHA=$(git -C "$REMOTE_REPOSITORY" rev-parse "origin/${DEPLOY_BRANCH}")
+git -C "$REMOTE_REPOSITORY" fetch --depth=100 origin \
+    "refs/heads/${DEPLOY_BRANCH}:${REMOTE_TRACKING_REF}"
+RELEASE_SHA=$(git -C "$REMOTE_REPOSITORY" rev-parse "$REMOTE_TRACKING_REF")
 
 if [[ "$MODE" == release ]]; then
     [[ "$TARGET_SHA" == "$RELEASE_SHA" ]] \
         || { printf 'REMOTE DEPLOY BLOCKED: origin branch changed.\n' >&2; exit 1; }
-    git -C "$REMOTE_REPOSITORY" checkout -B "$DEPLOY_BRANCH" "origin/${DEPLOY_BRANCH}"
+    git -C "$REMOTE_REPOSITORY" checkout -B "$DEPLOY_BRANCH" "$REMOTE_TRACKING_REF"
 else
     git -C "$REMOTE_REPOSITORY" cat-file -e "${TARGET_SHA}^{commit}"
     git -C "$REMOTE_REPOSITORY" merge-base --is-ancestor "$TARGET_SHA" "$RELEASE_SHA"
