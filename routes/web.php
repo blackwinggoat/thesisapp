@@ -138,7 +138,7 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get('/prodi/detail_topikusulan/{id}', 'Prodi@detail_topikusulan');
     Route::get('/prodi/usulan_pembimbing', 'Prodi@usulan_pembimbing');
     Route::get('/prodi/set_pembimbing_sementara/{nim}', 'Prodi@set_pembimbing_sementara');
-    Route::get('/prodi/usulan_timujianta/{id}', 'Prodi@usulan_timujianta');
+    Route::get('/prodi/usulan_timujianta', 'Prodi@sk_ujian_ta');
     Route::get('/prodi/set_pembimbing/{id}/{status}', 'Prodi@set_pembimbing');
     Route::get('/prodi/sk_pembimbing', 'Prodi@sk_pembimbing');
     Route::get('/prodi/peserta_proposal', 'Prodi@peserta_proposal');
@@ -555,7 +555,7 @@ Route::group(['middleware' => 'mhs'], function () {
 
     Route::get("/mhs/lembaran_hasilujian_proposal/{id}/{nim}/{regid}", "Prodi@lembaran_hasilujian_proposal");
 
-    Route::get("/mhs/chat/", "Prodi@chat");
+    Route::get("/mhs/chat/", "mhs@chat");
 
     Route::get('/mhs/pengumuman/show/{id}', 'mhs@show_pengumuman');
     Route::get('/mhs/pengumuman/', 'mhs@pengumuman');
