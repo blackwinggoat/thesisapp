@@ -97,7 +97,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($data as $i => $d)
+                        @foreach($data as $i => $d)
                         <tr class="odd gradeX">
                             <td width="1%" align="center">{{++$i}}</td>
                             <td>{{$d->C_NPM}}</td>
@@ -107,11 +107,7 @@
                             <td>{{$d->judul}}</td>
                             <td>{{$d->updated_at}}</td>
                         </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="text-center">Belum ada data mahasiswa pada status ini.</td>
-                        </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div><!-- /.table-responsive -->

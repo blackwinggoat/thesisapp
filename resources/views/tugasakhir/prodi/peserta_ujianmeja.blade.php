@@ -21,7 +21,6 @@
                 <div class="table-responsive">
                     <table class="table table-striped table-hover" id="datatable-example">
                         <thead class="the-box dark full">
-                        <tbody>
                         <tr>
                             <th>No</th>
                             <th>Tanggal pendaftaran</th>
@@ -50,5 +49,4 @@
         </div><!-- /.container-fluid -->
     </div>
 @endsection
-
 
