@@ -39,11 +39,44 @@ manifest at `/home/thesisapp/shared/thesisapps/managed-files.json` controls
 which source files may be removed on a later release. Files outside that
 manifest, including runtime exclusions, are never deleted by deployment.
 
+## SSH deployment from the local repository
+
+The local SSH client should define a `thesisapps-production` host alias with a
+dedicated key. The server must authorize only the public key; the private key
+must remain on the local computer.
+
+After the hosting provider enables external SSH for the account, deploy the
+exact `origin/main` commit with one command:
+
+```bash
+scripts/deploy-production-ssh.sh
+```
+
+Inspect the selected host and SHA without contacting the server:
+
+```bash
+scripts/deploy-production-ssh.sh --dry-run
+```
+
+The helper refuses a dirty worktree, refetches the server checkout, writes the
+exact SHA approval, and then calls the same guarded cPanel deployment script.
+
 ## Rollback
 
 Before source synchronization, the deployment script copies the current source
 to `/home/thesisapp/shared/thesisapps/deploy-backups/<timestamp>-<commit>`.
 Runtime directories are preserved throughout deployment and rollback.
+
+To restore an earlier source release after SSH has been enabled, use the full
+SHA of an ancestor of `origin/main`:
+
+```bash
+scripts/deploy-production-ssh.sh --rollback FULL_COMMIT_SHA
+```
+
+Rollback through this command is a new guarded deployment: it first creates a
+backup of the current production source and never replaces runtime uploads.
+It does not roll back the database.
 
 Database migrations are never run automatically. Any required migration must
 be reviewed, backed up, and approved as a separate operation.
