@@ -611,13 +611,8 @@
                                    <!-- @foreach (helper::get5Pengumuman() as $value)
                                         <li class="media">
                                             <div class="media-left">
-                                                @if ($value->gambar == '')
-                                                    <img class="media-object" src="{{ asset('gambar/no_image.jpg') }}"
-                                                        alt="Image">
-                                                @else
-                                                    <img class="media-object"
-                                                        src="{{ asset('gambar/' . $value->gambar) }}" alt="Image">
-                                                @endif
+                                                <img class="media-object"
+                                                    src="{{ \App\Helper::announcementImageUrl($value->gambar) }}" alt="Image">
                                             </div>
                                             <div class="media-body">
                                                 <h4 class="media-heading"><a

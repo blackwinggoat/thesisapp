@@ -15,3 +15,6 @@ public/public_html.zip
 
 # Generated document accidentally stored with public images.
 /public/gambar/Print Surat Pengusulan.pdf
+
+# Laravel public-disk symlink, created with `php artisan storage:link`.
+/public/storage

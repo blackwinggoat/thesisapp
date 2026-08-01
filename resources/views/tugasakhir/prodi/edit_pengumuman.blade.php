@@ -55,8 +55,8 @@
                     <div class="col-lg-5">
                             <div class="input-group">
 										<span class="input-group-btn">
-											<span class="btn btn-default btn-file">
-												Browse&hellip; <input value="{{asset('gambar/'.$data->gambar)}}" type="file" name="gambar" class="bold-border">
+												<span class="btn btn-default btn-file">
+													Browse&hellip; <input type="file" name="gambar" class="bold-border">
 											</span>
 										</span>
                                 <input type="text" class="form-control" readonly>
@@ -131,6 +131,5 @@
         }
     </script>
 @endsection
-
 
 

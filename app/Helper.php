@@ -6,10 +6,14 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use RuntimeException;
 
 class Helper
 {
+
+    const ANNOUNCEMENT_IMAGE_DIRECTORY = 'uploads/announcements';
 
     // get tanggal 1-31
     // public static function fortgl() {
@@ -174,6 +178,63 @@ class Helper
             Helper::DeleteImage($fileold, $folder);
         }
         return $fileName;
+    }
+
+    public static function storeAnnouncementImage($image)
+    {
+        $extension = strtolower($image->getClientOriginalExtension());
+
+        if (!in_array($extension, ['jpeg', 'jpg', 'gif', 'png'], true)) {
+            throw new RuntimeException('Format gambar pengumuman tidak didukung.');
+        }
+
+        $fileName = date('Ymd') . uniqid() . '.' . $extension;
+        $path = $image->storeAs(self::ANNOUNCEMENT_IMAGE_DIRECTORY, $fileName, 'public');
+
+        if ($path === false) {
+            throw new RuntimeException('Gambar pengumuman gagal disimpan.');
+        }
+
+        return $path;
+    }
+
+    public static function deleteAnnouncementImage($path)
+    {
+        if (!self::isManagedAnnouncementImage($path)) {
+            return false;
+        }
+
+        return Storage::disk('public')->delete($path);
+    }
+
+    public static function announcementImageUrl($path)
+    {
+        if (empty($path)) {
+            return asset('gambar/no_image.jpg');
+        }
+
+        if (self::isManagedAnnouncementImage($path)) {
+            return asset('storage/' . ltrim($path, '/'));
+        }
+
+        return asset('gambar/' . basename($path));
+    }
+
+    public static function isManagedAnnouncementImage($path)
+    {
+        if (!is_string($path)) {
+            return false;
+        }
+
+        $prefix = self::ANNOUNCEMENT_IMAGE_DIRECTORY . '/';
+
+        if (strpos($path, $prefix) !== 0) {
+            return false;
+        }
+
+        $fileName = substr($path, strlen($prefix));
+
+        return $fileName !== '' && basename($fileName) === $fileName;
     }
 
     // delete foto produk

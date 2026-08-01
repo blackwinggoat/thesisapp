@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
 use Exception;
+use RuntimeException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Input;
 
@@ -2465,15 +2466,31 @@ class prodi extends Controller
 
     public function pengumumanpost(Request $request)
     {
-        $datapost = $request->all();
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'last_update' => 'required',
+            'isi' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,jpg,gif,png|max:5120',
+        ]);
+        $imagePath = '';
+
         try {
-            $gambar = isset($datapost['gambar']) ? $datapost['gambar'] : '';
-            $datapost['gambar'] = Helper::uploadImage($gambar, 'public/gambar/', '');
-            $datapost['last_update'] = Helper::tgl($datapost['last_update']);
-            $datapost['user_id'] = '1';
-            mst_pengumuman::create($datapost);
+            if ($request->hasFile('gambar')) {
+                $imagePath = Helper::storeAnnouncementImage($request->file('gambar'));
+            }
+
+            mst_pengumuman::create([
+                'judul' => $validated['judul'],
+                'gambar' => $imagePath,
+                'last_update' => Helper::tgl($validated['last_update']),
+                'isi' => $validated['isi'],
+                'user_id' => '1',
+            ]);
+
             return redirect::to('prodi/pengumuman/')->with('status', 'success');
         } catch (Exception $exception) {
+            Helper::deleteAnnouncementImage($imagePath);
+            Log::error('Gagal membuat pengumuman.', ['exception' => $exception]);
             return redirect::to('prodi/pengumuman/')->with('status', 'error');
         }
     }
@@ -2488,40 +2505,64 @@ class prodi extends Controller
 
     public function edit_pengumuman_post(Request $request)
     {
-        try {
-            $datapost = $request->all();
-            $gambar = isset($datapost['gambar']) ? $datapost['gambar'] : '';
-            $datapost['gambar'] = Helper::uploadImage($gambar, 'public/gambar/', '');
-            $datapost['last_update'] = Helper::tgl($request->last_update);
-            $datapost['user_id'] = '1';
+        $validated = $request->validate([
+            'id' => 'required|integer',
+            'judul' => 'required|string|max:255',
+            'last_update' => 'required',
+            'isi' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,jpg,gif,png|max:5120',
+        ]);
+        $announcement = mst_pengumuman::findOrFail($validated['id']);
+        $oldImagePath = $announcement->gambar;
+        $newImagePath = null;
 
-            if ($gambar != '') {
-                mst_pengumuman::where('pengumuman_id', $request->id)->update([
-                    'judul' => $request->judul,
-                    'gambar' => $datapost['gambar'],
-                    'last_update' => $datapost['last_update'],
-                    'isi' => $request->isi,
-                ]);
-            } else {
-                mst_pengumuman::where('pengumuman_id', $request->id)->update([
-                    'judul' => $request->judul,
-                    'last_update' => $datapost['last_update'],
-                    'isi' => $request->isi,
-                ]);
+        try {
+            if ($request->hasFile('gambar')) {
+                $newImagePath = Helper::storeAnnouncementImage($request->file('gambar'));
             }
+
+            $update = [
+                'judul' => $validated['judul'],
+                'last_update' => Helper::tgl($validated['last_update']),
+                'isi' => $validated['isi'],
+            ];
+
+            if ($newImagePath !== null) {
+                $update['gambar'] = $newImagePath;
+            }
+
+            if (!$announcement->update($update)) {
+                throw new RuntimeException('Pengumuman gagal diperbarui.');
+            }
+
+            if ($newImagePath !== null) {
+                Helper::deleteAnnouncementImage($oldImagePath);
+            }
+
             return redirect::to('prodi/pengumuman/')->with('status', 'success');
         } catch (Exception $exception) {
-            return $exception;
+            Helper::deleteAnnouncementImage($newImagePath);
+            Log::error('Gagal memperbarui pengumuman.', ['exception' => $exception]);
             return redirect::to('prodi/pengumuman/')->with('status', 'error');
         }
     }
 
     public function pengumumandel($id)
     {
-        DB::table('mst_pengumuman')
-            ->where('pengumuman_id', $id)
-            ->delete();
-        return redirect::to('prodi/pengumuman');
+        $announcement = mst_pengumuman::findOrFail($id);
+        $imagePath = $announcement->gambar;
+
+        try {
+            if (!$announcement->delete()) {
+                throw new RuntimeException('Pengumuman gagal dihapus.');
+            }
+
+            Helper::deleteAnnouncementImage($imagePath);
+            return redirect::to('prodi/pengumuman')->with('status', 'success');
+        } catch (Exception $exception) {
+            Log::error('Gagal menghapus pengumuman.', ['exception' => $exception]);
+            return redirect::to('prodi/pengumuman')->with('status', 'error');
+        }
     }
 
     public function setlevelpembimbing($dosen, $level)

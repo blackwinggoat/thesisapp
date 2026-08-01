@@ -7,13 +7,8 @@
             <div class="row">
                 <div class="col-sm-8 col-md-9 col-full-width-right">
                     <div class="blog-detail-image">
-                        @if ($data->gambar == '')
-                        <img class="media-object" src="{{asset('gambar/no_image.jpg')}}" width="100%" lass="img-blog"
+                        <img class="media-object" src="{{ \App\Helper::announcementImageUrl($data->gambar) }}" width="100%" lass="img-blog"
                             alt="Blog image">
-                        @else
-                        <img class="media-object" src="{{asset('gambar/'.$data->gambar)}}" width="100%" lass="img-blog"
-                            alt="Blog image">
-                        @endif
                         <div class="blog-title">
                             <h5>Ditulis</h5>
                             <a href="#fakelink"><img src="{{asset('master/assets/img/avatar/avatar-1.jpg')}}"
