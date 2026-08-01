@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helper;
 use App\Model\mst_periode_jabatan;
 
 class Admin extends Controller
@@ -12,9 +13,17 @@ class Admin extends Controller
     }
 
     public function periode_jabatan_update(){
+        request()->validate([
+            'id_jabatan' => 'required|integer',
+            'ttd' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+        ]);
+
+        $newFileName = null;
+
         try {
             $request = request()->all();
             $data = mst_periode_jabatan::find($request['id_jabatan']);
+            $oldFileName = $data->ttd;
             $data->nama = $request['nama'];
             $data->prodi = $request['prodi'];
             $data->tanggal_menjabat = $request['tanggal_menjabat'];
@@ -23,16 +32,25 @@ class Admin extends Controller
             $data->no_telepon = $request['no_telepon'];
             if (request()->hasFile('ttd')) {
                 $file = request()->file('ttd');
-                $extension = $file->getClientOriginalExtension() ?: 'png';
-                $filename = 'ttd_kaprodi_' . $data->id_jabatan . '_' . time() . '.' . $extension;
-                $file->move('gambar', $filename);
-                $data->ttd = $filename;
+                $newFileName = Helper::storeOfficialImage(
+                    $file,
+                    Helper::MANAGED_OFFICIAL_IMAGE_PREFIX . $data->id_jabatan
+                );
+                $data->ttd = $newFileName;
             }
 
             $data->save();
 
+            if ($newFileName !== null) {
+                Helper::deleteManagedOfficialImage($oldFileName);
+            }
+
             return redirect()->back()->with(['status' => "berhasil"]);
         } catch (\Exception $th) {
+            if ($newFileName !== null) {
+                Helper::deleteManagedOfficialImage($newFileName);
+            }
+
             return redirect()->back()->with(['status' => "gagal"]);
         }
     }

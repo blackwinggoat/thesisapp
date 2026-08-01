@@ -51,7 +51,7 @@
                         @if ($value->ttd == '')
                             <td><img src="{{asset('gambar/no_image.jpg')}}" height="50" width="50"></td>
                         @else
-                            <td><img src="{{asset('gambar/'.$value->ttd)}}" height="50" width="50"></td>
+                            <td><img src="{{ \App\Helper::officialImageDataUri($value->ttd) }}" height="50" width="50"></td>
                         @endif
                         <td>
                             <a href="#" id="update-data-btn" 
@@ -111,7 +111,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="ttd">TTD</label>
-                                <input type="file" class="form-control" id="ttd" name="ttd">
+                                <input type="file" class="form-control" id="ttd" name="ttd" accept="image/png,image/jpeg">
                             </div>
                             <div class="form-group">
                                 <img src="" id="ttd-img-tag"/>
@@ -168,6 +168,5 @@
         });
     </script>
 @endsection
-
 
 

@@ -90,7 +90,7 @@
     @php
         $namaProdi = helper::getProgramStudiByNim($nim);
         $kaprodi = helper::getKaprodiByNimAndTanggal($nim, $trt_penguji->created_at ?? null);
-        $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'gambar/stempelprodi.png' : 'gambar/stempelprodi_si.png';
+        $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'stempelprodi.png' : 'stempelprodi_si.png';
         $tinggiTtdKaprodi = $namaProdi == 'Teknik Informatika' ? '70px' : '120px';
         $styleTtdKaprodi = $namaProdi == 'Teknik Informatika' ? 'position: absolute; right: 90px' : 'position: absolute; right: 20px; top: -10px';
         $headerProgramStudi = $namaProdi == 'Teknik Informatika' ? 'PROGRAM STUDI TEKNIK INFORMATIKA' : 'PROGRAM STUDI SISTEM INFORMASI';
@@ -231,10 +231,10 @@
     <br>
     <br>
     <div style="text-align: center; position: relative">
-        <img src="{{ asset($stempelKaprodi) }}" alt="" height="100px"
+        <img src="{{ \App\Helper::officialImageDataUri($stempelKaprodi) }}" alt="" height="100px"
             style="position: absolute; right: 140px">
         <br>
-        <img src="{{ asset('gambar/' . $kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
+        <img src="{{ \App\Helper::officialImageDataUri($kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
             style="{{ $styleTtdKaprodi }}">
     </div>
     <br><br><br>
@@ -542,10 +542,10 @@
     </div>
     <br>
     <div style="text-align: center; position: relative">
-        <img src="{{ asset($stempelKaprodi) }}" alt="" height="100px"
+        <img src="{{ \App\Helper::officialImageDataUri($stempelKaprodi) }}" alt="" height="100px"
             style="position: absolute; right: 140px">
         <br>
-        <img src="{{ asset('gambar/' . $kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
+        <img src="{{ \App\Helper::officialImageDataUri($kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
             style="{{ $styleTtdKaprodi }}">
     </div>
     <br><br><br>

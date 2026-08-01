@@ -15,6 +15,8 @@ class Helper
 
     const ANNOUNCEMENT_IMAGE_DIRECTORY = 'uploads/announcements';
 
+    const MANAGED_OFFICIAL_IMAGE_PREFIX = 'ttd_kaprodi_';
+
     // get tanggal 1-31
     // public static function fortgl() {
     //     for($i=1; $i<=31; $i++){
@@ -235,6 +237,80 @@ class Helper
         $fileName = substr($path, strlen($prefix));
 
         return $fileName !== '' && basename($fileName) === $fileName;
+    }
+
+    public static function storeOfficialImage($image, $prefix)
+    {
+        $extension = strtolower($image->getClientOriginalExtension());
+
+        if (!in_array($extension, ['jpeg', 'jpg', 'png'], true)) {
+            throw new RuntimeException('Format gambar resmi tidak didukung.');
+        }
+
+        $prefix = preg_replace('/[^a-z0-9_-]+/i', '_', (string) $prefix);
+        $fileName = trim($prefix, '_') . '_' . uniqid() . '.' . $extension;
+        $path = $image->storeAs('', $fileName, 'official');
+
+        if ($path === false) {
+            throw new RuntimeException('Gambar resmi gagal disimpan.');
+        }
+
+        return $fileName;
+    }
+
+    public static function officialImageDataUri($fileName)
+    {
+        if (!self::isSafeOfficialImageName($fileName)) {
+            return asset('gambar/no_image.jpg');
+        }
+
+        $contents = null;
+
+        if (Storage::disk('official')->exists($fileName)) {
+            $contents = Storage::disk('official')->get($fileName);
+        } else {
+            $legacyPath = public_path('gambar/' . $fileName);
+
+            if (is_file($legacyPath)) {
+                $contents = file_get_contents($legacyPath);
+            }
+        }
+
+        if ($contents === null || $contents === false) {
+            return asset('gambar/no_image.jpg');
+        }
+
+        $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $mime = $extension === 'png' ? 'image/png' : 'image/jpeg';
+
+        return 'data:' . $mime . ';base64,' . base64_encode($contents);
+    }
+
+    public static function deleteManagedOfficialImage($fileName)
+    {
+        if (!self::isManagedOfficialImage($fileName)) {
+            return false;
+        }
+
+        return Storage::disk('official')->delete($fileName);
+    }
+
+    public static function isManagedOfficialImage($fileName)
+    {
+        if (!self::isSafeOfficialImageName($fileName)) {
+            return false;
+        }
+
+        return (bool) preg_match('/\Attd_kaprodi_\d+_[a-f0-9]+\.(?:jpe?g|png)\z/i', $fileName);
+    }
+
+    public static function isSafeOfficialImageName($fileName)
+    {
+        if (!is_string($fileName) || $fileName === '' || basename($fileName) !== $fileName) {
+            return false;
+        }
+
+        return (bool) preg_match('/\A[a-zA-Z0-9._-]+\.(?:jpe?g|png)\z/i', $fileName);
     }
 
     // delete foto produk

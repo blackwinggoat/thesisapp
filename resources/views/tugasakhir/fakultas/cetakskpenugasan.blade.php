@@ -265,10 +265,10 @@
         @elseif(helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 1)
 
         @elseif(helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 2)
-            <img src="{{ asset('gambar/stempelfakultas.png') }}" alt="" height="100px"
+            <img src="{{ \App\Helper::officialImageDataUri('stempelfakultas.png') }}" alt="" height="100px"
                 style="position: absolute; right: 140px">
             @if (!empty($dekan->ttd))
-                <img src="{{ asset('gambar/' . $dekan->ttd) }}" alt="" height="70px"
+                <img src="{{ \App\Helper::officialImageDataUri($dekan->ttd) }}" alt="" height="70px"
                     style="position: absolute; right: -20px">
             @endif
         @endif
@@ -281,7 +281,7 @@
         @if (helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 0)
         @elseif(helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 1 ||
                 helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 2)
-            <img src="{{ asset('gambar/paraf_wd.png') }}" alt="" height="50px"
+            <img src="{{ \App\Helper::officialImageDataUri('paraf_wd.png') }}" alt="" height="50px"
                 style="position: absolute; right: -20px">
         @endif
     </div>
