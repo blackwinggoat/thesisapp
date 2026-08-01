@@ -55,6 +55,11 @@ return [
             'visibility' => 'public',
         ],
 
+        'official' => [
+            'driver' => 'local',
+            'root' => env('OFFICIAL_ASSET_PATH', storage_path('app/private/official-assets')),
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

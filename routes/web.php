@@ -18,9 +18,17 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 Auth::routes();
 
+Route::get('/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect('/login');
+});
 
 Route::get('/', 'HomeController@index');
 
@@ -54,6 +62,7 @@ Route::group(['middleware' => 'admin'], function () {
 	Route::get('/prodi/pengumuman', 'Prodi@pengumuman');
 	Route::get('/prodi/pengumumandel/{id}', 'Prodi@pengumumandel');
 	Route::get('/prodi/pendaftarandel/{id}', 'Prodi@pendaftarandel');
+    Route::get('/prodi/daftar_peserta', 'Prodi@daftar_peserta_index');
     Route::get('/prodi/daftar_peserta/{id}', 'Prodi@daftar_peserta');
     Route::get('/prodi/set_penguji', 'Prodi@set_penguji');
     Route::get('/prodi/cetakskpenguji/', 'Prodi@cetakskpenguji');
@@ -117,11 +126,15 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get('/prodi/reset_user/{id}', 'Prodi@reset_user');
     Route::get('/prodi/make_userx/{id}', 'Prodi@make_userx');
     Route::get('/prodi/reset_userx/{id}', 'Prodi@reset_userx');
+    Route::get('/prodi/login_as_dosen/{id}', 'Prodi@login_as_dosen');
     Route::get('/prodi/scope_ta', 'Prodi@scope_ta');
     Route::get('/prodi/scope_del/{id}', 'Prodi@scope_del');
+    Route::get('/prodi/master/dosen', 'Prodi@master_dosen');
+    Route::get('/prodi/master/dosen/edit/{kode_dosen}', 'Prodi@master_dosen_edit');
     Route::get('/prodi/master/jenis_tugas_akhir', 'Prodi@master_jenis_tugas_akhir');
     Route::get('/prodi/master/jenis_tugas_akhir/delete/{id}', 'Prodi@master_jenis_tugas_akhir_delete');
     Route::get('/prodi/topik', 'Prodi@topik');
+    Route::get('/prodi/topik/riwayat', 'Prodi@topik_riwayat');
     Route::get('/prodi/detail_topikusulan/{id}', 'Prodi@detail_topikusulan');
     Route::get('/prodi/usulan_pembimbing', 'Prodi@usulan_pembimbing');
     Route::get('/prodi/set_pembimbing_sementara/{nim}', 'Prodi@set_pembimbing_sementara');
@@ -167,6 +180,9 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::post('/prodi/sk_pengusulan_tim_ujian_ta', 'Prodi@sk_pengusulan_tim_ujian_tapost');
     Route::post('/prodi/jadwal', 'Prodi@jadwalpostadd');
     Route::post('/prodi/scope_add', 'Prodi@scope_add');
+    Route::post('/prodi/scope_update/{id}', 'Prodi@scope_update');
+    Route::post('/prodi/master/dosen', 'Prodi@master_dosen_store');
+    Route::post('/prodi/master/dosen/update/{kode_dosen}', 'Prodi@master_dosen_update');
     Route::post('/prodi/master/jenis_tugas_akhir', 'Prodi@master_jenis_tugas_akhir_store');
     Route::post('/prodi/pengumuman', 'Prodi@pengumumanpost');
     Route::post('/prodi/topik', 'Prodi@topikpost');
@@ -187,7 +203,9 @@ Route::group(['middleware' => 'kaprodi'], function () {
 
     // Hasil Ujian
     Route::get("/prodi/approve_hasilujian_proposal/", "Prodi@approve_hasilujian_proposal");
+    Route::get("/prodi/approve_hasilujian_proposal_history/", "Prodi@approve_hasilujian_proposal_history");
     Route::get("/prodi/detail_hasilujian_proposal/{id}", "Prodi@detail_hasilujian_proposal");
+    Route::get("/prodi/detail_hasilujian_proposal_history/{id}", "Prodi@detail_hasilujian_proposal_history");
     Route::get("/prodi/approve_hasilujian_proposal_post/{id}/{nim}/{pendaftaran_id}", "Prodi@approve_hasilujian_proposal_post");
     Route::get("/prodi/tolak_hasilujian_proposal_post/{id}/{nim}/{pendaftaran_id}", "Prodi@tolak_hasilujian_proposal_post");
     Route::get("/prodi/lembaran_hasilujian_proposal/{id}/{nim}/{regid}", "Prodi@lembaran_hasilujian_proposal");
@@ -197,7 +215,9 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get("/prodi/approve_hasilujian_ta_all_post", "Prodi@approve_hasilujian_ta_all_post");
 
     Route::get("/prodi/approve_hasilujian_ta/", "Prodi@approve_hasilujian_ta");
+    Route::get("/prodi/approve_hasilujian_ta_history/", "Prodi@approve_hasilujian_ta_history");
     Route::get("/prodi/detail_hasilujian_ta/{id}", "Prodi@detail_hasilujian_ta");
+    Route::get("/prodi/detail_hasilujian_ta_history/{id}", "Prodi@detail_hasilujian_ta_history");
     Route::get("/prodi/approve_hasilujian_ta_post/{id}/{nim}/{pendaftaran_id}", "Prodi@approve_hasilujian_ta_post");
     Route::get("/prodi/tolak_hasilujian_ta_post/{id}/{nim}/{pendaftaran_id}", "Prodi@tolak_hasilujian_ta_post");
     Route::get("/prodi/lembaran_hasilujian_ta/{id}/{nim}/{regid}", "Prodi@lembaran_hasilujian_ta");
@@ -303,6 +323,8 @@ Route::group(['middleware' => 'akademik_prodi'], function () {
     Route::get('/akademikprodi/selesai_konfirmasi/{nim}/{type}', 'AkademikProdi@selesaiKonfirmasi');
 
     Route::get('/akademikprodi/detail_status_bimbingan_mahasiswa/{status}/', 'AkademikProdi@detail_status_bimbingan_mahasiswa');
+    Route::get('/akademikprodi/detail_status_bimbingan_mahasiswa', 'AkademikProdi@tampilDetailStatusBimbinganDenganFilterTanggal')
+        ->name('akademikprodi.tampilDetailStatusBimbinganDenganFilterTanggal');
 
     // Catatan
     Route::get('/akademikprodi/detail_persyaratan_proposal/catatan/{id}/{nim}', 'AkademikProdi@detail_persyaratan_proposal_catatan');
@@ -346,6 +368,8 @@ Route::group(['middleware' => 'dekan'], function () {
     Route::get('/dekan/appove_sk_ujian_ta/{id}', 'Dekan@approve_sk_ujian_ta');
 
     Route::get('/dekan/detail_status_bimbingan_mahasiswa/{status}/', 'Dekan@detail_status_bimbingan_mahasiswa');
+    Route::get('/dekan/detail_status_bimbingan_mahasiswa', 'Dekan@tampilDetailStatusBimbinganDenganFilterTanggal')
+        ->name('dekan.tampilDetailStatusBimbinganDenganFilterTanggal');
 });
 
 Route::group(['middleware' => 'wakil_dekan'], function () {
@@ -359,6 +383,8 @@ Route::group(['middleware' => 'wakil_dekan'], function () {
     Route::get('/wakildekan/appove_sk_ujian_ta/{id}', 'WakilDekan@approve_sk_ujian_ta');
 
     Route::get('/wakildekan/detail_status_bimbingan_mahasiswa/{status}/', 'WakilDekan@detail_status_bimbingan_mahasiswa');
+    Route::get('/wakildekan/detail_status_bimbingan_mahasiswa', 'WakilDekan@tampilDetailStatusBimbinganDenganFilterTanggal')
+        ->name('wakildekan.tampilDetailStatusBimbinganDenganFilterTanggal');
 });
 
 Route::group(['middleware' => 'akademik_fakultas'], function () {
@@ -419,10 +445,13 @@ Route::group(['middleware' => 'dosen'], function () {
     Route::post('/dsn/detail_note/{id}', 'dosen@note_update');
     Route::get("/dsn/ubah_password/", "dosen@ubah_password");
     Route::post("/dsn/ubah_password/", "dosen@ubah_password_post");
+    Route::post("/dsn/kelengkapan_profil", "dosen@kelengkapan_profil_post");
     Route::get("/dsn/hasil_proposal/", "dosen@hasil_proposal");
+    Route::get("/dsn/hasil_proposal_history/", "dosen@hasil_proposal_history");
     Route::get("/dsn/detailhasil_proposal/{regid}", "dosen@detailhasil_proposal");
     Route::post("/dsn/detailhasil_proposalpost/", "dosen@detailhasil_proposalpost");
     Route::get("/dsn/hasil_ujianmeja/", "dosen@hasil_ujianmeja");
+    Route::get("/dsn/hasil_ujianmeja_history/", "dosen@hasil_ujianmeja_history");
     Route::get("/dsn/detailhasil_ujianmeja/{regid}", "dosen@detailhasil_ujianmeja");
     Route::post("/dsn/detailhasil_ujianmejapost/", "dosen@detailhasil_ujianmejapost");
     Route::get("/dsn/jadwal_proposal/", "dosen@jadwal_proposal");
@@ -434,12 +463,16 @@ Route::group(['middleware' => 'dosen'], function () {
 
     // Rekap Nilai Hasil Proposal
     Route::get("/dsn/rekap_nilai_proposal/", "dosen@rekap_nilai_proposal");
+    Route::get("/dsn/rekap_nilai_proposal_history/", "dosen@rekap_nilai_proposal_history");
     Route::get("/dsn/detail_rekap_nilai_proposal/{id}", "dosen@detail_rekap_nilai_proposal");
+    Route::get("/dsn/detail_rekap_nilai_proposal_history/{id}", "dosen@detail_rekap_nilai_proposal_history");
     Route::get("/dsn/lembaran_hasilujian_proposal/{id}/{nim}/{regid}", "dosen@lembaran_hasilujian_proposal");
 
     // Rekap Nilai Ujian TA
     Route::get("/dsn/rekap_nilai_ujian_ta/", "dosen@rekap_nilai_ujian_ta");
+    Route::get("/dsn/rekap_nilai_ujian_ta_history/", "dosen@rekap_nilai_ujian_ta_history");
     Route::get("/dsn/detail_rekap_nilai_ujian_ta/{id}", "dosen@detail_rekap_nilai_ujian_ta");
+    Route::get("/dsn/detail_rekap_nilai_ujian_ta_history/{id}", "dosen@detail_rekap_nilai_ujian_ta_history");
     Route::get("/dsn/lembaran_hasilujian_ujian_ta/{id}/{nim}/{regid}", "dosen@lembaran_hasilujian_ujian_ta");
 
     // Pengumuman
@@ -466,6 +499,7 @@ Route::group(['middleware' => 'dosen'], function () {
     Route::get('/dsn/honorarium', 'dosen@honorarium');
     Route::post('/dsn/honorarium', 'dosen@honorarium_save_all_dosen')->name('honorarium_save_all_dosen');
     Route::get('/dsn/history_honorarium', 'dosen@history_honorarium')->name('history_honorarium');
+    Route::get('/dsn/back_to_prodi', 'dosen@back_to_prodi');
 
     // set_session_status
     Route::post('/set-session-status', 'dosen@set_session_status')->name('set_session_status');
@@ -482,6 +516,7 @@ Route::group(['middleware' => 'mhs'], function () {
     Route::post('/mhs/ubah_judul/{id}', 'mhs@judul_update');
     Route::get('/mhs/pengajuan_topikdel/{id}', 'mhs@pengajuan_topikdel');
     Route::get('/mhs/riwayat_ujian/{nim}', 'mhs@riwayat_ujian');
+    Route::get('/mhs/dosen', 'mhs@daftar_dosen');
     Route::get('/mhs/mail_inbox', 'mhs@mail_inbox');
     Route::get('/mhs/mail_sent', 'mhs@mail_sent');
     Route::get('/mhs/mail_new', 'mhs@mail_new');
@@ -497,8 +532,10 @@ Route::group(['middleware' => 'mhs'], function () {
     Route::get('/mhs/beritaacara_proposal/{nim}', 'mhs@beritaacara_proposal');
     Route::get('/mhs/beritaacara_ujian/{nim}', 'mhs@beritaacara_ujian');
     Route::get('/mhs/cetak_beritaacara_proposal/{pendaftaran_id}/{nim}', 'mhs@cetak_beritaacara_proposal');
+    Route::get('/mhs/cetak_beritaacara_ujian/{pendaftaran_id}/{nim}', 'mhs@cetak_beritaacara_ujian');
 
     Route::post('/mhs/pengajuan_topik', 'mhs@pengajuan_topikpost');
+    Route::post('/mhs/kelengkapan_kontak', 'mhs@kelengkapan_kontak_post');
     Route::post('/mhs/registrasi', 'mhs@registrasi');
     Route::post('/mhs/pesanpost', 'mhs@pesanpost');
     Route::post('/mhs/usulan_tmp', 'mhs@usulan_tmp');

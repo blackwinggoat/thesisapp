@@ -33,9 +33,10 @@
                 </div>
                 <br><br>
                 <div class="form-group">
-                    <label class="col-lg-2 control-label">Tipe Ujian</label>
-                    <div class="col-lg-6">
+                <label class="col-lg-2 control-label">Tipe Ujian</label>
+                <div class="col-lg-6">
                         @php
+                            $tipe = '-';
                             if($info->tipe_ujian == 0):
                                 $tipe = "Proposal";
                             elseif($info->tipe_ujian == 2):
@@ -64,49 +65,17 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($data as $i => $d)
+                        @forelse($data as $i => $d)
                             <tr class="odd gradeX">
                                 <td width="1%" align="center">{{++$i}}</td>
                                 <td>{{$d->C_NPM}}</td>
                                 <td>{{$d->NAMA_MAHASISWA}}</td>
-                                @php
-                                    $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                                    $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                                    $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_I_id)->first();
-                                    $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_II_id)->first();
-                                    $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_III_id)->first();
-                                    $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$d->ketua_sidang_id)->first();
-                                @endphp
-                                <td>{{$pembimbing1->NAMA_DOSEN}}</td>
-                                <td>{{$pembimbing2->NAMA_DOSEN}}</td>
-                                <td>
-                                    @if ($penguji1 == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$penguji1->NAMA_DOSEN}}
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($penguji2 == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$penguji2->NAMA_DOSEN}}
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($penguji3 == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$penguji3->NAMA_DOSEN}}
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($ketuasidang == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$ketuasidang->NAMA_DOSEN}}
-                                    @endif
-                                </td>
+                                <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->penguji_I_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->penguji_II_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->penguji_III_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}</td>
                                 <td>
                                     <a href="{{ url("prodi/set_penguji/$info->pendaftaran_id/$d->C_NPM/$info->tipe_ujian")}}"><i class="fa fa-file-archive-o icon-square icon-xs icon-dark"></i></a>
                                 </td>
@@ -116,7 +85,11 @@
                                                 class="fa fa-trash-o"></i></a>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="11" class="text-center">Belum ada peserta pada jadwal ujian ini.</td>
+                            </tr>
+                        @endforelse
                         </tbody>
                     </table>
                 </div><!-- /.table-responsive -->
@@ -165,4 +138,3 @@ Apakah Anda yakin ingin menghapus data mahasiswa ini ?
 
 </script>
 @endsection
-

@@ -38,7 +38,7 @@
                     <div class="form-group">
                         <label class="col-lg-2 control-label">No Handphone</label>
                         <div class="col-lg-5">
-                            <input type="text" class="form-control bold-border" name="noHp" value="{{$data->NO_TELP}}" disabled/>
+                            <input type="text" class="form-control bold-border" name="noHp" value="{{ !empty($data->NO_HP) ? $data->NO_HP : (!empty($data->NO_TELP) ? $data->NO_TELP : '-') }}" disabled/>
                         </div>
                     </div>
                     <br><br>
@@ -58,13 +58,13 @@
                     <br><br>
                     <div class="form-group">
                         <label class="col-lg-2 control-label">Detail Bimbingan</label>
-                        <div class="table-responsive col-lg-7">
+                        <div class="table-responsive col-lg-10">
                             <table class="table table-th-block">
                                 <thead>
                                 <tr>
                                     <th>Tahapan Mahasiswa Bimbingan</th>
-                                    <th>Pembimbing Utama</th>
-                                    <th>Pembimbing Pendamping</th>
+                                    <th>Pembimbing Utama : Pembimbing Utama</th>
+                                    <th>Pembimbing Pendamping : Pembimbing Pendamping</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -95,58 +95,147 @@
                 </fieldset>
             </div><!-- /.the-box -->
             <!-- End breadcrumb -->
-            <h3 class="page-heading">Daftar Mahasiswa Bimbingan</h3>
+            <h3 class="page-heading">Daftar Mahasiswa Bimbingan Aktif / Belum Lulus</h3>
             <!-- BEGIN DATA TABLE -->
             <div class="the-box">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover" id="datatable-example">
+                    <table class="table table-striped table-hover" id="datatable-bimbingan-aktif">
                         <thead class="the-box dark full">
                         <tr>
                             <th>No</th>
-                            {{-- <th>No SK Bimbingan</th> --}}
+                            <th>Peran Pembimbing</th>
+                            <th>No SK Bimbingan</th>
                             <th>NIM</th>
                             <th>Nama</th>
+                            <th>Kontak Mahasiswa</th>
                             <th>Tahapan Bimbingan</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <?php
-                        $a = 0;
-                        ?>
-                        @foreach ($data_bimbingan1 as $key => $value)
+                        @forelse ($data_bimbingan_aktif as $key => $value)
                             <tr class="odd gradeX">
-                                <td width="1%" align="center">{{++$a}}</td>
-                                {{-- <td>{{helper::getNomorSkByNIM($value->C_NPM)}}</td> --}}
-                                <td>{{$value->C_NPM}}</td>
-                                <td>{{$value->NAMA_MAHASISWA}}</td>
+                                <td width="1%" align="center">{{ $key + 1 }}</td>
+                                <td>{{ $value->peran_pembimbing ?? '-' }}</td>
                                 <td>
-                                    @if($value->status_bimbingan==0)
-                                        Persiapan Proposal
-                                    @elseif($value->status_bimbingan==2)
-                                        Persiapan Ujian Meja
-                                    @elseif($value->status_bimbingan==3)
-                                        Persiapan Wisuda
+                                    @if (!empty($value->nomor_sk))
+                                        <span class="label label-primary">{{ $value->nomor_sk }}</span>
+                                    @else
+                                        -
                                     @endif
                                 </td>
-                            </tr>
-                        @endforeach
-                        @foreach ($data_bimbingan2 as $key => $value)
-                            <tr class="odd gradeX">
-                                <td width="1%" align="center">{{++$a}}</td>
-                                {{-- <td>{{helper::getNomorSkByNIM($value->C_NPM)}}</td> --}}
-                                <td>{{$value->C_NPM}}</td>
-                                <td>{{$value->NAMA_MAHASISWA}}</td>
+                                <td>{{ $value->C_NPM }}</td>
+                                <td>{{ $value->NAMA_MAHASISWA ?? '-' }}</td>
                                 <td>
-                                    @if($value->status_bimbingan==0)
-                                        Persiapan Proposal
-                                    @elseif($value->status_bimbingan==2)
-                                        Persiapan Ujian Meja
-                                    @elseif($value->status_bimbingan==3)
-                                        Persiapan Wisuda
+                                    @php
+                                        $waRaw = trim((string) ($value->no_wa ?? ''));
+                                        $waDigits = preg_replace('/\D+/', '', $waRaw);
+                                        if ($waDigits !== '' && strpos($waDigits, '0') === 0) {
+                                            $waDigits = '62' . substr($waDigits, 1);
+                                        }
+                                        $waLink = $waDigits !== '' ? 'https://wa.me/' . $waDigits : '';
+
+                                        $telegramRaw = trim((string) ($value->id_telegram ?? ''));
+                                        $telegramUsername = ltrim($telegramRaw, '@');
+                                        $telegramLink = $telegramUsername !== '' ? 'https://t.me/' . $telegramUsername : '';
+                                    @endphp
+
+                                    @if ($waLink !== '' || $telegramLink !== '')
+                                        <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                                            @if ($waLink !== '')
+                                                <a href="{{ $waLink }}" target="_blank" class="btn btn-success btn-sm" style="min-width: 125px; text-align: left;">
+                                                    <i class="fa fa-whatsapp" style="font-size: 16px; margin-right: 6px;"></i> WhatsApp
+                                                </a>
+                                            @endif
+                                            @if ($telegramLink !== '')
+                                                <a href="{{ $telegramLink }}" target="_blank" class="btn btn-info btn-sm" style="min-width: 125px; text-align: left;">
+                                                    <i class="fa fa-telegram" style="font-size: 16px; margin-right: 6px;"></i> Telegram
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @else
+                                        -
                                     @endif
                                 </td>
+                                <td>{{ $value->label_status_bimbingan ?? '-' }}</td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center">Belum ada mahasiswa bimbingan aktif / belum lulus.</td>
+                            </tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div><!-- /.table-responsive -->
+            </div><!-- /.the-box .default -->
+            <!-- END DATA TABLE -->
+
+            <h3 class="page-heading">Daftar Mahasiswa Lulusan</h3>
+            <div class="the-box">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="datatable-bimbingan-lulusan">
+                        <thead class="the-box dark full">
+                        <tr>
+                            <th>No</th>
+                            <th>Peran Pembimbing</th>
+                            <th>No SK Bimbingan</th>
+                            <th>NIM</th>
+                            <th>Nama</th>
+                            <th>Kontak Mahasiswa</th>
+                            <th>Tahapan Bimbingan</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @forelse ($data_bimbingan_lulusan as $key => $value)
+                            <tr class="odd gradeX">
+                                <td width="1%" align="center">{{ $key + 1 }}</td>
+                                <td>{{ $value->peran_pembimbing ?? '-' }}</td>
+                                <td>
+                                    @if (!empty($value->nomor_sk))
+                                        <span class="label label-primary">{{ $value->nomor_sk }}</span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>{{ $value->C_NPM }}</td>
+                                <td>{{ $value->NAMA_MAHASISWA ?? '-' }}</td>
+                                <td>
+                                    @php
+                                        $waRaw = trim((string) ($value->no_wa ?? ''));
+                                        $waDigits = preg_replace('/\D+/', '', $waRaw);
+                                        if ($waDigits !== '' && strpos($waDigits, '0') === 0) {
+                                            $waDigits = '62' . substr($waDigits, 1);
+                                        }
+                                        $waLink = $waDigits !== '' ? 'https://wa.me/' . $waDigits : '';
+
+                                        $telegramRaw = trim((string) ($value->id_telegram ?? ''));
+                                        $telegramUsername = ltrim($telegramRaw, '@');
+                                        $telegramLink = $telegramUsername !== '' ? 'https://t.me/' . $telegramUsername : '';
+                                    @endphp
+
+                                    @if ($waLink !== '' || $telegramLink !== '')
+                                        <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                                            @if ($waLink !== '')
+                                                <a href="{{ $waLink }}" target="_blank" class="btn btn-success btn-sm" style="min-width: 125px; text-align: left;">
+                                                    <i class="fa fa-whatsapp" style="font-size: 16px; margin-right: 6px;"></i> WhatsApp
+                                                </a>
+                                            @endif
+                                            @if ($telegramLink !== '')
+                                                <a href="{{ $telegramLink }}" target="_blank" class="btn btn-info btn-sm" style="min-width: 125px; text-align: left;">
+                                                    <i class="fa fa-telegram" style="font-size: 16px; margin-right: 6px;"></i> Telegram
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>{{ $value->label_status_bimbingan ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center">Belum ada mahasiswa lulusan.</td>
+                            </tr>
+                        @endforelse
                         </tbody>
                     </table>
                 </div><!-- /.table-responsive -->
@@ -157,5 +246,22 @@
 
 @endsection
 
+@section('script')
+    <script>
+        $(document).ready(function() {
+            if ($.fn.DataTable && $('#datatable-bimbingan-aktif').length > 0) {
+                $('#datatable-bimbingan-aktif').DataTable({
+                    paging: false,
+                    info: false,
+                    lengthChange: false
+                });
+            }
 
-
+            if ($.fn.DataTable && $('#datatable-bimbingan-lulusan').length > 0) {
+                $('#datatable-bimbingan-lulusan').DataTable({
+                    pageLength: 10
+                });
+            }
+        });
+    </script>
+@endsection

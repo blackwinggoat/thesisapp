@@ -32,7 +32,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 use Auth;
 use Exception;
 
@@ -48,9 +50,48 @@ class dosen extends Controller
         $this->middleware('auth');
     }
 
+    public function back_to_prodi(Request $request)
+    {
+        $sourceUserId = $request->session()->get('login_as_source_user_id');
+        $sourceUserLevel = (int) $request->session()->get('login_as_source_user_level', 0);
+
+        if (empty($sourceUserId) || $sourceUserLevel !== 5) {
+            return redirect('/')->with('danger', 'Session login as prodi tidak ditemukan.');
+        }
+
+        $sourceUser = DB::table('users')
+            ->select('id', 'level')
+            ->where('id', $sourceUserId)
+            ->first();
+
+        if (!$sourceUser || (int) $sourceUser->level !== 5) {
+            $request->session()->forget([
+                'login_as_source_user_id',
+                'login_as_source_user_name',
+                'login_as_source_user_level',
+            ]);
+            return redirect('/')->with('danger', 'Akun prodi asal tidak valid.');
+        }
+
+        Auth::loginUsingId($sourceUserId);
+        $request->session()->regenerate();
+        $request->session()->forget([
+            'login_as_source_user_id',
+            'login_as_source_user_name',
+            'login_as_source_user_level',
+        ]);
+
+        return redirect('/')->with('success', 'Berhasil kembali ke akun prodi.');
+    }
+
     public function detail_ujian($nim, $tipe_ujian)
     {
         $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_penguji.C_NPM = ? AND trt_reg.status = ?", [$nim, $tipe_ujian]);
+
+        if (empty($data)) {
+            return response('Data detail ujian tidak ditemukan.', 404);
+        }
+
         return view('tugasakhir.mhs.detail_ujian', compact('data'));
     }
 
@@ -58,26 +99,51 @@ class dosen extends Controller
     public function rekap_nilai_proposal()
     {
         $kode = auth()->user()->name;
-        $data = DB::select("SELECT DISTINCT mst_pendaftaran.pendaftaran_id, mst_pendaftaran.nama_periode, mst_pendaftaran.kuota, mst_pendaftaran.jml_peserta, trt_jadwal_ujian.tgl_ujian FROM mst_pendaftaran, trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa, trt_jadwal_ujian, trt_jadwal_ujian_per_mhs , mst_ruangan WHERE mst_pendaftaran.pendaftaran_id = mst_pendaftaran.pendaftaran_id AND mst_ruangan.id =  trt_jadwal_ujian_per_mhs.ruangan AND trt_bimbingan.C_NPM = trt_jadwal_ujian_per_mhs.C_NPM AND trt_jadwal_ujian.id = trt_jadwal_ujian_per_mhs.jadwal_ujian AND trt_jadwal_ujian.pendaftaran_id = mst_pendaftaran.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_penguji.ketua_sidang_id = ? AND mst_pendaftaran.tipe_ujian = ? AND  trt_penguji.tipe_ujian = ? AND trt_reg.status = ? ORDER BY trt_reg.pendaftaran_id", [$kode, 0, 0, 0]);
+        $data = DB::select("SELECT DISTINCT mst_pendaftaran.pendaftaran_id, mst_pendaftaran.nama_periode, mst_pendaftaran.kuota, mst_pendaftaran.jml_peserta, trt_jadwal_ujian.tgl_ujian FROM mst_pendaftaran, trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa, trt_jadwal_ujian, trt_jadwal_ujian_per_mhs , mst_ruangan WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND mst_ruangan.id =  trt_jadwal_ujian_per_mhs.ruangan AND trt_bimbingan.C_NPM = trt_jadwal_ujian_per_mhs.C_NPM AND trt_jadwal_ujian.id = trt_jadwal_ujian_per_mhs.jadwal_ujian AND trt_jadwal_ujian.pendaftaran_id = mst_pendaftaran.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_penguji.ketua_sidang_id = ? AND mst_pendaftaran.tipe_ujian = ? AND  trt_penguji.tipe_ujian = ? AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan = ? ORDER BY mst_pendaftaran.pendaftaran_id", [$kode, 0, 0, 0, 0]);
         return view('tugasakhir.dosen.rekap_nilai_proposal', compact('data'));
     }
     // Akhir Approve Hasil Ujian TA
+
+    public function rekap_nilai_proposal_history()
+    {
+        $kode = auth()->user()->name;
+        $data = DB::select("SELECT DISTINCT mst_pendaftaran.pendaftaran_id, mst_pendaftaran.nama_periode, mst_pendaftaran.kuota, mst_pendaftaran.jml_peserta, trt_jadwal_ujian.tgl_ujian FROM mst_pendaftaran, trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa, trt_jadwal_ujian, trt_jadwal_ujian_per_mhs, mst_ruangan WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND mst_ruangan.id = trt_jadwal_ujian_per_mhs.ruangan AND trt_bimbingan.C_NPM = trt_jadwal_ujian_per_mhs.C_NPM AND trt_jadwal_ujian.id = trt_jadwal_ujian_per_mhs.jadwal_ujian AND trt_jadwal_ujian.pendaftaran_id = mst_pendaftaran.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_penguji.ketua_sidang_id = ? AND mst_pendaftaran.tipe_ujian = ? AND trt_penguji.tipe_ujian = ? AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan IN (?, ?) ORDER BY mst_pendaftaran.pendaftaran_id", [$kode, 0, 0, 0, 2, 3]);
+        return view('tugasakhir.dosen.rekap_nilai_proposal_history', compact('data'));
+    }
 
     // Halaman Approve Hasil Ujian TA
     public function detail_rekap_nilai_proposal($id)
     {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
-        $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ? AND trt_penguji.ketua_sidang_id = ?", [$id, $info->tipe_ujian, auth()->user()->name]);
+        if (!$info || !isset($info->tipe_ujian)) {
+            return response('Data rekap nilai proposal tidak ditemukan.', 404);
+        }
+        $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ? AND trt_penguji.ketua_sidang_id = ? AND trt_bimbingan.status_bimbingan = ?", [$id, $info->tipe_ujian, auth()->user()->name, 0]);
         return view('tugasakhir.dosen.detail_rekap_nilai_proposal', compact("data", "info"));
     }
     // Akhir Approve Hasil Ujian TA
+
+    public function detail_rekap_nilai_proposal_history($id)
+    {
+        $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
+            ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
+        if (!$info || !isset($info->tipe_ujian)) {
+            return response('Data rekap nilai proposal history tidak ditemukan.', 404);
+        }
+        $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ? AND trt_penguji.ketua_sidang_id = ? AND trt_bimbingan.status_bimbingan IN (?, ?)", [$id, $info->tipe_ujian, auth()->user()->name, 2, 3]);
+        return view('tugasakhir.dosen.detail_rekap_nilai_proposal_history', compact("data", "info"));
+    }
 
     // Halaman Lembaran Hasil Ujian
     public function lembaran_hasilujian_proposal($pendaftaran_id, $nim, $reg_id)
     {
         $trtjadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("trt_jadwal_ujian.pendaftaran_id", $pendaftaran_id)->first();
+        if (!$trtjadwalujian) {
+            return response('Data jadwal ujian proposal tidak ditemukan.', 404);
+        }
+
         $trtjadwalujianpermhs = TrtJadwalUjianPerMhs::join("mst_ruangan", "mst_ruangan.id", "trt_jadwal_ujian_per_mhs.ruangan")
             ->where([
                 "C_NPM" => $nim,
@@ -85,12 +151,20 @@ class dosen extends Controller
             ])->first();
         $trt_bimbingan = trt_bimbingan::where("C_NPM", $nim)->first();
         $mst_pendaftaran = mst_pendaftaran::find($pendaftaran_id);
+        if (!$mst_pendaftaran || !$trt_bimbingan) {
+            return response('Data lembaran hasil ujian proposal tidak lengkap.', 404);
+        }
+
         $trt_penguji = TrtPenguji::where([
             "C_NPM" => $nim,
             "tipe_ujian" => $mst_pendaftaran->tipe_ujian
         ])->first();
 
-        $ruangan = MstRuangan::find($trtjadwalujianpermhs->ruangan)->nama_ruangan;
+        $ruangan = '-';
+        if ($trtjadwalujianpermhs && !empty($trtjadwalujianpermhs->ruangan)) {
+            $ruanganModel = MstRuangan::find($trtjadwalujianpermhs->ruangan);
+            $ruangan = $ruanganModel ? $ruanganModel->nama_ruangan : '-';
+        }
         $tgl_ujian = Carbon::parse($trtjadwalujian->tgl_ujian)->formatLocalized("%A, %d %B %Y");
         switch ($mst_pendaftaran->tipe_ujian) {
             case "0":
@@ -115,6 +189,10 @@ class dosen extends Controller
             ->where("trt_bimbingan.C_NPM", $nim)
             ->first();
 
+        if (!$data_dosen_selesai || !$data_dosen_pembimbing) {
+            return response('Data dosen pada lembaran hasil ujian proposal belum lengkap.', 404);
+        }
+
         return view("tugasakhir.dosen.lembaran_hasilujian_proposal", compact(
             "nim",
             "trt_bimbingan",
@@ -134,27 +212,51 @@ class dosen extends Controller
     public function rekap_nilai_ujian_ta()
     {
         $kode = auth()->user()->name;
-        $kode = auth()->user()->name;
-        $data = DB::select("SELECT DISTINCT mst_pendaftaran.pendaftaran_id, mst_pendaftaran.nama_periode, mst_pendaftaran.kuota, mst_pendaftaran.jml_peserta, trt_jadwal_ujian.tgl_ujian FROM mst_pendaftaran, trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa, trt_jadwal_ujian, trt_jadwal_ujian_per_mhs , mst_ruangan WHERE mst_pendaftaran.pendaftaran_id = mst_pendaftaran.pendaftaran_id AND mst_ruangan.id =  trt_jadwal_ujian_per_mhs.ruangan AND trt_bimbingan.C_NPM = trt_jadwal_ujian_per_mhs.C_NPM AND trt_jadwal_ujian.id = trt_jadwal_ujian_per_mhs.jadwal_ujian AND trt_jadwal_ujian.pendaftaran_id = mst_pendaftaran.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_penguji.ketua_sidang_id = ? AND mst_pendaftaran.tipe_ujian = ? AND  trt_penguji.tipe_ujian = ? AND trt_reg.status = ? ORDER BY trt_reg.pendaftaran_id", [$kode, 2, 2, 2]);
+        $data = DB::select("SELECT DISTINCT mst_pendaftaran.pendaftaran_id, mst_pendaftaran.nama_periode, mst_pendaftaran.kuota, mst_pendaftaran.jml_peserta, trt_jadwal_ujian.tgl_ujian FROM mst_pendaftaran, trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa, trt_jadwal_ujian, trt_jadwal_ujian_per_mhs , mst_ruangan WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND mst_ruangan.id =  trt_jadwal_ujian_per_mhs.ruangan AND trt_bimbingan.C_NPM = trt_jadwal_ujian_per_mhs.C_NPM AND trt_jadwal_ujian.id = trt_jadwal_ujian_per_mhs.jadwal_ujian AND trt_jadwal_ujian.pendaftaran_id = mst_pendaftaran.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_penguji.ketua_sidang_id = ? AND mst_pendaftaran.tipe_ujian = ? AND  trt_penguji.tipe_ujian = ? AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan = ? ORDER BY mst_pendaftaran.pendaftaran_id", [$kode, 2, 2, 2, 2]);
         return view('tugasakhir.dosen.rekap_nilai_ujian_ta', compact('data'));
     }
     // Akhir Approve Hasil Ujian TA
+
+    public function rekap_nilai_ujian_ta_history()
+    {
+        $kode = auth()->user()->name;
+        $data = DB::select("SELECT DISTINCT mst_pendaftaran.pendaftaran_id, mst_pendaftaran.nama_periode, mst_pendaftaran.kuota, mst_pendaftaran.jml_peserta, trt_jadwal_ujian.tgl_ujian FROM mst_pendaftaran, trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa, trt_jadwal_ujian, trt_jadwal_ujian_per_mhs, mst_ruangan WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND mst_ruangan.id = trt_jadwal_ujian_per_mhs.ruangan AND trt_bimbingan.C_NPM = trt_jadwal_ujian_per_mhs.C_NPM AND trt_jadwal_ujian.id = trt_jadwal_ujian_per_mhs.jadwal_ujian AND trt_jadwal_ujian.pendaftaran_id = mst_pendaftaran.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_penguji.ketua_sidang_id = ? AND mst_pendaftaran.tipe_ujian = ? AND trt_penguji.tipe_ujian = ? AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan = ? ORDER BY mst_pendaftaran.pendaftaran_id", [$kode, 2, 2, 2, 3]);
+        return view('tugasakhir.dosen.rekap_nilai_ujian_ta_history', compact('data'));
+    }
 
     // Halaman Approve Hasil Ujian TA
     public function detail_rekap_nilai_ujian_ta($id)
     {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
-        $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ? AND trt_penguji.ketua_sidang_id = ?", [$id, $info->tipe_ujian, auth()->user()->name]);
+        if (!$info || !isset($info->tipe_ujian)) {
+            return response('Data rekap nilai ujian TA tidak ditemukan.', 404);
+        }
+        $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ? AND trt_penguji.ketua_sidang_id = ? AND trt_bimbingan.status_bimbingan = ?", [$id, $info->tipe_ujian, auth()->user()->name, 2]);
         return view('tugasakhir.dosen.detail_rekap_nilai_ujian_ta', compact("data", "info"));
     }
     // Akhir Approve Hasil Ujian TA
+
+    public function detail_rekap_nilai_ujian_ta_history($id)
+    {
+        $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
+            ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
+        if (!$info || !isset($info->tipe_ujian)) {
+            return response('Data rekap nilai ujian TA history tidak ditemukan.', 404);
+        }
+        $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ? AND trt_penguji.ketua_sidang_id = ? AND trt_bimbingan.status_bimbingan = ?", [$id, $info->tipe_ujian, auth()->user()->name, 3]);
+        return view('tugasakhir.dosen.detail_rekap_nilai_ujian_ta_history', compact("data", "info"));
+    }
 
     // Halaman Lembaran Hasil Ujian
     public function lembaran_hasilujian_ujian_ta($pendaftaran_id, $nim, $reg_id)
     {
         $trtjadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("trt_jadwal_ujian.pendaftaran_id", $pendaftaran_id)->first();
+        if (!$trtjadwalujian) {
+            return response('Data jadwal ujian TA tidak ditemukan.', 404);
+        }
+
         $trtjadwalujianpermhs = TrtJadwalUjianPerMhs::join("mst_ruangan", "mst_ruangan.id", "trt_jadwal_ujian_per_mhs.ruangan")
             ->where([
                 "C_NPM" => $nim,
@@ -162,12 +264,20 @@ class dosen extends Controller
             ])->first();
         $trt_bimbingan = trt_bimbingan::where("C_NPM", $nim)->first();
         $mst_pendaftaran = mst_pendaftaran::find($pendaftaran_id);
+        if (!$mst_pendaftaran || !$trt_bimbingan) {
+            return response('Data lembaran hasil ujian TA tidak lengkap.', 404);
+        }
+
         $trt_penguji = TrtPenguji::where([
             "C_NPM" => $nim,
             "tipe_ujian" => $mst_pendaftaran->tipe_ujian
         ])->first();
 
-        $ruangan = MstRuangan::find($trtjadwalujianpermhs->ruangan)->nama_ruangan;
+        $ruangan = '-';
+        if ($trtjadwalujianpermhs && !empty($trtjadwalujianpermhs->ruangan)) {
+            $ruanganModel = MstRuangan::find($trtjadwalujianpermhs->ruangan);
+            $ruangan = $ruanganModel ? $ruanganModel->nama_ruangan : '-';
+        }
         $tgl_ujian = Carbon::parse($trtjadwalujian->tgl_ujian)->formatLocalized("%A, %d %B %Y");
         switch ($mst_pendaftaran->tipe_ujian) {
             case "0":
@@ -191,6 +301,10 @@ class dosen extends Controller
             ->select("*")
             ->where("trt_bimbingan.C_NPM", $nim)
             ->first();
+
+        if (!$data_dosen_selesai || !$data_dosen_pembimbing) {
+            return response('Data dosen pada lembaran hasil ujian TA belum lengkap.', 404);
+        }
 
         return view("tugasakhir.dosen.lembaran_hasilujian_ujian_ta", compact(
             "nim",
@@ -263,19 +377,31 @@ class dosen extends Controller
     public function hasil_proposal()
     {
         $kode = auth()->user()->name;
-        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id  = ? OR trt_penguji.penguji_II_id  = ? OR trt_penguji.penguji_III_id  = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ?", [$kode, $kode, $kode, $kode, $kode, $kode, 0]);
+        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id  = ? OR trt_penguji.penguji_II_id  = ? OR trt_penguji.penguji_III_id  = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan NOT IN (?, ?)", [$kode, $kode, $kode, $kode, $kode, $kode, 0, 2, 3]);
 
         return view('tugasakhir.dosen.hasil_proposal', compact('data'));
     }
     // Akhir Halaman Hasil Ujian Proposal
 
+    public function hasil_proposal_history()
+    {
+        $kode = auth()->user()->name;
+        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id = ? OR trt_penguji.penguji_II_id = ? OR trt_penguji.penguji_III_id = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan IN (?, ?)", [$kode, $kode, $kode, $kode, $kode, $kode, 0, 2, 3]);
+
+        return view('tugasakhir.dosen.hasil_proposal_history', compact('data'));
+    }
+
     // Detail Halaman Hasil Ujian
     public function detailhasil_proposal($regid)
     {
-        $data_hasil = trt_hasil::where('reg_id', $regid)->where('nidn', auth()->user()->name)->first();
+        $kodeDosen = Helper::getKodeDosenForTrtHasil();
+        $data_hasil = trt_hasil::where('reg_id', $regid)->where('nidn', $kodeDosen)->first();
         $nilai = array();
         if ($data_hasil != null) {
-            $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, trt_hasil, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = trt_hasil.reg_id AND trt_reg.reg_id = ? AND trt_hasil.nidn = ?', [$regid, auth()->user()->name]);
+            $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, trt_hasil, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = trt_hasil.reg_id AND trt_reg.reg_id = ? AND trt_hasil.nidn = ?', [$regid, $kodeDosen]);
+            if (empty($data)) {
+                return response('Data hasil ujian proposal tidak ditemukan.', 404);
+            }
 
             $nilai = [
                 "nilai_1" => $data[0]->nilai_1,
@@ -287,6 +413,9 @@ class dosen extends Controller
             ];
         } else {
             $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = ?', [$regid]);
+            if (empty($data)) {
+                return response('Data hasil ujian proposal tidak ditemukan.', 404);
+            }
             $nilai = [
                 "nilai_1" => null,
                 "nilai_2" => null,
@@ -297,40 +426,61 @@ class dosen extends Controller
             ];
         }
 
-
-
-        return view('tugasakhir.dosen.detailhasil_proposal', compact('data', 'nilai'));
+        return view('tugasakhir.dosen.detailhasil_proposal', compact('data', 'nilai', 'kodeDosen'));
     }
     // Akhir Detail Halaman Hasil Ujian
 
     // Kirim Detail Hasil Proposal
     public function detailhasil_proposalpost(Request $request)
     {
-        $data_hasil = trt_hasil::where('reg_id', $request->reg_id)->where('nidn', auth()->user()->name)->first();
-        if ($data_hasil != null) {
-            trt_hasil::where('reg_id', $request->reg_id)->where('nidn', auth()->user()->name)->update([
+        $kodeDosen = Helper::getKodeDosenForTrtHasil();
+
+        if ($kodeDosen === '') {
+            Log::warning('detailhasil_proposalpost dosen code not found', [
+                'user_name' => auth()->user()->name ?? null,
+                'user_email' => auth()->user()->email ?? null,
+                'resolved_kode_dosen' => $kodeDosen,
                 'reg_id' => $request->reg_id,
-                'nidn' => auth()->user()->name,
-                'nilai_1' => $request->nilai_1,
-                'nilai_2' => $request->nilai_2,
-                'nilai_3' => $request->nilai_3,
-                'nilai_4' => $request->nilai_4,
-                'nilai_5' => $request->nilai_5,
-                'saran' => $request->saran,
             ]);
-        } else {
-            trt_hasil::create([
-                'reg_id' => $request->reg_id,
-                'nidn' => auth()->user()->name,
-                'nilai_1' => $request->nilai_1,
-                'nilai_2' => $request->nilai_2,
-                'nilai_3' => $request->nilai_3,
-                'nilai_4' => $request->nilai_4,
-                'nilai_5' => $request->nilai_5,
-                'saran' => $request->saran,
-            ]);
+            return redirect()->back()->with('error', 'Kode dosen akun login tidak ditemukan. Silakan periksa akun dosen ini.');
         }
-        return redirect::to('dsn/hasil_proposal');
+
+        try {
+            $data_hasil = trt_hasil::where('reg_id', $request->reg_id)->where('nidn', $kodeDosen)->first();
+            if ($data_hasil != null) {
+                trt_hasil::where('reg_id', $request->reg_id)->where('nidn', $kodeDosen)->update([
+                    'reg_id' => $request->reg_id,
+                    'nidn' => $kodeDosen,
+                    'nilai_1' => $request->nilai_1,
+                    'nilai_2' => $request->nilai_2,
+                    'nilai_3' => $request->nilai_3,
+                    'nilai_4' => $request->nilai_4,
+                    'nilai_5' => $request->nilai_5,
+                    'saran' => $request->saran,
+                ]);
+            } else {
+                trt_hasil::create([
+                    'reg_id' => $request->reg_id,
+                    'nidn' => $kodeDosen,
+                    'nilai_1' => $request->nilai_1,
+                    'nilai_2' => $request->nilai_2,
+                    'nilai_3' => $request->nilai_3,
+                    'nilai_4' => $request->nilai_4,
+                    'nilai_5' => $request->nilai_5,
+                    'saran' => $request->saran,
+                ]);
+            }
+            return redirect::to('dsn/hasil_proposal')->with('status', 'Nilai proposal berhasil disimpan.');
+        } catch (\Throwable $th) {
+            Log::error('detailhasil_proposalpost error', [
+                'user_name' => auth()->user()->name ?? null,
+                'user_email' => auth()->user()->email ?? null,
+                'resolved_kode_dosen' => $kodeDosen,
+                'reg_id' => $request->reg_id,
+                'message' => $th->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan nilai proposal.');
+        }
     }
     // Hasil Kirim Detail Hasil Proposal
 
@@ -338,22 +488,34 @@ class dosen extends Controller
     public function hasil_ujianmeja()
     {
         $kode = auth()->user()->name;
-        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id  = ? OR trt_penguji.penguji_II_id  = ? OR trt_penguji.penguji_III_id  = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ?", [$kode, $kode, $kode, $kode, $kode, $kode, 2]);
+        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id  = ? OR trt_penguji.penguji_II_id  = ? OR trt_penguji.penguji_III_id  = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan <> ?", [$kode, $kode, $kode, $kode, $kode, $kode, 2, 3]);
 
         return view('tugasakhir.dosen.hasil_ujianmeja', compact('data'));
     }
     // Akhir Halaman Hasil Ujian Proposal
 
+    public function hasil_ujianmeja_history()
+    {
+        $kode = auth()->user()->name;
+        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id = ? OR trt_penguji.penguji_II_id = ? OR trt_penguji.penguji_III_id = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan = ?", [$kode, $kode, $kode, $kode, $kode, $kode, 2, 3]);
+
+        return view('tugasakhir.dosen.hasil_ujianmeja_history', compact('data'));
+    }
+
     // Detail Halaman Hasil Ujian
     public function detailhasil_ujianmeja($regid)
     {
-        $data_hasil = trt_hasil::where('reg_id', $regid)->where('nidn', auth()->user()->name)->first();
+        $kodeDosen = Helper::getKodeDosenForTrtHasil();
+        $data_hasil = trt_hasil::where('reg_id', $regid)->where('nidn', $kodeDosen)->first();
         $nilai = array();
 
 
 
         if ($data_hasil != null) {
-            $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, trt_hasil, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = trt_hasil.reg_id AND trt_reg.reg_id = ? AND trt_hasil.nidn = ?', [$regid, auth()->user()->name]);
+            $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, trt_hasil, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = trt_hasil.reg_id AND trt_reg.reg_id = ? AND trt_hasil.nidn = ?', [$regid, $kodeDosen]);
+            if (empty($data)) {
+                return response('Data hasil ujian meja tidak ditemukan.', 404);
+            }
 
             $nilai = [
                 "nilai_1" => $data[0]->nilai_1,
@@ -365,6 +527,9 @@ class dosen extends Controller
             ];
         } else {
             $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = ?', [$regid]);
+            if (empty($data)) {
+                return response('Data hasil ujian meja tidak ditemukan.', 404);
+            }
             $nilai = [
                 "nilai_1" => null,
                 "nilai_2" => null,
@@ -375,40 +540,61 @@ class dosen extends Controller
             ];
         }
 
-
-
-        return view('tugasakhir.dosen.detailhasil_ujianmeja', compact('data', 'nilai'));
+        return view('tugasakhir.dosen.detailhasil_ujianmeja', compact('data', 'nilai', 'kodeDosen'));
     }
     // Akhir Detail Halaman Hasil Ujian
 
     // Kirim Detail Hasil Proposal
     public function detailhasil_ujianmejapost(Request $request)
     {
-        $data_hasil = trt_hasil::where('reg_id', $request->reg_id)->where('nidn', auth()->user()->name)->first();
-        if ($data_hasil != null) {
-            trt_hasil::where('reg_id', $request->reg_id)->where('nidn', auth()->user()->name)->update([
+        $kodeDosen = Helper::getKodeDosenForTrtHasil();
+
+        if ($kodeDosen === '') {
+            Log::warning('detailhasil_ujianmejapost dosen code not found', [
+                'user_name' => auth()->user()->name ?? null,
+                'user_email' => auth()->user()->email ?? null,
+                'resolved_kode_dosen' => $kodeDosen,
                 'reg_id' => $request->reg_id,
-                'nidn' => auth()->user()->name,
-                'nilai_1' => $request->nilai_1,
-                'nilai_2' => $request->nilai_2,
-                'nilai_3' => $request->nilai_3,
-                'nilai_4' => $request->nilai_4,
-                'nilai_5' => $request->nilai_5,
-                'saran' => $request->saran,
             ]);
-        } else {
-            trt_hasil::create([
-                'reg_id' => $request->reg_id,
-                'nidn' => auth()->user()->name,
-                'nilai_1' => $request->nilai_1,
-                'nilai_2' => $request->nilai_2,
-                'nilai_3' => $request->nilai_3,
-                'nilai_4' => $request->nilai_4,
-                'nilai_5' => $request->nilai_5,
-                'saran' => $request->saran,
-            ]);
+            return redirect()->back()->with('error', 'Kode dosen akun login tidak ditemukan. Silakan periksa akun dosen ini.');
         }
-        return redirect::to('dsn/hasil_ujianmeja');
+
+        try {
+            $data_hasil = trt_hasil::where('reg_id', $request->reg_id)->where('nidn', $kodeDosen)->first();
+            if ($data_hasil != null) {
+                trt_hasil::where('reg_id', $request->reg_id)->where('nidn', $kodeDosen)->update([
+                    'reg_id' => $request->reg_id,
+                    'nidn' => $kodeDosen,
+                    'nilai_1' => $request->nilai_1,
+                    'nilai_2' => $request->nilai_2,
+                    'nilai_3' => $request->nilai_3,
+                    'nilai_4' => $request->nilai_4,
+                    'nilai_5' => $request->nilai_5,
+                    'saran' => $request->saran,
+                ]);
+            } else {
+                trt_hasil::create([
+                    'reg_id' => $request->reg_id,
+                    'nidn' => $kodeDosen,
+                    'nilai_1' => $request->nilai_1,
+                    'nilai_2' => $request->nilai_2,
+                    'nilai_3' => $request->nilai_3,
+                    'nilai_4' => $request->nilai_4,
+                    'nilai_5' => $request->nilai_5,
+                    'saran' => $request->saran,
+                ]);
+            }
+            return redirect::to('dsn/hasil_ujianmeja')->with('status', 'Nilai ujian meja berhasil disimpan.');
+        } catch (\Throwable $th) {
+            Log::error('detailhasil_ujianmejapost error', [
+                'user_name' => auth()->user()->name ?? null,
+                'user_email' => auth()->user()->email ?? null,
+                'resolved_kode_dosen' => $kodeDosen,
+                'reg_id' => $request->reg_id,
+                'message' => $th->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan nilai ujian meja.');
+        }
     }
     // Hasil Kirim Detail Hasil Proposal
 
@@ -455,6 +641,49 @@ class dosen extends Controller
     }
     // Akhir Ubah Password
 
+    public function kelengkapan_profil_post(Request $request)
+    {
+        $this->validate($request, [
+            'C_KODE_PRODI' => 'required|in:55201,57201',
+            'JENIS_KELAMIN' => 'required|in:Pria,Wanita',
+            'NO_HP' => 'required|max:15',
+            'EMAIL' => 'required|email|max:50',
+            'pangkat' => 'required|max:100',
+            'jabatan_fungsional' => 'required|in:Asisten Ahli,Lektor,Lektor Kepala,Guru Besar',
+        ], [
+            'C_KODE_PRODI.required' => 'Program studi wajib dipilih.',
+            'C_KODE_PRODI.in' => 'Program studi tidak valid.',
+            'JENIS_KELAMIN.required' => 'Jenis kelamin wajib dipilih.',
+            'NO_HP.required' => 'No. HP wajib diisi.',
+            'EMAIL.required' => 'Email wajib diisi.',
+            'EMAIL.email' => 'Format email tidak valid.',
+            'pangkat.required' => 'Pangkat wajib diisi.',
+            'jabatan_fungsional.required' => 'Jabatan fungsional wajib dipilih.',
+        ]);
+
+        $profile = Helper::getCurrentDosenProfileByAuthUser();
+        $kodeDosen = trim((string) ($profile->C_KODE_DOSEN ?? Helper::getKodeDosenFromUser()));
+
+        if ($kodeDosen === '') {
+            return redirect()->to('/')->with('dosen_profile_error', 'Kode dosen akun login tidak ditemukan.');
+        }
+
+        try {
+            $payload = $this->buildKelengkapanProfilDosenPayload($request, $profile, $kodeDosen);
+            $this->syncKelengkapanProfilDosen($payload, $kodeDosen);
+
+            return redirect()->to('/')->with('dosen_profile_success', 'Kelengkapan profil berhasil disimpan.');
+        } catch (Exception $e) {
+            Log::error('kelengkapan_profil_post error', [
+                'kode_dosen' => $kodeDosen,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+            ]);
+
+            return redirect()->to('/')->withInput()->with('dosen_profile_error', 'Kelengkapan profil gagal disimpan.');
+        }
+    }
+
     /**
      * Show the application dashboard.
      *
@@ -489,19 +718,34 @@ class dosen extends Controller
             ->select('*')
             ->where('C_KODE_DOSEN', $id)
             ->first();
+        if (!$data) {
+            $data = helper::getDosenRecordByKode($id);
+        }
+        if (!$data) {
+            return response('Data dosen pembimbing tidak ditemukan.', 404);
+        }
 
-        $data_bimbingan1 = DB::table('trt_bimbingan')
-            ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-            ->join('mst_sk_pembimbing', 'trt_bimbingan.bimbingan_id', '=', 'mst_sk_pembimbing.bimbingan_id')
-            ->where('pembimbing_I_id', $id)
-            ->get();
-
-        $data_bimbingan2 = DB::table('trt_bimbingan')
-            ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-            ->join('mst_sk_pembimbing', 'trt_bimbingan.bimbingan_id', '=', 'mst_sk_pembimbing.bimbingan_id')
-            ->where('pembimbing_II_id', $id)
-            ->get();
+        $data_bimbingan1 = $this->getMahasiswaBimbinganByPeran($id, 'pembimbing_I_id', 'Pembimbing Utama');
+        $data_bimbingan2 = $this->getMahasiswaBimbinganByPeran($id, 'pembimbing_II_id', 'Pembimbing Pendamping');
         $total = count($data_bimbingan1) + count($data_bimbingan2);
+
+        $semuaBimbingan = $data_bimbingan1->merge($data_bimbingan2)->values();
+        $data_bimbingan_aktif = $semuaBimbingan
+            ->filter(function ($item) {
+                return (string) ($item->status_bimbingan ?? '') !== '3';
+            })
+            ->sortBy(function ($item) {
+                return $this->getStatusBimbinganSortOrder($item->status_bimbingan ?? null) . '|' . strtolower(trim((string) ($item->NAMA_MAHASISWA ?? '')));
+            })
+            ->values();
+        $data_bimbingan_lulusan = $semuaBimbingan
+            ->filter(function ($item) {
+                return (string) ($item->status_bimbingan ?? '') === '3';
+            })
+            ->sortBy(function ($item) {
+                return strtolower(trim((string) ($item->NAMA_MAHASISWA ?? '')));
+            })
+            ->values();
 
         $ppropI = DB::table('trt_bimbingan')
             ->where('pembimbing_I_id', $id)
@@ -538,8 +782,8 @@ class dosen extends Controller
         return view('tugasakhir.dosen.detail_pembimbing', compact(
             'data',
             'total',
-            'data_bimbingan1',
-            'data_bimbingan2',
+            'data_bimbingan_aktif',
+            'data_bimbingan_lulusan',
             'ppropI',
             'ppropII',
             'phasilI',
@@ -654,6 +898,9 @@ class dosen extends Controller
             ->select('*')
             ->where('mst_pesan.pesan_id', $id)
             ->first();
+        if (!$data) {
+            return response('Data pesan tidak ditemukan.', 404);
+        }
         trt_konsultasi::where(["pesan_id" => $id, "penerima_id" => auth()->user()->name])->update([
             "status_baca" => 1
         ]);
@@ -692,6 +939,9 @@ class dosen extends Controller
             ->whereNotIn('t_mst_mahasiswa.C_NPM', trt_bimbingan::select("C_NPM"))
             ->select('t_mst_mahasiswa.*', 'trt_topik.*', 'mst_tmp_usulan.*')
             ->first();
+        if (!$data) {
+            return redirect()->back()->with('error', 'Data permintaan pembimbing tidak ditemukan');
+        }
         if ($data->pembimbing_I_id == Auth::user()->name) {
             mst_tmp_usulan::where(["C_NPM" => $mahasiswa, "pembimbing_I_id" => Auth::user()->name])->update([
                 "pembimbing_I_status" => $status
@@ -723,6 +973,9 @@ class dosen extends Controller
         $data = DB::table('mst_pengumuman')
             ->where('pengumuman_id', $id)
             ->first();
+        if (!$data) {
+            return response('Data pengumuman tidak ditemukan.', 404);
+        }
         return view('tugasakhir.mhs.single_pengumuman', compact('data'));
     }
 
@@ -742,6 +995,11 @@ class dosen extends Controller
             ->select('*')
             ->where('mst_sk_pembimbing.nomor_sk', $datapost["nomor"])
             ->get();
+
+        if ($data_sk->isEmpty()) {
+            return response('Data surat SK pembimbing belum lengkap atau tidak ditemukan.', 404);
+        }
+
         $tgl_ujian = helper::tgl_indo_lengkap(date('Y-m-d'));
         return view('tugasakhir.dosen.cetak_sk_pembimbing', compact('data_sk', 'tgl_ujian'));
     }
@@ -824,6 +1082,10 @@ class dosen extends Controller
             ->where("trt_bimbingan.C_NPM", $nim)
             ->first();
 
+        if (!$data || !isset($data->bimbingan_id)) {
+            return response('Data surat SK ujian meja tidak ditemukan.', 404);
+        }
+
         $data_sk = DB::table('mst_sk_penugasan')
             ->join('trt_bimbingan', 'mst_sk_penugasan.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
             ->join('trt_penguji', 'trt_penguji.C_NPM', '=', 'trt_bimbingan.C_NPM')
@@ -835,6 +1097,10 @@ class dosen extends Controller
             ->where('trt_penguji.tipe_ujian', 2)
             ->where('trt_jadwal_ujian.status', 2)
             ->get();
+
+        if ($data_sk->isEmpty()) {
+            return response('Data surat SK ujian meja belum lengkap atau tidak ditemukan.', 404);
+        }
 
         return view('tugasakhir.fakultas.cetakskpenugasan', compact('data_sk'));
     }
@@ -1038,5 +1304,265 @@ class dosen extends Controller
         $request->session()->flash('message', $request->message);
 
         return response()->json(['success' => true]);
+    }
+
+    protected function buildKelengkapanProfilDosenPayload(Request $request, $profile, $kodeDosen)
+    {
+        $now = Carbon::now();
+        $profile = (array) $profile;
+
+        $defaults = [
+            'C_KODE_DOSEN' => $kodeDosen,
+            'C_NIP' => null,
+            'NAMA_DOSEN' => trim((string) ($profile['NAMA_DOSEN'] ?? auth()->user()->name ?? '')),
+            'C_KODE_PRODI' => trim((string) ($profile['C_KODE_PRODI'] ?? '')),
+            'jabatan_id' => null,
+            'JENIS_KELAMIN' => null,
+            'TEMPAT_LAHIR' => null,
+            'TGL_LAHIR' => null,
+            'kota' => null,
+            'ALAMAT' => null,
+            'NO_HP' => null,
+            'website' => null,
+            'pendidikan_terakhir' => null,
+            'waktu_masuk' => null,
+            'foto' => null,
+            'jabatan_fungsional' => null,
+            'ruang' => null,
+            'user_id' => auth()->id(),
+            'created_at' => $this->normalizeSqlDateTimeOrNull($profile['created_at'] ?? null) ?: $now,
+            'updated_at' => $now,
+            'C_KODE_KAB_KOTA' => '',
+            'C_KODE_PROPINSI' => '',
+            'KODE_POS' => '',
+            'NO_TELP' => null,
+            'EMAIL' => trim((string) ($profile['EMAIL'] ?? auth()->user()->email ?? '')),
+            'GOLONGAN_DARAH' => '',
+            'NO_KTP' => '',
+            'C_KODE_AGAMA' => '',
+            'NO_NPWP' => '',
+            'NO_REK_BANK' => '',
+            'ATAS_NAMA_REK' => '',
+            'NAMA_BANK' => '',
+            'NAMA_CAB_BANK' => '',
+            'AKRONIM_DOSEN' => $this->generateAkronimDosen($profile['NAMA_DOSEN'] ?? auth()->user()->name ?? ''),
+            'C_KODE_STATUS_IKATAN_KERJA' => '',
+            'C_KODE_STATUS_BEBAN_KERJA_DOSEN' => '',
+            'SEMESTER_DOSEN_MULAI' => '',
+            'ADA_SERTIFIKAT_MENGAJAR' => '',
+            'ADA_SURAT_IJIN_MENGAJAR' => '',
+            'NIP_PNS' => '',
+            'KODE_INSTANSI_INDUK' => '',
+            'C_KODE_STATUS_AKTIF_DOSEN' => 'A',
+            'SEMESTER_DOSEN_KELUAR' => '',
+            'D_FOTO_DOSEN' => '',
+            'F_AKTIF' => 1,
+            'F_IS_C' => 0,
+            'F_IS_U' => 0,
+            'F_IS_D' => 0,
+            'F_CHANGE_LOG' => 0,
+        ];
+
+        $payload = array_merge($defaults, $profile, [
+            'C_KODE_DOSEN' => $kodeDosen,
+            'C_NIP' => trim((string) ($profile['C_NIP'] ?? '')),
+            'NAMA_DOSEN' => trim((string) ($profile['NAMA_DOSEN'] ?? auth()->user()->name ?? '')),
+            'C_KODE_PRODI' => trim((string) $request->C_KODE_PRODI),
+            'JENIS_KELAMIN' => trim((string) $request->JENIS_KELAMIN),
+            'ALAMAT' => trim((string) ($profile['ALAMAT'] ?? '')),
+            'NO_HP' => trim((string) $request->NO_HP),
+            'EMAIL' => trim((string) $request->EMAIL),
+            'website' => trim((string) $request->pangkat),
+            'jabatan_fungsional' => trim((string) $request->jabatan_fungsional),
+            'AKRONIM_DOSEN' => $this->generateAkronimDosen($profile['NAMA_DOSEN'] ?? auth()->user()->name ?? ''),
+            'C_KODE_STATUS_AKTIF_DOSEN' => ((int) ($profile['F_AKTIF'] ?? 1) === 1 ? 'A' : 'N'),
+            'updated_at' => $now,
+        ]);
+
+        unset($payload['id'], $payload['exists_t_mst_dosen'], $payload['exists_mig_t_mst_dosen'], $payload['nama_prodi']);
+
+        $payload['TGL_LAHIR'] = $this->normalizeSqlDateOrNull($payload['TGL_LAHIR'] ?? null);
+        $payload['waktu_masuk'] = $this->normalizeSqlDateOrNull($payload['waktu_masuk'] ?? null);
+        $payload['created_at'] = $this->normalizeSqlDateTimeOrNull($payload['created_at'] ?? null) ?: $now;
+
+        return $payload;
+    }
+
+    protected function syncKelengkapanProfilDosen(array $payload, $kodeDosen)
+    {
+        DB::beginTransaction();
+        try {
+            $updatePayload = $this->filterKelengkapanProfilDosenUpdatePayload($payload);
+
+            $existsUtama = Schema::hasTable('t_mst_dosen')
+                ? DB::table('t_mst_dosen')->where('C_KODE_DOSEN', $kodeDosen)->exists()
+                : false;
+
+            if ($existsUtama) {
+                DB::table('t_mst_dosen')
+                    ->where('C_KODE_DOSEN', $kodeDosen)
+                    ->update($updatePayload);
+            } elseif (Schema::hasTable('t_mst_dosen')) {
+                DB::table('t_mst_dosen')->insert($payload);
+            }
+
+            $existsMigrasi = Schema::hasTable('mig_t_mst_dosen')
+                ? DB::table('mig_t_mst_dosen')->where('C_KODE_DOSEN', $kodeDosen)->exists()
+                : false;
+
+            if ($existsMigrasi) {
+                DB::table('mig_t_mst_dosen')
+                    ->where('C_KODE_DOSEN', $kodeDosen)
+                    ->update($updatePayload);
+            } elseif (Schema::hasTable('mig_t_mst_dosen')) {
+                DB::table('mig_t_mst_dosen')->insert($payload);
+            }
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    protected function filterKelengkapanProfilDosenUpdatePayload(array $payload)
+    {
+        return array_intersect_key($payload, array_flip([
+            'C_KODE_DOSEN',
+            'C_NIP',
+            'NAMA_DOSEN',
+            'C_KODE_PRODI',
+            'JENIS_KELAMIN',
+            'ALAMAT',
+            'NO_HP',
+            'EMAIL',
+            'website',
+            'jabatan_fungsional',
+            'AKRONIM_DOSEN',
+            'user_id',
+            'C_KODE_STATUS_AKTIF_DOSEN',
+            'F_AKTIF',
+            'updated_at',
+        ]));
+    }
+
+    protected function getMahasiswaBimbinganByPeran($kodeDosen, $kolomPembimbing, $peranPembimbing)
+    {
+        $query = DB::table('trt_bimbingan')
+            ->leftJoin('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->leftJoin('mst_sk_pembimbing', 'trt_bimbingan.bimbingan_id', '=', 'mst_sk_pembimbing.bimbingan_id')
+            ->select(
+                'trt_bimbingan.bimbingan_id',
+                'trt_bimbingan.C_NPM',
+                'trt_bimbingan.status_bimbingan',
+                't_mst_mahasiswa.NAMA_MAHASISWA',
+                'mst_sk_pembimbing.nomor_sk',
+                'mst_sk_pembimbing.created_at as tanggal_sk'
+            )
+            ->where('trt_bimbingan.' . $kolomPembimbing, $kodeDosen)
+            ->orderBy('t_mst_mahasiswa.NAMA_MAHASISWA', 'asc')
+            ->distinct();
+
+        if (Schema::hasTable('trt_kontak_mahasiswa')) {
+            $query->leftJoin('trt_kontak_mahasiswa', 'trt_kontak_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+                ->addSelect('trt_kontak_mahasiswa.no_wa', 'trt_kontak_mahasiswa.id_telegram');
+        }
+
+        return $query->get()->map(function ($item) use ($peranPembimbing) {
+            $item->peran_pembimbing = $peranPembimbing;
+            $item->label_status_bimbingan = $this->getStatusBimbinganLabel($item->status_bimbingan ?? null);
+            $item->kontak_mahasiswa = $this->formatKontakMahasiswa($item->no_wa ?? null, $item->id_telegram ?? null);
+            return $item;
+        });
+    }
+
+    protected function getStatusBimbinganLabel($status)
+    {
+        switch ((string) $status) {
+            case '0':
+                return 'Persiapan Proposal';
+            case '1':
+                return 'Persiapan Seminar Hasil';
+            case '2':
+                return 'Persiapan Ujian Meja';
+            case '3':
+                return 'Lulusan';
+            case '4':
+                return 'Non Aktif';
+            default:
+                return '-';
+        }
+    }
+
+    protected function getStatusBimbinganSortOrder($status)
+    {
+        switch ((string) $status) {
+            case '0':
+                return '01';
+            case '1':
+                return '02';
+            case '2':
+                return '03';
+            case '4':
+                return '04';
+            case '3':
+                return '05';
+            default:
+                return '99';
+        }
+    }
+
+    protected function formatKontakMahasiswa($noWa = null, $idTelegram = null)
+    {
+        $parts = [];
+        $noWa = trim((string) $noWa);
+        $idTelegram = trim((string) $idTelegram);
+
+        if ($noWa !== '') {
+            $parts[] = 'WA: ' . $noWa;
+        }
+
+        if ($idTelegram !== '') {
+            $parts[] = 'Telegram: ' . $idTelegram;
+        }
+
+        return empty($parts) ? '-' : implode("\n", $parts);
+    }
+
+    protected function normalizeSqlDateOrNull($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '' || $value === '0000-00-00') {
+            return null;
+        }
+
+        return $value;
+    }
+
+    protected function normalizeSqlDateTimeOrNull($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '' || $value === '0000-00-00 00:00:00') {
+            return null;
+        }
+
+        return $value;
+    }
+
+    protected function generateAkronimDosen($namaDosen)
+    {
+        $parts = preg_split('/[^A-Za-z0-9]+/', strtoupper(trim((string) $namaDosen)));
+        $akronim = '';
+
+        foreach ($parts as $part) {
+            if ($part !== '') {
+                $akronim .= substr($part, 0, 1);
+            }
+        }
+
+        $akronim = substr($akronim, 0, 20);
+        return $akronim !== '' ? $akronim : substr(strtoupper(preg_replace('/\s+/', '', (string) $namaDosen)), 0, 20);
     }
 }

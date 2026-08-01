@@ -17,6 +17,12 @@
 
         <h3 class="page-heading">Hasil Ujian</h3>
         <!-- BEGIN DATA TABLE -->
+        @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+        @if (session('status'))
+        <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
         <div class="row">
 
             <div class="col-md-8">
@@ -27,10 +33,25 @@
                             {{ csrf_field() }}
                             <input type="hidden" name="reg_id" value="{{$data[0]->reg_id}}">
                             <div class="form-group">
+                                <label class="col-lg-4 control-label">NIM</label>
+                                <div class="col-lg-8">
+                                    <input type="text" class="form-control bold-border"
+                                        value="{{$data[0]->C_NPM}}" disabled />
+                                </div>
+                            </div>
+                            <br><br>
+                            <div class="form-group">
                                 <label class="col-lg-4 control-label">Nama</label>
                                 <div class="col-lg-8">
                                     <input type="text" class="form-control bold-border" name="nama"
                                         value="{{$data[0]->NAMA_MAHASISWA}}" disabled />
+                                </div>
+                            </div>
+                            <br><br>
+                            <div class="form-group">
+                                <label class="col-lg-4 control-label">Judul Tugas Akhir</label>
+                                <div class="col-lg-8">
+                                    <textarea class="form-control bold-border" rows="3" disabled>{{ $data[0]->judul }}</textarea>
                                 </div>
                             </div>
                             <br><br>

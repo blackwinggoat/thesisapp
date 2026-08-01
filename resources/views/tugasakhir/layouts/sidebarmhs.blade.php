@@ -48,6 +48,12 @@
             </a>
         </li>
         <li>
+            <a href="{{ url('mhs/dosen') }}">
+                <i class="fa fa-users icon-sidebar"></i>
+                Daftar Dosen
+            </a>
+        </li>
+        <li>
             <a href="#fakelink">
                 <i class="fa fa-envelope icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
@@ -96,6 +102,5 @@
     </ul>
 </div><!-- /.sidebar-left -->
 <!-- END SIDEBAR LEFT -->
-
 
 

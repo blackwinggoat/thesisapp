@@ -373,6 +373,10 @@ Apakah Anda yakin ingin menghapus data?
         }        
     });
     const initStatusPembimbing = e => {
+        if (!e) {
+            return;
+        }
+
         let id = e.value;
         let index = e.getAttribute("index");
         let status0 = document.getElementById("status0");

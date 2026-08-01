@@ -1,9 +1,11 @@
-@if ($data[0]->status_bimbingan == 0)
+@if ($status == 0)
 @section('tambahan', "- Mahasiswa Persiapan Ujian Proposal")
-@elseif($data[0]->status_bimbingan == 2)
-@section('tambahan', "- Mahasiswa Persiapan Ujian Proposal")
-@elseif($data[0]->status_bimbingan == 3)
+@elseif($status == 2)
+@section('tambahan', "- Mahasiswa Persiapan Ujian TA")
+@elseif($status == 3)
 @section('tambahan', "- Lulusan Mahasiswa")
+@elseif($status == 4)
+@section('tambahan', "- Mahasiswa Non Aktif")
 @endif
 
 @extends('tugasakhir.index')
@@ -28,13 +30,15 @@
         <h3 class="page-heading">Daftar Peserta Persiapan Ujian Proposal</h3>
         @elseif($status == 2)
         <h3 class="page-heading">Daftar Peserta Perisapan Ujian TA</h3>
-        @else
+        @elseif($status == 3)
         <h3 class="page-heading">Daftar Lulusan</h3>
+        @else
+        <h3 class="page-heading">Daftar Mahasiswa Non Aktif</h3>
         @endif
         <div class="the-box">
             <div class="text-left">
                 <div class="row">
-                    <form action="{{route('tampilDetailStatusBimbinganDenganFilterTanggal')}}" method="get">
+                    <form action="{{ $filterActionRoute ?? route('tampilDetailStatusBimbinganDenganFilterTanggal') }}" method="get">
                         @csrf
                         <input type="hidden" name="status" value="{{$status}}">
                         <div class="col-md-8"></div>
@@ -47,7 +51,7 @@
                                             <div class="col-md-10">
                                                 <input type="text" class="form-control datepicker bold-border"
                                                     data-date-format="yyyy-mm-dd" placeholder="TAHUN-BULAN-HARI"
-                                                    name="tanggal_dari">
+                                                    name="tanggal_dari" value="{{ request('tanggal_dari') }}">
                                             </div>
                                         </div>
                                     </div>
@@ -60,7 +64,7 @@
                                             <div class="col-md-10">
                                                 <input type="text" class="form-control datepicker bold-border"
                                                     data-date-format="yyyy-mm-dd" placeholder="TAHUN-BULAN-HARI"
-                                                    name="tanggal_sampai">
+                                                    name="tanggal_sampai" value="{{ request('tanggal_sampai') }}">
                                             </div>
                                         </div>
                                     </div>
@@ -71,7 +75,7 @@
                                         style="margin-top: 5px; margin-left: 25px;">Filter</button>
                                 </div>
                                 <div class="col-md-4">
-                                    <a href="{{url('prodi/detail_status_bimbingan_mahasiswa')}}/{{$status}}" class="btn btn-danger btn-block"
+                                    <a href="{{ $resetUrl ?? url('prodi/detail_status_bimbingan_mahasiswa/' . $status) }}" class="btn btn-danger btn-block"
                                         style="margin-top: 5px">Reset</a>
                                 </div>
                             </div>
@@ -93,21 +97,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($data as $i => $d)
+                        @forelse($data as $i => $d)
                         <tr class="odd gradeX">
                             <td width="1%" align="center">{{++$i}}</td>
                             <td>{{$d->C_NPM}}</td>
                             <td>{{helper::getNamaMhs($d->C_NPM)}}</td>
-                            @php
-                            $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                            $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                            @endphp
-                            <td>{{$pembimbing1->NAMA_DOSEN}}</td>
-                            <td>{{$pembimbing2->NAMA_DOSEN}}</td>
+                            <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</td>
+                            <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</td>
                             <td>{{$d->judul}}</td>
                             <td>{{$d->updated_at}}</td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="7" class="text-center">Belum ada data mahasiswa pada status ini.</td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div><!-- /.table-responsive -->

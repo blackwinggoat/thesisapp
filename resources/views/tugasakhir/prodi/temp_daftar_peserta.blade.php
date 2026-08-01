@@ -30,6 +30,7 @@
                 <label class="col-lg-2 control-label">Tipe Ujian</label>
                 <div class="col-lg-6">
                     @php
+                    $tipe = '-';
                     if($info[0]->tipe_ujian == 0):
                     $tipe = "Proposal";
                     elseif($info[0]->tipe_ujian == 2):
@@ -58,19 +59,15 @@
                         </thead>
                         <tbody>
 
-                            @foreach($data as $i => $d)
+                            @forelse($data as $i => $d)
                             <tr class="odd gradeX">
                                 <input type="hidden" name="C_NPM[]" value="{{$d->C_NPM}}">
                                 <td width="1%" align="center">{{++$i}}</td>
                                 <td>{{$d->C_NPM}}</td>
                                 <td>{{$d->NAMA_MAHASISWA}}</td>
                                 <td>{{$d->judul}}</td>
-                                @php
-                                $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                                $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                                @endphp
-                                <td>{{$pembimbing1->NAMA_DOSEN}}</td>
-                                <td>{{$pembimbing2->NAMA_DOSEN}}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</td>
                                 <input type="hidden" name="status_ujian" value="{{$d->status_ujian}}">
                                 <input type="hidden" name="tipe_ujian" value="{{$info[0]->tipe_ujian}}">
                                 <td>
@@ -87,11 +84,17 @@
                                             class="fa fa-trash-o"></i></a>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="8" class="text-center">Belum ada peserta pada periode ini.</td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
+                @if(count($data) > 0)
                 <input type="submit" value="Ubah Periode" class="btn btn-info">
+                @endif
             </form>
         </div>
     </div><!-- /.container-fluid -->

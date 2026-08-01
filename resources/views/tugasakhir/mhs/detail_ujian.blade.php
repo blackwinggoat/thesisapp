@@ -2,28 +2,29 @@
 @section('isi')
 <!-- BEGIN PAGE CONTENT -->
 @php
+$ujian = $data[0];
 $data_count_nilai = 0;
-if (helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_I_id, $data[0]->reg_id) != 0) {
+if (helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_I_id, $ujian->reg_id) != 0) {
 $data_count_nilai = $data_count_nilai+ 1;
 }
 
-if (helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_II_id, $data[0]->reg_id) != 0) {
+if (helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_II_id, $ujian->reg_id) != 0) {
 $data_count_nilai = $data_count_nilai+ 1;
 }
 
-if (helper::getTotalNilaByNidnAndRegId($data[0]->penguji_I_id, $data[0]->reg_id) != 0) {
+if (helper::getTotalNilaByNidnAndRegId($ujian->penguji_I_id, $ujian->reg_id) != 0) {
 $data_count_nilai = $data_count_nilai+ 1;
 }
 
-if (helper::getTotalNilaByNidnAndRegId($data[0]->penguji_II_id, $data[0]->reg_id) != 0) {
+if (helper::getTotalNilaByNidnAndRegId($ujian->penguji_II_id, $ujian->reg_id) != 0) {
 $data_count_nilai = $data_count_nilai+ 1;
 }
 
-if (helper::getTotalNilaByNidnAndRegId($data[0]->penguji_III_id, $data[0]->reg_id) != 0) {
+if (helper::getTotalNilaByNidnAndRegId($ujian->penguji_III_id, $ujian->reg_id) != 0) {
 $data_count_nilai = $data_count_nilai+ 1;
 }
 
-if (helper::getTotalNilaByNidnAndRegId($data[0]->ketua_sidang_id, $data[0]->reg_id) != 0) {
+if (helper::getTotalNilaByNidnAndRegId($ujian->ketua_sidang_id, $ujian->reg_id) != 0) {
 $data_count_nilai = $data_count_nilai+ 1;
 }
 
@@ -52,7 +53,7 @@ $data_count_nilai = $data_count_nilai+ 1;
                     <label class="col-lg-2 control-label">NIM</label>
                     <div class="col-lg-6">
                         <input type="text" class="form-control bold-border" name="nim" disabled
-                            value="{{$data[0]->C_NPM}}" />
+                            value="{{$ujian->C_NPM}}" />
                     </div>
                 </div>
                 <br><br>
@@ -60,15 +61,15 @@ $data_count_nilai = $data_count_nilai+ 1;
                     <label class="col-lg-2 control-label">Nama</label>
                     <div class="col-lg-6">
                         <input type="text" class="form-control bold-border" name="nama" disabled
-                            value="{{$data[0]->NAMA_MAHASISWA}}" />
+                            value="{{$ujian->NAMA_MAHASISWA}}" />
                     </div>
                 </div>
                 <br><br>
                 @php
                 $nama_tipe_ujian = "";
-                if ($data[0]->tipe_ujian == 0) {
+                if ($ujian->tipe_ujian == 0) {
                 $nama_tipe_ujian = "Proposal";
-                }else if($data[0]->tipe_ujian == 2){
+                }else if($ujian->tipe_ujian == 2){
                 $nama_tipe_ujian = "Ujian Meja";
                 }
                 @endphp
@@ -87,7 +88,7 @@ $data_count_nilai = $data_count_nilai+ 1;
                         <input type="text" class="form-control bold-border" name="nilai_ujian" disabled value="0" />
                         @else
                         <input type="text" class="form-control bold-border" name="nilai_ujian" disabled
-                            value="{{((helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_I_id, $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_II_id, $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->penguji_I_id, $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->penguji_II_id, $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->penguji_III_id, $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->ketua_sidang_id, $data[0]->reg_id))/$data_count_nilai)}}" />
+                            value="{{((helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_I_id, $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_II_id, $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->penguji_I_id, $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->penguji_II_id, $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->penguji_III_id, $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->ketua_sidang_id, $ujian->reg_id))/$data_count_nilai)}}" />
                         @endif
                     </div>
                 </div>
@@ -100,13 +101,13 @@ $data_count_nilai = $data_count_nilai+ 1;
                         if ($data_count_nilai == 0) {
                             $nilai_final = 0;
                         } else {
-                        $nilai_final = ((helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_I_id,
-                        $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_II_id,
-                        $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->penguji_I_id,
-                        $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->penguji_II_id,
-                        $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->penguji_III_id,
-                        $data[0]->reg_id)+helper::getTotalNilaByNidnAndRegId($data[0]->ketua_sidang_id,
-                        $data[0]->reg_id))/$data_count_nilai);
+                        $nilai_final = ((helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_I_id,
+                        $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_II_id,
+                        $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->penguji_I_id,
+                        $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->penguji_II_id,
+                        $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->penguji_III_id,
+                        $ujian->reg_id)+helper::getTotalNilaByNidnAndRegId($ujian->ketua_sidang_id,
+                        $ujian->reg_id))/$data_count_nilai);
                         }
                         
                         $index_nilai = "";
@@ -174,12 +175,12 @@ $data_count_nilai = $data_count_nilai+ 1;
                 </div>
                 <br>
                 @php
-                $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$data[0]->pembimbing_I_id)->first();
-                $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$data[0]->pembimbing_II_id)->first();
-                $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$data[0]->penguji_I_id)->first();
-                $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$data[0]->penguji_II_id)->first();
-                $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$data[0]->penguji_III_id)->first();
-                $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$data[0]->ketua_sidang_id)->first();
+                $pembimbing1 = helper::getNamaDosenByKode($ujian->pembimbing_I_id);
+                $pembimbing2 = helper::getNamaDosenByKode($ujian->pembimbing_II_id);
+                $penguji1 = helper::getNamaDosenByKode($ujian->penguji_I_id);
+                $penguji2 = helper::getNamaDosenByKode($ujian->penguji_II_id);
+                $penguji3 = helper::getNamaDosenByKode($ujian->penguji_III_id);
+                $ketuasidang = helper::getNamaDosenByKode($ujian->ketua_sidang_id);
                 @endphp
                 <div class="form-group">
                     <div class="table-responsive col-lg-8">
@@ -201,7 +202,7 @@ $data_count_nilai = $data_count_nilai+ 1;
                             <tbody>
                                 <tr>
                                     <td>1</td>
-                                    @if ($data[0]->tipe_ujian == 0)
+                                    @if ($ujian->tipe_ujian == 0)
                                     <td>Pembimbig Utama & Ketua Sidang</td>
                                     @else
                                     <td>Ketua Sidang</td>
@@ -211,27 +212,27 @@ $data_count_nilai = $data_count_nilai+ 1;
                                         @if ($ketuasidang == null)
                                         {{"-"}}
                                         @else
-                                        {{$ketuasidang->NAMA_DOSEN}}
+                                        {{$ketuasidang}}
                                         @endif
                                     </td>
-                                    <td>{{helper::getSaranByNidnAndRegId($data[0]->ketua_sidang_id, $data[0]->reg_id)}}
+                                    <td>{{helper::getSaranByNidnAndRegId($ujian->ketua_sidang_id, $ujian->reg_id)}}
                                     </td>
                                     @if (Auth::user()->level == 7 || Auth::user()->level == 6 || Auth::user()->level == 4)
-                                        <td>{{helper::getTotalNilaByNidnAndRegId($data[0]->ketua_sidang_id, $data[0]->reg_id)}}
+                                        <td>{{helper::getTotalNilaByNidnAndRegId($ujian->ketua_sidang_id, $ujian->reg_id)}}
                                     </td>
-                                    @if (helper::getTotalNilaByNidnAndRegId($data[0]->ketua_sidang_id, $data[0]->reg_id)
+                                    @if (helper::getTotalNilaByNidnAndRegId($ujian->ketua_sidang_id, $ujian->reg_id)
                                     == 0)
                                     <td><a href="#" class="btn btn-info disabled"><i class="fa fa-file-text"></i>Belum
                                             Ada Penilaian</a></td>
                                     @else
 
-                                    @if ($data[0]->tipe_ujian == 0)
+                                    @if ($ujian->tipe_ujian == 0)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$data[0]->ketua_sidang_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/1"
+                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$ujian->ketua_sidang_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/1"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
-                                    @elseif($data[0]->tipe_ujian == 2)
+                                    @elseif($ujian->tipe_ujian == 2)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$data[0]->ketua_sidang_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/1"
+                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$ujian->ketua_sidang_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/1"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
                                     @endif
                                     @endif
@@ -246,27 +247,27 @@ $data_count_nilai = $data_count_nilai+ 1;
                                         @if ($penguji1 == null)
                                         {{"-"}}
                                         @else
-                                        {{$penguji1->NAMA_DOSEN}}
+                                        {{$penguji1}}
                                         @endif
                                     </td>
-                                    <td>{{helper::getSaranByNidnAndRegId($data[0]->penguji_I_id, $data[0]->reg_id)}}
+                                    <td>{{helper::getSaranByNidnAndRegId($ujian->penguji_I_id, $ujian->reg_id)}}
                                     </td>
                                     @if (Auth::user()->level == 7 || Auth::user()->level == 6 || Auth::user()->level == 4)
-                                        <td>{{helper::getTotalNilaByNidnAndRegId($data[0]->penguji_I_id, $data[0]->reg_id)}}
+                                        <td>{{helper::getTotalNilaByNidnAndRegId($ujian->penguji_I_id, $ujian->reg_id)}}
                                     </td>
-                                    @if (helper::getTotalNilaByNidnAndRegId($data[0]->penguji_I_id, $data[0]->reg_id) ==
+                                    @if (helper::getTotalNilaByNidnAndRegId($ujian->penguji_I_id, $ujian->reg_id) ==
                                     0)
                                     <td><a href="#" class="btn btn-info disabled"><i class="fa fa-file-text"></i>Belum
                                             Ada Penilaian</a></td>
                                     @else
 
-                                    @if ($data[0]->tipe_ujian == 0)
+                                    @if ($ujian->tipe_ujian == 0)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$data[0]->penguji_I_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/2"
+                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$ujian->penguji_I_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/2"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
-                                    @elseif($data[0]->tipe_ujian == 2)
+                                    @elseif($ujian->tipe_ujian == 2)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$data[0]->penguji_I_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/2"
+                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$ujian->penguji_I_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/2"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
                                     @endif
                                     @endif
@@ -282,27 +283,27 @@ $data_count_nilai = $data_count_nilai+ 1;
                                         @if ($penguji2 == null)
                                         {{"-"}}
                                         @else
-                                        {{$penguji2->NAMA_DOSEN}}
+                                        {{$penguji2}}
                                         @endif
                                     </td>
-                                    <td>{{helper::getSaranByNidnAndRegId($data[0]->penguji_II_id, $data[0]->reg_id)}}
+                                    <td>{{helper::getSaranByNidnAndRegId($ujian->penguji_II_id, $ujian->reg_id)}}
                                     </td>
                                     @if (Auth::user()->level == 7 || Auth::user()->level == 6 || Auth::user()->level == 4)
-                                        <td>{{helper::getTotalNilaByNidnAndRegId($data[0]->penguji_II_id, $data[0]->reg_id)}}
+                                        <td>{{helper::getTotalNilaByNidnAndRegId($ujian->penguji_II_id, $ujian->reg_id)}}
                                     </td>
-                                    @if (helper::getTotalNilaByNidnAndRegId($data[0]->penguji_II_id, $data[0]->reg_id)
+                                    @if (helper::getTotalNilaByNidnAndRegId($ujian->penguji_II_id, $ujian->reg_id)
                                     == 0)
                                     <td><a href="#" class="btn btn-info disabled"><i class="fa fa-file-text"></i>Belum
                                             Ada Penilaian</a></td>
                                     @else
 
-                                    @if ($data[0]->tipe_ujian == 0)
+                                    @if ($ujian->tipe_ujian == 0)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$data[0]->penguji_II_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/3"
+                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$ujian->penguji_II_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/3"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
-                                    @elseif($data[0]->tipe_ujian == 2)
+                                    @elseif($ujian->tipe_ujian == 2)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$data[0]->penguji_II_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/3"
+                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$ujian->penguji_II_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/3"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
                                     @endif
                                     @endif
@@ -318,26 +319,26 @@ $data_count_nilai = $data_count_nilai+ 1;
                                         @if ($penguji3 == null)
                                         {{"-"}}
                                         @else
-                                        {{$penguji3->NAMA_DOSEN}}
+                                        {{$penguji3}}
                                         @endif
                                     </td>
-                                    <td>{{helper::getSaranByNidnAndRegId($data[0]->penguji_III_id, $data[0]->reg_id)}}
+                                    <td>{{helper::getSaranByNidnAndRegId($ujian->penguji_III_id, $ujian->reg_id)}}
                                     </td>
                                     @if (Auth::user()->level == 7 || Auth::user()->level == 6 || Auth::user()->level == 4)
-                                        <td>{{helper::getTotalNilaByNidnAndRegId($data[0]->penguji_III_id, $data[0]->reg_id)}}
+                                        <td>{{helper::getTotalNilaByNidnAndRegId($ujian->penguji_III_id, $ujian->reg_id)}}
                                     </td>
-                                    @if (helper::getTotalNilaByNidnAndRegId($data[0]->penguji_III_id, $data[0]->reg_id)
+                                    @if (helper::getTotalNilaByNidnAndRegId($ujian->penguji_III_id, $ujian->reg_id)
                                     == 0)
                                     <td><a href="#" class="btn btn-info disabled"><i class="fa fa-file-text"></i>Belum
                                             Ada Penilaian</a></td>
                                     @else
-                                    @if ($data[0]->tipe_ujian == 0)
+                                    @if ($ujian->tipe_ujian == 0)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$data[0]->penguji_III_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/4"
+                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$ujian->penguji_III_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/4"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
-                                    @elseif($data[0]->tipe_ujian == 2)
+                                    @elseif($ujian->tipe_ujian == 2)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$data[0]->penguji_III_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/4"
+                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$ujian->penguji_III_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/4"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
                                     @endif
                                     @endif
@@ -346,7 +347,7 @@ $data_count_nilai = $data_count_nilai+ 1;
                                     @endif
 
                                 </tr>
-                                @if ($data[0]->tipe_ujian == 0)
+                                @if ($ujian->tipe_ujian == 0)
                                 @else
                                 <tr>
                                     <td>5</td>
@@ -355,28 +356,28 @@ $data_count_nilai = $data_count_nilai+ 1;
                                         @if ($pembimbing1 == null)
                                         {{"-"}}
                                         @else
-                                        {{$pembimbing1->NAMA_DOSEN}}
+                                        {{$pembimbing1}}
                                         @endif
                                     </td>
-                                    <td>{{helper::getSaranByNidnAndRegId($data[0]->pembimbing_I_id, $data[0]->reg_id)}}
+                                    <td>{{helper::getSaranByNidnAndRegId($ujian->pembimbing_I_id, $ujian->reg_id)}}
                                     </td>
                                     @if (Auth::user()->level == 7 || Auth::user()->level == 6 || Auth::user()->level == 4)
-                                        <td>{{helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_I_id, $data[0]->reg_id)}}
+                                        <td>{{helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_I_id, $ujian->reg_id)}}
                                     </td>
 
-                                    @if (helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_I_id, $data[0]->reg_id)
+                                    @if (helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_I_id, $ujian->reg_id)
                                     == 0)
                                     <td><a href="#" class="btn btn-info disabled"><i class="fa fa-file-text"></i>Belum
                                             Ada Penilaian</a></td>
                                     @else
 
-                                    @if ($data[0]->tipe_ujian == 0)
+                                    @if ($ujian->tipe_ujian == 0)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$data[0]->pembimbing_I_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/5"
+                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$ujian->pembimbing_I_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/5"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
-                                    @elseif($data[0]->tipe_ujian == 2)
+                                    @elseif($ujian->tipe_ujian == 2)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$data[0]->pembimbing_I_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/5"
+                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$ujian->pembimbing_I_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/5"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
                                     @endif
                                     @endif
@@ -397,27 +398,27 @@ $data_count_nilai = $data_count_nilai+ 1;
                                         @if ($pembimbing2 == null)
                                         {{"-"}}
                                         @else
-                                        {{$pembimbing2->NAMA_DOSEN}}
+                                        {{$pembimbing2}}
                                         @endif
                                     </td>
-                                    <td>{{helper::getSaranByNidnAndRegId($data[0]->pembimbing_II_id, $data[0]->reg_id)}}
+                                    <td>{{helper::getSaranByNidnAndRegId($ujian->pembimbing_II_id, $ujian->reg_id)}}
                                     </td>
                                     @if (Auth::user()->level == 7 || Auth::user()->level == 6 || Auth::user()->level == 4)
-                                        <td>{{helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_II_id, $data[0]->reg_id)}}
+                                        <td>{{helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_II_id, $ujian->reg_id)}}
                                     </td>
-                                    @if (helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_II_id,
-                                    $data[0]->reg_id) == 0)
+                                    @if (helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_II_id,
+                                    $ujian->reg_id) == 0)
                                     <td><a href="#" class="btn btn-info disabled"><i class="fa fa-file-text"></i>Belum
                                             Ada Penilaian</a></td>
                                     @else
 
-                                    @if ($data[0]->tipe_ujian == 0)
+                                    @if ($ujian->tipe_ujian == 0)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$data[0]->pembimbing_II_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/6"
+                                            href="{{ url("dsn/detailhasil_proposal/")}}/{{$ujian->pembimbing_II_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/6"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
-                                    @elseif($data[0]->tipe_ujian == 2)
+                                    @elseif($ujian->tipe_ujian == 2)
                                     <td><a target="_blank"
-                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$data[0]->pembimbing_II_id}}/{{$data[0]->reg_id}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/6"
+                                            href="{{ url("dsn/detailhasil_ujianmeja/")}}/{{$ujian->pembimbing_II_id}}/{{$ujian->reg_id}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/6"
                                             class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a></td>
                                     @endif
 
@@ -431,12 +432,12 @@ $data_count_nilai = $data_count_nilai+ 1;
                         </table>
                     </div>
                     @if (Auth::user()->level == 7 || Auth::user()->level == 6 || Auth::user()->level == 4)
-                        @if ((helper::getTotalNilaByNidnAndRegId($data[0]->penguji_I_id, $data[0]->reg_id) == 0) ||
-                    (helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_II_id, $data[0]->reg_id) == 0) ||
-                    (helper::getTotalNilaByNidnAndRegId($data[0]->pembimbing_I_id, $data[0]->reg_id) == 0) ||
-                    (helper::getTotalNilaByNidnAndRegId($data[0]->penguji_II_id, $data[0]->reg_id) == 0) ||
-                    (helper::getTotalNilaByNidnAndRegId($data[0]->penguji_III_id, $data[0]->reg_id) == 0) ||
-                    (helper::getTotalNilaByNidnAndRegId($data[0]->ketua_sidang_id, $data[0]->reg_id) == 0) )
+                        @if ((helper::getTotalNilaByNidnAndRegId($ujian->penguji_I_id, $ujian->reg_id) == 0) ||
+                    (helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_II_id, $ujian->reg_id) == 0) ||
+                    (helper::getTotalNilaByNidnAndRegId($ujian->pembimbing_I_id, $ujian->reg_id) == 0) ||
+                    (helper::getTotalNilaByNidnAndRegId($ujian->penguji_II_id, $ujian->reg_id) == 0) ||
+                    (helper::getTotalNilaByNidnAndRegId($ujian->penguji_III_id, $ujian->reg_id) == 0) ||
+                    (helper::getTotalNilaByNidnAndRegId($ujian->ketua_sidang_id, $ujian->reg_id) == 0) )
                     <div class="form-group">
                         <div class="col-xs-8" align="right">
                             <a class="btn btn-info btn-perspective disabled" target="_blank">Belum Bisa Dicetak</a>
@@ -445,13 +446,13 @@ $data_count_nilai = $data_count_nilai+ 1;
                     @else
                     <div class="form-group">
                         <div class="col-xs-8" align="right">
-                            @if ($data[0]->tipe_ujian == 0)
+                            @if ($ujian->tipe_ujian == 0)
                             <a class="btn btn-info btn-perspective"
-                                href="{{url('dsn/lembaran_hasilujian_proposal/')}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/{{$data[0]->reg_id}}"
+                                href="{{url('dsn/lembaran_hasilujian_proposal/')}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/{{$ujian->reg_id}}"
                                 target="_blank">Cetak</a>
-                            @elseif($data[0]->tipe_ujian == 2)
+                            @elseif($ujian->tipe_ujian == 2)
                             <a class="btn btn-info btn-perspective"
-                                href="{{url('dsn/lembaran_hasilujian_ujian_ta/')}}/{{$data[0]->pendaftaran_id}}/{{$data[0]->C_NPM}}/{{$data[0]->reg_id}}"
+                                href="{{url('dsn/lembaran_hasilujian_ujian_ta/')}}/{{$ujian->pendaftaran_id}}/{{$ujian->C_NPM}}/{{$ujian->reg_id}}"
                                 target="_blank">Cetak</a>
                             @endif
                         </div>

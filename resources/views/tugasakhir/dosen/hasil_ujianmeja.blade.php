@@ -16,10 +16,15 @@
             <!-- End breadcrumb -->
 
             <!-- BEGIN DATA TABLE -->
-            <h3 class="page-heading">Berita Acara</h3>
+            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <h3 class="page-heading" style="margin: 0;">Penilaian Ujian Akhir</h3>
+                <a href="{{ url('dsn/hasil_ujianmeja_history') }}" class="btn btn-primary btn-sm">
+                    <i class="fa fa-history"></i> History
+                </a>
+            </div>
             <div class="the-box">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover" id="datatable-example">
+                    <table class="table table-striped table-hover" id="datatable-hasil-ujianakhir">
                         <thead class="the-box dark full">
                         <tr>
                             <th>No</th>
@@ -40,76 +45,67 @@
                                 <td width="1%" align="center">{{++$i}}</td>
                                 <td>{{$d->C_NPM}}</td>
                                 <td>{{$d->NAMA_MAHASISWA}}</td>
-                                @php
-                                    $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                                    $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                                    $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_I_id)->first();
-                                    $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_II_id)->first();
-                                    $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_III_id)->first();
-                                    $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$d->ketua_sidang_id)->first();
-                                @endphp
                                 <td>
-                                    
-                                    @if ($pembimbing1->C_KODE_DOSEN == auth()->user()->name)
-                                            <b>{{$pembimbing1->NAMA_DOSEN}}</b>
+                                    @if ($d->pembimbing_I_id == auth()->user()->name)
+                                            <b>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</b>
                                         @else
-                                            {{$pembimbing1->NAMA_DOSEN}}
+                                            {{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}
                                         @endif
                                 </td>
                                 <td>
-                                    @if ($pembimbing2->C_KODE_DOSEN == auth()->user()->name)
-                                            <b>{{$pembimbing2->NAMA_DOSEN}}</b>
+                                    @if ($d->pembimbing_II_id == auth()->user()->name)
+                                            <b>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</b>
                                         @else
-                                            {{$pembimbing2->NAMA_DOSEN}}
+                                            {{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}
                                         @endif
                                 </td>
                                 <td>
-                                    @if ($penguji1 == null)
+                                    @if (empty($d->penguji_I_id))
                                         {{"-"}}
                                     @else
-                                        @if ($penguji1->C_KODE_DOSEN == auth()->user()->name)
-                                            <b>{{$penguji1->NAMA_DOSEN}}</b>
+                                        @if ($d->penguji_I_id == auth()->user()->name)
+                                            <b>{{ helper::getNamaDosenByKode($d->penguji_I_id) }}</b>
                                         @else
-                                            {{$penguji1->NAMA_DOSEN}}
+                                            {{ helper::getNamaDosenByKode($d->penguji_I_id) }}
                                         @endif
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($penguji2 == null)
+                                    @if (empty($d->penguji_II_id))
                                         {{"-"}}
                                     @else
-                                        @if ($penguji2->C_KODE_DOSEN == auth()->user()->name)
-                                            <b>{{$penguji2->NAMA_DOSEN}}</b>
+                                        @if ($d->penguji_II_id == auth()->user()->name)
+                                            <b>{{ helper::getNamaDosenByKode($d->penguji_II_id) }}</b>
                                         @else
-                                            {{$penguji2->NAMA_DOSEN}}
+                                            {{ helper::getNamaDosenByKode($d->penguji_II_id) }}
                                         @endif
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($penguji3 == null)
+                                    @if (empty($d->penguji_III_id))
                                         {{"-"}}
                                     @else
-                                        @if ($penguji3->C_KODE_DOSEN == auth()->user()->name)
-                                            <b>{{$penguji3->NAMA_DOSEN}}</b>
+                                        @if ($d->penguji_III_id == auth()->user()->name)
+                                            <b>{{ helper::getNamaDosenByKode($d->penguji_III_id) }}</b>
                                         @else
-                                            {{$penguji3->NAMA_DOSEN}}
+                                            {{ helper::getNamaDosenByKode($d->penguji_III_id) }}
                                         @endif
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($ketuasidang == null)
+                                    @if (empty($d->ketua_sidang_id))
                                         {{"-"}}
                                     @else
-                                        @if ($ketuasidang->C_KODE_DOSEN == auth()->user()->name)
-                                            <b>{{$ketuasidang->NAMA_DOSEN}}</b>
+                                        @if ($d->ketua_sidang_id == auth()->user()->name)
+                                            <b>{{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}</b>
                                         @else
-                                            {{$ketuasidang->NAMA_DOSEN}}
+                                            {{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}
                                         @endif
                                     @endif
                                 </td>
                                 <td style="width: 240px; text-align: center">
                                     
-                                    @if ($penguji1 == null && $penguji2 == null && $penguji3 == null && $ketuasidang == null)
+                                    @if (empty($d->penguji_I_id) && empty($d->penguji_II_id) && empty($d->penguji_III_id) && empty($d->ketua_sidang_id))
                                         Belum Bisa Beri Nilai
                                     @else
                                     @if (helper::getStatusBimbinganByNim($d->C_NPM) == 3)
@@ -130,4 +126,16 @@
     </div>
 @endsection
 
-
+@section('script')
+    <script>
+        $(function() {
+            if ($('#datatable-hasil-ujianakhir').length > 0) {
+                $('#datatable-hasil-ujianakhir').DataTable({
+                    paging: false,
+                    info: false,
+                    order: []
+                });
+            }
+        });
+    </script>
+@endsection

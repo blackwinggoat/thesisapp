@@ -90,9 +90,11 @@
     @php
         $namaProdi = helper::getProgramStudiByNim($nim);
         $kaprodi = helper::getKaprodiByNimAndTanggal($nim, $trt_penguji->created_at ?? null);
-        $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'gambar/stempelprodi.png' : 'gambar/stempelprodi_si.png';
+        $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'stempelprodi.png' : 'stempelprodi_si.png';
         $tinggiTtdKaprodi = $namaProdi == 'Teknik Informatika' ? '70px' : '120px';
         $styleTtdKaprodi = $namaProdi == 'Teknik Informatika' ? 'position: absolute; right: 90px' : 'position: absolute; right: 20px; top: -10px';
+        $headerProgramStudi = $namaProdi == 'Teknik Informatika' ? 'PROGRAM STUDI TEKNIK INFORMATIKA' : 'PROGRAM STUDI SISTEM INFORMASI';
+        $headerEmailProdi = $namaProdi == 'Teknik Informatika' ? 'S1.teknik.informatika@umi.ac.id' : 's1.sisteminformasi@umi.ac.id';
     @endphp
     <div class="header"
         style="position: relative; display: flex; align-items: center; justify-content: space-between; page-break-before: always !important;">
@@ -105,11 +107,7 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4><br>
         </div>
     </div>
     <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
@@ -117,7 +115,7 @@
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
         Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
         Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        <br>website: fikom.umi.ac.id, email: {{ $headerEmailProdi }}
     </div>
     <div class="title" style="text-align: center; margin-top: 20px;">
         <i>
@@ -173,7 +171,7 @@
             <tr>
                 <td>1</td>
                 <td width="100px">Ketua Sidang</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->ketua_sidang_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_penguji->ketua_sidang_id) }}</td>
                 <td width="30px">1</td>
                 <td></td>
                 <td></td>
@@ -181,7 +179,7 @@
             <tr>
                 <td>2</td>
                 <td>Pembimbing Utama</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_I_id) }}</td>
                 <td></td>
                 <td>2</td>
                 <td></td>
@@ -189,7 +187,7 @@
             <tr>
                 <td>3</td>
                 <td>Pembimbing Pendamping</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_II_id) }}</td>
                 <td>3</td>
                 <td></td>
                 <td></td>
@@ -197,7 +195,7 @@
             <tr>
                 <td>4</td>
                 <td>Penguji 1</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_I_id) }}</td>
                 <td></td>
                 <td>4</td>
                 <td></td>
@@ -205,7 +203,7 @@
             <tr>
                 <td>5</td>
                 <td>Penguji 2</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_II_id) }}</td>
                 <td>5</td>
                 <td></td>
                 <td></td>
@@ -213,7 +211,7 @@
             <tr>
                 <td>6</td>
                 <td>Penguji 3</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_III_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_III_id) }}</td>
                 <td></td>
                 <td>6</td>
                 <td></td>
@@ -233,10 +231,10 @@
     <br>
     <br>
     <div style="text-align: center; position: relative">
-        <img src="{{ asset($stempelKaprodi) }}" alt="" height="100px"
+        <img src="{{ \App\Helper::officialImageDataUri($stempelKaprodi) }}" alt="" height="100px"
             style="position: absolute; right: 140px">
         <br>
-        <img src="{{ asset('gambar/' . $kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
+        <img src="{{ \App\Helper::officialImageDataUri($kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
             style="{{ $styleTtdKaprodi }}">
     </div>
     <br><br><br>
@@ -299,24 +297,24 @@
             <tr>
                 <td>Ketua Sidang</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->ketua_sidang_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_penguji->ketua_sidang_id) }}</td>
             </tr>
             <tr>
                 <td style="padding-right: 20px">Pembimbing Utama</td>
                 <td style="padding-right: 10px">:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_I_id) }}</td>
             </tr>
             <tr>
                 <td>Pembimbing Kedua</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_II_id) }}</td>
             </tr>
             <tr>
                 <td style="position: absolute">Tim Penguji</td>
                 <td style="vertical-align: top">:</td>
-                <td>1. {{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_I_id)->first()->NAMA_DOSEN }} <br>
-                    2. {{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_II_id)->first()->NAMA_DOSEN }} <br>
-                    3. {{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_III_id)->first()->NAMA_DOSEN }}
+                <td>1. {{ helper::getNamaDosenByKode($trt_penguji->penguji_I_id) }} <br>
+                    2. {{ helper::getNamaDosenByKode($trt_penguji->penguji_II_id) }} <br>
+                    3. {{ helper::getNamaDosenByKode($trt_penguji->penguji_III_id) }}
                 </td>
             </tr>
         </table>
@@ -457,19 +455,19 @@
             <tr>
                 <td>Pembimbing Utama</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_I_id) }}</td>
                 <td>.........................</td>
             </tr>
             <tr>
                 <td>Pembimbing Pendamping</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_II_id) }}</td>
                 <td>.........................</td>
             </tr>
             <tr>
                 <td>Ketua Sidang</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->ketua_sidang_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_penguji->ketua_sidang_id) }}</td>
                 <td>.........................</td>
             </tr>
             <tr>
@@ -481,19 +479,19 @@
             <tr>
                 <td style="padding-left: 25px">Penanggap 1</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_I_id) }}</td>
                 <td>.........................</td>
             </tr>
             <tr>
                 <td style="padding-left: 25px">Penanggap 2</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_II_id) }}</td>
                 <td>.........................</td>
             </tr>
             <tr>
                 <td style="padding-left: 25px">Penanggap 3</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_III_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_III_id) }}</td>
                 <td>.........................</td>
             </tr>
             <tr>
@@ -544,10 +542,10 @@
     </div>
     <br>
     <div style="text-align: center; position: relative">
-        <img src="{{ asset($stempelKaprodi) }}" alt="" height="100px"
+        <img src="{{ \App\Helper::officialImageDataUri($stempelKaprodi) }}" alt="" height="100px"
             style="position: absolute; right: 140px">
         <br>
-        <img src="{{ asset('gambar/' . $kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
+        <img src="{{ \App\Helper::officialImageDataUri($kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
             style="{{ $styleTtdKaprodi }}">
     </div>
     <br><br><br>
@@ -674,7 +672,7 @@
         </div>
         <br><br><br><br>
         <div class="legalitor">
-            <b><u>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_I_id)->first()->NAMA_DOSEN }}</u></b><br>
+            <b><u>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_I_id) }}</u></b><br>
             <b>NIDN : </b><br>
         </div>
         <br><br>
@@ -829,7 +827,7 @@
             </div>
             <br><br><br><br>
             <div class="legalitor">
-                <b><u>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_II_id)->first()->NAMA_DOSEN }}</u></b><br>
+                <b><u>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_II_id) }}</u></b><br>
                 <b>NIDN : </b><br>
             </div>
             <br><br>
@@ -983,7 +981,7 @@
             </div>
             <br><br><br><br>
             <div class="legalitor">
-                <b><u>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_I_id)->first()->NAMA_DOSEN }}</u></b><br>
+                <b><u>{{ helper::getNamaDosenByKode($trt_penguji->penguji_I_id) }}</u></b><br>
                 <b>NIDN : </b><br>
             </div>
             <br><br>
@@ -1138,7 +1136,7 @@
             </div>
             <br><br><br><br>
             <div class="legalitor">
-                <b><u>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_II_id)->first()->NAMA_DOSEN }}</u></b><br>
+                <b><u>{{ helper::getNamaDosenByKode($trt_penguji->penguji_II_id) }}</u></b><br>
                 <b>NIDN : </b><br>
             </div>
             <br><br>
@@ -1293,7 +1291,7 @@
             </div>
             <br><br><br><br>
             <div class="legalitor">
-                <b><u>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_III_id)->first()->NAMA_DOSEN }}</u></b><br>
+                <b><u>{{ helper::getNamaDosenByKode($trt_penguji->penguji_III_id) }}</u></b><br>
                 <b>NIDN : </b><br>
             </div>
             <br><br>
@@ -1405,7 +1403,7 @@
                     <tr>
                         <td>1</td>
                         <td width="100px">Ketua Sidang</td>
-                        <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->ketua_sidang_id)->first()->NAMA_DOSEN }}
+                        <td>{{ helper::getNamaDosenByKode($trt_penguji->ketua_sidang_id) }}
                         </td>
                         <td></td>
                         <td></td>
@@ -1413,7 +1411,7 @@
                     <tr>
                         <td>2</td>
                         <td>Pembimbing Utama</td>
-                        <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_I_id)->first()->NAMA_DOSEN }}
+                        <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_I_id) }}
                         </td>
                         <td></td>
                         <td></td>
@@ -1421,7 +1419,7 @@
                     <tr>
                         <td>3</td>
                         <td>Pembimbing Pendamping</td>
-                        <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_bimbingan->pembimbing_II_id)->first()->NAMA_DOSEN }}
+                        <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_II_id) }}
                         </td>
                         <td></td>
                         <td></td>
@@ -1429,7 +1427,7 @@
                     <tr>
                         <td>4</td>
                         <td>Penguji 1</td>
-                        <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_I_id)->first()->NAMA_DOSEN }}
+                        <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_I_id) }}
                         </td>
                         <td></td>
                         <td></td>
@@ -1437,7 +1435,7 @@
                     <tr>
                         <td>5</td>
                         <td>Penguji 2</td>
-                        <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_II_id)->first()->NAMA_DOSEN }}
+                        <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_II_id) }}
                         </td>
                         <td></td>
                         <td></td>
@@ -1445,7 +1443,7 @@
                     <tr>
                         <td>6</td>
                         <td>Penguji 3</td>
-                        <td>{{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->penguji_III_id)->first()->NAMA_DOSEN }}
+                        <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_III_id) }}
                         </td>
                         <td></td>
                         <td></td>
@@ -1480,7 +1478,7 @@
                     <tr style="height: 40px"></tr>
                     <tr>
                         <td style="text-align: center; white-space: nowrap; border-bottom: solid 1px">
-                            {{ \App\Dosen::where('C_KODE_DOSEN', $trt_penguji->ketua_sidang_id)->first()->NAMA_DOSEN }}
+                            {{ helper::getNamaDosenByKode($trt_penguji->ketua_sidang_id) }}
                         </td>
                     </tr>
                     <tr>

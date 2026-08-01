@@ -1,0 +1,26 @@
+# Environment and repository metadata
+/.env
+/.git/
+/node_modules/
+
+# Runtime state
+/storage/
+/bootstrap/cache/
+/public/storage
+/.well-known/
+
+# Legacy user uploads that must survive source synchronization
+/gambar/
+/dokumen/
+/public/gambar/
+/public/public/gambar/
+/public/dokumen/
+/public/public/dokumen/
+/public/mobile/controller/simta/uploadedFiles/
+
+# Runtime logs and local-only files
+*.log
+*.zip
+error_log
+.DS_Store
+/.idea/

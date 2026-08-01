@@ -17,6 +17,12 @@
 
         <h3 class="page-heading">Hasil Ujian Tutup</h3>
         <!-- BEGIN DATA TABLE -->
+        @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+        @if (session('status'))
+        <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
         <div class="row">
             <div class="col-md-8">
                 <div class="the-box">
@@ -26,10 +32,25 @@
                             {{ csrf_field() }}
                             <input type="hidden" name="reg_id" value="{{$data[0]->reg_id}}">
                             <div class="form-group">
+                                <label class="col-lg-4 control-label">NIM</label>
+                                <div class="col-lg-8">
+                                    <input type="text" class="form-control bold-border"
+                                        value="{{$data[0]->C_NPM}}" disabled />
+                                </div>
+                            </div>
+                            <br><br>
+                            <div class="form-group">
                                 <label class="col-lg-4 control-label">Nama</label>
                                 <div class="col-lg-8">
                                     <input type="text" class="form-control bold-border" name="nama"
                                         value="{{$data[0]->NAMA_MAHASISWA}}" disabled />
+                                </div>
+                            </div>
+                            <br><br>
+                            <div class="form-group">
+                                <label class="col-lg-4 control-label">Judul Tugas Akhir</label>
+                                <div class="col-lg-8">
+                                    <textarea class="form-control bold-border" rows="3" disabled>{{ $data[0]->judul }}</textarea>
                                 </div>
                             </div>
                             <br><br>
@@ -364,10 +385,10 @@
                                 <h4 style="font-weight: bold">Catatan Ujian Proposal</h4>
                             </div>
                             <div class="col-md-12">
-                                @if (helper::getSaranByNidnAndRegId(auth()->user()->name, $data[0]->reg_id) == null)
+                                @if (helper::getSaranByNidnAndRegId($kodeDosen, $data[0]->reg_id) == null)
                                     <p>Tidak ada catatan ketika ujian proposal</p>
                                 @else
-                                    <p>{{ helper::getSaranByNidnAndRegId(auth()->user()->name, $data[0]->reg_id) }}</p>
+                                    <p>{{ helper::getSaranByNidnAndRegId($kodeDosen, $data[0]->reg_id) }}</p>
                                 @endif
                             </div>
                         </div>

@@ -137,12 +137,12 @@
             <tr>
                 <td width="150px">Pembimbing Utama</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $data_sk[0]->pembimbing_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($data_sk[0]->pembimbing_I_id) }}</td>
             </tr>
             <tr>
                 <td>Pembimbing Pendamping</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $data_sk[0]->pembimbing_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($data_sk[0]->pembimbing_II_id) }}</td>
             </tr>
         </table>
     </div>
@@ -152,7 +152,7 @@
             <tr>
                 <td width="150px">Ketua Sidang</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $data_sk[0]->ketua_sidang_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($data_sk[0]->ketua_sidang_id) }}</td>
             </tr>
         </table>
     </div>
@@ -162,17 +162,17 @@
             <tr>
                 <td width="150px">Penguji</td>
                 <td>:</td>
-                <td>1. {{ \App\Dosen::where('C_KODE_DOSEN', $data_sk[0]->penguji_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>1. {{ helper::getNamaDosenByKode($data_sk[0]->penguji_I_id) }}</td>
             </tr>
             <tr>
                 <td></td>
                 <td></td>
-                <td>2. {{ \App\Dosen::where('C_KODE_DOSEN', $data_sk[0]->penguji_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>2. {{ helper::getNamaDosenByKode($data_sk[0]->penguji_II_id) }}</td>
             </tr>
             <tr>
                 <td></td>
                 <td></td>
-                <td>3. {{ \App\Dosen::where('C_KODE_DOSEN', $data_sk[0]->penguji_III_id)->first()->NAMA_DOSEN }}</td>
+                <td>3. {{ helper::getNamaDosenByKode($data_sk[0]->penguji_III_id) }}</td>
             </tr>
         </table>
     </div>
@@ -265,10 +265,10 @@
         @elseif(helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 1)
 
         @elseif(helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 2)
-            <img src="{{ asset('gambar/stempelfakultas.png') }}" alt="" height="100px"
+            <img src="{{ \App\Helper::officialImageDataUri('stempelfakultas.png') }}" alt="" height="100px"
                 style="position: absolute; right: 140px">
             @if (!empty($dekan->ttd))
-                <img src="{{ asset('gambar/' . $dekan->ttd) }}" alt="" height="70px"
+                <img src="{{ \App\Helper::officialImageDataUri($dekan->ttd) }}" alt="" height="70px"
                     style="position: absolute; right: -20px">
             @endif
         @endif
@@ -281,7 +281,7 @@
         @if (helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 0)
         @elseif(helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 1 ||
                 helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 2)
-            <img src="{{ asset('gambar/paraf_wd.png') }}" alt="" height="50px"
+            <img src="{{ \App\Helper::officialImageDataUri('paraf_wd.png') }}" alt="" height="50px"
                 style="position: absolute; right: -20px">
         @endif
     </div>

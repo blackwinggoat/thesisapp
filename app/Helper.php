@@ -5,10 +5,17 @@ namespace App;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use RuntimeException;
 
 class Helper
 {
+
+    const ANNOUNCEMENT_IMAGE_DIRECTORY = 'uploads/announcements';
+
+    const MANAGED_OFFICIAL_IMAGE_PREFIX = 'ttd_kaprodi_';
 
     // get tanggal 1-31
     // public static function fortgl() {
@@ -175,6 +182,137 @@ class Helper
         return $fileName;
     }
 
+    public static function storeAnnouncementImage($image)
+    {
+        $extension = strtolower($image->getClientOriginalExtension());
+
+        if (!in_array($extension, ['jpeg', 'jpg', 'gif', 'png'], true)) {
+            throw new RuntimeException('Format gambar pengumuman tidak didukung.');
+        }
+
+        $fileName = date('Ymd') . uniqid() . '.' . $extension;
+        $path = $image->storeAs(self::ANNOUNCEMENT_IMAGE_DIRECTORY, $fileName, 'public');
+
+        if ($path === false) {
+            throw new RuntimeException('Gambar pengumuman gagal disimpan.');
+        }
+
+        return $path;
+    }
+
+    public static function deleteAnnouncementImage($path)
+    {
+        if (!self::isManagedAnnouncementImage($path)) {
+            return false;
+        }
+
+        return Storage::disk('public')->delete($path);
+    }
+
+    public static function announcementImageUrl($path)
+    {
+        if (empty($path)) {
+            return asset('gambar/no_image.jpg');
+        }
+
+        if (self::isManagedAnnouncementImage($path)) {
+            return asset('storage/' . ltrim($path, '/'));
+        }
+
+        return asset('gambar/' . basename($path));
+    }
+
+    public static function isManagedAnnouncementImage($path)
+    {
+        if (!is_string($path)) {
+            return false;
+        }
+
+        $prefix = self::ANNOUNCEMENT_IMAGE_DIRECTORY . '/';
+
+        if (strpos($path, $prefix) !== 0) {
+            return false;
+        }
+
+        $fileName = substr($path, strlen($prefix));
+
+        return $fileName !== '' && basename($fileName) === $fileName;
+    }
+
+    public static function storeOfficialImage($image, $prefix)
+    {
+        $extension = strtolower($image->getClientOriginalExtension());
+
+        if (!in_array($extension, ['jpeg', 'jpg', 'png'], true)) {
+            throw new RuntimeException('Format gambar resmi tidak didukung.');
+        }
+
+        $prefix = preg_replace('/[^a-z0-9_-]+/i', '_', (string) $prefix);
+        $fileName = trim($prefix, '_') . '_' . uniqid() . '.' . $extension;
+        $path = $image->storeAs('', $fileName, 'official');
+
+        if ($path === false) {
+            throw new RuntimeException('Gambar resmi gagal disimpan.');
+        }
+
+        return $fileName;
+    }
+
+    public static function officialImageDataUri($fileName)
+    {
+        if (!self::isSafeOfficialImageName($fileName)) {
+            return asset('gambar/no_image.jpg');
+        }
+
+        $contents = null;
+
+        if (Storage::disk('official')->exists($fileName)) {
+            $contents = Storage::disk('official')->get($fileName);
+        } else {
+            $legacyPath = public_path('gambar/' . $fileName);
+
+            if (is_file($legacyPath)) {
+                $contents = file_get_contents($legacyPath);
+            }
+        }
+
+        if ($contents === null || $contents === false) {
+            return asset('gambar/no_image.jpg');
+        }
+
+        $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $mime = $extension === 'png' ? 'image/png' : 'image/jpeg';
+
+        return 'data:' . $mime . ';base64,' . base64_encode($contents);
+    }
+
+    public static function deleteManagedOfficialImage($fileName)
+    {
+        if (!self::isManagedOfficialImage($fileName)) {
+            return false;
+        }
+
+        return Storage::disk('official')->delete($fileName);
+    }
+
+    public static function isManagedOfficialImage($fileName)
+    {
+        if (!self::isSafeOfficialImageName($fileName)) {
+            return false;
+        }
+
+        return (bool) preg_match('/\Attd_kaprodi_\d+_[a-f0-9]+\.(?:jpe?g|png)\z/i', $fileName);
+    }
+
+    public static function isSafeOfficialImageName($fileName)
+    {
+        if (!is_string($fileName) || $fileName === '' || basename($fileName) !== $fileName) {
+            return false;
+        }
+
+        return (bool) preg_match('/\A[a-zA-Z0-9._-]+\.(?:jpe?g|png)\z/i', $fileName);
+    }
+
     // delete foto produk
     public static function deleteImage($image, $folder)
     {
@@ -273,11 +411,40 @@ class Helper
 
     public static function getDeskripsi($id)
     {
-        $v = DB::table('t_mst_dosen')
-            ->select('*')
-            ->Where('C_KODE_DOSEN', $id)
-            ->first();
-        return isset($v) ? $v->NAMA_DOSEN : '--';
+        return self::getNamaDosenByKode($id);
+    }
+
+    public static function getDosenRecordByKode($kodeDosen)
+    {
+        $kodeDosen = trim((string) $kodeDosen);
+
+        if ($kodeDosen === '') {
+            return null;
+        }
+
+        $dosen = null;
+
+        if (Schema::hasTable('t_mst_dosen')) {
+            $dosen = DB::table('t_mst_dosen')
+                ->select('*')
+                ->where('C_KODE_DOSEN', $kodeDosen)
+                ->first();
+        }
+
+        if (!$dosen && Schema::hasTable('mig_t_mst_dosen')) {
+            $dosen = DB::table('mig_t_mst_dosen')
+                ->select('*')
+                ->where('C_KODE_DOSEN', $kodeDosen)
+                ->first();
+        }
+
+        return $dosen;
+    }
+
+    public static function getNamaDosenByKode($kodeDosen)
+    {
+        $dosen = self::getDosenRecordByKode($kodeDosen);
+        return isset($dosen->NAMA_DOSEN) && $dosen->NAMA_DOSEN !== '' ? $dosen->NAMA_DOSEN : '--';
     }
 
     public static function getNamaMhs($id)
@@ -287,6 +454,377 @@ class Helper
             ->Where('C_NPM', $id)
             ->first();
         return isset($v) ? $v->NAMA_MAHASISWA : '';
+    }
+
+    public static function getKodeDosenFromUser($user = null)
+    {
+        $user = $user ?: auth()->user();
+
+        if (!$user) {
+            return '';
+        }
+
+        $candidates = array_filter([
+            trim((string) ($user->name ?? '')),
+            trim((string) ($user->email ?? '')),
+        ]);
+
+        foreach ($candidates as $candidate) {
+            $dosen = self::getDosenRecordByKode($candidate);
+            if ($dosen && !empty($dosen->C_KODE_DOSEN)) {
+                return $dosen->C_KODE_DOSEN;
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            $dosen = null;
+
+            if (Schema::hasTable('t_mst_dosen')) {
+                $dosen = DB::table('t_mst_dosen')
+                    ->select('C_KODE_DOSEN')
+                    ->whereRaw('LOWER(TRIM(EMAIL)) = ?', [strtolower($candidate)])
+                    ->first();
+            }
+
+            if (!$dosen && Schema::hasTable('mig_t_mst_dosen')) {
+                $dosen = DB::table('mig_t_mst_dosen')
+                    ->select('C_KODE_DOSEN')
+                    ->whereRaw('LOWER(TRIM(EMAIL)) = ?', [strtolower($candidate)])
+                    ->first();
+            }
+
+            if ($dosen && !empty($dosen->C_KODE_DOSEN)) {
+                return $dosen->C_KODE_DOSEN;
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            $dosen = null;
+
+            if (Schema::hasTable('t_mst_dosen')) {
+                $dosen = DB::table('t_mst_dosen')
+                    ->select('C_KODE_DOSEN')
+                    ->whereRaw('LOWER(TRIM(NAMA_DOSEN)) = ?', [strtolower($candidate)])
+                    ->first();
+            }
+
+            if (!$dosen && Schema::hasTable('mig_t_mst_dosen')) {
+                $dosen = DB::table('mig_t_mst_dosen')
+                    ->select('C_KODE_DOSEN')
+                    ->whereRaw('LOWER(TRIM(NAMA_DOSEN)) = ?', [strtolower($candidate)])
+                    ->first();
+            }
+
+            if ($dosen && !empty($dosen->C_KODE_DOSEN)) {
+                return $dosen->C_KODE_DOSEN;
+            }
+        }
+
+        $normalizedCandidates = array_filter(array_unique(array_map(function ($candidate) {
+            return self::normalizeNamaOrang($candidate);
+        }, $candidates)));
+
+        foreach ($normalizedCandidates as $normalizedCandidate) {
+            $rows = collect();
+
+            if (Schema::hasTable('t_mst_dosen')) {
+                $rows = $rows->merge(
+                    DB::table('t_mst_dosen')
+                        ->select('C_KODE_DOSEN', 'NAMA_DOSEN')
+                        ->get()
+                );
+            }
+
+            if (Schema::hasTable('mig_t_mst_dosen')) {
+                $rows = $rows->merge(
+                    DB::table('mig_t_mst_dosen')
+                        ->select('C_KODE_DOSEN', 'NAMA_DOSEN')
+                        ->get()
+                );
+            }
+
+            $match = $rows->first(function ($row) use ($normalizedCandidate) {
+                return self::normalizeNamaOrang($row->NAMA_DOSEN ?? '') === $normalizedCandidate;
+            });
+
+            if ($match && !empty($match->C_KODE_DOSEN)) {
+                return $match->C_KODE_DOSEN;
+            }
+        }
+
+        return trim((string) ($user->name ?? ''));
+    }
+
+    public static function getKodeDosenForTrtHasil($user = null)
+    {
+        $user = $user ?: auth()->user();
+
+        if (!$user) {
+            return '';
+        }
+
+        $candidates = array_filter([
+            trim((string) ($user->name ?? '')),
+            trim((string) ($user->email ?? '')),
+        ]);
+
+        if (Schema::hasTable('mig_t_mst_dosen')) {
+            foreach ($candidates as $candidate) {
+                $dosen = DB::table('mig_t_mst_dosen')
+                    ->select('C_KODE_DOSEN')
+                    ->where('C_KODE_DOSEN', $candidate)
+                    ->first();
+
+                if ($dosen && !empty($dosen->C_KODE_DOSEN)) {
+                    return $dosen->C_KODE_DOSEN;
+                }
+            }
+
+            foreach ($candidates as $candidate) {
+                $dosen = DB::table('mig_t_mst_dosen')
+                    ->select('C_KODE_DOSEN')
+                    ->whereRaw('LOWER(TRIM(EMAIL)) = ?', [strtolower($candidate)])
+                    ->first();
+
+                if ($dosen && !empty($dosen->C_KODE_DOSEN)) {
+                    return $dosen->C_KODE_DOSEN;
+                }
+            }
+
+            $normalizedCandidates = array_filter(array_unique(array_map(function ($candidate) {
+                return self::normalizeNamaOrang($candidate);
+            }, $candidates)));
+
+            if (!empty($normalizedCandidates)) {
+                $rows = DB::table('mig_t_mst_dosen')
+                    ->select('C_KODE_DOSEN', 'NAMA_DOSEN')
+                    ->get();
+
+                foreach ($normalizedCandidates as $normalizedCandidate) {
+                    $match = $rows->first(function ($row) use ($normalizedCandidate) {
+                        return self::normalizeNamaOrang($row->NAMA_DOSEN ?? '') === $normalizedCandidate;
+                    });
+
+                    if ($match && !empty($match->C_KODE_DOSEN)) {
+                        return $match->C_KODE_DOSEN;
+                    }
+                }
+            }
+        }
+
+        return '';
+    }
+
+    public static function getCurrentDosenProfileByAuthUser($user = null)
+    {
+        $user = $user ?: auth()->user();
+
+        if (!$user) {
+            return (object) [];
+        }
+
+        $kodeDosen = self::getKodeDosenFromUser($user);
+        $utama = null;
+        $migrasi = null;
+
+        if ($kodeDosen !== '' && Schema::hasTable('t_mst_dosen')) {
+            $utama = DB::table('t_mst_dosen')
+                ->select('*')
+                ->where('C_KODE_DOSEN', $kodeDosen)
+                ->first();
+        }
+
+        if ($kodeDosen !== '' && Schema::hasTable('mig_t_mst_dosen')) {
+            $migrasi = DB::table('mig_t_mst_dosen')
+                ->select('*')
+                ->where('C_KODE_DOSEN', $kodeDosen)
+                ->first();
+        }
+
+        if (!$utama || !$migrasi) {
+            $candidateEmail = strtolower(trim((string) ($user->email ?? '')));
+            $candidateName = trim((string) ($user->name ?? ''));
+
+            if (!$utama && Schema::hasTable('t_mst_dosen')) {
+                if ($candidateEmail !== '') {
+                    $utama = DB::table('t_mst_dosen')
+                        ->select('*')
+                        ->whereRaw('LOWER(TRIM(EMAIL)) = ?', [$candidateEmail])
+                        ->first();
+                }
+
+                if (!$utama && $candidateName !== '') {
+                    $utama = DB::table('t_mst_dosen')
+                        ->select('*')
+                        ->whereRaw('LOWER(TRIM(NAMA_DOSEN)) = ?', [strtolower($candidateName)])
+                        ->first();
+                }
+            }
+
+            if (!$migrasi && Schema::hasTable('mig_t_mst_dosen')) {
+                if ($candidateEmail !== '') {
+                    $migrasi = DB::table('mig_t_mst_dosen')
+                        ->select('*')
+                        ->whereRaw('LOWER(TRIM(EMAIL)) = ?', [$candidateEmail])
+                        ->first();
+                }
+
+                if (!$migrasi && $candidateName !== '') {
+                    $migrasi = DB::table('mig_t_mst_dosen')
+                        ->select('*')
+                        ->whereRaw('LOWER(TRIM(NAMA_DOSEN)) = ?', [strtolower($candidateName)])
+                        ->first();
+                }
+            }
+
+            if ($kodeDosen === '') {
+                $kodeDosen = trim((string) ($utama->C_KODE_DOSEN ?? $migrasi->C_KODE_DOSEN ?? ''));
+            }
+        }
+
+        $profile = (object) array_merge((array) $migrasi, (array) $utama);
+        $profile->C_KODE_DOSEN = $profile->C_KODE_DOSEN ?? $kodeDosen;
+        $profile->exists_t_mst_dosen = $utama ? 1 : 0;
+        $profile->exists_mig_t_mst_dosen = $migrasi ? 1 : 0;
+
+        if (!empty($profile->C_KODE_PRODI) && Schema::hasTable('trt_prodi')) {
+            $prodi = DB::table('trt_prodi')
+                ->select('nama')
+                ->where('kode_prodi', $profile->C_KODE_PRODI)
+                ->first();
+            $profile->nama_prodi = $prodi->nama ?? $profile->C_KODE_PRODI;
+        } else {
+            $profile->nama_prodi = $profile->C_KODE_PRODI ?? '';
+        }
+
+        return $profile;
+    }
+
+    public static function getCurrentDosenProfileMissingFields($user = null)
+    {
+        $profile = self::getCurrentDosenProfileByAuthUser($user);
+
+        $requiredFields = [
+            'C_KODE_PRODI' => 'Program Studi',
+            'JENIS_KELAMIN' => 'Jenis Kelamin',
+            'NO_HP' => 'No. HP',
+            'EMAIL' => 'Email',
+            'website' => 'Pangkat',
+            'jabatan_fungsional' => 'Jabatan Fungsional',
+        ];
+
+        $missing = [];
+
+        foreach ($requiredFields as $field => $label) {
+            $value = trim((string) ($profile->$field ?? ''));
+            if ($value === '' || $value === '0000-00-00' || $value === '0000-00-00 00:00:00') {
+                $missing[] = $label;
+            }
+        }
+
+        return $missing;
+    }
+
+    public static function shouldShowCurrentDosenProfilePopup($user = null)
+    {
+        return count(self::getCurrentDosenProfileMissingFields($user)) > 0;
+    }
+
+    public static function getCurrentMahasiswaContactByAuthUser($user = null)
+    {
+        $user = $user ?: auth()->user();
+
+        if (!$user) {
+            return (object) [];
+        }
+
+        $nim = trim((string) ($user->name ?? ''));
+        $mahasiswa = null;
+        $kontak = null;
+
+        if ($nim !== '' && Schema::hasTable('t_mst_mahasiswa')) {
+            $mahasiswa = DB::table('t_mst_mahasiswa')
+                ->select('C_NPM', 'NAMA_MAHASISWA', 'C_KODE_PRODI')
+                ->where('C_NPM', $nim)
+                ->first();
+        }
+
+        if ($nim !== '' && Schema::hasTable('trt_kontak_mahasiswa')) {
+            $kontak = DB::table('trt_kontak_mahasiswa')
+                ->select('*')
+                ->where('C_NPM', $nim)
+                ->first();
+        }
+
+        $data = (object) array_merge((array) $mahasiswa, (array) $kontak);
+        $data->C_NPM = $data->C_NPM ?? $nim;
+        $data->NAMA_MAHASISWA = $data->NAMA_MAHASISWA ?? self::getNamaMhs($nim);
+
+        return $data;
+    }
+
+    public static function getCurrentMahasiswaContactMissingFields($user = null)
+    {
+        $kontak = self::getCurrentMahasiswaContactByAuthUser($user);
+        $missing = [];
+        $noWa = trim((string) ($kontak->no_wa ?? ''));
+
+        if ($noWa === '') {
+            $missing[] = 'Nomor WhatsApp';
+        }
+
+        return $missing;
+    }
+
+    public static function shouldShowCurrentMahasiswaContactPopup($user = null)
+    {
+        return count(self::getCurrentMahasiswaContactMissingFields($user)) > 0;
+    }
+
+    private static function normalizeNamaOrang($nama)
+    {
+        $nama = strtolower(trim((string) $nama));
+
+        if ($nama === '') {
+            return '';
+        }
+
+        if (strpos($nama, ',') !== false) {
+            $nama = trim(strstr($nama, ',', true));
+        }
+
+        $prefixes = [
+            'prof.',
+            'prof ',
+            'dr.',
+            'dr ',
+            'drs.',
+            'drs ',
+            'dra.',
+            'dra ',
+            'ir.',
+            'ir ',
+            'h.',
+            'h ',
+            'hj.',
+            'hj ',
+        ];
+
+        $trimmed = true;
+        while ($trimmed) {
+            $trimmed = false;
+            foreach ($prefixes as $prefix) {
+                if (strpos($nama, $prefix) === 0) {
+                    $nama = trim(substr($nama, strlen($prefix)));
+                    $trimmed = true;
+                }
+            }
+        }
+
+        $nama = preg_replace('/[^a-z0-9\s]/', ' ', $nama);
+        $nama = preg_replace('/\s+/', ' ', $nama);
+
+        return trim($nama);
     }
 
     // fungsi implode
@@ -375,11 +913,19 @@ class Helper
 
     public static function getJabatanFungsionalByNIDN($nidn)
     {
-        $v = DB::table('t_mst_dosen')
-            ->select('*')
-            ->Where('C_KODE_DOSEN', $nidn)
-            ->first();
-        return isset($v) ? $v->jabatan_fungsional . " / " . $v->website : '';
+        $v = self::getDosenRecordByKode($nidn);
+        if (!isset($v)) {
+            return '';
+        }
+
+        $jabatan = trim((string) ($v->jabatan_fungsional ?? ''));
+        $website = trim((string) ($v->website ?? ''));
+
+        if ($jabatan !== '' && $website !== '') {
+            return $jabatan . " / " . $website;
+        }
+
+        return $jabatan !== '' ? $jabatan : $website;
     }
 
     public static function getNomorSkPerMhs($bimbingan_id)
@@ -493,6 +1039,10 @@ class Helper
             return $defaultKaprodi;
         }
 
+        if (!Schema::hasTable('mst_periode_jabatan')) {
+            return $defaultKaprodi;
+        }
+
         $dataPeriode = DB::table('mst_periode_jabatan')
             ->whereRaw('LOWER(TRIM(prodi)) = ?', [strtolower($prodi)])
             ->get()
@@ -528,12 +1078,16 @@ class Helper
             return $defaultKaprodi;
         }
 
-        $dosen = DB::table('t_mst_dosen')
-            ->select('C_KODE_DOSEN', 'NAMA_DOSEN')
-            ->whereRaw('LOWER(TRIM(NAMA_DOSEN)) = ?', [strtolower(trim($periodeAktif->nama))])
-            ->first();
+        $dosen = null;
 
-        if (!$dosen) {
+        if (Schema::hasTable('t_mst_dosen')) {
+            $dosen = DB::table('t_mst_dosen')
+                ->select('C_KODE_DOSEN', 'NAMA_DOSEN')
+                ->whereRaw('LOWER(TRIM(NAMA_DOSEN)) = ?', [strtolower(trim($periodeAktif->nama))])
+                ->first();
+        }
+
+        if (!$dosen && Schema::hasTable('mig_t_mst_dosen')) {
             $dosen = DB::table('mig_t_mst_dosen')
                 ->select('C_KODE_DOSEN', 'NAMA_DOSEN')
                 ->whereRaw('LOWER(TRIM(NAMA_DOSEN)) = ?', [strtolower(trim($periodeAktif->nama))])
@@ -575,6 +1129,10 @@ class Helper
         ];
 
         if ($jabatan === '') {
+            return $defaultPejabat;
+        }
+
+        if (!Schema::hasTable('mst_periode_jabatan_fakultas')) {
             return $defaultPejabat;
         }
 
@@ -741,6 +1299,74 @@ class Helper
         return isset($v) ? count($v) : '';
     }
 
+    public static function getPenilaiWajibByRegId($reg_id)
+    {
+        $reg = DB::table('trt_reg as rg')
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+            ->leftJoin('trt_penguji as tp', function ($join) {
+                $join->on('tp.C_NPM', '=', 'tb.C_NPM')
+                    ->on('tp.tipe_ujian', '=', 'rg.status');
+            })
+            ->select(
+                'rg.status',
+                'tb.pembimbing_I_id',
+                'tb.pembimbing_II_id',
+                'tp.penguji_I_id',
+                'tp.penguji_II_id',
+                'tp.penguji_III_id',
+                'tp.ketua_sidang_id'
+            )
+            ->where('rg.reg_id', $reg_id)
+            ->first();
+
+        if (!$reg) {
+            return [];
+        }
+
+        $penilai = [
+            trim((string) ($reg->pembimbing_I_id ?? '')),
+            trim((string) ($reg->pembimbing_II_id ?? '')),
+            trim((string) ($reg->penguji_I_id ?? '')),
+            trim((string) ($reg->penguji_II_id ?? '')),
+            trim((string) ($reg->penguji_III_id ?? '')),
+            trim((string) ($reg->ketua_sidang_id ?? '')),
+        ];
+
+        $penilai = array_filter($penilai, function ($value) {
+            return $value !== '' && $value !== '--';
+        });
+
+        return array_values(array_unique($penilai));
+    }
+
+    public static function getJumlahPenilaiSudahIsiByRegId($reg_id)
+    {
+        $penilaiWajib = self::getPenilaiWajibByRegId($reg_id);
+
+        if (empty($penilaiWajib)) {
+            return 0;
+        }
+
+        return (int) DB::table('trt_hasil')
+            ->where('reg_id', $reg_id)
+            ->whereIn('nidn', $penilaiWajib)
+            ->distinct()
+            ->count('nidn');
+    }
+
+    public static function isPenilaianLengkapByRegId($reg_id)
+    {
+        $penilaiWajib = self::getPenilaiWajibByRegId($reg_id);
+        $jumlahWajib = count($penilaiWajib);
+
+        if ($jumlahWajib === 0) {
+            return false;
+        }
+
+        $jumlahSudahIsi = self::getJumlahPenilaiSudahIsiByRegId($reg_id);
+        return $jumlahSudahIsi >= $jumlahWajib;
+    }
+
     public static function getNomorSkByNIM($nim)
     {
         $v = DB::table('trt_bimbingan')
@@ -804,29 +1430,35 @@ class Helper
         return isset($v) ? $v : 'Tidak Ada Pengumuman';
     }
 
-    public static function getStatusBimbinganByStatus($status, $isPeriode = false)
+    public static function getCurrentSemesterDateRange()
     {
         $now = Carbon::now();
-        $startOfYear = Carbon::createFromDate($now->year, 1, 1);
-        $midYear = Carbon::createFromDate($now->year, 8, 1);
-        $endOfYear = Carbon::createFromDate($now->year, 12, 31);
 
-        if ($now->between($startOfYear, $midYear->subSecond())) {
-            // Periode 1: Januari - Juli
-            $startDate = $startOfYear;
-            $endDate = $midYear->subSecond();
+        if ((int) $now->month < 8) {
+            $startDate = Carbon::create($now->year, 1, 1, 0, 0, 0);
+            $endDate = Carbon::create($now->year, 7, 31, 23, 59, 59);
         } else {
-            // Periode 2: Agustus - Desember
-            $startDate = $midYear;
-            $endDate = $endOfYear;
+            $startDate = Carbon::create($now->year, 8, 1, 0, 0, 0);
+            $endDate = Carbon::create($now->year, 12, 31, 23, 59, 59);
         }
 
+        return (object) [
+            'start' => $startDate,
+            'end' => $endDate,
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate->format('Y-m-d'),
+        ];
+    }
+
+    public static function getStatusBimbinganByStatus($status, $isPeriode = false)
+    {
         $query = DB::table('trt_bimbingan')
             ->select("*")
             ->where('trt_bimbingan.status_bimbingan', $status);
 
         if ($isPeriode) {
-            $query->whereBetween('trt_bimbingan.updated_at', [$startDate, $endDate]);
+            $semesterRange = self::getCurrentSemesterDateRange();
+            $query->whereBetween('trt_bimbingan.updated_at', [$semesterRange->start, $semesterRange->end]);
         }
 
         $v = $query->get();
@@ -837,28 +1469,14 @@ class Helper
 
     public static function getStatusBimbinganByStatusTi($status, $isPeriode = false)
     {
-        $now = Carbon::now();
-        $startOfYear = Carbon::createFromDate($now->year, 1, 1);
-        $midYear = Carbon::createFromDate($now->year, 8, 1);
-        $endOfYear = Carbon::createFromDate($now->year, 12, 31);
-
-        if ($now->between($startOfYear, $midYear->subSecond())) {
-            // Periode 1: Januari - Juli
-            $startDate = $startOfYear;
-            $endDate = $midYear->subSecond();
-        } else {
-            // Periode 2: Agustus - Desember
-            $startDate = $midYear;
-            $endDate = $endOfYear;
-        }
-
         $query = DB::table('trt_bimbingan')
             ->select("*")
             ->where('trt_bimbingan.status_bimbingan', $status)
             ->where('trt_bimbingan.C_NPM', 'LIKE', '130%');
 
         if ($isPeriode) {
-            $query->whereBetween('trt_bimbingan.updated_at', [$startDate, $endDate]);
+            $semesterRange = self::getCurrentSemesterDateRange();
+            $query->whereBetween('trt_bimbingan.updated_at', [$semesterRange->start, $semesterRange->end]);
         }
 
         $v = $query->get();
@@ -868,28 +1486,14 @@ class Helper
 
     public static function getStatusBimbinganByStatusSi($status, $isPeriode = false)
     {
-        $now = Carbon::now();
-        $startOfYear = Carbon::createFromDate($now->year, 1, 1);
-        $midYear = Carbon::createFromDate($now->year, 8, 1);
-        $endOfYear = Carbon::createFromDate($now->year, 12, 31);
-
-        if ($now->between($startOfYear, $midYear->subSecond())) {
-            // Periode 1: Januari - Juli
-            $startDate = $startOfYear;
-            $endDate = $midYear->subSecond();
-        } else {
-            // Periode 2: Agustus - Desember
-            $startDate = $midYear;
-            $endDate = $endOfYear;
-        }
-
         $query = DB::table('trt_bimbingan')
             ->select("*")
             ->where('trt_bimbingan.status_bimbingan', $status)
             ->where('trt_bimbingan.C_NPM', 'LIKE', '131%');
 
         if ($isPeriode) {
-            $query->whereBetween('trt_bimbingan.updated_at', [$startDate, $endDate]);
+            $semesterRange = self::getCurrentSemesterDateRange();
+            $query->whereBetween('trt_bimbingan.updated_at', [$semesterRange->start, $semesterRange->end]);
         }
 
         $v = $query->get();
@@ -915,6 +1519,115 @@ class Helper
         return $data;
     }
 
+    public static function getRingkasanPeranPengujiAktifByDosen($kodeDosen)
+    {
+        $kodeDosen = trim((string) $kodeDosen);
+
+        if ($kodeDosen === '') {
+            return [
+                'proposal' => 0,
+                'ujian_ta' => 0,
+                'ketua_sidang_proposal' => 0,
+                'ketua_sidang_ujian_ta' => 0,
+                'ketua_sidang' => 0,
+            ];
+        }
+
+        $base = DB::table('trt_penguji as tp')
+            ->join('trt_reg as rg', function ($join) {
+                $join->on('rg.C_NPM', '=', 'tp.C_NPM')
+                    ->on('rg.status', '=', 'tp.tipe_ujian');
+            })
+            ->join('trt_bimbingan as tb', 'tb.C_NPM', '=', 'tp.C_NPM')
+            ->whereIn('tp.tipe_ujian', [0, 2]);
+
+        $proposal = (clone $base)
+            ->where('tp.tipe_ujian', 0)
+            ->where('tb.status_bimbingan', 0)
+            ->where(function ($query) use ($kodeDosen) {
+                $query->where('tp.penguji_I_id', $kodeDosen)
+                    ->orWhere('tp.penguji_II_id', $kodeDosen)
+                    ->orWhere('tp.penguji_III_id', $kodeDosen);
+            })
+            ->distinct()
+            ->count('tp.C_NPM');
+
+        $ujianTa = (clone $base)
+            ->where('tp.tipe_ujian', 2)
+            ->where('tb.status_bimbingan', 2)
+            ->where(function ($query) use ($kodeDosen) {
+                $query->where('tp.penguji_I_id', $kodeDosen)
+                    ->orWhere('tp.penguji_II_id', $kodeDosen)
+                    ->orWhere('tp.penguji_III_id', $kodeDosen);
+            })
+            ->distinct()
+            ->count('tp.C_NPM');
+
+        $ketuaSidang = (clone $base)
+            ->whereIn('tp.tipe_ujian', [0, 2])
+            ->whereIn('tb.status_bimbingan', [0, 2])
+            ->where('tp.ketua_sidang_id', $kodeDosen)
+            ->distinct()
+            ->count('tp.C_NPM');
+
+        $ketuaSidangProposal = (clone $base)
+            ->where('tp.tipe_ujian', 0)
+            ->where('tb.status_bimbingan', 0)
+            ->where('tp.ketua_sidang_id', $kodeDosen)
+            ->distinct()
+            ->count('tp.C_NPM');
+
+        $ketuaSidangUjianTa = (clone $base)
+            ->where('tp.tipe_ujian', 2)
+            ->where('tb.status_bimbingan', 2)
+            ->where('tp.ketua_sidang_id', $kodeDosen)
+            ->distinct()
+            ->count('tp.C_NPM');
+
+        return [
+            'proposal' => (int) $proposal,
+            'ujian_ta' => (int) $ujianTa,
+            'ketua_sidang_proposal' => (int) $ketuaSidangProposal,
+            'ketua_sidang_ujian_ta' => (int) $ketuaSidangUjianTa,
+            'ketua_sidang' => (int) $ketuaSidang,
+        ];
+    }
+
+    public static function getKomposisiPeranPembimbingAktifByDosen($kodeDosen)
+    {
+        $kodeDosen = trim((string) $kodeDosen);
+
+        if ($kodeDosen === '') {
+            return [
+                'proposal_utama' => 0,
+                'proposal_pendamping' => 0,
+                'ujian_utama' => 0,
+                'ujian_pendamping' => 0,
+            ];
+        }
+
+        $base = DB::table('trt_bimbingan')->whereIn('status_bimbingan', [0, 2]);
+
+        return [
+            'proposal_utama' => (int) (clone $base)
+                ->where('status_bimbingan', 0)
+                ->where('pembimbing_I_id', $kodeDosen)
+                ->count(),
+            'proposal_pendamping' => (int) (clone $base)
+                ->where('status_bimbingan', 0)
+                ->where('pembimbing_II_id', $kodeDosen)
+                ->count(),
+            'ujian_utama' => (int) (clone $base)
+                ->where('status_bimbingan', 2)
+                ->where('pembimbing_I_id', $kodeDosen)
+                ->count(),
+            'ujian_pendamping' => (int) (clone $base)
+                ->where('status_bimbingan', 2)
+                ->where('pembimbing_II_id', $kodeDosen)
+                ->count(),
+        ];
+    }
+
     public static function getStatusBimbinganByDosenAndStatus($kode_dosen, $status)
     {
         return DB::table('trt_bimbingan')
@@ -926,6 +1639,8 @@ class Helper
                 't_mst_mahasiswa.C_NPM',
                 't_mst_mahasiswa.NAMA_MAHASISWA',
                 'sk_pembimbing.tgl_sk_penetapan',
+                'trt_bimbingan.pembimbing_I_id',
+                'trt_bimbingan.pembimbing_II_id',
                 'dosen_utama.NAMA_DOSEN as pembimbing_utama',
                 'dosen_pendamping.NAMA_DOSEN as pembimbing_pendamping',
                 'trt_bimbingan.judul',
@@ -967,6 +1682,322 @@ class Helper
         }
 
         return !empty($hasil) ? implode(' ', $hasil) : '0 hari';
+    }
+
+    public static function getRataLamaProsesBimbinganDosenPerAngkatan($kodeDosen)
+    {
+        $kodeDosen = trim((string) $kodeDosen);
+        if ($kodeDosen === '') {
+            return [];
+        }
+
+        $rows = DB::select(
+            "
+            SELECT
+                src.angkatan_tahun,
+                ROUND(AVG(CASE WHEN src.kode_prodi_nim = '130' THEN src.lama_hari END) / 30, 1) AS ti_bulan,
+                ROUND(AVG(CASE WHEN src.kode_prodi_nim = '131' THEN src.lama_hari END) / 30, 1) AS si_bulan,
+                SUM(CASE WHEN src.kode_prodi_nim = '130' THEN 1 ELSE 0 END) AS total_ti,
+                SUM(CASE WHEN src.kode_prodi_nim = '131' THEN 1 ELSE 0 END) AS total_si
+            FROM (
+                SELECT
+                    tb.C_NPM,
+                    LEFT(tb.C_NPM, 3) AS kode_prodi_nim,
+                    SUBSTRING(tb.C_NPM, 4, 4) AS angkatan_tahun,
+                    DATEDIFF(
+                        CASE
+                            WHEN tb.status_bimbingan = 3 THEN COALESCE(DATE(tb.last_update), DATE(tb.updated_at), CURDATE())
+                            ELSE CURDATE()
+                        END,
+                        COALESCE(sk.tgl_sk_penetapan, DATE(tb.created_at), DATE(tb.updated_at), CURDATE())
+                    ) AS lama_hari
+                FROM trt_bimbingan tb
+                LEFT JOIN (
+                    SELECT bimbingan_id, DATE(MIN(created_at)) AS tgl_sk_penetapan
+                    FROM mst_sk_pembimbing
+                    GROUP BY bimbingan_id
+                ) sk ON sk.bimbingan_id = tb.bimbingan_id
+                WHERE (tb.pembimbing_I_id = ? OR tb.pembimbing_II_id = ?)
+                  AND LEFT(tb.C_NPM, 3) IN ('130', '131')
+            ) src
+            WHERE src.angkatan_tahun REGEXP '^[0-9]{4}$'
+              AND src.lama_hari >= 0
+            GROUP BY src.angkatan_tahun
+            ORDER BY src.angkatan_tahun ASC
+            ",
+            [$kodeDosen, $kodeDosen]
+        );
+
+        return collect($rows)->map(function ($row) {
+            $tiBulan = (float) ($row->ti_bulan ?? 0);
+            $siBulan = (float) ($row->si_bulan ?? 0);
+
+            return [
+                'y' => (string) ($row->angkatan_tahun ?? '-'),
+                'ti_bulan' => $tiBulan,
+                'si_bulan' => $siBulan,
+                'ti_label' => number_format($tiBulan, 1) . ' bulan',
+                'si_label' => number_format($siBulan, 1) . ' bulan',
+                'total_ti' => (int) ($row->total_ti ?? 0),
+                'total_si' => (int) ($row->total_si ?? 0),
+            ];
+        })->values()->all();
+    }
+
+    public static function getStatusBimbinganSummaryProdiByUsername($username = null)
+    {
+        try {
+            $nimLike = self::getScopeTaNimLikeByUsername($username);
+
+            $baseQuery = DB::table('trt_bimbingan');
+            if ($nimLike !== '%') {
+                $baseQuery->where('trt_bimbingan.C_NPM', 'LIKE', $nimLike);
+            }
+
+            return (object) [
+                'y' => '',
+                'PP' => (clone $baseQuery)->where('trt_bimbingan.status_bimbingan', 0)->count(),
+                'PUM' => (clone $baseQuery)->where('trt_bimbingan.status_bimbingan', 2)->count(),
+                'L' => (clone $baseQuery)->where('trt_bimbingan.status_bimbingan', 3)->count(),
+            ];
+        } catch (\Throwable $e) {
+            \Log::warning('getStatusBimbinganSummaryProdiByUsername error', [
+                'username' => $username,
+                'message' => $e->getMessage(),
+            ]);
+
+            return (object) [
+                'y' => '',
+                'PP' => 0,
+                'PUM' => 0,
+                'L' => 0,
+            ];
+        }
+    }
+
+    public static function getRataLamaProsesBimbinganProdiPerAngkatanByUsername($username = null)
+    {
+        try {
+            $rows = DB::select(
+                "
+            SELECT
+                src.angkatan_tahun,
+                ROUND(AVG(CASE WHEN src.kode_prodi_nim = '130' THEN src.lama_hari END) / 30, 1) AS ti_bulan,
+                ROUND(AVG(CASE WHEN src.kode_prodi_nim = '131' THEN src.lama_hari END) / 30, 1) AS si_bulan,
+                SUM(CASE WHEN src.kode_prodi_nim = '130' THEN 1 ELSE 0 END) AS total_ti,
+                SUM(CASE WHEN src.kode_prodi_nim = '131' THEN 1 ELSE 0 END) AS total_si
+            FROM (
+                SELECT
+                    tb.C_NPM,
+                    LEFT(tb.C_NPM, 3) AS kode_prodi_nim,
+                    SUBSTRING(tb.C_NPM, 4, 4) AS angkatan_tahun,
+                    DATEDIFF(
+                        CASE
+                            WHEN tb.status_bimbingan = 3 THEN COALESCE(DATE(tb.last_update), DATE(tb.updated_at), CURDATE())
+                            ELSE CURDATE()
+                        END,
+                        COALESCE(sk.tgl_sk_penetapan, DATE(tb.created_at), DATE(tb.updated_at), CURDATE())
+                    ) AS lama_hari
+                FROM trt_bimbingan tb
+                LEFT JOIN (
+                    SELECT bimbingan_id, DATE(MIN(created_at)) AS tgl_sk_penetapan
+                    FROM mst_sk_pembimbing
+                    GROUP BY bimbingan_id
+                ) sk ON sk.bimbingan_id = tb.bimbingan_id
+                WHERE LEFT(tb.C_NPM, 3) IN ('130', '131')
+            ) src
+            WHERE src.angkatan_tahun REGEXP '^[0-9]{4}$'
+              AND src.lama_hari >= 0
+            GROUP BY src.angkatan_tahun
+            ORDER BY src.angkatan_tahun ASC
+            "
+            );
+
+            return collect($rows)->map(function ($row) {
+                $tiBulan = (float) ($row->ti_bulan ?? 0);
+                $siBulan = (float) ($row->si_bulan ?? 0);
+
+                return [
+                    'y' => (string) ($row->angkatan_tahun ?? '-'),
+                    'ti_bulan' => $tiBulan,
+                    'si_bulan' => $siBulan,
+                    'ti_label' => number_format($tiBulan, 1) . ' bulan',
+                    'si_label' => number_format($siBulan, 1) . ' bulan',
+                    'total_ti' => (int) ($row->total_ti ?? 0),
+                    'total_si' => (int) ($row->total_si ?? 0),
+                ];
+            })->values()->all();
+        } catch (\Throwable $e) {
+            \Log::warning('getRataLamaProsesBimbinganProdiPerAngkatanByUsername error', [
+                'username' => $username,
+                'message' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    public static function getScopeTaNimLikeByUsername($username = null)
+    {
+        $username = strtolower(trim((string) ($username ?: auth()->user()->name ?? '')));
+
+        if ($username === 'proditi') {
+            return '130%';
+        }
+
+        if ($username === 'prodisi') {
+            return '131%';
+        }
+
+        return '%';
+    }
+
+    public static function getScopeTaLulusanPeriodeChartByAuthUser()
+    {
+        return self::getScopeTaLulusanPeriodeChartByUsername();
+    }
+
+    public static function getScopeTaLulusanPeriodeChartByUsername($username = null)
+    {
+        $nimLike = self::getScopeTaNimLikeByUsername($username);
+        $chart = [];
+
+        try {
+            $rows = DB::table('trt_bimbingan')
+                ->select('C_NPM', 'last_update', 'updated_at', 'created_at')
+                ->where('status_bimbingan', 3)
+                ->where('C_NPM', 'LIKE', $nimLike)
+                ->orderBy('bimbingan_id', 'desc')
+                ->get();
+
+            $lulusanNims = [];
+            $periodeCounts = [];
+
+            foreach ($rows as $row) {
+                if (in_array($row->C_NPM, $lulusanNims)) {
+                    continue;
+                }
+
+                $lulusanNims[] = $row->C_NPM;
+                $tanggalAcuan = '';
+
+                foreach (['last_update', 'updated_at', 'created_at'] as $field) {
+                    if (isset($row->$field) && $row->$field) {
+                        $candidate = substr((string) $row->$field, 0, 10);
+                        if ($candidate !== '' && $candidate !== '0000-00-00') {
+                            $tanggalAcuan = $candidate;
+                            break;
+                        }
+                    }
+                }
+
+                $label = 'Tidak diketahui';
+
+                if ($tanggalAcuan !== '') {
+                    try {
+                        $tanggal = Carbon::parse($tanggalAcuan);
+                        $tahun = $tanggal->year;
+                        $bulan = $tanggal->month;
+                        $label = $bulan >= 8 ? ($tahun . '/' . ($tahun + 1)) : (($tahun - 1) . '/' . $tahun);
+                    } catch (\Exception $e) {
+                        $label = 'Tidak diketahui';
+                    }
+                }
+
+                if (!isset($periodeCounts[$label])) {
+                    $periodeCounts[$label] = 0;
+                }
+
+                $periodeCounts[$label]++;
+            }
+
+            uksort($periodeCounts, function ($a, $b) {
+                if ($a === 'Tidak diketahui') {
+                    return 1;
+                }
+                if ($b === 'Tidak diketahui') {
+                    return -1;
+                }
+                return strcmp($a, $b);
+            });
+
+            foreach ($periodeCounts as $label => $total) {
+                $chart[] = [
+                    'y' => $label,
+                    'total' => (int) $total,
+                ];
+            }
+        } catch (\Exception $e) {
+            return [];
+        }
+
+        return $chart;
+    }
+
+    public static function getScopeTaLulusanBidangChartByAuthUser()
+    {
+        return self::getScopeTaLulusanBidangChartByUsername();
+    }
+
+    public static function getScopeTaLulusanBidangChartByUsername($username = null)
+    {
+        $nimLike = self::getScopeTaNimLikeByUsername($username);
+        $chart = [];
+
+        try {
+            $lulusanRows = DB::table('trt_bimbingan')
+                ->select('C_NPM')
+                ->where('status_bimbingan', 3)
+                ->where('C_NPM', 'LIKE', $nimLike)
+                ->orderBy('bimbingan_id', 'desc')
+                ->get();
+
+            $lulusanNims = [];
+            foreach ($lulusanRows as $row) {
+                if (!in_array($row->C_NPM, $lulusanNims)) {
+                    $lulusanNims[] = $row->C_NPM;
+                }
+            }
+
+            $topikRows = DB::table('trt_topik')
+                ->select('C_NPM', 'bidang_ilmu_peminatan')
+                ->where('status', 1)
+                ->where('C_NPM', 'LIKE', $nimLike)
+                ->orderBy('topik_id', 'desc')
+                ->get();
+
+            $topikByMahasiswa = [];
+            foreach ($topikRows as $row) {
+                if (!isset($topikByMahasiswa[$row->C_NPM])) {
+                    $topikByMahasiswa[$row->C_NPM] = trim((string) $row->bidang_ilmu_peminatan);
+                }
+            }
+
+            $bidangCounts = [];
+            foreach ($lulusanNims as $nim) {
+                $label = isset($topikByMahasiswa[$nim]) && $topikByMahasiswa[$nim] !== '' ? $topikByMahasiswa[$nim] : 'Belum diisi';
+
+                if (!isset($bidangCounts[$label])) {
+                    $bidangCounts[$label] = 0;
+                }
+
+                $bidangCounts[$label]++;
+            }
+
+            arsort($bidangCounts);
+            $bidangCounts = array_slice($bidangCounts, 0, 10, true);
+
+            foreach ($bidangCounts as $label => $total) {
+                $chart[] = [
+                    'y' => $label,
+                    'total' => (int) $total,
+                ];
+            }
+        } catch (\Exception $e) {
+            return [];
+        }
+
+        return $chart;
     }
 
 
@@ -1036,6 +2067,11 @@ class Helper
     {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
+
+        if (!isset($info) || !isset($info->tipe_ujian)) {
+            return collect();
+        }
+
         $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa , trt_jadwal_ujian, trt_jadwal_ujian_per_mhs , mst_ruangan WHERE mst_ruangan.id =  trt_jadwal_ujian_per_mhs.ruangan AND trt_bimbingan.C_NPM = trt_jadwal_ujian_per_mhs.C_NPM AND trt_jadwal_ujian.id = trt_jadwal_ujian_per_mhs.jadwal_ujian AND trt_jadwal_ujian.pendaftaran_id = trt_reg.pendaftaran_id AND mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ?", [$id, $info->tipe_ujian]);
 
         return $data;
@@ -1176,12 +2212,39 @@ class Helper
 
     public static function getNilaiKetuaSidangByDosen($dosen, $reg_id)
     {
+        static $cache = [];
+
+        $dosen = trim((string) $dosen);
+        $reg_id = trim((string) $reg_id);
+        $cacheKey = $dosen . '|' . $reg_id;
+
+        if (array_key_exists($cacheKey, $cache)) {
+            return $cache[$cacheKey];
+        }
+
+        $defaultNilai = (object) [
+            'nidn' => $dosen,
+            'reg_id' => $reg_id,
+            'nilai_1' => 0,
+            'nilai_2' => 0,
+            'nilai_3' => 0,
+            'nilai_4' => 0,
+            'nilai_5' => 0,
+        ];
+
+        if ($dosen === '' || $reg_id === '') {
+            $cache[$cacheKey] = $defaultNilai;
+            return $cache[$cacheKey];
+        }
+
         $v = DB::table('trt_hasil')
             ->select("*")
             ->where('trt_hasil.nidn', $dosen)
             ->where('trt_hasil.reg_id', $reg_id)
             ->first();
-        return isset($v) ? $v : '0';
+
+        $cache[$cacheKey] = isset($v) ? $v : $defaultNilai;
+        return $cache[$cacheKey];
     }
 
     public static function getPeriodePendaftaranByStatusUjian($status_ujian, $tipe_ujian)

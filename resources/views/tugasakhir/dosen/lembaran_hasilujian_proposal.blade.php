@@ -168,7 +168,7 @@
                 <td>NAMA MAHASISWA</td>
                 <td>:</td>
                 <td style="" colspan="2">
-                    {{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                    {{ ucwords(strtolower(helper::getNamaMhs($nim))) }}
                 </td>
             </tr>
             <tr>
@@ -192,7 +192,7 @@
                 <td class="tg-baqh">1.</td>
                 <td class="tg-0lax">Ketua Sidang</td>
                 <td class="tg-0lax">
-                    {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_selesai->ketua_sidang_id)->first()->NAMA_DOSEN }}
+                    {{ helper::getNamaDosenByKode($data_dosen_selesai->ketua_sidang_id) }}
                 </td>
                 <td class="tg-baqh">
                     {{ helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->ketua_sidang_id, $reg_id)->nilai_1 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->ketua_sidang_id, $reg_id)->nilai_2 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->ketua_sidang_id, $reg_id)->nilai_3 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->ketua_sidang_id, $reg_id)->nilai_4 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->ketua_sidang_id, $reg_id)->nilai_5 }}
@@ -203,7 +203,7 @@
                 <td class="tg-baqh">2.</td>
                 <td class="tg-0lax">Pembimbing Utama</td>
                 <td class="tg-0lax">
-                    {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_pembimbing->pembimbing_I_id)->first()->NAMA_DOSEN }}
+                    {{ helper::getNamaDosenByKode($data_dosen_pembimbing->pembimbing_I_id) }}
                 </td>
                 <td class="tg-baqh">
                     {{ helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_I_id, $reg_id)->nilai_1 + helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_I_id, $reg_id)->nilai_2 + helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_I_id, $reg_id)->nilai_3 + helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_I_id, $reg_id)->nilai_4 + helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_I_id, $reg_id)->nilai_5 }}
@@ -214,7 +214,7 @@
                 <td class="tg-baqh">3.</td>
                 <td class="tg-0lax">Pembimbing Pendamping</td>
                 <td class="tg-0lax">
-                    {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_pembimbing->pembimbing_II_id)->first()->NAMA_DOSEN }}
+                    {{ helper::getNamaDosenByKode($data_dosen_pembimbing->pembimbing_II_id) }}
                 </td>
                 <td class="tg-baqh">
                     {{ helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_II_id, $reg_id)->nilai_1 + helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_II_id, $reg_id)->nilai_2 + helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_II_id, $reg_id)->nilai_3 + helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_II_id, $reg_id)->nilai_4 + helper::getNilaiKetuaSidangByDosen($data_dosen_pembimbing->pembimbing_II_id, $reg_id)->nilai_5 }}
@@ -225,7 +225,7 @@
                 <td class="tg-baqh">4.</td>
                 <td class="tg-0lax">Penguji I</td>
                 <td class="tg-0lax">
-                    {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_selesai->penguji_I_id)->first()->NAMA_DOSEN }}
+                    {{ helper::getNamaDosenByKode($data_dosen_selesai->penguji_I_id) }}
                 </td>
                 <td class="tg-baqh">
                     {{ helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_I_id, $reg_id)->nilai_1 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_I_id, $reg_id)->nilai_2 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_I_id, $reg_id)->nilai_3 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_I_id, $reg_id)->nilai_4 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_I_id, $reg_id)->nilai_5 }}
@@ -236,7 +236,7 @@
                 <td class="tg-baqh">5.</td>
                 <td class="tg-0lax">Penguji II</td>
                 <td class="tg-0lax">
-                    {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_selesai->penguji_II_id)->first()->NAMA_DOSEN }}
+                    {{ helper::getNamaDosenByKode($data_dosen_selesai->penguji_II_id) }}
                 </td>
                 <td class="tg-baqh">
                     {{ helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_II_id, $reg_id)->nilai_1 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_II_id, $reg_id)->nilai_2 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_II_id, $reg_id)->nilai_3 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_II_id, $reg_id)->nilai_4 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_II_id, $reg_id)->nilai_5 }}
@@ -247,7 +247,7 @@
                 <td class="tg-baqh">6.</td>
                 <td class="tg-0lax">Penguji III</td>
                 <td class="tg-0lax">
-                    {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_selesai->penguji_III_id)->first()->NAMA_DOSEN }}
+                    {{ helper::getNamaDosenByKode($data_dosen_selesai->penguji_III_id) }}
                 </td>
                 <td class="tg-baqh">
                     {{ helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_III_id, $reg_id)->nilai_1 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_III_id, $reg_id)->nilai_2 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_III_id, $reg_id)->nilai_3 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_III_id, $reg_id)->nilai_4 + helper::getNilaiKetuaSidangByDosen($data_dosen_selesai->penguji_III_id, $reg_id)->nilai_5 }}
@@ -359,7 +359,7 @@
     <br><br><br><br>
     <br>
     <div class="legalitor">
-        {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_selesai->ketua_sidang_id)->first()->NAMA_DOSEN }}
+        {{ helper::getNamaDosenByKode($data_dosen_selesai->ketua_sidang_id) }}
         <b><u></u></b><br>
         <b>NIDN : {{ $data_dosen_selesai->ketua_sidang_id }}<br>
     </div>
@@ -453,7 +453,7 @@
                 <td>NAMA MAHASISWA</td>
                 <td>:</td>
                 <td style="" colspan="2">
-                    {{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                    {{ ucwords(strtolower(helper::getNamaMhs($nim))) }}
                 </td>
             </tr>
             <tr>
@@ -563,7 +563,7 @@
     <br><br><br><br>
     <br>
     <div class="legalitor">
-        {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_selesai->ketua_sidang_id)->first()->NAMA_DOSEN }}
+        {{ helper::getNamaDosenByKode($data_dosen_selesai->ketua_sidang_id) }}
         <b><u></u></b><br>
         <b>NIDN : {{ $data_dosen_selesai->ketua_sidang_id }}<br>
     </div>
@@ -654,7 +654,7 @@
                 <td>NAMA MAHASISWA</td>
                 <td>:</td>
                 <td style="" colspan="2">
-                    {{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                    {{ ucwords(strtolower(helper::getNamaMhs($nim))) }}
                 </td>
             </tr>
             <tr>
@@ -759,7 +759,7 @@
     <br><br><br><br>
     <br>
     <div class="legalitor">
-        {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_selesai->penguji_I_id)->first()->NAMA_DOSEN }}
+        {{ helper::getNamaDosenByKode($data_dosen_selesai->penguji_I_id) }}
         <b><u></u></b><br>
         <b>NIDN : {{ $data_dosen_selesai->penguji_I_id }}<br>
     </div>
@@ -850,7 +850,7 @@
                 <td>NAMA MAHASISWA</td>
                 <td>:</td>
                 <td style="" colspan="2">
-                    {{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                    {{ ucwords(strtolower(helper::getNamaMhs($nim))) }}
                 </td>
             </tr>
             <tr>
@@ -955,7 +955,7 @@
     <br><br><br><br>
     <br>
     <div class="legalitor">
-        {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_selesai->penguji_II_id)->first()->NAMA_DOSEN }}
+        {{ helper::getNamaDosenByKode($data_dosen_selesai->penguji_II_id) }}
         <b><u></u></b><br>
         <b>NIDN : {{ $data_dosen_selesai->penguji_II_id }}<br>
     </div>
@@ -1046,7 +1046,7 @@
                 <td>NAMA MAHASISWA</td>
                 <td>:</td>
                 <td style="" colspan="2">
-                    {{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                    {{ ucwords(strtolower(helper::getNamaMhs($nim))) }}
                 </td>
             </tr>
             <tr>
@@ -1156,7 +1156,7 @@
     <br><br><br><br>
     <br>
     <div class="legalitor">
-        {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_selesai->penguji_III_id)->first()->NAMA_DOSEN }}
+        {{ helper::getNamaDosenByKode($data_dosen_selesai->penguji_III_id) }}
         <b><u></u></b><br>
         <b>NIDN : {{ $data_dosen_selesai->penguji_III_id }}<br>
     </div>
@@ -1247,7 +1247,7 @@
                 <td>NAMA MAHASISWA</td>
                 <td>:</td>
                 <td style="" colspan="2">
-                    {{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                    {{ ucwords(strtolower(helper::getNamaMhs($nim))) }}
                 </td>
             </tr>
             <tr>
@@ -1357,7 +1357,7 @@
     <br><br><br><br>
     <br>
     <div class="legalitor">
-        {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_pembimbing->pembimbing_I_id)->first()->NAMA_DOSEN }}
+        {{ helper::getNamaDosenByKode($data_dosen_pembimbing->pembimbing_I_id) }}
         <b><u></u></b><br>
         <b>NIDN : {{ $data_dosen_pembimbing->pembimbing_I_id }}<br>
     </div>
@@ -1448,7 +1448,7 @@
                 <td>NAMA MAHASISWA</td>
                 <td>:</td>
                 <td style="" colspan="2">
-                    {{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                    {{ ucwords(strtolower(helper::getNamaMhs($nim))) }}
                 </td>
             </tr>
             <tr>
@@ -1558,7 +1558,7 @@
     <br><br><br><br>
     <br>
     <div class="legalitor">
-        {{ \App\Dosen::where('C_KODE_DOSEN', $data_dosen_pembimbing->pembimbing_II_id)->first()->NAMA_DOSEN }}
+        {{ helper::getNamaDosenByKode($data_dosen_pembimbing->pembimbing_II_id) }}
         <b><u></u></b><br>
         <b>NIDN : {{ $data_dosen_pembimbing->pembimbing_II_id }}<br>
     </div>

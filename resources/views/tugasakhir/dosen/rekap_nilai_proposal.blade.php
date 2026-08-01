@@ -16,7 +16,12 @@
             <!-- End breadcrumb -->
 
             <!-- BEGIN DATA TABLE -->
-            <h3 class="page-heading">Daftar Hasil Ujian Per Periode</h3>
+            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <h3 class="page-heading" style="margin: 0;">Daftar Hasil Ujian Per Periode</h3>
+                <a href="{{ url('dsn/rekap_nilai_proposal_history') }}" class="btn btn-primary btn-sm">
+                    <i class="fa fa-history"></i> History
+                </a>
+            </div>
             <div class="the-box">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover" id="datatable-example">
@@ -50,5 +55,4 @@
         </div><!-- /.container-fluid -->
     </div>
 @endsection
-
 

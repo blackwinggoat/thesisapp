@@ -64,51 +64,42 @@
                             <td width="1%" align="center">{{++$i}}</td>
                             <td>{{$d->C_NPM}}</td>
                             <td>{{$d->NAMA_MAHASISWA}}</td>
-                            @php
-                            $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                            $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                            $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_I_id)->first();
-                            $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_II_id)->first();
-                            $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_III_id)->first();
-                            $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$d->ketua_sidang_id)->first();
-                            @endphp
-                            <td>{{$pembimbing1->NAMA_DOSEN}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_I_id, $d->reg_id) ?></td>
-                            <td>{{$pembimbing2->NAMA_DOSEN}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_II_id, $d->reg_id) ?></td>
+                            <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_I_id, $d->reg_id) ?></td>
+                            <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_II_id, $d->reg_id) ?></td>
                             <td>
-                                @if ($penguji1 == null)
+                                @if (empty($d->penguji_I_id))
                                 {{"-"}}
                                 @else
-                                {{$penguji1->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->penguji_I_id) }}
                                 <?= helper::getStatusPenilaianPerDosen($d->penguji_I_id, $d->reg_id) ?>
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji2 == null)
+                                @if (empty($d->penguji_II_id))
                                 {{"-"}}
                                 @else
-                                {{$penguji2->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->penguji_II_id) }}
                                 <?= helper::getStatusPenilaianPerDosen($d->penguji_II_id, $d->reg_id) ?>
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji3 == null)
+                                @if (empty($d->penguji_III_id))
                                 {{"-"}}
                                 @else
-                                {{$penguji3->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->penguji_III_id) }}
                                 <?= helper::getStatusPenilaianPerDosen($d->penguji_III_id, $d->reg_id) ?>
                                 @endif
                             </td>
                             <td>
-                                @if ($ketuasidang == null)
+                                @if (empty($d->ketua_sidang_id))
                                 {{"-"}}
                                 @else
-                                {{$ketuasidang->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}
                                 <?= helper::getStatusPenilaianPerDosen($d->ketua_sidang_id, $d->reg_id) ?>
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji1 == null && $penguji2 == null && $penguji3 == null && $ketuasidang ==
-                                null)
+                                @if (empty($d->penguji_I_id) && empty($d->penguji_II_id) && empty($d->penguji_III_id) && empty($d->ketua_sidang_id))
                                 Silahkan Set Penguji dan Ketua Sidang
                                 @else
                                         <a href="{{url('dsn/detail_ujian')}}/{{$d->C_NPM}}/0" class="btn btn-info" target="_blank"><i class="fa fa-paperclip"></i></a>

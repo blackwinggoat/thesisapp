@@ -142,12 +142,12 @@
             <tr>
                 <td width="150px">Pembimbing Utama</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $bimbingan->pembimbing_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($bimbingan->pembimbing_I_id) }}</td>
             </tr>
             <tr>
                 <td>Pembimbing Pendamping</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $bimbingan->pembimbing_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($bimbingan->pembimbing_II_id) }}</td>
             </tr>
         </table>
     </div>
@@ -157,7 +157,7 @@
             <tr>
                 <td width="150px">Ketua Sidang</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $penguji->ketua_sidang_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($penguji->ketua_sidang_id) }}</td>
             </tr>
         </table>
     </div>
@@ -167,17 +167,17 @@
             <tr>
                 <td width="150px">Penguji</td>
                 <td>:</td>
-                <td>1. {{ \App\Dosen::where('C_KODE_DOSEN', $penguji->penguji_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>1. {{ helper::getNamaDosenByKode($penguji->penguji_I_id) }}</td>
             </tr>
             <tr>
                 <td></td>
                 <td></td>
-                <td>2. {{ \App\Dosen::where('C_KODE_DOSEN', $penguji->penguji_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>2. {{ helper::getNamaDosenByKode($penguji->penguji_II_id) }}</td>
             </tr>
             <tr>
                 <td></td>
                 <td></td>
-                <td>3. {{ \App\Dosen::where('C_KODE_DOSEN', $penguji->penguji_III_id)->first()->NAMA_DOSEN }}</td>
+                <td>3. {{ helper::getNamaDosenByKode($penguji->penguji_III_id) }}</td>
             </tr>
         </table>
     </div>
@@ -193,7 +193,7 @@
             </tr>
             <tr>
                 <td style="text-align: center">1</td>
-                <td>{{ \App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA }}</td>
+                <td>{{ helper::getNamaMhs($nim) }}</td>
                 <td style="text-align: center">{{ $nim }}</td>
             </tr>
         </table>

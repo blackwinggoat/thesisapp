@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Dosen;
 use App\Helper;
 use App\Model\mst_bidangilmu;
 use App\Model\mst_jenis_tugas_akhir;
@@ -32,7 +31,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 use Exception;
+use RuntimeException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Input;
 
@@ -197,9 +198,18 @@ class prodi extends Controller
     // Menampilkan Status Bimbingan Mahasiswa
     public function detail_status_bimbingan_mahasiswa($status)
     {
-        $data = DB::table('trt_bimbingan')
+        $query = DB::table('trt_bimbingan')
             ->select("*")
-            ->where('trt_bimbingan.status_bimbingan', $status)
+            ->where('trt_bimbingan.status_bimbingan', $status);
+
+        if (Auth::user()->name == 'proditi') {
+            $query->where('trt_bimbingan.C_NPM', 'LIKE', '130%');
+        } elseif (Auth::user()->name == 'prodisi') {
+            $query->where('trt_bimbingan.C_NPM', 'LIKE', '131%');
+        }
+
+        $data = $query
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         return view('tugasakhir.prodi.detail_status_bimbingan_mahasiswa', compact('data', 'status'));
@@ -232,35 +242,130 @@ class prodi extends Controller
     // Halaman Approve Hasil Ujian Proposal
     public function approve_hasilujian_proposal()
     {
-        if (Auth::user()->name == "proditi") {
-            $data = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', 0)
-                ->where('mst_pendaftaran.status_prodi', 1)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        } else {
-            $data = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', 0)
-                ->where('mst_pendaftaran.status_prodi', 2)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        }
-        return view('tugasakhir.prodi.approve_hasilujian_proposal', compact('data'));
+        $data = $this->getDaftarApproveHasilUjianProposalPeriode(false);
+        $isHistory = false;
+        return view('tugasakhir.prodi.approve_hasilujian_proposal', compact('data', 'isHistory'));
+    }
+
+    public function approve_hasilujian_proposal_history()
+    {
+        $data = $this->getDaftarApproveHasilUjianProposalPeriode(true);
+        $isHistory = true;
+        return view('tugasakhir.prodi.approve_hasilujian_proposal', compact('data', 'isHistory'));
     }
     // Akhir Approve Hasil Ujian Proposal
 
     // Halaman Approve Hasil Ujian Proposal
     public function detail_hasilujian_proposal($id)
     {
+        return $this->renderDetailHasilUjianProposal($id, false);
+    }
+
+    public function detail_hasilujian_proposal_history($id)
+    {
+        return $this->renderDetailHasilUjianProposal($id, true);
+    }
+
+    protected function renderDetailHasilUjianProposal($id, $isHistory = false)
+    {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
-        $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ?", [$id, $info->tipe_ujian]);
 
+        if (!$info) {
+            return response('Data jadwal/pendaftaran proposal tidak ditemukan.', 404);
+        }
 
+        $query = DB::table('mst_pendaftaran')
+            ->join('trt_reg', 'mst_pendaftaran.pendaftaran_id', '=', 'trt_reg.pendaftaran_id')
+            ->join('trt_bimbingan', 'trt_reg.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
+            ->join('trt_penguji', function ($join) {
+                $join->on('trt_penguji.C_NPM', '=', 'trt_bimbingan.C_NPM')
+                    ->on('trt_penguji.tipe_ujian', '=', 'trt_reg.status');
+            })
+            ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->where('trt_reg.pendaftaran_id', $id)
+            ->where('trt_reg.status', $info->tipe_ujian);
 
-        return view('tugasakhir.prodi.detail_hasilujian_proposal', compact("data", "info"));
+        if ($isHistory) {
+            $query->where('trt_bimbingan.status_bimbingan', '<>', 0);
+        } else {
+            $query->where('trt_bimbingan.status_bimbingan', 0);
+        }
+
+        $data = $query->select(
+            'mst_pendaftaran.*',
+            'trt_reg.*',
+            'trt_bimbingan.*',
+            'trt_penguji.*',
+            't_mst_mahasiswa.C_NPM as C_NPM',
+            't_mst_mahasiswa.NAMA_MAHASISWA'
+        )->get();
+
+        return view('tugasakhir.prodi.detail_hasilujian_proposal', compact("data", "info", "isHistory"));
+    }
+
+    protected function getDaftarApproveHasilUjianProposalPeriode($isHistory = false)
+    {
+        $statusProdi = Auth::user()->name == "proditi" ? 1 : 2;
+
+        $query = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
+            ->where(function ($q) {
+                $q->where('mst_pendaftaran.tipe_ujian', 0)
+                    ->orWhere('mst_pendaftaran.tipe_ujian', 3);
+            })
+            ->where('mst_pendaftaran.status_prodi', $statusProdi)
+            ->orderBy('mst_pendaftaran.created_at', 'desc');
+
+        if ($isHistory) {
+            $query->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('trt_reg')
+                    ->join('trt_bimbingan', 'trt_reg.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
+                    ->whereRaw('trt_reg.pendaftaran_id = mst_pendaftaran.pendaftaran_id')
+                    ->where('trt_reg.status', 0)
+                    ->where('trt_bimbingan.status_bimbingan', '<>', 0);
+            });
+        } else {
+            $query->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('trt_reg')
+                    ->join('trt_bimbingan', 'trt_reg.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
+                    ->whereRaw('trt_reg.pendaftaran_id = mst_pendaftaran.pendaftaran_id')
+                    ->where('trt_reg.status', 0)
+                    ->where('trt_bimbingan.status_bimbingan', 0);
+            });
+        }
+
+        $data = $query->get();
+
+        return $data->map(function ($item) use ($isHistory) {
+            $peserta = DB::table('trt_reg as rg')
+                ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+                ->where('rg.pendaftaran_id', $item->pendaftaran_id)
+                ->where('rg.status', 0)
+                ->when($isHistory, function ($q) {
+                    $q->where('tb.status_bimbingan', '<>', 0);
+                }, function ($q) {
+                    $q->where('tb.status_bimbingan', 0);
+                })
+                ->select('rg.reg_id')
+                ->distinct()
+                ->get();
+
+            $lengkap = 0;
+            $tidakLengkap = 0;
+            foreach ($peserta as $rowPeserta) {
+                if (Helper::isPenilaianLengkapByRegId($rowPeserta->reg_id)) {
+                    $lengkap++;
+                } else {
+                    $tidakLengkap++;
+                }
+            }
+
+            $item->total_penilaian_lengkap = $lengkap;
+            $item->total_penilaian_tidak_lengkap = $tidakLengkap;
+            return $item;
+        });
     }
     // Akhir Approve Hasil Ujian Proposal
 
@@ -334,7 +439,7 @@ class prodi extends Controller
             ->get();
         $data_bimbingan_id = array();
         foreach ($data as $key => $value) {
-            if (Helper::getJumlahTrtHasil($value->reg_id) == 5) {
+            if (Helper::isPenilaianLengkapByRegId($value->reg_id)) {
                 array_push($data_bimbingan_id, $value->bimbingan_id);
             }
         }
@@ -361,7 +466,7 @@ class prodi extends Controller
             ->get();
         $data_bimbingan_id = array();
         foreach ($data as $key => $value) {
-            if (Helper::getJumlahTrtHasil($value->reg_id) == 6) {
+            if (Helper::isPenilaianLengkapByRegId($value->reg_id)) {
                 array_push($data_bimbingan_id, $value->bimbingan_id);
             }
         }
@@ -461,35 +566,132 @@ class prodi extends Controller
     // Halaman Approve Hasil Ujian TA
     public function approve_hasilujian_ta()
     {
-        if (Auth::user()->name == "proditi") {
-            $data = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', 2)
-                ->where('mst_pendaftaran.status_prodi', 1)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        } else {
-            $data = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', 2)
-                ->where('mst_pendaftaran.status_prodi', 2)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        }
-        return view('tugasakhir.prodi.approve_hasilujian_ta', compact('data'));
+        $data = $this->getDaftarApproveHasilUjianTaPeriode(false);
+        $isHistory = false;
+        return view('tugasakhir.prodi.approve_hasilujian_ta', compact('data', 'isHistory'));
+    }
+
+    public function approve_hasilujian_ta_history()
+    {
+        $data = $this->getDaftarApproveHasilUjianTaPeriode(true);
+        $isHistory = true;
+        return view('tugasakhir.prodi.approve_hasilujian_ta', compact('data', 'isHistory'));
     }
     // Akhir Approve Hasil Ujian TA
 
     // Halaman Approve Hasil Ujian TA
     public function detail_hasilujian_ta($id)
     {
+        return $this->renderDetailHasilUjianTa($id, false);
+    }
+
+    public function detail_hasilujian_ta_history($id)
+    {
+        return $this->renderDetailHasilUjianTa($id, true);
+    }
+
+    protected function renderDetailHasilUjianTa($id, $isHistory = false)
+    {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
-        $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ?", [$id, $info->tipe_ujian]);
 
-        return view('tugasakhir.prodi.detail_hasilujian_ta', compact("data", "info"));
+        if (!$info) {
+            return response('Data jadwal/pendaftaran ujian TA tidak ditemukan.', 404);
+        }
+
+        $query = DB::table('mst_pendaftaran')
+            ->join('trt_reg', 'mst_pendaftaran.pendaftaran_id', '=', 'trt_reg.pendaftaran_id')
+            ->join('trt_bimbingan', 'trt_reg.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
+            ->join('trt_penguji', function ($join) {
+                $join->on('trt_penguji.C_NPM', '=', 'trt_bimbingan.C_NPM')
+                    ->on('trt_penguji.tipe_ujian', '=', 'trt_reg.status');
+            })
+            ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->where('trt_reg.pendaftaran_id', $id)
+            ->where('trt_reg.status', $info->tipe_ujian);
+
+        if ($isHistory) {
+            $query->where('trt_bimbingan.status_bimbingan', '<>', 2);
+        } else {
+            $query->where('trt_bimbingan.status_bimbingan', 2);
+        }
+
+        $data = $query->select(
+            'mst_pendaftaran.*',
+            'trt_reg.*',
+            'trt_bimbingan.*',
+            'trt_penguji.*',
+            't_mst_mahasiswa.C_NPM as C_NPM',
+            't_mst_mahasiswa.NAMA_MAHASISWA'
+        )->get();
+
+        return view('tugasakhir.prodi.detail_hasilujian_ta', compact("data", "info", "isHistory"));
     }
     // Akhir Approve Hasil Ujian TA
+
+    protected function getDaftarApproveHasilUjianTaPeriode($isHistory = false)
+    {
+        $statusProdi = Auth::user()->name == "proditi" ? 1 : 2;
+
+        $query = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
+            ->where(function ($q) {
+                $q->where('mst_pendaftaran.tipe_ujian', 2)
+                    ->orWhere('mst_pendaftaran.tipe_ujian', 3);
+            })
+            ->where('mst_pendaftaran.status_prodi', $statusProdi)
+            ->orderBy('mst_pendaftaran.created_at', 'desc');
+
+        if ($isHistory) {
+            $query->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('trt_reg')
+                    ->join('trt_bimbingan', 'trt_reg.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
+                    ->whereRaw('trt_reg.pendaftaran_id = mst_pendaftaran.pendaftaran_id')
+                    ->where('trt_reg.status', 2)
+                    ->where('trt_bimbingan.status_bimbingan', '<>', 2);
+            });
+        } else {
+            $query->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('trt_reg')
+                    ->join('trt_bimbingan', 'trt_reg.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
+                    ->whereRaw('trt_reg.pendaftaran_id = mst_pendaftaran.pendaftaran_id')
+                    ->where('trt_reg.status', 2)
+                    ->where('trt_bimbingan.status_bimbingan', 2);
+            });
+        }
+
+        $data = $query->get();
+
+        return $data->map(function ($item) use ($isHistory) {
+            $peserta = DB::table('trt_reg as rg')
+                ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+                ->where('rg.pendaftaran_id', $item->pendaftaran_id)
+                ->where('rg.status', 2)
+                ->when($isHistory, function ($q) {
+                    $q->where('tb.status_bimbingan', '<>', 2);
+                }, function ($q) {
+                    $q->where('tb.status_bimbingan', 2);
+                })
+                ->select('rg.reg_id')
+                ->distinct()
+                ->get();
+
+            $lengkap = 0;
+            $tidakLengkap = 0;
+            foreach ($peserta as $rowPeserta) {
+                if (Helper::isPenilaianLengkapByRegId($rowPeserta->reg_id)) {
+                    $lengkap++;
+                } else {
+                    $tidakLengkap++;
+                }
+            }
+
+            $item->total_penilaian_lengkap = $lengkap;
+            $item->total_penilaian_tidak_lengkap = $tidakLengkap;
+            return $item;
+        });
+    }
 
     // Halaman Approve Hasil Ujian TA
     public function approve_hasilujian_ta_post($id, $nim, $pendaftaran_id)
@@ -673,19 +875,33 @@ class prodi extends Controller
             ->select('*')
             ->where('C_KODE_DOSEN', $id)
             ->first();
+        if (!$data) {
+            $data = helper::getDosenRecordByKode($id);
+        }
+        if (!$data) {
+            return response('Data dosen pembimbing tidak ditemukan.', 404);
+        }
 
-        $data_bimbingan1 = DB::table('trt_bimbingan')
-            ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-            ->where('pembimbing_I_id', $id)
-            ->get();
-
-
-
-        $data_bimbingan2 = DB::table('trt_bimbingan')
-            ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-            ->where('pembimbing_II_id', $id)
-            ->get();
+        $data_bimbingan1 = $this->getMahasiswaBimbinganByPeran($id, 'pembimbing_I_id', 'Pembimbing Utama');
+        $data_bimbingan2 = $this->getMahasiswaBimbinganByPeran($id, 'pembimbing_II_id', 'Pembimbing Pendamping');
         $total = count($data_bimbingan1) + count($data_bimbingan2);
+        $semuaBimbingan = $data_bimbingan1->merge($data_bimbingan2)->values();
+        $data_bimbingan_aktif = $semuaBimbingan
+            ->filter(function ($item) {
+                return (string) ($item->status_bimbingan ?? '') !== '3';
+            })
+            ->sortBy(function ($item) {
+                return $this->getStatusBimbinganSortOrder($item->status_bimbingan ?? null) . '|' . strtolower(trim((string) ($item->NAMA_MAHASISWA ?? '')));
+            })
+            ->values();
+        $data_bimbingan_lulusan = $semuaBimbingan
+            ->filter(function ($item) {
+                return (string) ($item->status_bimbingan ?? '') === '3';
+            })
+            ->sortBy(function ($item) {
+                return strtolower(trim((string) ($item->NAMA_MAHASISWA ?? '')));
+            })
+            ->values();
 
         $ppropI = DB::table('trt_bimbingan')
             ->where('pembimbing_I_id', $id)
@@ -722,8 +938,8 @@ class prodi extends Controller
         return view('tugasakhir.prodi.detail_pembimbing', compact(
             'data',
             'total',
-            'data_bimbingan1',
-            'data_bimbingan2',
+            'data_bimbingan_aktif',
+            'data_bimbingan_lulusan',
             'ppropI',
             'ppropII',
             'phasilI',
@@ -735,21 +951,140 @@ class prodi extends Controller
         ));
     }
 
-    public function mahasiswa()
+    protected function getMahasiswaBimbinganByPeran($kodeDosen, $kolomPembimbing, $peranPembimbing)
     {
-        $status = '';
-        if (auth()->user()->name == "prodisi") {
-            $status = '131';
-        } else if (auth()->user()->name == "proditi") {
-            $status = '130';
+        $query = DB::table('trt_bimbingan')
+            ->leftJoin('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->leftJoin('mst_sk_pembimbing', 'trt_bimbingan.bimbingan_id', '=', 'mst_sk_pembimbing.bimbingan_id')
+            ->select(
+                'trt_bimbingan.bimbingan_id',
+                'trt_bimbingan.C_NPM',
+                'trt_bimbingan.status_bimbingan',
+                't_mst_mahasiswa.NAMA_MAHASISWA',
+                'mst_sk_pembimbing.nomor_sk',
+                'mst_sk_pembimbing.created_at as tanggal_sk'
+            )
+            ->where('trt_bimbingan.' . $kolomPembimbing, $kodeDosen)
+            ->orderBy('t_mst_mahasiswa.NAMA_MAHASISWA', 'asc')
+            ->distinct();
+
+        if (Schema::hasTable('trt_kontak_mahasiswa')) {
+            $query->leftJoin('trt_kontak_mahasiswa', 'trt_kontak_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+                ->addSelect('trt_kontak_mahasiswa.no_wa', 'trt_kontak_mahasiswa.id_telegram');
         }
 
+        return $query->get()->map(function ($item) use ($peranPembimbing) {
+            $item->peran_pembimbing = $peranPembimbing;
+            $item->label_status_bimbingan = $this->getStatusBimbinganLabel($item->status_bimbingan ?? null);
+            return $item;
+        });
+    }
 
-        $data = DB::table('t_mst_mahasiswa')
-            ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA')
-            ->where('C_NPM', 'LIKE', '' . $status . '%')
-            ->get();
-        return view('tugasakhir.prodi.mahasiswa', compact('data'));
+    protected function getStatusBimbinganLabel($status)
+    {
+        switch ((string) $status) {
+            case '0':
+                return 'Persiapan Proposal';
+            case '1':
+                return 'Persiapan Seminar Hasil';
+            case '2':
+                return 'Persiapan Ujian Meja';
+            case '3':
+                return 'Lulusan';
+            case '4':
+                return 'Non Aktif';
+            default:
+                return '-';
+        }
+    }
+
+    protected function getStatusBimbinganSortOrder($status)
+    {
+        switch ((string) $status) {
+            case '0':
+                return '01';
+            case '1':
+                return '02';
+            case '2':
+                return '03';
+            case '4':
+                return '04';
+            case '3':
+                return '05';
+            default:
+                return '99';
+        }
+    }
+
+    public function mahasiswa(Request $request)
+    {
+        $nimPrefix = '';
+        if (auth()->user()->name == "prodisi") {
+            $nimPrefix = '131';
+        } else if (auth()->user()->name == "proditi") {
+            $nimPrefix = '130';
+        }
+
+        $q = trim((string) $request->get('q', ''));
+        $angkatan = trim((string) $request->get('angkatan', ''));
+        $statusAkun = trim((string) $request->get('status_akun', 'semua'));
+        $perPage = (int) $request->get('per_page', 25);
+        $allowedPerPage = [25, 50, 100, 200];
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 25;
+        }
+
+        $query = DB::table('t_mst_mahasiswa')
+            ->leftJoin('users', function ($join) {
+                $join->on('users.name', '=', 't_mst_mahasiswa.C_NPM');
+            })
+            ->select(
+                't_mst_mahasiswa.C_NPM',
+                't_mst_mahasiswa.NAMA_MAHASISWA',
+                DB::raw('CASE WHEN users.id IS NULL THEN 0 ELSE 1 END AS has_user')
+            );
+
+        if ($nimPrefix !== '') {
+            $query->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimPrefix . '%');
+        }
+
+        if ($q !== '') {
+            $query->where(function ($subQuery) use ($q) {
+                $subQuery->where('t_mst_mahasiswa.C_NPM', 'LIKE', '%' . $q . '%')
+                    ->orWhere('t_mst_mahasiswa.NAMA_MAHASISWA', 'LIKE', '%' . $q . '%');
+            });
+        }
+
+        if ($angkatan !== '' && preg_match('/^[0-9]{4}$/', $angkatan)) {
+            $query->whereRaw('SUBSTRING(t_mst_mahasiswa.C_NPM, 4, 4) = ?', [$angkatan]);
+        }
+
+        if ($statusAkun === 'aktif') {
+            $query->whereNotNull('users.id');
+        } elseif ($statusAkun === 'belum') {
+            $query->whereNull('users.id');
+        }
+
+        $data = $query
+            ->orderBy('t_mst_mahasiswa.C_NPM', 'desc')
+            ->paginate($perPage)
+            ->appends($request->query());
+
+        $angkatanQuery = DB::table('t_mst_mahasiswa')
+            ->selectRaw('SUBSTRING(C_NPM, 4, 4) as angkatan')
+            ->whereRaw("SUBSTRING(C_NPM, 4, 4) REGEXP '^[0-9]{4}$'");
+
+        if ($nimPrefix !== '') {
+            $angkatanQuery->where('C_NPM', 'LIKE', $nimPrefix . '%');
+        }
+
+        $listAngkatan = $angkatanQuery
+            ->distinct()
+            ->orderBy('angkatan', 'desc')
+            ->pluck('angkatan')
+            ->toArray();
+
+        return view('tugasakhir.prodi.mahasiswa', compact('data', 'listAngkatan', 'q', 'angkatan', 'statusAkun', 'perPage'));
     }
 
     public function detail_mahasiswa($id)
@@ -892,6 +1227,33 @@ class prodi extends Controller
         return redirect()->back();
     }
 
+    public function login_as_dosen(Request $request, $id)
+    {
+        $authUser = auth()->user();
+        if (!$authUser || (int) $authUser->level !== 5) {
+            return redirect('/')->with('danger', 'Akses login as hanya untuk akun prodi.');
+        }
+
+        $dosenUser = DB::table('users')
+            ->select('id', 'name', 'level')
+            ->where('name', $id)
+            ->where('level', 7)
+            ->first();
+
+        if (!$dosenUser) {
+            return redirect()->back()->with('danger', 'Akun dosen belum tersedia. Silakan daftarkan akun dosen terlebih dahulu.');
+        }
+
+        $request->session()->put('login_as_source_user_id', $authUser->id);
+        $request->session()->put('login_as_source_user_name', $authUser->name);
+        $request->session()->put('login_as_source_user_level', (int) $authUser->level);
+
+        Auth::loginUsingId($dosenUser->id);
+        $request->session()->regenerate();
+
+        return redirect('/')->with('success', 'Berhasil login sebagai dosen.');
+    }
+
 
     public function surat_pengusulanujianta()
     {
@@ -900,34 +1262,56 @@ class prodi extends Controller
 
     public function topik()
     {
-        if (Auth::user()->name == 'proditi') {
-            $data_pengusul = DB::table('trt_topik')
-                ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA')
-                ->where('trt_topik.status', 0)
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '130%')
-                ->distinct()
-                ->get();
-            $data_riwayat_usulan = DB::table('trt_topik')
-                ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA', 'trt_topik.topik', 'trt_topik.kerangka', 'trt_topik.status')
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '130%')
-                ->get();
-        } else {
-            $data_pengusul = DB::table('trt_topik')
-                ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA')
-                ->where('trt_topik.status', 0)
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '131%')
-                ->distinct()
-                ->get();
-            $data_riwayat_usulan = DB::table('trt_topik')
-                ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA', 'trt_topik.topik', 'trt_topik.kerangka', 'trt_topik.status')
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '131%')
-                ->get();
+        $nimPrefix = Auth::user()->name == 'proditi' ? '130%' : '131%';
+
+        $data_pengusul = DB::table('trt_topik')
+            ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA')
+            ->where('trt_topik.status', 0)
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimPrefix)
+            ->distinct()
+            ->orderBy('t_mst_mahasiswa.C_NPM', 'desc')
+            ->get();
+
+        return view('tugasakhir.prodi.topik', compact('data_pengusul'));
+    }
+
+    public function topik_riwayat(Request $request)
+    {
+        $nimPrefix = Auth::user()->name == 'proditi' ? '130%' : '131%';
+        $q = trim((string) $request->get('q', ''));
+        $perPage = (int) $request->get('per_page', 50);
+        $allowedPerPage = [25, 50, 100, 200];
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 50;
         }
-        return view('tugasakhir.prodi.topik', compact('data_riwayat_usulan', 'data_pengusul'));
+
+        $query = DB::table('trt_topik')
+            ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->select(
+                'trt_topik.topik_id',
+                't_mst_mahasiswa.C_NPM',
+                't_mst_mahasiswa.NAMA_MAHASISWA',
+                'trt_topik.topik',
+                'trt_topik.kerangka',
+                'trt_topik.status'
+            )
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimPrefix);
+
+        if ($q !== '') {
+            $query->where(function ($subQuery) use ($q) {
+                $subQuery->where('t_mst_mahasiswa.C_NPM', 'LIKE', '%' . $q . '%')
+                    ->orWhere('t_mst_mahasiswa.NAMA_MAHASISWA', 'LIKE', '%' . $q . '%')
+                    ->orWhere('trt_topik.topik', 'LIKE', '%' . $q . '%');
+            });
+        }
+
+        $data_riwayat_usulan = $query
+            ->orderBy('trt_topik.topik_id', 'desc')
+            ->paginate($perPage)
+            ->appends($request->query());
+
+        return view('tugasakhir.prodi.topik_riwayat', compact('data_riwayat_usulan', 'q', 'perPage'));
     }
 
     public function topikpost(Request $request)
@@ -1099,18 +1483,125 @@ class prodi extends Controller
 
     public function set_penguji($pendaftaran_id, $nim, $tipe_ujian)
     {
-        $info = t_mst_mahasiswa::join("trt_bimbingan", "trt_bimbingan.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
-            ->join('trt_penguji', 'trt_penguji.C_NPM', '=', 'trt_bimbingan.C_NPM')
-            ->where("t_mst_mahasiswa.C_NPM", $nim)
-            ->where('trt_penguji.tipe_ujian', $tipe_ujian)
-            ->first();
-        $dosen = Dosen::whereNotIn("C_KODE_DOSEN", [$info->pembimbing_I_id, $info->pembimbing_II_id])->get();
-        return view('tugasakhir.prodi.set_penguji', compact('dosen', "info", "pendaftaran_id"));
+        try {
+            $mst_pendaftaran = mst_pendaftaran::where("pendaftaran_id", $pendaftaran_id)->first();
+
+            if (empty($mst_pendaftaran)) {
+                return response('Data pendaftaran ujian tidak ditemukan.', 404);
+            }
+
+            $info = t_mst_mahasiswa::join("trt_bimbingan", "trt_bimbingan.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
+                ->where("t_mst_mahasiswa.C_NPM", $nim)
+                ->select(
+                    't_mst_mahasiswa.C_NPM',
+                    't_mst_mahasiswa.NAMA_MAHASISWA',
+                    'trt_bimbingan.judul',
+                    'trt_bimbingan.pembimbing_I_id',
+                    'trt_bimbingan.pembimbing_II_id'
+                )
+                ->orderBy('trt_bimbingan.bimbingan_id', 'desc')
+                ->first();
+
+            if (empty($info)) {
+                return response('Data mahasiswa bimbingan tidak ditemukan.', 404);
+            }
+
+            $tipeUjianAktif = isset($mst_pendaftaran->tipe_ujian) ? $mst_pendaftaran->tipe_ujian : $tipe_ujian;
+            $currentPenguji = TrtPenguji::where([
+                "C_NPM" => $nim,
+                "tipe_ujian" => $tipeUjianAktif
+            ])->first();
+
+            $namaPembimbing1 = $this->getNamaDosenSetPenguji($info->pembimbing_I_id);
+            $namaPembimbing2 = $this->getNamaDosenSetPenguji($info->pembimbing_II_id);
+
+            $excludeDosen = array_values(array_filter([$info->pembimbing_I_id, $info->pembimbing_II_id]));
+            $dosen = collect();
+
+            try {
+                $queryDosenUtama = DB::table('t_mst_dosen')
+                    ->select('C_KODE_DOSEN', 'NAMA_DOSEN');
+
+                if (!empty($excludeDosen)) {
+                    $queryDosenUtama->whereNotIn('C_KODE_DOSEN', $excludeDosen);
+                }
+
+                $dosen = collect($queryDosenUtama->get());
+            } catch (Exception $e) {
+                $dosen = collect();
+            }
+
+            try {
+                $queryDosenMigrasi = DB::table('mig_t_mst_dosen')
+                    ->select('C_KODE_DOSEN', 'NAMA_DOSEN');
+
+                if (!empty($excludeDosen)) {
+                    $queryDosenMigrasi->whereNotIn('C_KODE_DOSEN', $excludeDosen);
+                }
+
+                $dosenMigrasi = collect($queryDosenMigrasi->get());
+
+                foreach ($dosenMigrasi as $row) {
+                    if (!$dosen->firstWhere('C_KODE_DOSEN', $row->C_KODE_DOSEN)) {
+                        $dosen->push($row);
+                    }
+                }
+            } catch (Exception $e) {
+            }
+
+            $dosen = $dosen->sortBy('NAMA_DOSEN')->values();
+
+            return view('tugasakhir.prodi.set_penguji', compact('dosen', 'info', 'pendaftaran_id', 'mst_pendaftaran', 'currentPenguji', 'tipeUjianAktif', 'namaPembimbing1', 'namaPembimbing2'));
+        } catch (Exception $e) {
+            Log::error('set_penguji error', [
+                'pendaftaran_id' => $pendaftaran_id,
+                'nim' => $nim,
+                'tipe_ujian' => $tipe_ujian,
+                'message' => $e->getMessage(),
+            ]);
+            return response('Terjadi kesalahan saat memuat data set penguji.', 500);
+        }
+    }
+
+    protected function getNamaDosenSetPenguji($kodeDosen)
+    {
+        $kodeDosen = trim((string) $kodeDosen);
+
+        if ($kodeDosen === '') {
+            return '--';
+        }
+
+        $dosen = null;
+
+        try {
+            $dosen = DB::table('t_mst_dosen')
+                ->select('NAMA_DOSEN')
+                ->where('C_KODE_DOSEN', $kodeDosen)
+                ->first();
+        } catch (Exception $e) {
+            $dosen = null;
+        }
+
+        if (!$dosen) {
+            try {
+            $dosen = DB::table('mig_t_mst_dosen')
+                ->select('NAMA_DOSEN')
+                ->where('C_KODE_DOSEN', $kodeDosen)
+                ->first();
+            } catch (Exception $e) {
+                $dosen = null;
+            }
+        }
+
+        return !empty($dosen->NAMA_DOSEN) ? $dosen->NAMA_DOSEN : '--';
     }
 
     public function set_pengujipost($pendaftaran_id, Request $request)
     {
         $mst_pendaftaran = mst_pendaftaran::where("pendaftaran_id", $pendaftaran_id)->first();
+        if (empty($mst_pendaftaran)) {
+            return redirect()->back()->with('error', 'Data pendaftaran ujian tidak ditemukan.');
+        }
         $request->merge(["tipe_ujian" => $mst_pendaftaran->tipe_ujian]);
         $trtpenguji = TrtPenguji::where([
             "C_NPM" => $request->C_NPM,
@@ -1213,6 +1704,10 @@ class prodi extends Controller
             ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
             ->where('trt_sk.nomor', '=', str_replace("$", "/", $nomor))
             ->get();
+
+        if ($datax->isEmpty()) {
+            return response('Data surat pengusulan tidak ditemukan atau belum tersedia.', 404);
+        }
 
         $perihal = $datax[0]->perihal;
         $tgl = $datax[0]->tgl_surat;
@@ -1410,10 +1905,20 @@ class prodi extends Controller
         return view('tugasakhir.prodi.peserta_ujianmeja', compact('pendaftaran'));
     }
 
+    public function daftar_peserta_index()
+    {
+        return redirect()->to('/prodi/jadwal');
+    }
+
     public function daftar_peserta($id)
     {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
+
+        if (!$info || !isset($info->tipe_ujian)) {
+            return response('Data jadwal ujian tidak ditemukan.', 404);
+        }
+
         $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ?", [$id, $info->tipe_ujian]);
 
 
@@ -1423,6 +1928,10 @@ class prodi extends Controller
     public function temp_daftar_peserta($id)
     {
         $info = DB::select("SELECT * FROM mst_pendaftaran WHERE mst_pendaftaran.pendaftaran_id = ?", [$id]);
+
+        if (empty($info) || !isset($info[0]->tipe_ujian)) {
+            return response('Data periode pendaftaran tidak ditemukan.', 404);
+        }
 
         $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ?", [$id, $info[0]->tipe_ujian]);
 
@@ -1476,10 +1985,140 @@ class prodi extends Controller
 
     public function scope_ta()
     {
-        $data = DB::table('mst_bidangilmu')
+        $queryBidangIlmu = DB::table('mst_bidangilmu')
             ->select('*')
-            ->get();
-        return view('tugasakhir.prodi.scope_ta', compact('data'));
+            ->orderBy('bidang_ilmu');
+
+        $data = $queryBidangIlmu->get();
+
+        $hasStatusAktif = Schema::hasColumn('mst_bidangilmu', 'status_aktif');
+
+        foreach ($data as $row) {
+            if (!$hasStatusAktif) {
+                $row->status_aktif = 1;
+            }
+
+            $row->status_label = (int) ($row->status_aktif ?? 1) === 1 ? 'Aktif' : 'Tidak Aktif';
+        }
+
+        $lulusanPeriodeChart = [];
+        $lulusanBidangChart = [];
+
+        $nimLike = '%';
+        if (Auth::user()->name == 'proditi') {
+            $nimLike = '130%';
+        } elseif (Auth::user()->name == 'prodisi') {
+            $nimLike = '131%';
+        }
+
+        try {
+            $lulusanRows = DB::table('trt_bimbingan')
+                ->select('C_NPM', 'last_update', 'updated_at', 'created_at')
+                ->where('status_bimbingan', 3)
+                ->where('C_NPM', 'LIKE', $nimLike)
+                ->orderBy('bimbingan_id', 'desc')
+                ->get();
+
+            $lulusanNims = [];
+            $periodeCounts = [];
+
+            foreach ($lulusanRows as $row) {
+                if (in_array($row->C_NPM, $lulusanNims)) {
+                    continue;
+                }
+
+                $lulusanNims[] = $row->C_NPM;
+                $tanggalAcuan = '';
+
+                foreach (['last_update', 'updated_at', 'created_at'] as $field) {
+                    if (isset($row->$field) && $row->$field) {
+                        $candidate = substr((string) $row->$field, 0, 10);
+                        if ($candidate !== '' && $candidate !== '0000-00-00') {
+                            $tanggalAcuan = $candidate;
+                            break;
+                        }
+                    }
+                }
+
+                $label = 'Tidak diketahui';
+
+                if ($tanggalAcuan !== '') {
+                    try {
+                        $tanggal = Carbon::parse($tanggalAcuan);
+                        $tahun = $tanggal->year;
+                        $bulan = $tanggal->month;
+                        $label = $bulan >= 8 ? ($tahun . '/' . ($tahun + 1)) : (($tahun - 1) . '/' . $tahun);
+                    } catch (Exception $e) {
+                        $label = 'Tidak diketahui';
+                    }
+                }
+
+                if (!isset($periodeCounts[$label])) {
+                    $periodeCounts[$label] = 0;
+                }
+
+                $periodeCounts[$label]++;
+            }
+
+            uksort($periodeCounts, function ($a, $b) {
+                if ($a === 'Tidak diketahui') {
+                    return 1;
+                }
+                if ($b === 'Tidak diketahui') {
+                    return -1;
+                }
+                return strcmp($a, $b);
+            });
+
+            foreach ($periodeCounts as $label => $total) {
+                $lulusanPeriodeChart[] = [
+                    'y' => $label,
+                    'total' => (int) $total,
+                ];
+            }
+
+            $topikRows = DB::table('trt_topik')
+                ->select('C_NPM', 'bidang_ilmu_peminatan')
+                ->where('status', 1)
+                ->where('C_NPM', 'LIKE', $nimLike)
+                ->orderBy('topik_id', 'desc')
+                ->get();
+
+            $topikByMahasiswa = [];
+            foreach ($topikRows as $row) {
+                if (!isset($topikByMahasiswa[$row->C_NPM])) {
+                    $topikByMahasiswa[$row->C_NPM] = trim((string) $row->bidang_ilmu_peminatan);
+                }
+            }
+
+            $bidangCounts = [];
+            foreach ($lulusanNims as $nim) {
+                $label = isset($topikByMahasiswa[$nim]) && $topikByMahasiswa[$nim] !== '' ? $topikByMahasiswa[$nim] : 'Belum diisi';
+
+                if (!isset($bidangCounts[$label])) {
+                    $bidangCounts[$label] = 0;
+                }
+
+                $bidangCounts[$label]++;
+            }
+
+            arsort($bidangCounts);
+            $bidangCounts = array_slice($bidangCounts, 0, 10, true);
+
+            foreach ($bidangCounts as $label => $total) {
+                $lulusanBidangChart[] = [
+                    'y' => $label,
+                    'total' => (int) $total,
+                ];
+            }
+        } catch (Exception $e) {
+            Log::error('scope_ta chart error', [
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+            ]);
+        }
+
+        return view('tugasakhir.prodi.scope_ta', compact('data', 'lulusanPeriodeChart', 'lulusanBidangChart'));
     }
 
     public function master_jenis_tugas_akhir()
@@ -1490,6 +2129,16 @@ class prodi extends Controller
             ->get();
 
         return view('tugasakhir.prodi.master_jenis_tugas_akhir', compact('data'));
+    }
+
+    public function master_dosen()
+    {
+        return $this->renderMasterDosenPage();
+    }
+
+    public function master_dosen_edit($kode_dosen)
+    {
+        return $this->renderMasterDosenPage($kode_dosen);
     }
 
     public function jadwalpostadd(Request $request)
@@ -1545,9 +2194,55 @@ class prodi extends Controller
 
     public function scope_add(Request $request)
     {
-        $datapost = $request->all();
+        $this->validate($request, [
+            'bidang_ilmu' => 'required|max:255',
+            'status_aktif' => 'nullable|in:0,1',
+        ], [
+            'bidang_ilmu.required' => 'Nama bidang ilmu wajib diisi.',
+        ]);
+
+        $datapost = [
+            'bidang_ilmu' => trim((string) $request->bidang_ilmu),
+        ];
+
+        if (Schema::hasColumn('mst_bidangilmu', 'status_aktif')) {
+            $datapost['status_aktif'] = (int) $request->input('status_aktif', 1);
+        }
+
         mst_bidangilmu::create($datapost);
         return redirect::to('prodi/scope_ta');
+    }
+
+    public function scope_update(Request $request, $id)
+    {
+        $this->validate($request, [
+            'bidang_ilmu' => 'required|max:255',
+            'status_aktif' => 'nullable|in:0,1',
+        ], [
+            'bidang_ilmu.required' => 'Nama bidang ilmu wajib diisi.',
+        ]);
+
+        $record = DB::table('mst_bidangilmu')
+            ->where('bidangilmu_id', $id)
+            ->first();
+
+        if (!$record) {
+            return redirect::to('prodi/scope_ta')->with('danger', 'Data bidang ilmu tidak ditemukan.');
+        }
+
+        $payload = [
+            'bidang_ilmu' => trim((string) $request->bidang_ilmu),
+        ];
+
+        if (Schema::hasColumn('mst_bidangilmu', 'status_aktif')) {
+            $payload['status_aktif'] = (int) $request->input('status_aktif', 1);
+        }
+
+        DB::table('mst_bidangilmu')
+            ->where('bidangilmu_id', $id)
+            ->update($payload);
+
+        return redirect::to('prodi/scope_ta')->with('success', 'Data bidang ilmu berhasil diperbarui.');
     }
 
     public function master_jenis_tugas_akhir_store(Request $request)
@@ -1570,6 +2265,82 @@ class prodi extends Controller
             return redirect::to('prodi/master/jenis_tugas_akhir')->with('success', 'Data berhasil disimpan.');
         } catch (Exception $e) {
             return redirect::to('prodi/master/jenis_tugas_akhir')->with('danger', 'Data gagal disimpan.');
+        }
+    }
+
+    public function master_dosen_store(Request $request)
+    {
+        $this->validateMasterDosenRequest($request);
+
+        $kodeDosen = trim((string) $request->C_KODE_DOSEN);
+        $noHp = trim((string) $request->NO_HP);
+
+        if ($this->isMasterDosenKodeUsed($kodeDosen)) {
+            return redirect()->back()->withInput()->withErrors([
+                'C_KODE_DOSEN' => 'Kode dosen sudah digunakan.',
+            ]);
+        }
+
+        if ($noHp !== '' && $this->isMasterDosenNoHpUsed($noHp)) {
+            return redirect()->back()->withInput()->withErrors([
+                'NO_HP' => 'Nomor HP sudah digunakan oleh dosen lain.',
+            ]);
+        }
+
+        try {
+            $payload = $this->buildMasterDosenPayload($request);
+            $this->syncMasterDosenTables($payload);
+
+            return redirect::to('prodi/master/dosen')->with('success', 'Data dosen berhasil disimpan dan disinkronkan.');
+        } catch (Exception $e) {
+            Log::error('master_dosen_store error', [
+                'kode_dosen' => $kodeDosen,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+            ]);
+
+            return redirect::to('prodi/master/dosen')->withInput()->with('danger', 'Data dosen gagal disimpan.');
+        }
+    }
+
+    public function master_dosen_update(Request $request, $kode_dosen)
+    {
+        $this->validateMasterDosenRequest($request);
+
+        $kodeDosenBaru = trim((string) $request->C_KODE_DOSEN);
+        $noHp = trim((string) $request->NO_HP);
+        $existing = $this->findMasterDosenByKode($kode_dosen);
+
+        if (!$existing) {
+            return redirect::to('prodi/master/dosen')->with('danger', 'Data dosen tidak ditemukan.');
+        }
+
+        if ($this->isMasterDosenKodeUsed($kodeDosenBaru, $kode_dosen)) {
+            return redirect()->back()->withInput()->withErrors([
+                'C_KODE_DOSEN' => 'Kode dosen sudah digunakan.',
+            ]);
+        }
+
+        if ($noHp !== '' && $this->isMasterDosenNoHpUsed($noHp, $kode_dosen)) {
+            return redirect()->back()->withInput()->withErrors([
+                'NO_HP' => 'Nomor HP sudah digunakan oleh dosen lain.',
+            ]);
+        }
+
+        try {
+            $payload = $this->buildMasterDosenPayload($request, $existing);
+            $this->syncMasterDosenTables($payload, $kode_dosen);
+
+            return redirect::to('prodi/master/dosen')->with('success', 'Data dosen berhasil diperbarui.');
+        } catch (Exception $e) {
+            Log::error('master_dosen_update error', [
+                'kode_dosen_lama' => $kode_dosen,
+                'kode_dosen_baru' => $kodeDosenBaru,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+            ]);
+
+            return redirect::to('prodi/master/dosen/edit/' . $kode_dosen)->withInput()->with('danger', 'Data dosen gagal diperbarui.');
         }
     }
 
@@ -1665,6 +2436,11 @@ class prodi extends Controller
     {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
+
+        if (!$info || !isset($info->tipe_ujian)) {
+            return response('Data SK ujian tidak ditemukan atau belum memiliki jadwal ujian.', 404);
+        }
+
         $data = trt_reg::join("trt_bimbingan", "trt_bimbingan.bimbingan_id", "=", "trt_reg.bimbingan_id")
             ->join("t_mst_mahasiswa", "t_mst_mahasiswa.C_NPM", "=", "trt_reg.C_NPM")
             ->join("trt_penguji", "trt_penguji.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
@@ -1672,6 +2448,11 @@ class prodi extends Controller
                 "trt_reg.pendaftaran_id" => $id,
                 "trt_penguji.tipe_ujian" => $info->tipe_ujian
             ])->get();
+
+        if ($data->isEmpty()) {
+            return response('Data peserta SK ujian tidak ditemukan atau belum lengkap.', 404);
+        }
+
         return view('tugasakhir.prodi.detail_skujian', compact("info", "data"));
     }
 
@@ -1685,15 +2466,31 @@ class prodi extends Controller
 
     public function pengumumanpost(Request $request)
     {
-        $datapost = $request->all();
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'last_update' => 'required',
+            'isi' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,jpg,gif,png|max:5120',
+        ]);
+        $imagePath = '';
+
         try {
-            $gambar = isset($datapost['gambar']) ? $datapost['gambar'] : '';
-            $datapost['gambar'] = Helper::uploadImage($gambar, 'public/gambar/', '');
-            $datapost['last_update'] = Helper::tgl($datapost['last_update']);
-            $datapost['user_id'] = '1';
-            mst_pengumuman::create($datapost);
+            if ($request->hasFile('gambar')) {
+                $imagePath = Helper::storeAnnouncementImage($request->file('gambar'));
+            }
+
+            mst_pengumuman::create([
+                'judul' => $validated['judul'],
+                'gambar' => $imagePath,
+                'last_update' => Helper::tgl($validated['last_update']),
+                'isi' => $validated['isi'],
+                'user_id' => '1',
+            ]);
+
             return redirect::to('prodi/pengumuman/')->with('status', 'success');
         } catch (Exception $exception) {
+            Helper::deleteAnnouncementImage($imagePath);
+            Log::error('Gagal membuat pengumuman.', ['exception' => $exception]);
             return redirect::to('prodi/pengumuman/')->with('status', 'error');
         }
     }
@@ -1708,40 +2505,64 @@ class prodi extends Controller
 
     public function edit_pengumuman_post(Request $request)
     {
-        try {
-            $datapost = $request->all();
-            $gambar = isset($datapost['gambar']) ? $datapost['gambar'] : '';
-            $datapost['gambar'] = Helper::uploadImage($gambar, 'public/gambar/', '');
-            $datapost['last_update'] = Helper::tgl($request->last_update);
-            $datapost['user_id'] = '1';
+        $validated = $request->validate([
+            'id' => 'required|integer',
+            'judul' => 'required|string|max:255',
+            'last_update' => 'required',
+            'isi' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,jpg,gif,png|max:5120',
+        ]);
+        $announcement = mst_pengumuman::findOrFail($validated['id']);
+        $oldImagePath = $announcement->gambar;
+        $newImagePath = null;
 
-            if ($gambar != '') {
-                mst_pengumuman::where('pengumuman_id', $request->id)->update([
-                    'judul' => $request->judul,
-                    'gambar' => $datapost['gambar'],
-                    'last_update' => $datapost['last_update'],
-                    'isi' => $request->isi,
-                ]);
-            } else {
-                mst_pengumuman::where('pengumuman_id', $request->id)->update([
-                    'judul' => $request->judul,
-                    'last_update' => $datapost['last_update'],
-                    'isi' => $request->isi,
-                ]);
+        try {
+            if ($request->hasFile('gambar')) {
+                $newImagePath = Helper::storeAnnouncementImage($request->file('gambar'));
             }
+
+            $update = [
+                'judul' => $validated['judul'],
+                'last_update' => Helper::tgl($validated['last_update']),
+                'isi' => $validated['isi'],
+            ];
+
+            if ($newImagePath !== null) {
+                $update['gambar'] = $newImagePath;
+            }
+
+            if (!$announcement->update($update)) {
+                throw new RuntimeException('Pengumuman gagal diperbarui.');
+            }
+
+            if ($newImagePath !== null) {
+                Helper::deleteAnnouncementImage($oldImagePath);
+            }
+
             return redirect::to('prodi/pengumuman/')->with('status', 'success');
         } catch (Exception $exception) {
-            return $exception;
+            Helper::deleteAnnouncementImage($newImagePath);
+            Log::error('Gagal memperbarui pengumuman.', ['exception' => $exception]);
             return redirect::to('prodi/pengumuman/')->with('status', 'error');
         }
     }
 
     public function pengumumandel($id)
     {
-        DB::table('mst_pengumuman')
-            ->where('pengumuman_id', $id)
-            ->delete();
-        return redirect::to('prodi/pengumuman');
+        $announcement = mst_pengumuman::findOrFail($id);
+        $imagePath = $announcement->gambar;
+
+        try {
+            if (!$announcement->delete()) {
+                throw new RuntimeException('Pengumuman gagal dihapus.');
+            }
+
+            Helper::deleteAnnouncementImage($imagePath);
+            return redirect::to('prodi/pengumuman')->with('status', 'success');
+        } catch (Exception $exception) {
+            Log::error('Gagal menghapus pengumuman.', ['exception' => $exception]);
+            return redirect::to('prodi/pengumuman')->with('status', 'error');
+        }
     }
 
     public function setlevelpembimbing($dosen, $level)
@@ -2525,6 +3346,11 @@ class prodi extends Controller
     {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $pendaftaran_id)->first();
+
+        if (empty($info) || !isset($info->tipe_ujian)) {
+            return response('Data jadwal ujian per mahasiswa tidak ditemukan.', 404);
+        }
+
         $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ?", [$pendaftaran_id, $info->tipe_ujian]);
 
         // return $data;
@@ -2536,15 +3362,26 @@ class prodi extends Controller
     {
         $xinfo = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $pendaftaran_id)->first();
+
+        if (empty($xinfo) || !isset($xinfo->tipe_ujian)) {
+            return response('Data jadwal ujian tidak ditemukan.', 404);
+        }
+
         $info = trt_reg::join("trt_bimbingan", "trt_bimbingan.bimbingan_id", "=", "trt_reg.bimbingan_id")
             ->join("t_mst_mahasiswa", "t_mst_mahasiswa.C_NPM", "=", "trt_bimbingan.C_NPM")
-            ->join("trt_penguji", "trt_penguji.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
+            ->leftJoin("trt_penguji", function ($join) use ($xinfo) {
+                $join->on("trt_penguji.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
+                    ->where("trt_penguji.tipe_ujian", "=", $xinfo->tipe_ujian);
+            })
             ->where([
                 "trt_reg.pendaftaran_id" => $pendaftaran_id,
                 "trt_reg.status" => $xinfo->tipe_ujian,
-                "trt_penguji.tipe_ujian" => $xinfo->tipe_ujian,
                 "t_mst_mahasiswa.C_NPM" => $nim
             ])->first();
+
+        if (empty($info)) {
+            return response('Data peserta jadwal ujian tidak ditemukan.', 404);
+        }
 
         $jadwal = TrtJadwalUjianPerMhs::where([
             "C_NPM" => $nim,
@@ -2560,7 +3397,7 @@ class prodi extends Controller
         $trtjadwalujian = TrtJadwalUjian::where("pendaftaran_id", $pendaftaran_id)->first();
         $trtjadwalujianpermhs = TrtJadwalUjianPerMhs::where(["C_NPM" => $request->C_NPM, "jadwal_ujian" => $trtjadwalujian->id])->first();
         $request->merge(["jadwal_ujian" => $trtjadwalujian->id]);
-        $request->merge(["jam_ujian" => $request->jam_ujian]);
+        $request->merge(["jam_ujian" => $this->normalizeJamUjian($request->jam_ujian)]);
         if (empty($trtjadwalujianpermhs)) {
             TrtJadwalUjianPerMhs::create($request->all());
         } else {
@@ -2573,6 +3410,21 @@ class prodi extends Controller
         }
 
         return redirect()->to("/prodi/detail_jadwalpermhs/$pendaftaran_id");
+    }
+
+    protected function normalizeJamUjian($jamInput)
+    {
+        $jamInput = trim((string) $jamInput);
+        if ($jamInput === '') {
+            return $jamInput;
+        }
+
+        // Ambil format jam dasar HH:MM jika input berupa rentang "HH:MM-XX:YY"
+        if (preg_match('/^([0-2][0-9]:[0-5][0-9])/', $jamInput, $matches)) {
+            return $matches[1];
+        }
+
+        return $jamInput;
     }
 
     public function cekJamUjian($tipe_ujian, $ruangan, $nim, $pendaftaran_id)
@@ -3049,13 +3901,19 @@ class prodi extends Controller
         $tanggal_dari = Input::get('tanggal_dari');
         $tanggal_sampai = Input::get('tanggal_sampai');
         $status = Input::get('status');
-        $data = DB::table('trt_bimbingan')
+        $query = DB::table('trt_bimbingan')
             ->where('status_bimbingan', $status)
-            ->whereBetween('updated_at', [$tanggal_dari, $tanggal_sampai])
-            ->get();
-        if ($data->isEmpty()) {
-            return redirect('prodi/detail_status_bimbingan_mahasiswa/' . $status . '');
+            ->whereBetween('updated_at', [$tanggal_dari, $tanggal_sampai]);
+
+        if (Auth::user()->name == 'proditi') {
+            $query->where('trt_bimbingan.C_NPM', 'LIKE', '130%');
+        } elseif (Auth::user()->name == 'prodisi') {
+            $query->where('trt_bimbingan.C_NPM', 'LIKE', '131%');
         }
+
+        $data = $query
+            ->orderBy('updated_at', 'desc')
+            ->get();
 
         return view('tugasakhir.prodi.detail_status_bimbingan_mahasiswa', compact('data', 'status'));
     }
@@ -3133,7 +3991,7 @@ class prodi extends Controller
             $riwayat_usulan = DB::table('trt_sk')
                 ->select('nomor', 'tgl_surat')
                 ->distinct('nomor')
-                ->orderBy('trt_sk.sk_id', 'DESC')
+                ->orderBy('tgl_surat', 'DESC')
                 ->get();
 
             $data_sk = DB::table('mst_sk_pembimbing')
@@ -3160,7 +4018,7 @@ class prodi extends Controller
             $riwayat_usulan = DB::table('trt_sk')
                 ->select('nomor', 'tgl_surat')
                 ->distinct('nomor')
-                ->orderBy('trt_sk.sk_id', 'DESC')
+                ->orderBy('tgl_surat', 'DESC')
                 ->get();
 
             $data_sk = DB::table('mst_sk_pembimbing')
@@ -3233,7 +4091,9 @@ class prodi extends Controller
             ->where('trt_sk_ujian_ta.nomor', '=', $nomor)
             ->get();
 
-
+        if ($data->isEmpty()) {
+            return response('Data surat usulan tim ujian tidak ditemukan atau belum tersedia.', 404);
+        }
 
         $perihal = $data[0]->perihal;
         $tgl_ujian = $data[0]->tgl_surat;
@@ -3246,6 +4106,425 @@ class prodi extends Controller
             ->where('mst_pendaftaran.pendaftaran_id', '=', $data)
             ->get();
 
+        if ($datax->isEmpty()) {
+            return response('Data pendaftaran untuk surat usulan tim ujian tidak ditemukan.', 404);
+        }
+
         return view('tugasakhir.prodi.surat_usulantimujian', compact('nomor', 'perihal', 'datax', 'tgl_ujian'));
+    }
+
+    protected function renderMasterDosenPage($editKodeDosen = null)
+    {
+        $currentProdi = $this->getCurrentMasterDosenProdi();
+        $prodiList = $this->getMasterDosenProdiList();
+        $data = $this->getMasterDosenList();
+        $editData = null;
+
+        if ($editKodeDosen) {
+            $editData = $this->findMasterDosenByKode($editKodeDosen);
+
+            if (!$editData) {
+                return redirect::to('prodi/master/dosen')->with('danger', 'Data dosen tidak ditemukan.');
+            }
+        }
+
+        return view('tugasakhir.prodi.master_dosen', compact('data', 'prodiList', 'editData', 'currentProdi'));
+    }
+
+    protected function getMasterDosenList($kodeProdi = null)
+    {
+        $rowsUtama = collect(
+            DB::table('t_mst_dosen')
+                ->select('*')
+                ->when($kodeProdi, function ($query) use ($kodeProdi) {
+                    return $query->where('C_KODE_PRODI', $kodeProdi);
+                })
+                ->get()
+        )->keyBy('C_KODE_DOSEN');
+
+        $rowsMig = collect();
+        if (Schema::hasTable('mig_t_mst_dosen')) {
+            $rowsMig = collect(
+                DB::table('mig_t_mst_dosen')
+                    ->select('*')
+                    ->when($kodeProdi, function ($query) use ($kodeProdi) {
+                        return $query->where('C_KODE_PRODI', $kodeProdi);
+                    })
+                    ->get()
+            )->keyBy('C_KODE_DOSEN');
+        }
+
+        $prodiMap = [];
+        if (Schema::hasTable('trt_prodi')) {
+            $prodiMap = DB::table('trt_prodi')
+                ->pluck('nama', 'kode_prodi')
+                ->toArray();
+        }
+
+        $data = collect();
+        $allKodes = $rowsUtama->keys()->merge($rowsMig->keys())->unique()->filter();
+
+        foreach ($allKodes as $kodeDosen) {
+            $utama = $rowsUtama->get($kodeDosen);
+            $mig = $rowsMig->get($kodeDosen);
+            $merged = (object) array_merge((array) $mig, (array) $utama);
+
+            $merged->exists_t_mst_dosen = $utama ? 1 : 0;
+            $merged->exists_mig_t_mst_dosen = $mig ? 1 : 0;
+            $merged->status_sinkron = $utama && $mig ? 'Lengkap' : 'Perlu Sinkron';
+            $merged->nama_prodi = isset($prodiMap[$merged->C_KODE_PRODI]) ? $prodiMap[$merged->C_KODE_PRODI] : $merged->C_KODE_PRODI;
+            $merged->status_aktif_label = (int) ($merged->F_AKTIF ?? 0) === 1 ? 'Aktif' : 'Non Aktif';
+
+            $data->push($merged);
+        }
+
+        return $data->sortBy(function ($row) {
+            return strtolower(trim((string) ($row->NAMA_DOSEN ?? '')));
+        })->values();
+    }
+
+    protected function getMasterDosenProdiList()
+    {
+        if (!Schema::hasTable('trt_prodi')) {
+            return collect();
+        }
+
+        return DB::table('trt_prodi')
+            ->select('kode_prodi', 'nama')
+            ->orderBy('nama')
+            ->get();
+    }
+
+    protected function getCurrentMasterDosenProdi()
+    {
+        if (!Schema::hasTable('trt_prodi')) {
+            return null;
+        }
+
+        $namaProdi = Helper::getProgramStudiByAuthUser(Auth::user()->name);
+        if ($namaProdi === '') {
+            return null;
+        }
+
+        return DB::table('trt_prodi')
+            ->select('kode_prodi', 'nama')
+            ->whereRaw('LOWER(TRIM(nama)) = ?', [strtolower(trim($namaProdi))])
+            ->first();
+    }
+
+    protected function findMasterDosenByKode($kodeDosen)
+    {
+        $utama = DB::table('t_mst_dosen')
+            ->select('*')
+            ->where('C_KODE_DOSEN', $kodeDosen)
+            ->first();
+
+        $mig = null;
+        if (Schema::hasTable('mig_t_mst_dosen')) {
+            $mig = DB::table('mig_t_mst_dosen')
+                ->select('*')
+                ->where('C_KODE_DOSEN', $kodeDosen)
+                ->first();
+        }
+
+        if (!$utama && !$mig) {
+            return null;
+        }
+
+        $data = (object) array_merge((array) $mig, (array) $utama);
+        $data->exists_t_mst_dosen = $utama ? 1 : 0;
+        $data->exists_mig_t_mst_dosen = $mig ? 1 : 0;
+
+        return $data;
+    }
+
+    protected function validateMasterDosenRequest(Request $request)
+    {
+        $this->validate($request, [
+            'C_KODE_DOSEN' => 'required|max:20',
+            'C_NIP' => 'nullable|max:50',
+            'NAMA_DOSEN' => 'required|max:100',
+            'C_KODE_PRODI' => 'required|max:20',
+            'JENIS_KELAMIN' => 'nullable|in:Pria,Wanita',
+            'NO_HP' => 'nullable|max:15',
+            'EMAIL' => 'required|email|max:50',
+            'pangkat' => 'nullable|max:100',
+            'ALAMAT' => 'nullable',
+            'jabatan_fungsional' => 'nullable|in:Asisten Ahli,Lektor,Lektor Kepala,Guru Besar',
+            'F_AKTIF' => 'nullable|in:0,1',
+        ], [
+            'C_KODE_DOSEN.required' => 'Kode dosen wajib diisi.',
+            'NAMA_DOSEN.required' => 'Nama dosen wajib diisi.',
+            'C_KODE_PRODI.required' => 'Program studi wajib dipilih.',
+            'EMAIL.required' => 'Email wajib diisi.',
+            'EMAIL.email' => 'Format email tidak valid.',
+        ]);
+    }
+
+    protected function isMasterDosenKodeUsed($kodeDosen, $ignoreKodeDosen = null)
+    {
+        $kodeDosen = trim((string) $kodeDosen);
+        $ignoreKodeDosen = trim((string) $ignoreKodeDosen);
+
+        $usedInUtama = DB::table('t_mst_dosen')
+            ->where('C_KODE_DOSEN', $kodeDosen)
+            ->when($ignoreKodeDosen !== '', function ($query) use ($ignoreKodeDosen) {
+                return $query->where('C_KODE_DOSEN', '<>', $ignoreKodeDosen);
+            })
+            ->exists();
+
+        if ($usedInUtama) {
+            return true;
+        }
+
+        if (Schema::hasTable('mig_t_mst_dosen')) {
+            return DB::table('mig_t_mst_dosen')
+                ->where('C_KODE_DOSEN', $kodeDosen)
+                ->when($ignoreKodeDosen !== '', function ($query) use ($ignoreKodeDosen) {
+                    return $query->where('C_KODE_DOSEN', '<>', $ignoreKodeDosen);
+                })
+                ->exists();
+        }
+
+        return false;
+    }
+
+    protected function isMasterDosenNoHpUsed($noHp, $ignoreKodeDosen = null)
+    {
+        $noHp = trim((string) $noHp);
+        $ignoreKodeDosen = trim((string) $ignoreKodeDosen);
+
+        if ($noHp === '') {
+            return false;
+        }
+
+        $usedInUtama = DB::table('t_mst_dosen')
+            ->where('NO_HP', $noHp)
+            ->when($ignoreKodeDosen !== '', function ($query) use ($ignoreKodeDosen) {
+                return $query->where('C_KODE_DOSEN', '<>', $ignoreKodeDosen);
+            })
+            ->exists();
+
+        if ($usedInUtama) {
+            return true;
+        }
+
+        if (Schema::hasTable('mig_t_mst_dosen')) {
+            return DB::table('mig_t_mst_dosen')
+                ->where('NO_HP', $noHp)
+                ->when($ignoreKodeDosen !== '', function ($query) use ($ignoreKodeDosen) {
+                    return $query->where('C_KODE_DOSEN', '<>', $ignoreKodeDosen);
+                })
+                ->exists();
+        }
+
+        return false;
+    }
+
+    protected function buildMasterDosenPayload(Request $request, $existing = null)
+    {
+        $existing = $existing ? (array) $existing : [];
+        $aktif = (int) $request->get('F_AKTIF', 1) === 1 ? 1 : 0;
+        $namaDosen = trim((string) $request->NAMA_DOSEN);
+        $now = Carbon::now();
+
+        $defaults = [
+            'C_NIP' => null,
+            'jabatan_id' => null,
+            'JENIS_KELAMIN' => null,
+            'TEMPAT_LAHIR' => null,
+            'TGL_LAHIR' => null,
+            'kota' => null,
+            'ALAMAT' => null,
+            'NO_HP' => null,
+            'website' => null,
+            'pendidikan_terakhir' => null,
+            'waktu_masuk' => null,
+            'foto' => null,
+            'jabatan_fungsional' => null,
+            'ruang' => null,
+            'user_id' => null,
+            'C_KODE_KAB_KOTA' => '',
+            'C_KODE_PROPINSI' => '',
+            'KODE_POS' => '',
+            'NO_TELP' => null,
+            'GOLONGAN_DARAH' => '',
+            'NO_KTP' => '',
+            'C_KODE_AGAMA' => '',
+            'NO_NPWP' => '',
+            'NO_REK_BANK' => '',
+            'ATAS_NAMA_REK' => '',
+            'NAMA_BANK' => '',
+            'NAMA_CAB_BANK' => '',
+            'AKRONIM_DOSEN' => '',
+            'C_KODE_STATUS_IKATAN_KERJA' => '',
+            'C_KODE_STATUS_BEBAN_KERJA_DOSEN' => '',
+            'SEMESTER_DOSEN_MULAI' => '',
+            'ADA_SERTIFIKAT_MENGAJAR' => '',
+            'ADA_SURAT_IJIN_MENGAJAR' => '',
+            'NIP_PNS' => '',
+            'KODE_INSTANSI_INDUK' => '',
+            'C_KODE_STATUS_AKTIF_DOSEN' => '',
+            'SEMESTER_DOSEN_KELUAR' => '',
+            'D_FOTO_DOSEN' => '',
+            'F_AKTIF' => 1,
+            'F_IS_C' => 0,
+            'F_IS_U' => 0,
+            'F_IS_D' => 0,
+            'F_CHANGE_LOG' => 0,
+        ];
+
+        $managed = [
+            'C_KODE_DOSEN' => trim((string) $request->C_KODE_DOSEN),
+            'C_NIP' => $this->emptyStringToNull($request->C_NIP),
+            'NAMA_DOSEN' => $namaDosen,
+            'C_KODE_PRODI' => trim((string) $request->C_KODE_PRODI),
+            'JENIS_KELAMIN' => $this->emptyStringToNull($request->JENIS_KELAMIN),
+            'ALAMAT' => $this->emptyStringToNull($request->ALAMAT),
+            'NO_HP' => $this->emptyStringToNull($request->NO_HP),
+            'EMAIL' => trim((string) $request->EMAIL),
+            'website' => $this->emptyStringToNull($request->pangkat),
+            'jabatan_fungsional' => $this->emptyStringToNull($request->jabatan_fungsional),
+            'AKRONIM_DOSEN' => $this->generateAkronimDosen($namaDosen),
+            'F_AKTIF' => $aktif,
+            'C_KODE_STATUS_AKTIF_DOSEN' => $aktif === 1 ? 'A' : 'N',
+            'updated_at' => $now,
+        ];
+
+        $payload = array_merge($defaults, $existing, $managed);
+
+        $payload['TGL_LAHIR'] = $this->normalizeSqlDateOrNull($payload['TGL_LAHIR'] ?? null);
+        $payload['waktu_masuk'] = $this->normalizeSqlDateOrNull($payload['waktu_masuk'] ?? null);
+        $payload['created_at'] = $this->normalizeSqlDateTimeOrNull($payload['created_at'] ?? null);
+
+        if (!isset($existing['created_at']) || empty($existing['created_at'])) {
+            $payload['created_at'] = $now;
+        }
+
+        unset($payload['id']);
+        unset($payload['exists_t_mst_dosen']);
+        unset($payload['exists_mig_t_mst_dosen']);
+        unset($payload['status_sinkron']);
+        unset($payload['nama_prodi']);
+        unset($payload['status_aktif_label']);
+
+        return $payload;
+    }
+
+    protected function syncMasterDosenTables(array $payload, $lookupKodeDosen = null)
+    {
+        $lookupKodeDosen = trim((string) ($lookupKodeDosen ?: $payload['C_KODE_DOSEN']));
+        $updatePayload = $this->filterMasterDosenUpdatePayload($payload);
+
+        DB::beginTransaction();
+        try {
+            $existsUtama = DB::table('t_mst_dosen')
+                ->where('C_KODE_DOSEN', $lookupKodeDosen)
+                ->exists();
+
+            if ($existsUtama) {
+                DB::table('t_mst_dosen')
+                    ->where('C_KODE_DOSEN', $lookupKodeDosen)
+                    ->update($updatePayload);
+            } else {
+                DB::table('t_mst_dosen')->insert($payload);
+            }
+
+            if (Schema::hasTable('mig_t_mst_dosen')) {
+                $existsMig = DB::table('mig_t_mst_dosen')
+                    ->where('C_KODE_DOSEN', $lookupKodeDosen)
+                    ->exists();
+
+                if ($existsMig) {
+                    DB::table('mig_t_mst_dosen')
+                        ->where('C_KODE_DOSEN', $lookupKodeDosen)
+                        ->update($updatePayload);
+                } else {
+                    DB::table('mig_t_mst_dosen')->insert($payload);
+                }
+            }
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    protected function filterMasterDosenUpdatePayload(array $payload)
+    {
+        $columns = [
+            'C_KODE_DOSEN',
+            'C_NIP',
+            'NAMA_DOSEN',
+            'C_KODE_PRODI',
+            'JENIS_KELAMIN',
+            'ALAMAT',
+            'NO_HP',
+            'EMAIL',
+            'website',
+            'jabatan_fungsional',
+            'AKRONIM_DOSEN',
+            'F_AKTIF',
+            'C_KODE_STATUS_AKTIF_DOSEN',
+            'updated_at',
+        ];
+
+        return array_intersect_key($payload, array_flip($columns));
+    }
+
+    protected function emptyStringToNull($value)
+    {
+        $value = trim((string) $value);
+        return $value === '' ? null : $value;
+    }
+
+    protected function normalizeNoTelp($value)
+    {
+        $value = preg_replace('/[^0-9]/', '', (string) $value);
+
+        if ($value === '' || strlen($value) > 10) {
+            return null;
+        }
+
+        $number = (int) $value;
+        return $number > 2147483647 ? null : $number;
+    }
+
+    protected function normalizeSqlDateOrNull($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '' || $value === '0000-00-00') {
+            return null;
+        }
+
+        return $value;
+    }
+
+    protected function normalizeSqlDateTimeOrNull($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '' || $value === '0000-00-00 00:00:00') {
+            return null;
+        }
+
+        return $value;
+    }
+
+    protected function generateAkronimDosen($namaDosen)
+    {
+        $parts = preg_split('/[^A-Za-z0-9]+/', strtoupper(trim((string) $namaDosen)));
+        $akronim = '';
+
+        foreach ($parts as $part) {
+            if ($part !== '') {
+                $akronim .= substr($part, 0, 1);
+            }
+        }
+
+        $akronim = substr($akronim, 0, 20);
+        return $akronim !== '' ? $akronim : substr(strtoupper(preg_replace('/\s+/', '', (string) $namaDosen)), 0, 20);
     }
 }

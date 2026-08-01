@@ -101,11 +101,7 @@
                         <td>{{$value->last_update}}</td>
                         <td>{{$value->judul}}</td>
                         <td>{{mb_strimwidth(strip_tags($value->isi), 0, 100, '...')}}</td>
-                        @if ($value->gambar == '')
-                            <td><img src="{{asset('gambar/no_image.jpg')}}" height="50" width="50"></td>
-                        @else
-                            <td><img src="{{asset('gambar/'.$value->gambar)}}" height="50" width="50"></td>
-                        @endif
+                        <td><img src="{{ \App\Helper::announcementImageUrl($value->gambar) }}" height="50" width="50"></td>
                         <td>
                             <a href="{{ url('prodi/pengumuman/'.$value->pengumuman_id)}}"><i class="fa fa-pencil icon-square icon-xs icon-dark"></i></a>
                             <a class="btn btn-danger" href="{{ url('prodi/pengumumandel/'.$value->pengumuman_id)}}"><i class="fa fa-trash-o"></i></a>
@@ -169,6 +165,4 @@
         }
     </script>
 @endsection
-
-
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Helper;
 use Closure;
 
 class mhs
@@ -15,9 +16,20 @@ class mhs
      */
     public function handle($request, Closure $next)
     {
-        if (auth()->check() && ($request->user()->level==8)) {
+        if (!(auth()->check() && ($request->user()->level == 8))) {
+            return redirect()->guest('/');
+        }
+
+        $kontakBelumLengkap = Helper::shouldShowCurrentMahasiswaContactPopup($request->user());
+
+        if (!$kontakBelumLengkap) {
             return $next($request);
         }
-        return redirect()->guest('/');
+
+        if ($request->is('home') || $request->is('mhs/kelengkapan_kontak')) {
+            return $next($request);
+        }
+
+        return redirect('/home')->with('mhs_contact_error', 'Nomor WhatsApp wajib diisi terlebih dahulu sebelum menggunakan menu mahasiswa lainnya.');
     }
 }

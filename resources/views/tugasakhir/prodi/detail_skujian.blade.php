@@ -36,6 +36,7 @@
                     <label class="col-lg-2 control-label">Tipe Ujian</label>
                     <div class="col-lg-6">
                         @php
+                            $tipe = '-';
                             if($info->tipe_ujian == 0):
                                 $tipe = "Proposal";
                             elseif($info->tipe_ujian == 2):
@@ -78,47 +79,20 @@
                                 <td width="1%" align="center">{{++$i}}</td>
                                 <td>{{$d->C_NPM}}</td>
                                 <td>{{$d->NAMA_MAHASISWA}}</td>
-                                @php
-                                    $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                                    $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                                    $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_I_id)->first();
-                                    $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_II_id)->first();
-                                    $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_III_id)->first();
-                                    $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$d->ketua_sidang_id)->first();
-                                @endphp
-                                <td>{{$pembimbing1->NAMA_DOSEN}}</td>
-                                <td>{{$pembimbing2->NAMA_DOSEN}}</td>
-                                <td>
-                                    @if ($penguji1 == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$penguji1->NAMA_DOSEN}}
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($penguji2 == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$penguji2->NAMA_DOSEN}}
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($penguji3 == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$penguji3->NAMA_DOSEN}}
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($ketuasidang == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$ketuasidang->NAMA_DOSEN}}
-                                    @endif
-                                </td>
+                                <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->penguji_I_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->penguji_II_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->penguji_III_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}</td>
 
                                 <td style="width: 240px; text-align: center">
-                                    @if ($penguji1 == null && $penguji2 == null && $penguji3 == null && $ketuasidang == null)
+                                    @if (
+                                        helper::getNamaDosenByKode($d->penguji_I_id) == '--' &&
+                                        helper::getNamaDosenByKode($d->penguji_II_id) == '--' &&
+                                        helper::getNamaDosenByKode($d->penguji_III_id) == '--' &&
+                                        helper::getNamaDosenByKode($d->ketua_sidang_id) == '--'
+                                    )
                                         SK Belum Terbit, Silahkan Set Penguji dan Ketua Sidang
                                     @else
                                     <a target="_blank"  href="{{ url("$path/cetakskpenguji/$info->pendaftaran_id/$d->C_NPM")}}" class="btn btn-primary"><i class="fa fa-file-text"></i>SK Penguji</a>
@@ -136,5 +110,3 @@
         </div><!-- /.container-fluid -->
     </div>
 @endsection
-
-

@@ -91,7 +91,7 @@
     @php
         $namaProdi = helper::getProgramStudiByNim($nim);
         $kaprodi = helper::getKaprodiByNimAndTanggal($nim, $penguji->created_at ?? null);
-        $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'gambar/stempelprodi.png' : 'gambar/stempelprodi_si.png';
+        $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'stempelprodi.png' : 'stempelprodi_si.png';
         $tinggiTtdKaprodi = $namaProdi == 'Teknik Informatika' ? '70px' : '120px';
         $styleTtdKaprodi = $namaProdi == 'Teknik Informatika' ? 'position: absolute; right: 90px' : 'position: absolute; right: 20px; top: -10px';
     @endphp
@@ -146,12 +146,12 @@
             <tr>
                 <td width="150px">Pembimbing Utama</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $bimbingan->pembimbing_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($bimbingan->pembimbing_I_id) }}</td>
             </tr>
             <tr>
                 <td>Pembimbing Pendamping</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $bimbingan->pembimbing_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($bimbingan->pembimbing_II_id) }}</td>
             </tr>
         </table>
     </div>
@@ -160,7 +160,7 @@
             <tr>
                 <td width="150px">Ketua Sidang</td>
                 <td>:</td>
-                <td>{{ \App\Dosen::where('C_KODE_DOSEN', $penguji->ketua_sidang_id)->first()->NAMA_DOSEN }}</td>
+                <td>{{ helper::getNamaDosenByKode($penguji->ketua_sidang_id) }}</td>
             </tr>
         </table>
     </div>
@@ -169,17 +169,17 @@
             <tr>
                 <td width="150px">Penguji</td>
                 <td>:</td>
-                <td>1. {{ \App\Dosen::where('C_KODE_DOSEN', $penguji->penguji_I_id)->first()->NAMA_DOSEN }}</td>
+                <td>1. {{ helper::getNamaDosenByKode($penguji->penguji_I_id) }}</td>
             </tr>
             <tr>
                 <td></td>
                 <td></td>
-                <td>2. {{ \App\Dosen::where('C_KODE_DOSEN', $penguji->penguji_II_id)->first()->NAMA_DOSEN }}</td>
+                <td>2. {{ helper::getNamaDosenByKode($penguji->penguji_II_id) }}</td>
             </tr>
             <tr>
                 <td></td>
                 <td></td>
-                <td>3. {{ \App\Dosen::where('C_KODE_DOSEN', $penguji->penguji_III_id)->first()->NAMA_DOSEN }}</td>
+                <td>3. {{ helper::getNamaDosenByKode($penguji->penguji_III_id) }}</td>
             </tr>
         </table>
     </div>
@@ -248,10 +248,10 @@
     </div>
     <br>
     <div style="text-align: center; position: relative">
-        <img src="{{ asset($stempelKaprodi) }}" alt="" height="100px"
+        <img src="{{ \App\Helper::officialImageDataUri($stempelKaprodi) }}" alt="" height="100px"
             style="position: absolute; right: 140px">
         <br>
-        <img src="{{ asset('gambar/' . $kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
+        <img src="{{ \App\Helper::officialImageDataUri($kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
             style="{{ $styleTtdKaprodi }}">
     </div>
     <br><br><br>

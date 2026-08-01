@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 use Exception;
 
 class mhs extends Controller
@@ -159,6 +160,143 @@ class mhs extends Controller
     }
     // Akhir Halaman Tampilan Akhir Usulan
 
+    public function daftar_dosen()
+    {
+        $mahasiswa = DB::table('t_mst_mahasiswa')
+            ->select('C_NPM', 'NAMA_MAHASISWA', 'C_KODE_PRODI')
+            ->where('C_NPM', auth()->user()->name)
+            ->first();
+
+        if (!$mahasiswa) {
+            return response('Data mahasiswa tidak ditemukan.', 404);
+        }
+
+        $dosenMap = [];
+
+        if (Schema::hasTable('t_mst_dosen')) {
+            $rowsUtama = DB::table('t_mst_dosen')
+                ->select('C_KODE_DOSEN', 'NAMA_DOSEN', 'NO_HP', 'NO_TELP')
+                ->orderBy('NAMA_DOSEN', 'asc')
+                ->get();
+
+            foreach ($rowsUtama as $row) {
+                $kodeDosen = trim((string) ($row->C_KODE_DOSEN ?? ''));
+
+                if ($kodeDosen === '') {
+                    continue;
+                }
+
+                $dosenMap[$kodeDosen] = (object) [
+                    'nidn' => $kodeDosen,
+                    'nama_dosen' => trim((string) ($row->NAMA_DOSEN ?? '')),
+                    'nomor_telpon' => $this->normalizeNomorTelponDosen($row->NO_HP ?? null, $row->NO_TELP ?? null),
+                ];
+            }
+        }
+
+        if (Schema::hasTable('mig_t_mst_dosen')) {
+            $rowsMigrasi = DB::table('mig_t_mst_dosen')
+                ->select('C_KODE_DOSEN', 'NAMA_DOSEN', 'NO_HP', 'NO_TELP')
+                ->orderBy('NAMA_DOSEN', 'asc')
+                ->get();
+
+            foreach ($rowsMigrasi as $row) {
+                $kodeDosen = trim((string) ($row->C_KODE_DOSEN ?? ''));
+
+                if ($kodeDosen === '') {
+                    continue;
+                }
+
+                $nomorTelpon = $this->normalizeNomorTelponDosen($row->NO_HP ?? null, $row->NO_TELP ?? null);
+
+                if (!isset($dosenMap[$kodeDosen])) {
+                    $dosenMap[$kodeDosen] = (object) [
+                        'nidn' => $kodeDosen,
+                        'nama_dosen' => trim((string) ($row->NAMA_DOSEN ?? '')),
+                        'nomor_telpon' => $nomorTelpon,
+                    ];
+                    continue;
+                }
+
+                if ($dosenMap[$kodeDosen]->nama_dosen === '' && !empty($row->NAMA_DOSEN)) {
+                    $dosenMap[$kodeDosen]->nama_dosen = trim((string) $row->NAMA_DOSEN);
+                }
+
+                if ($dosenMap[$kodeDosen]->nomor_telpon === '-' && $nomorTelpon !== '-') {
+                    $dosenMap[$kodeDosen]->nomor_telpon = $nomorTelpon;
+                }
+            }
+        }
+
+        $data = collect(array_values($dosenMap))
+            ->sortBy('nama_dosen', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+
+        return view('tugasakhir.mhs.daftar_dosen', compact('data', 'mahasiswa'));
+    }
+
+    public function kelengkapan_kontak_post(Request $request)
+    {
+        if (!Schema::hasTable('trt_kontak_mahasiswa')) {
+            return redirect()->to('/home')->with('mhs_contact_error', 'Tabel kontak mahasiswa belum tersedia.');
+        }
+
+        $this->validate($request, [
+            'no_wa' => 'required|max:20',
+            'id_telegram' => 'nullable|max:100',
+        ], [
+            'no_wa.required' => 'Nomor WhatsApp wajib diisi.',
+        ]);
+
+        $nim = trim((string) auth()->user()->name);
+
+        if ($nim === '') {
+            return redirect()->to('/home')->with('mhs_contact_error', 'NIM akun login tidak ditemukan.');
+        }
+
+        $nomorWa = $this->normalizeNomorWaMahasiswa($request->no_wa);
+        if ($nomorWa === null) {
+            return redirect()->to('/home')->withInput()->with('mhs_contact_error', 'Format nomor WhatsApp tidak valid. Gunakan format seperti 6281234567890 atau 081234567890.');
+        }
+
+        $idTelegram = $this->normalizeTelegramMahasiswa($request->id_telegram);
+        if ($idTelegram === false) {
+            return redirect()->to('/home')->withInput()->with('mhs_contact_error', 'Format ID Telegram tidak valid. Gunakan format seperti @username_telegram.');
+        }
+
+        try {
+            $existing = DB::table('trt_kontak_mahasiswa')
+                ->where('C_NPM', $nim)
+                ->first();
+
+            $payload = [
+                'C_NPM' => $nim,
+                'no_wa' => $nomorWa,
+                'id_telegram' => $idTelegram,
+                'updated_at' => Carbon::now(),
+            ];
+
+            if ($existing) {
+                DB::table('trt_kontak_mahasiswa')
+                    ->where('C_NPM', $nim)
+                    ->update($payload);
+            } else {
+                $payload['created_at'] = Carbon::now();
+                DB::table('trt_kontak_mahasiswa')->insert($payload);
+            }
+
+            return redirect()->to('/home')->with('mhs_contact_success', 'Kontak mahasiswa berhasil disimpan.');
+        } catch (Exception $e) {
+            \Log::error('kelengkapan_kontak_mahasiswa_post error', [
+                'nim' => $nim,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+            ]);
+
+            return redirect()->to('/home')->withInput()->with('mhs_contact_error', 'Kontak mahasiswa gagal disimpan.');
+        }
+    }
+
     // Cetak Berita Acara Ujian Proposal
     public function cetak_beritaacara_proposal($pendaftaran_id, $nim)
     {
@@ -201,6 +339,63 @@ class mhs extends Controller
     }
     // Akhir
 
+    public function cetak_beritaacara_ujian($pendaftaran_id, $nim)
+    {
+        $trtjadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
+            ->where("trt_jadwal_ujian.pendaftaran_id", $pendaftaran_id)
+            ->first();
+
+        if (!$trtjadwalujian) {
+            return response('Data jadwal ujian meja tidak ditemukan.', 404);
+        }
+
+        $trtjadwalujianpermhs = TrtJadwalUjianPerMhs::join("mst_ruangan", "mst_ruangan.id", "trt_jadwal_ujian_per_mhs.ruangan")
+            ->where([
+                "C_NPM" => $nim,
+                "jadwal_ujian" => $trtjadwalujian->id
+            ])->first();
+        $trt_bimbingan = trt_bimbingan::where("C_NPM", $nim)->first();
+        $mst_pendaftaran = mst_pendaftaran::find($pendaftaran_id);
+
+        if (!$trtjadwalujianpermhs || !$trt_bimbingan || !$mst_pendaftaran) {
+            return response('Data berita acara ujian meja belum lengkap.', 404);
+        }
+
+        $trt_penguji = TrtPenguji::where([
+            "C_NPM" => $nim,
+            "tipe_ujian" => $mst_pendaftaran->tipe_ujian
+        ])->first();
+
+        if (!$trt_penguji) {
+            return response('Data tim penguji ujian meja belum lengkap.', 404);
+        }
+
+        $ruanganModel = MstRuangan::find($trtjadwalujianpermhs->ruangan);
+        $ruangan = $ruanganModel ? $ruanganModel->nama_ruangan : '-';
+        $tgl_ujian = Carbon::parse($trtjadwalujian->tgl_ujian)->formatLocalized("%A, %d %B %Y");
+
+        switch ($mst_pendaftaran->tipe_ujian) {
+            case "0":
+                $tipe_ujian = "Proposal";
+                break;
+            case "2":
+                $tipe_ujian = "Meja";
+                break;
+            default:
+                $tipe_ujian = "Ujian";
+                break;
+        }
+
+        return view("tugasakhir.prodi.cetak_berita_acara", compact(
+            "nim",
+            "trt_bimbingan",
+            "trt_penguji",
+            "tipe_ujian",
+            "ruangan",
+            "tgl_ujian"
+        ));
+    }
+
     // Halaman Berita Cara Proposal
     public function beritaacara_proposal($nim)
     {
@@ -215,8 +410,6 @@ class mhs extends Controller
     public function beritaacara_ujian($nim)
     {
         $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_penguji.C_NPM = ? AND trt_reg.status = ?", [$nim, 2]);
-
-
         return view('tugasakhir.mhs.beritaacara_ujian', compact("data"));
     }
     // Akhir Berita Acara Ujian
@@ -294,9 +487,14 @@ class mhs extends Controller
             ->get();
 
         $id = auth()->user()->name;
-        $data = DB::table('mst_bidangilmu')
-            ->select('*')
-            ->get();
+        $queryBidangIlmu = DB::table('mst_bidangilmu')
+            ->select('*');
+
+        if (Schema::hasColumn('mst_bidangilmu', 'status_aktif')) {
+            $queryBidangIlmu->where('status_aktif', 1);
+        }
+
+        $data = $queryBidangIlmu->get();
 
         $listdosen = DB::table('t_mst_dosen')
             ->leftJoin("trt_level_pembimbing", "trt_level_pembimbing.C_KODE_DOSEN", "=", "t_mst_dosen.C_KODE_DOSEN")
@@ -918,11 +1116,20 @@ class mhs extends Controller
             }
         }
 
+        if ($status !== 'ada' || $new_nomor === '') {
+            return response('Data surat SK pembimbing tidak ditemukan.', 404);
+        }
+
         $data_sk = DB::table('mst_sk_pembimbing')
             ->join('trt_bimbingan', 'mst_sk_pembimbing.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
             ->select('*')
             ->where('mst_sk_pembimbing.nomor_sk', $new_nomor)
             ->get();
+
+        if ($data_sk->isEmpty()) {
+            return response('Data surat SK pembimbing belum lengkap.', 404);
+        }
+
         $tgl_ujian = helper::tgl_indo_lengkap(date('Y-m-d'));
         return view('tugasakhir.fakultas.cetakskpembimbing', compact('data_sk', 'tgl_ujian'));
     }
@@ -946,6 +1153,10 @@ class mhs extends Controller
             }
         }
 
+        if ($status !== 'ada' || $id_bimbingan === '') {
+            return response('Data surat SK ujian meja tidak ditemukan.', 404);
+        }
+
 
         $data_sk = DB::table('mst_sk_penugasan')
             ->join('trt_bimbingan', 'mst_sk_penugasan.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
@@ -958,6 +1169,10 @@ class mhs extends Controller
             ->where('trt_penguji.tipe_ujian', 2)
             ->where('trt_jadwal_ujian.status', 2)
             ->get();
+
+        if ($data_sk->isEmpty()) {
+            return response('Data surat SK ujian meja belum lengkap.', 404);
+        }
 
         return view('tugasakhir.fakultas.cetakskpenugasan', compact('data_sk'));
     }
@@ -1023,5 +1238,64 @@ class mhs extends Controller
         } catch (Exception $error) {
             return redirect('mhs/download');
         }
+    }
+
+    protected function normalizeNomorTelponDosen($nomorHp = null, $nomorTelp = null)
+    {
+        foreach ([$nomorHp, $nomorTelp] as $value) {
+            $value = trim((string) $value);
+
+            if ($value !== '' && $value !== '0' && $value !== '-') {
+                return $value;
+            }
+        }
+
+        return '-';
+    }
+
+    protected function normalizeNomorWaMahasiswa($value)
+    {
+        $value = preg_replace('/[^0-9]/', '', (string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (strpos($value, '62') === 0) {
+            $normalized = $value;
+        } elseif (strpos($value, '0') === 0) {
+            $normalized = '62' . substr($value, 1);
+        } elseif (strpos($value, '8') === 0) {
+            $normalized = '62' . $value;
+        } else {
+            return null;
+        }
+
+        if (!preg_match('/^62[0-9]{8,15}$/', $normalized)) {
+            return null;
+        }
+
+        return $normalized;
+    }
+
+    protected function normalizeTelegramMahasiswa($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        $value = str_replace(' ', '', $value);
+
+        if ($value[0] !== '@') {
+            $value = '@' . $value;
+        }
+
+        if (!preg_match('/^@[A-Za-z0-9_]{5,32}$/', $value)) {
+            return false;
+        }
+
+        return strtolower($value);
     }
 }

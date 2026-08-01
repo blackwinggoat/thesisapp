@@ -19,6 +19,56 @@
             <h3 class="page-heading">Detail Mahasiswa</h3>
             <!-- BEGIN DATA TABLE -->
             <div class="the-box">
+                @php
+                    $currentPenguji = isset($currentPenguji) ? $currentPenguji : null;
+                    $tipeUjianAktif = isset($tipeUjianAktif) ? $tipeUjianAktif : (isset($info->tipe_ujian) ? $info->tipe_ujian : null);
+
+                    if (!isset($namaPembimbing1)) {
+                        $namaPembimbing1 = '--';
+                        try {
+                            $dosenPembimbing1 = \Illuminate\Support\Facades\DB::table('t_mst_dosen')
+                                ->select('NAMA_DOSEN')
+                                ->where('C_KODE_DOSEN', $info->pembimbing_I_id)
+                                ->first();
+                            if (!empty($dosenPembimbing1->NAMA_DOSEN)) {
+                                $namaPembimbing1 = $dosenPembimbing1->NAMA_DOSEN;
+                            } else {
+                                $dosenPembimbing1 = \Illuminate\Support\Facades\DB::table('mig_t_mst_dosen')
+                                    ->select('NAMA_DOSEN')
+                                    ->where('C_KODE_DOSEN', $info->pembimbing_I_id)
+                                    ->first();
+                                if (!empty($dosenPembimbing1->NAMA_DOSEN)) {
+                                    $namaPembimbing1 = $dosenPembimbing1->NAMA_DOSEN;
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            $namaPembimbing1 = '--';
+                        }
+                    }
+
+                    if (!isset($namaPembimbing2)) {
+                        $namaPembimbing2 = '--';
+                        try {
+                            $dosenPembimbing2 = \Illuminate\Support\Facades\DB::table('t_mst_dosen')
+                                ->select('NAMA_DOSEN')
+                                ->where('C_KODE_DOSEN', $info->pembimbing_II_id)
+                                ->first();
+                            if (!empty($dosenPembimbing2->NAMA_DOSEN)) {
+                                $namaPembimbing2 = $dosenPembimbing2->NAMA_DOSEN;
+                            } else {
+                                $dosenPembimbing2 = \Illuminate\Support\Facades\DB::table('mig_t_mst_dosen')
+                                    ->select('NAMA_DOSEN')
+                                    ->where('C_KODE_DOSEN', $info->pembimbing_II_id)
+                                    ->first();
+                                if (!empty($dosenPembimbing2->NAMA_DOSEN)) {
+                                    $namaPembimbing2 = $dosenPembimbing2->NAMA_DOSEN;
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            $namaPembimbing2 = '--';
+                        }
+                    }
+                @endphp
                 <form method="post" action="{{url('prodi/set_penguji/'.$pendaftaran_id)}}" enctype="multipart/form-data">
                     {{ csrf_field() }}
                     <fieldset>
@@ -44,45 +94,27 @@
                             </div>
                         </div>
                         <br><br>
-                        @php
-                            $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$info->pembimbing_I_id)->first();
-                            $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$info->pembimbing_II_id)->first();
-                        @endphp
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Pembimbing Utama</label>
                             <div class="col-xs-5">
-                                <div class="form-control bold-border" disabled>{{$pembimbing1->NAMA_DOSEN}}</div>
+                                <div class="form-control bold-border" disabled>{{$namaPembimbing1}}</div>
                             </div><!-- /.col-xs-5 -->
                         </div>
                         <br><br>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Pembimbing Pendamping</label>
                             <div class="col-xs-5">
-                                <div class="form-control bold-border" disabled>{{$pembimbing2->NAMA_DOSEN}}</div>
+                                <div class="form-control bold-border" disabled>{{$namaPembimbing2}}</div>
                             </div><!-- /.col-xs-5 -->
                         </div>
                         <br><br>
-                        @php
-                            $mst_pendaftaran = \App\Model\mst_pendaftaran::where("pendaftaran_id",$pendaftaran_id)->first();
-                        @endphp
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Penguji I</label>
                             <div class="col-xs-5">
                                 <select class="form-control bold-border" name="penguji_I_id" required>
-                                    <option disabled selected>--</option>
+                                    <option disabled {{ empty($currentPenguji) || empty($currentPenguji->penguji_I_id) ? 'selected' : '' }}>--</option>
                                     @foreach ($dosen as $key => $value)
-                                        @php
-                                            $selected="";
-                                            $trtpenguji = \App\TrtPenguji::where([
-                                                "penguji_I_id" => $value->C_KODE_DOSEN,
-                                                "tipe_ujian" => $mst_pendaftaran->tipe_ujian,
-                                                "C_NPM" =>$info->C_NPM
-                                              ])->count();
-                                            if(!empty($trtpenguji)){
-                                                $selected="selected";
-                                            }
-                                        @endphp
-                                        <option value="{{$value->C_KODE_DOSEN}}" {{$selected}}>{{$value->NAMA_DOSEN}}</option>
+                                        <option value="{{$value->C_KODE_DOSEN}}" {{ !empty($currentPenguji) && $currentPenguji->penguji_I_id == $value->C_KODE_DOSEN ? 'selected' : '' }}>{{$value->NAMA_DOSEN}}</option>
                                     @endforeach
                                 </select>
                             </div><!-- /.col-xs-5 -->
@@ -92,20 +124,9 @@
                             <label class="col-lg-2 control-label">Penguji II</label>
                             <div class="col-xs-5">
                                 <select class="form-control bold-border" name="penguji_II_id" required>
-                                    <option disabled selected>--</option>
+                                    <option disabled {{ empty($currentPenguji) || empty($currentPenguji->penguji_II_id) ? 'selected' : '' }}>--</option>
                                     @foreach ($dosen as $key => $value)
-                                        @php
-                                            $selected="";
-                                            $trtpenguji = \App\TrtPenguji::where([
-                                                "penguji_II_id" => $value->C_KODE_DOSEN,
-                                                "tipe_ujian" => $mst_pendaftaran->tipe_ujian,
-                                                "C_NPM" =>$info->C_NPM
-                                              ])->count();
-                                            if(!empty($trtpenguji)){
-                                                $selected="selected";
-                                            }
-                                        @endphp
-                                        <option value="{{$value->C_KODE_DOSEN}}" {{$selected}}>{{$value->NAMA_DOSEN}}</option>
+                                        <option value="{{$value->C_KODE_DOSEN}}" {{ !empty($currentPenguji) && $currentPenguji->penguji_II_id == $value->C_KODE_DOSEN ? 'selected' : '' }}>{{$value->NAMA_DOSEN}}</option>
                                     @endforeach
                                 </select>
                             </div><!-- /.col-xs-5 -->
@@ -115,52 +136,30 @@
                             <label class="col-lg-2 control-label">Peenguji III</label>
                             <div class="col-xs-5">
                                 <select class="form-control bold-border" name="penguji_III_id" required>
-                                    <option disabled selected>--</option>
+                                    <option disabled {{ empty($currentPenguji) || empty($currentPenguji->penguji_III_id) ? 'selected' : '' }}>--</option>
                                     @foreach ($dosen as $key => $value)
-                                        @php
-                                            $selected="";
-                                            $trtpenguji = \App\TrtPenguji::where([
-                                                "penguji_III_id" => $value->C_KODE_DOSEN,
-                                                "tipe_ujian" => $mst_pendaftaran->tipe_ujian,
-                                                "C_NPM" =>$info->C_NPM
-                                              ])->count();
-                                            if(!empty($trtpenguji)){
-                                                $selected="selected";
-                                            }
-                                        @endphp
-                                            <option value="{{$value->C_KODE_DOSEN}}" {{$selected}}>{{$value->NAMA_DOSEN}}</option>
+                                            <option value="{{$value->C_KODE_DOSEN}}" {{ !empty($currentPenguji) && $currentPenguji->penguji_III_id == $value->C_KODE_DOSEN ? 'selected' : '' }}>{{$value->NAMA_DOSEN}}</option>
                                     @endforeach
                                 </select>
                             </div><!-- /.col-xs-5 -->
                         </div>
                         <br><br>
-                        @if ($info->tipe_ujian == 0)
+                        @if ($tipeUjianAktif == 0)
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Ketua Sidang</label>
                             <div class="col-xs-5">
-                                <div class="form-control bold-border" disabled>{{$pembimbing1->NAMA_DOSEN}}</div>
+                                <div class="form-control bold-border" disabled>{{$namaPembimbing1}}</div>
                             </div><!-- /.col-xs-5 -->
                         </div>
-                        <input type="hidden" name="ketua_sidang_id" value="{{$pembimbing1->C_KODE_DOSEN}}">
+                        <input type="hidden" name="ketua_sidang_id" value="{{$info->pembimbing_I_id}}">
                         @else
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Ketua Sidang</label>
                             <div class="col-xs-5">
                                 <select class="form-control bold-border" name="ketua_sidang_id" required>
-                                    <option disabled selected>--</option>
+                                    <option disabled {{ empty($currentPenguji) || empty($currentPenguji->ketua_sidang_id) ? 'selected' : '' }}>--</option>
                                     @foreach ($dosen as $key => $value)
-                                        @php
-                                            $selected="";
-                                            $trtpenguji = \App\TrtPenguji::where([
-                                                "ketua_sidang_id" => $value->C_KODE_DOSEN,
-                                                "tipe_ujian" => $mst_pendaftaran->tipe_ujian,
-                                                "C_NPM" =>$info->C_NPM
-                                              ])->count();
-                                            if(!empty($trtpenguji)){
-                                                $selected="selected";
-                                            }
-                                        @endphp
-                                        <option value="{{$value->C_KODE_DOSEN}}" {{$selected}}>{{$value->NAMA_DOSEN}}</option>
+                                        <option value="{{$value->C_KODE_DOSEN}}" {{ !empty($currentPenguji) && $currentPenguji->ketua_sidang_id == $value->C_KODE_DOSEN ? 'selected' : '' }}>{{$value->NAMA_DOSEN}}</option>
                                     @endforeach
                                 </select>
                             </div><!-- /.col-xs-5 -->
@@ -228,8 +227,4 @@
         }
     </script>
 @endsection
-
-
-
-
 

@@ -21,11 +21,7 @@
             @foreach ($data as $value)
             <div class="col-sm-4">
                 <div class="featured-post-wide">
-                    @if ($value->gambar == '')
-                    <img class="media-object" src="{{asset('gambar/no_image.jpg')}}" height="200" width="100%" class="featured-img" alt="Image">
-                    @else
-                    <img class="media-object" src="{{asset('gambar/'.$value->gambar)}}" height="200" width="100%" class="featured-img" alt="Image">
-                    @endif
+                    <img class="media-object" src="{{ \App\Helper::announcementImageUrl($value->gambar) }}" height="200" width="100%" class="featured-img" alt="Image">
                     <i class="fa fa-newspaper-o icon-info icon-square icon-xs icon-type"></i>
                     <div class="featured-text relative">
                         <h3><a href="#fakelink">{{$value->judul}}</a></h3>

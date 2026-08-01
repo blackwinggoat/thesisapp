@@ -217,10 +217,10 @@
             @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 1)
 
             @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
-                <img src="{{ asset('gambar/stempelfakultas.png') }}" alt="" height="100px"
+                <img src="{{ \App\Helper::officialImageDataUri('stempelfakultas.png') }}" alt="" height="100px"
                     style="position: absolute; right: 140px">
                 @if (!empty($dekan->ttd))
-                    <img src="{{ asset('gambar/' . $dekan->ttd) }}" alt="" height="70px"
+                    <img src="{{ \App\Helper::officialImageDataUri($dekan->ttd) }}" alt="" height="70px"
                         style="position: absolute; right: -20px">
                 @endif
             @endif
@@ -234,7 +234,7 @@
         @if (helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 0)
         @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 1 ||
                 helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
-            <img src="{{ asset('gambar/paraf_wd.png') }}" alt="" height="50px"
+            <img src="{{ \App\Helper::officialImageDataUri('paraf_wd.png') }}" alt="" height="50px"
                 style="position: absolute; right: -20px">
         @endif
     </div>
@@ -381,10 +381,10 @@
             @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 1)
 
             @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
-                <img src="{{ asset('gambar/stempelfakultas.png') }}" alt="" height="100px"
+                <img src="{{ \App\Helper::officialImageDataUri('stempelfakultas.png') }}" alt="" height="100px"
                     style="position: absolute; right: 140px">
                 @if (!empty($dekan->ttd))
-                    <img src="{{ asset('gambar/' . $dekan->ttd) }}" alt="" height="70px"
+                    <img src="{{ \App\Helper::officialImageDataUri($dekan->ttd) }}" alt="" height="70px"
                         style="position: absolute; right: -20px">
                 @endif
             @endif
@@ -398,7 +398,7 @@
         @if (helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 0)
         @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 1 ||
                 helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
-            <img src="{{ asset('gambar/paraf_wd.png') }}" alt="" height="50px"
+            <img src="{{ \App\Helper::officialImageDataUri('paraf_wd.png') }}" alt="" height="50px"
                 style="position: absolute; right: -20px">
         @endif
     </div>

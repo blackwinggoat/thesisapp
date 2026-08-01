@@ -89,7 +89,7 @@
     @php
         $namaProdi = helper::getProgramStudiByAuthUser(Auth::user()->name);
         $kaprodi = helper::getKaprodiByProdiAndTanggal($namaProdi, $tgl_ujian ?? null);
-        $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'gambar/stempelprodi.png' : 'gambar/stempelprodi_si.png';
+        $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'stempelprodi.png' : 'stempelprodi_si.png';
         $tinggiTtdKaprodi = $namaProdi == 'Teknik Informatika' ? '70px' : '120px';
         $styleTtdKaprodi = $namaProdi == 'Teknik Informatika' ? 'position: absolute; right: 90px' : 'position: absolute; right: 20px; top: -10px';
     @endphp
@@ -172,26 +172,18 @@
                         <td style="font-size: 12px">{{ ++$key }}</td>
                         <td style="font-size: 12px">{{ $value->NAMA_MAHASISWA }} / {{ $value->C_NPM }}</td>
                         <td style="font-size: 12px">{{ $value->judul }}</td>
-                        @php
-                            $pembimbing1 = \App\Dosen::where('C_KODE_DOSEN', $value->pembimbing_I_id)->first();
-                            $pembimbing2 = \App\Dosen::where('C_KODE_DOSEN', $value->pembimbing_II_id)->first();
-                            $penguji1 = \App\Dosen::where('C_KODE_DOSEN', $value->penguji_I_id)->first();
-                            $penguji2 = \App\Dosen::where('C_KODE_DOSEN', $value->penguji_II_id)->first();
-                            $penguji3 = \App\Dosen::where('C_KODE_DOSEN', $value->penguji_III_id)->first();
-                            $ketua_sidang = \App\Dosen::where('C_KODE_DOSEN', $value->ketua_sidang_id)->first();
-                        @endphp
                         <td style="font-size: 12px">
-                            Ketua Sidang : {{ $ketua_sidang->NAMA_DOSEN }}<br>
+                            Ketua Sidang : {{ helper::getNamaDosenByKode($value->ketua_sidang_id) }}<br>
                             <hr color="black">
-                            Pembimbing Utama : {{ $pembimbing1->NAMA_DOSEN }}<br>
+                            Pembimbing Utama : {{ helper::getNamaDosenByKode($value->pembimbing_I_id) }}<br>
                             <hr color="black">
-                            Pembimbing Pendamping : {{ $pembimbing2->NAMA_DOSEN }}<br>
+                            Pembimbing Pendamping : {{ helper::getNamaDosenByKode($value->pembimbing_II_id) }}<br>
                             <hr color="black">
-                            Penguji I : {{ $penguji1->NAMA_DOSEN }}<br>
+                            Penguji I : {{ helper::getNamaDosenByKode($value->penguji_I_id) }}<br>
                             <hr color="black">
-                            Penguji II : {{ $penguji2->NAMA_DOSEN }}<br>
+                            Penguji II : {{ helper::getNamaDosenByKode($value->penguji_II_id) }}<br>
                             <hr color="black">
-                            Penguji III : {{ $penguji3->NAMA_DOSEN }}<br>
+                            Penguji III : {{ helper::getNamaDosenByKode($value->penguji_III_id) }}<br>
                         </td>
                         <td style="text-align: center; font-size: 12px">
                             {{-- @php
@@ -225,10 +217,10 @@
         </div>
         <br>
         <div style="text-align: center; position: relative">
-            <img src="{{ asset($stempelKaprodi) }}" alt="" height="100px"
+            <img src="{{ \App\Helper::officialImageDataUri($stempelKaprodi) }}" alt="" height="100px"
                 style="position: absolute; right: 140px">
             <br>
-            <img src="{{ asset('gambar/' . $kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
+            <img src="{{ \App\Helper::officialImageDataUri($kaprodi->ttd) }}" alt="" height="{{ $tinggiTtdKaprodi }}"
                 style="{{ $styleTtdKaprodi }}">
         </div>
         <br><br><br><br>
