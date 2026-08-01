@@ -36,4 +36,16 @@ class DataTableMarkupTest extends TestCase
             $script
         );
     }
+
+    public function testLayoutCacheBustsTheRuntimeDataTablesScript()
+    {
+        $footer = file_get_contents(
+            __DIR__ . '/../../resources/views/tugasakhir/layouts/footer.blade.php'
+        );
+
+        $this->assertContains(
+            "?v={{ filemtime(public_path('master/assets/js/apps.js')) }}",
+            $footer
+        );
+    }
 }

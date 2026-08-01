@@ -104,7 +104,7 @@ Placed at the end of the document so the pages load faster
 <script src="{{ asset('master/assets/plugins/c3-chart/c3.min.js')}}"></script>
 
 <!-- MAIN APPS JS -->
-<script src="{{ asset('master/assets/js/apps.js')}}"></script>
+<script src="{{ asset('master/assets/js/apps.js')}}?v={{ filemtime(public_path('master/assets/js/apps.js')) }}"></script>
 <script src="{{ asset('js/axios.min.js')}}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9.10.12/dist/sweetalert2.all.min.js"></script>
 <script src="{{ asset('master/assets/plugins/validator/example.js')}}"></script>
