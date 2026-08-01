@@ -54,4 +54,3 @@
         </div><!-- /.container-fluid -->
     </div>
 @endsection
-
