@@ -20,6 +20,7 @@
 
 # Runtime logs and local-only files
 *.log
+*.zip
 error_log
 .DS_Store
 /.idea/

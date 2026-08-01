@@ -56,6 +56,7 @@ printf 'user document\n' > "${DEPLOY_PATH}/public/dokumen/user-document.pdf"
 printf 'nested user document\n' > "${DEPLOY_PATH}/public/public/dokumen/nested-user-document.pdf"
 printf 'mobile user upload\n' > "${DEPLOY_PATH}/public/mobile/controller/simta/uploadedFiles/mobile-user-upload.pdf"
 printf 'runtime state\n' > "${DEPLOY_PATH}/storage/runtime.txt"
+printf 'server archive\n' > "${DEPLOY_PATH}/public/public_html.zip"
 
 for index in 1 2 3 4 5 6 7; do
     printf 'official %s\n' "$index" > "${SHARED_PATH}/official-assets/official-${index}.png"
@@ -119,11 +120,13 @@ assert_line 'user document' "${DEPLOY_PATH}/public/dokumen/user-document.pdf"
 assert_line 'nested user document' "${DEPLOY_PATH}/public/public/dokumen/nested-user-document.pdf"
 assert_line 'mobile user upload' "${DEPLOY_PATH}/public/mobile/controller/simta/uploadedFiles/mobile-user-upload.pdf"
 assert_line 'runtime state' "${DEPLOY_PATH}/storage/runtime.txt"
+assert_line 'server archive' "${DEPLOY_PATH}/public/public_html.zip"
 assert_line "OFFICIAL_ASSET_PATH=${SHARED_PATH}/official-assets" "${DEPLOY_PATH}/.env"
 [[ -L "${DEPLOY_PATH}/public/storage" ]]
 [[ ! -e "${DEPLOY_PATH}/storage/framework/down" ]]
 [[ ! -e "${SHARED_PATH}/deploy-approved-commit" ]]
 assert_line 'old source' "${SHARED_PATH}"/deploy-backups/*/app/version.php
+[[ -z "$(find "${SHARED_PATH}/deploy-backups" -type f -name '*.zip' -print -quit)" ]]
 
 printf 'broken source\n' > "${APP_PATH}/app/version.php"
 git -C "$APP_PATH" add app/version.php
@@ -150,6 +153,7 @@ assert_line 'user document' "${DEPLOY_PATH}/public/dokumen/user-document.pdf"
 assert_line 'nested user document' "${DEPLOY_PATH}/public/public/dokumen/nested-user-document.pdf"
 assert_line 'mobile user upload' "${DEPLOY_PATH}/public/mobile/controller/simta/uploadedFiles/mobile-user-upload.pdf"
 assert_line 'runtime state' "${DEPLOY_PATH}/storage/runtime.txt"
+assert_line 'server archive' "${DEPLOY_PATH}/public/public_html.zip"
 [[ ! -e "${DEPLOY_PATH}/storage/framework/down" ]]
 assert_line "$FAILED_COMMIT_SHA" "${SHARED_PATH}/deploy-approved-commit"
 
