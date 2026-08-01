@@ -3991,7 +3991,7 @@ class prodi extends Controller
             $riwayat_usulan = DB::table('trt_sk')
                 ->select('nomor', 'tgl_surat')
                 ->distinct('nomor')
-                ->orderBy('trt_sk.sk_id', 'DESC')
+                ->orderBy('tgl_surat', 'DESC')
                 ->get();
 
             $data_sk = DB::table('mst_sk_pembimbing')
@@ -4018,7 +4018,7 @@ class prodi extends Controller
             $riwayat_usulan = DB::table('trt_sk')
                 ->select('nomor', 'tgl_surat')
                 ->distinct('nomor')
-                ->orderBy('trt_sk.sk_id', 'DESC')
+                ->orderBy('tgl_surat', 'DESC')
                 ->get();
 
             $data_sk = DB::table('mst_sk_pembimbing')

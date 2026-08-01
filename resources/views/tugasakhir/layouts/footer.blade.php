@@ -47,6 +47,7 @@ Placed at the end of the document so the pages load faster
 <script src="{{ asset('master/assets/plugins/owl-carousel/owl.carousel.min.js')}}"></script>
 <script src="{{ asset('master/assets/plugins/chosen/chosen.jquery.min.js')}}"></script>
 <script src="{{ asset('master/assets/plugins/icheck/icheck.min.js')}}"></script>
+<script src="{{ asset('master/assets/plugins/newsticker/jquery.newsTicker.min.js')}}"></script>
 <script src="{{ asset('master/assets/plugins/datepicker/bootstrap-datepicker.js')}}"></script>
 <script src="{{ asset('master/assets/plugins/timepicker/bootstrap-timepicker.js')}}"></script>
 <script src="{{ asset('master/assets/plugins/mask/jquery.mask.min.js')}}"></script>
@@ -97,7 +98,6 @@ Placed at the end of the document so the pages load faster
 <!-- MORRIS JS -->
 <script src="{{ asset('master/assets/plugins/morris-chart/raphael.min.js')}}"></script>
 <script src="{{ asset('master/assets/plugins/morris-chart/morris.min.js')}}"></script>
-<script src="{{ asset('master/assets/plugins/morris-chart/example.js')}}"></script>
 
 <!-- C3 JS -->
 <script src="{{ asset('master/assets/plugins/c3-chart/d3.v3.min.js')}}" charset="utf-8"></script>
