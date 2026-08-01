@@ -41,11 +41,20 @@ manifest, including runtime exclusions, are never deleted by deployment.
 
 ## SSH deployment from the local repository
 
-The local SSH client should define a `thesisapps-production` host alias with a
-dedicated key. The server must authorize only the public key; the private key
-must remain on the local computer.
+The local SSH client must define a `thesisapps-production` host alias with the
+ChemiCloud SSH port and a dedicated key. The server authorizes only the public
+key; the private key remains on the local computer.
 
-After the hosting provider enables external SSH for the account, deploy the
+```sshconfig
+Host thesisapps-production
+    HostName rs5-sgp.serverhostgroup.com
+    User thesisapp
+    Port 1988
+    IdentityFile ~/.ssh/id_ed25519_thesisapps
+    IdentitiesOnly yes
+```
+
+External SSH access through port `1988` was verified on 2026-08-02. Deploy the
 exact `origin/main` commit with one command:
 
 ```bash
@@ -67,8 +76,8 @@ Before source synchronization, the deployment script copies the current source
 to `/home/thesisapp/shared/thesisapps/deploy-backups/<timestamp>-<commit>`.
 Runtime directories are preserved throughout deployment and rollback.
 
-To restore an earlier source release after SSH has been enabled, use the full
-SHA of an ancestor of `origin/main`:
+To restore an earlier source release, use the full SHA of an ancestor of
+`origin/main`:
 
 ```bash
 scripts/deploy-production-ssh.sh --rollback FULL_COMMIT_SHA
