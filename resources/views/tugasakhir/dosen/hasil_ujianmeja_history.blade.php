@@ -11,20 +11,20 @@
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="index.html"><i class="fa fa-home"></i></a></li>
                 <li><a href="#fakelink">Home</a></li>
-                <li class="active">Peserta ujian</li>
+                <li class="active">History hasil ujian akhir</li>
             </ol>
             <!-- End breadcrumb -->
 
             <!-- BEGIN DATA TABLE -->
-            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 8px;">
-                <h3 class="page-heading" style="margin: 0;">Penilaian Proposal</h3>
-                <a href="{{ url('dsn/hasil_proposal_history') }}" class="btn btn-primary btn-sm">
-                    <i class="fa fa-history"></i> History
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <h3 class="page-heading" style="margin: 0;">History Penilaian Ujian Akhir</h3>
+                <a href="{{ url('dsn/hasil_ujianmeja') }}" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Kembali
                 </a>
             </div>
             <div class="the-box">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover" id="datatable-hasil-proposal">
+                    <table class="table table-striped table-hover" id="datatable-example">
                         <thead class="the-box dark full">
                         <tr>
                             <th>No</th>
@@ -36,32 +36,32 @@
                             <th>Penguji II</th>
                             <th>Penguji III</th>
                             <th>Ketua Sidang</th>
-                            <th style="text-align: center">Aksi</th>
+                            <th style="text-align: center">Keterangan</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($data as $i => $d)
                             <tr class="odd gradeX">
-                                <td width="1%" align="center">{{++$i}}</td>
-                                <td>{{$d->C_NPM}}</td>
-                                <td>{{$d->NAMA_MAHASISWA}}</td>
+                                <td width="1%" align="center">{{ ++$i }}</td>
+                                <td>{{ $d->C_NPM }}</td>
+                                <td>{{ $d->NAMA_MAHASISWA }}</td>
                                 <td>
                                     @if ($d->pembimbing_I_id == auth()->user()->name)
-                                            <b>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</b>
-                                        @else
-                                            {{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}
-                                        @endif
+                                        <b>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</b>
+                                    @else
+                                        {{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}
+                                    @endif
                                 </td>
                                 <td>
                                     @if ($d->pembimbing_II_id == auth()->user()->name)
-                                            <b>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</b>
-                                        @else
-                                            {{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}
-                                        @endif
+                                        <b>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</b>
+                                    @else
+                                        {{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}
+                                    @endif
                                 </td>
                                 <td>
                                     @if (empty($d->penguji_I_id))
-                                        {{"-"}}
+                                        -
                                     @else
                                         @if ($d->penguji_I_id == auth()->user()->name)
                                             <b>{{ helper::getNamaDosenByKode($d->penguji_I_id) }}</b>
@@ -72,7 +72,7 @@
                                 </td>
                                 <td>
                                     @if (empty($d->penguji_II_id))
-                                        {{"-"}}
+                                        -
                                     @else
                                         @if ($d->penguji_II_id == auth()->user()->name)
                                             <b>{{ helper::getNamaDosenByKode($d->penguji_II_id) }}</b>
@@ -83,7 +83,7 @@
                                 </td>
                                 <td>
                                     @if (empty($d->penguji_III_id))
-                                        {{"-"}}
+                                        -
                                     @else
                                         @if ($d->penguji_III_id == auth()->user()->name)
                                             <b>{{ helper::getNamaDosenByKode($d->penguji_III_id) }}</b>
@@ -94,7 +94,7 @@
                                 </td>
                                 <td>
                                     @if (empty($d->ketua_sidang_id))
-                                        {{"-"}}
+                                        -
                                     @else
                                         @if ($d->ketua_sidang_id == auth()->user()->name)
                                             <b>{{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}</b>
@@ -103,18 +103,8 @@
                                         @endif
                                     @endif
                                 </td>
-                                <td style="width: 240px; text-align: center">
-                                    
-                                    @if (empty($d->penguji_I_id) && empty($d->penguji_II_id) && empty($d->penguji_III_id) && empty($d->ketua_sidang_id))
-                                        Belum Bisa Beri Nilai
-                                    @else
-                                    @if (helper::getStatusBimbinganByNim($d->C_NPM) == 2 || helper::getStatusBimbinganByNim($d->C_NPM) == 3)
-                                        Nilai Mahasiswa Telah Diapprove Oleh Prodi
-                                    @else
-                                        <a href="{{ url("dsn/detailhasil_proposal/$d->reg_id")}}" class="btn btn-info"><i class="fa fa-file-text"></i>Penilaian</a>
-                                    @endif
-                                    
-                                    @endif
+                                <td style="width: 260px; text-align: center">
+                                    Nilai Mahasiswa Telah Diapprove Oleh Prodi
                                 </td>
                             </tr>
                         @endforeach
@@ -127,16 +117,3 @@
     </div>
 @endsection
 
-@section('script')
-    <script>
-        $(function() {
-            if ($('#datatable-hasil-proposal').length > 0) {
-                $('#datatable-hasil-proposal').DataTable({
-                    paging: false,
-                    info: false,
-                    order: []
-                });
-            }
-        });
-    </script>
-@endsection

@@ -29,11 +29,39 @@ class WakilDekan extends Controller
         $data = DB::table('trt_bimbingan')
             ->select("*")
             ->where('trt_bimbingan.status_bimbingan', $status)
+            ->orderBy('updated_at', 'desc')
             ->get();
 
-        return view('tugasakhir.wakildekan.detail_status_bimbingan_mahasiswa', compact('data', 'status'));
+        $filterActionRoute = route('wakildekan.tampilDetailStatusBimbinganDenganFilterTanggal');
+        $resetUrl = url('wakildekan/detail_status_bimbingan_mahasiswa/' . $status);
+
+        return view('tugasakhir.prodi.detail_status_bimbingan_mahasiswa', compact('data', 'status', 'filterActionRoute', 'resetUrl'));
     }
     // Akhir Menampilkan Status Bimbingan Mahasiswa
+
+    public function tampilDetailStatusBimbinganDenganFilterTanggal(Request $request)
+    {
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $status = $request->input('status');
+
+        $query = DB::table('trt_bimbingan')
+            ->select('*')
+            ->where('trt_bimbingan.status_bimbingan', $status);
+
+        if (!empty($tanggalDari) && !empty($tanggalSampai)) {
+            $query->whereBetween('trt_bimbingan.updated_at', [$tanggalDari, $tanggalSampai]);
+        }
+
+        $data = $query
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $filterActionRoute = route('wakildekan.tampilDetailStatusBimbinganDenganFilterTanggal');
+        $resetUrl = url('wakildekan/detail_status_bimbingan_mahasiswa/' . $status);
+
+        return view('tugasakhir.prodi.detail_status_bimbingan_mahasiswa', compact('data', 'status', 'filterActionRoute', 'resetUrl'));
+    }
 
 
     // Approve SK Pembimbing

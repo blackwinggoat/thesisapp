@@ -40,50 +40,17 @@
                                 <td width="1%" align="center">{{++$i}}</td>
                                 <td>{{$d->C_NPM}}</td>
                                 <td>{{$d->NAMA_MAHASISWA}}</td>
-                                @php
-                                    $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                                    $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                                    $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_I_id)->first();
-                                    $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_II_id)->first();
-                                    $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_III_id)->first();
-                                    $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$d->ketua_sidang_id)->first();
-                                @endphp
-                                <td>{{$pembimbing1->NAMA_DOSEN}}</td>
-                                <td>{{$pembimbing2->NAMA_DOSEN}}</td>
-                                <td>
-                                    @if ($penguji1 == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$penguji1->NAMA_DOSEN}}
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($penguji2 == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$penguji2->NAMA_DOSEN}}
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($penguji3 == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$penguji3->NAMA_DOSEN}}
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($ketuasidang == null)
-                                        {{"-"}}
-                                    @else
-                                        {{$ketuasidang->NAMA_DOSEN}}
-                                    @endif
-                                </td>
+                                <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->penguji_I_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->penguji_II_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->penguji_III_id) }}</td>
+                                <td>{{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}</td>
                                 <td style="width: 240px; text-align: center">
-                                    
-                                    @if ((helper::getRuanganUjianTAByNim($d->C_NPM) == null) || (helper::getRuanganUjianTAByNim($d->C_NPM) == '') && $penguji1 == null && $penguji2 == null && $penguji3 == null && $ketuasidang == null)
+                                    @if (empty(helper::getRuanganUjianTAByNim($d->C_NPM)))
                                         Berita Acara Belum Terbit
                                     @else
-                                    <a href="{{ url("mhs/cetak_beritaacara_proposal/$d->pendaftaran_id/$d->C_NPM")}}" class="btn btn-info"><i class="fa fa-file-text"></i>Berita Acara</a>
+                                    <a href="{{ url("mhs/cetak_beritaacara_ujian/$d->pendaftaran_id/$d->C_NPM")}}" class="btn btn-info"><i class="fa fa-file-text"></i>Berita Acara</a>
                                     @endif
                                 </td>
                             </tr>
@@ -96,5 +63,4 @@
         </div><!-- /.container-fluid -->
     </div>
 @endsection
-
 

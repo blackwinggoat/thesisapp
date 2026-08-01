@@ -11,15 +11,15 @@
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="index.html"><i class="fa fa-home"></i></a></li>
                 <li><a href="#fakelink">Home</a></li>
-                <li class="active">Peserta Proposal</li>
+                <li class="active">History Rekap Nilai Ujian TA</li>
             </ol>
             <!-- End breadcrumb -->
 
             <!-- BEGIN DATA TABLE -->
             <div style="display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 8px;">
-                <h3 class="page-heading" style="margin: 0;">Daftar Hasil Ujian Per Periode</h3>
-                <a href="{{ url('dsn/rekap_nilai_proposal_history') }}" class="btn btn-primary btn-sm">
-                    <i class="fa fa-history"></i> History
+                <h3 class="page-heading" style="margin: 0;">History Daftar Hasil Ujian Per Periode</h3>
+                <a href="{{ url('dsn/rekap_nilai_ujian_ta') }}" class="btn btn-default btn-sm">
+                    <i class="fa fa-arrow-left"></i> Kembali
                 </a>
             </div>
             <div class="the-box">
@@ -38,13 +38,12 @@
                         <tbody>
                         @foreach($data as $key => $value)
                             <tr class="odd gradeX">
-                                <td width="1%" align="center">{{++$key}}</td>
-                                <td>{{$value->tgl_ujian}}</td>
-                                <td>{{$value->nama_periode}}</td>
-                                <td>{{$value->kuota}}</td>
-                                <td>{{$value->jml_peserta}}</td>
-                                {{-- <<td>{{$value->status == 0 ? "td>{{$value->status == 0 ? "<td>{{$d->status == 0 ? "Belum terlaksana" : "Terlaksana"}}</td>" : "Terlaksana"}}</td>" : "Terlaksana"}}</td> --}}
-                                <td><a href="{{ url('dsn/detail_rekap_nilai_proposal/'.$value->pendaftaran_id)}}"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a></td>
+                                <td width="1%" align="center">{{ ++$key }}</td>
+                                <td>{{ $value->tgl_ujian }}</td>
+                                <td>{{ $value->nama_periode }}</td>
+                                <td>{{ $value->kuota }}</td>
+                                <td>{{ $value->jml_peserta }}</td>
+                                <td><a href="{{ url('dsn/detail_rekap_nilai_ujian_ta_history/'.$value->pendaftaran_id) }}"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a></td>
                             </tr>
                         @endforeach
                         </tbody>

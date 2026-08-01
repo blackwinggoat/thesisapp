@@ -55,7 +55,7 @@
                             <th>Penguji II</th>
                             <th>Penguji III</th>
                             <th>Ketua Sidang</th>
-                            <th>Approve</th>
+                            <th>{{ !empty($isHistory) ? 'Keterangan' : 'Approve' }}</th>
                             <th>Hasil</th>
                         </tr>
                     </thead>
@@ -66,84 +66,88 @@
                             <td>{{$d->C_NPM}}</td>
                             <td>{{$d->NAMA_MAHASISWA}}</td>
                             @php
-                            $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                            $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                            $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_I_id)->first();
-                            $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_II_id)->first();
-                            $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_III_id)->first();
-                            $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$d->ketua_sidang_id)->first();
+                            $pembimbing1 = helper::getNamaDosenByKode($d->pembimbing_I_id);
+                            $pembimbing2 = helper::getNamaDosenByKode($d->pembimbing_II_id);
+                            $penguji1 = helper::getNamaDosenByKode($d->penguji_I_id);
+                            $penguji2 = helper::getNamaDosenByKode($d->penguji_II_id);
+                            $penguji3 = helper::getNamaDosenByKode($d->penguji_III_id);
+                            $ketuasidang = helper::getNamaDosenByKode($d->ketua_sidang_id);
                             @endphp
-                            <td>{{$pembimbing1->NAMA_DOSEN}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_I_id, $d->reg_id) ?></td>
-                            <td>{{$pembimbing2->NAMA_DOSEN}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_II_id, $d->reg_id) ?></td>
+                            <td>{{$pembimbing1}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_I_id, $d->reg_id) ?></td>
+                            <td>{{$pembimbing2}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_II_id, $d->reg_id) ?></td>
                             <td>
-                                @if ($penguji1 == null)
+                                @if ($penguji1 == '--')
                                 {{"-"}}
                                 @else
-                                {{$penguji1->NAMA_DOSEN}}
+                                {{$penguji1}}
                                 <?= helper::getStatusPenilaianPerDosen($d->penguji_I_id, $d->reg_id) ?>
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji2 == null)
+                                @if ($penguji2 == '--')
                                 {{"-"}}
                                 @else
-                                {{$penguji2->NAMA_DOSEN}}
+                                {{$penguji2}}
                                 <?= helper::getStatusPenilaianPerDosen($d->penguji_II_id, $d->reg_id) ?>
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji3 == null)
+                                @if ($penguji3 == '--')
                                 {{"-"}}
                                 @else
-                                {{$penguji3->NAMA_DOSEN}}
+                                {{$penguji3}}
                                 <?= helper::getStatusPenilaianPerDosen($d->penguji_III_id, $d->reg_id) ?>
 
                                 @endif
                             </td>
                             <td>
-                                @if ($ketuasidang == null)
+                                @if ($ketuasidang == '--')
                                 {{"-"}}
                                 @else
-                                {{$ketuasidang->NAMA_DOSEN}}
+                                {{$ketuasidang}}
                                 <?= helper::getStatusPenilaianPerDosen($d->ketua_sidang_id, $d->reg_id) ?>
 
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji1 == null && $penguji2 == null && $penguji3 == null && $ketuasidang ==
-                                null)
-                                Silahkan Set Penguji dan Ketua Sidang
+                                @if (!empty($isHistory))
+                                    <span class="label label-success">Nilai Mahasiswa Telah Diapprove Oleh Prodi</span>
                                 @else
-                                @if (helper::getStatusBimbinganByNim($d->C_NPM) == 0)
-                                    @if (helper::getJumlahTrtHasil($d->reg_id) == 5)
-                                        @if (helper::getStatusTolakBimbinganProposalByNim($d->C_NPM) == 0)
-                                            <button  onclick="showModal(this)" data-target="#modalPrimary" data-toggle="modal"
-                                            data-href="{{url('/prodi/approve_hasilujian_proposal_post/')}}/{{$d->bimbingan_id}}/{{$d->C_NPM}}/{{$d->pendaftaran_id}}"
-                                            class="btn btn-primary visible-lg-inline">Terima
-                                            </button>
-                                            <button onclick="showModal(this)" data-target="#modalDanger" data-toggle="modal"
-                                            data-href="{{url('/prodi/tolak_hasilujian_proposal_post/')}}/{{$d->bimbingan_id}}/{{$d->C_NPM}}/{{$d->pendaftaran_id}}"
-                                            class="btn btn-danger visible-lg-inline">Tolak
-                                            </button>
+                                    @if ($penguji1 == '--' && $penguji2 == '--' && $penguji3 == '--' && $ketuasidang ==
+                                    '--')
+                                    Silahkan Set Penguji dan Ketua Sidang
+                                    @else
+                                    @if (helper::getStatusBimbinganByNim($d->C_NPM) == 0)
+                                        @if (helper::isPenilaianLengkapByRegId($d->reg_id))
+                                            @if (helper::getStatusTolakBimbinganProposalByNim($d->C_NPM) == 0)
+                                                <button  onclick="showModal(this)" data-target="#modalPrimary" data-toggle="modal"
+                                                data-href="{{url('/prodi/approve_hasilujian_proposal_post/')}}/{{$d->bimbingan_id}}/{{$d->C_NPM}}/{{$d->pendaftaran_id}}"
+                                                class="btn btn-primary visible-lg-inline">Terima
+                                                </button>
+                                                <button onclick="showModal(this)" data-target="#modalDanger" data-toggle="modal"
+                                                data-href="{{url('/prodi/tolak_hasilujian_proposal_post/')}}/{{$d->bimbingan_id}}/{{$d->C_NPM}}/{{$d->pendaftaran_id}}"
+                                                class="btn btn-danger visible-lg-inline">Tolak
+                                                </button>
+                                            @else
+                                                <button class="btn btn-primary disabled">Anda Ditolak
+                                                </button>
+                                            @endif
                                         @else
-                                            <button class="btn btn-primary disabled">Anda Ditolak
+                                            <button  onclick="showModal(this)" data-target="#modalPrimary" data-toggle="modal"
+                                            data-href=""
+                                            class="btn btn-primary disabled visible-lg-inline">Terima
+                                            </button>
+                                            <button onclick="showModal(this)" data-target="#modalPrimary" data-toggle="modal"
+                                            data-href=""
+                                            class="btn btn-danger visible-lg-inline disabled">Tolak
                                             </button>
                                         @endif
                                     @else
-                                        <button  onclick="showModal(this)" data-target="#modalPrimary" data-toggle="modal"
-                                        data-href=""
-                                        class="btn btn-primary disabled visible-lg-inline">Terima
-                                        </button>
-                                        <button onclick="showModal(this)" data-target="#modalPrimary" data-toggle="modal"
-                                        data-href=""
-                                        class="btn btn-danger visible-lg-inline disabled">Tolak
+                                        <button
+                                        class="btn btn-secondary" disabled>Telah diterima
                                         </button>
                                     @endif
-                                @else
-                                    <button
-                                    class="btn btn-secondary" disabled>Telah diterima
-                                    </button>
-                                @endif
+                                    @endif
                                 @endif
                             </td>
                             <td>
@@ -151,7 +155,7 @@
                                 null)
                                 Silahkan Set Penguji dan Ketua Sidang
                                 @else
-                                    @if (helper::getJumlahTrtHasil($d->reg_id) == 5)
+                                    @if (helper::isPenilaianLengkapByRegId($d->reg_id))
                                         <a href="{{url('prodi/lembaran_hasilujian_proposal')}}/{{$d->pendaftaran_id}}/{{$d->C_NPM}}/{{$d->reg_id}}" class="btn btn-info" target="_blank"><i class="fa fa-paperclip"></i></a>
                                     @else
                                         <span>Penilaian Belum Lengkap</span>

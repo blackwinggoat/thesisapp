@@ -436,14 +436,69 @@ class AkademikProdi extends Controller
     // Menampilkan Status Bimbingan Mahasiswa
     public function detail_status_bimbingan_mahasiswa($status)
     {
-        $data = DB::table('trt_bimbingan')
+        $query = DB::table('trt_bimbingan')
             ->select("*")
-            ->where('trt_bimbingan.status_bimbingan', $status)
+            ->where('trt_bimbingan.status_bimbingan', $status);
+
+        $nimPrefix = $this->getAkademikProdiNimPrefix();
+        if ($nimPrefix !== null) {
+            $query->where('trt_bimbingan.C_NPM', 'LIKE', $nimPrefix);
+        }
+
+        $data = $query
+            ->orderBy('updated_at', 'desc')
             ->get();
 
-        return view('tugasakhir.prodi.detail_status_bimbingan_mahasiswa', compact('data', "status"));
+        $filterActionRoute = route('akademikprodi.tampilDetailStatusBimbinganDenganFilterTanggal');
+        $resetUrl = url('akademikprodi/detail_status_bimbingan_mahasiswa/' . $status);
+
+        return view('tugasakhir.prodi.detail_status_bimbingan_mahasiswa', compact('data', 'status', 'filterActionRoute', 'resetUrl'));
     }
     // Akhir Menampilkan Status Bimbingan Mahasiswa
+
+    public function tampilDetailStatusBimbinganDenganFilterTanggal(Request $request)
+    {
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $status = $request->input('status');
+
+        $query = DB::table('trt_bimbingan')
+            ->select('*')
+            ->where('trt_bimbingan.status_bimbingan', $status);
+
+        if (!empty($tanggalDari) && !empty($tanggalSampai)) {
+            $query->whereBetween('trt_bimbingan.updated_at', [$tanggalDari, $tanggalSampai]);
+        }
+
+        $nimPrefix = $this->getAkademikProdiNimPrefix();
+        if ($nimPrefix !== null) {
+            $query->where('trt_bimbingan.C_NPM', 'LIKE', $nimPrefix);
+        }
+
+        $data = $query
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $filterActionRoute = route('akademikprodi.tampilDetailStatusBimbinganDenganFilterTanggal');
+        $resetUrl = url('akademikprodi/detail_status_bimbingan_mahasiswa/' . $status);
+
+        return view('tugasakhir.prodi.detail_status_bimbingan_mahasiswa', compact('data', 'status', 'filterActionRoute', 'resetUrl'));
+    }
+
+    protected function getAkademikProdiNimPrefix()
+    {
+        $username = Auth::user()->name;
+
+        if ($username === 'akademikproditi' || $username === 'proditi') {
+            return '130%';
+        }
+
+        if ($username === 'akademikprodisi' || $username === 'prodisi') {
+            return '131%';
+        }
+
+        return null;
+    }
 
     public function make_user_all()
     {

@@ -48,70 +48,61 @@
                             <td>{{$d->nama_ruangan}}</td>
                             <td>{{$d->jam_ujian}}</td>
                             <td>{{$d->tgl_ujian}}</td>
-                            @php
-                            $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                            $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                            $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_I_id)->first();
-                            $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_II_id)->first();
-                            $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_III_id)->first();
-                            $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$d->ketua_sidang_id)->first();
-                            @endphp
                             <td>
-
-                                @if ($pembimbing1->C_KODE_DOSEN == auth()->user()->name)
-                                <b>{{$pembimbing1->NAMA_DOSEN}}</b>
+                                @if ($d->pembimbing_I_id == auth()->user()->name)
+                                <b>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</b>
                                 @else
-                                {{$pembimbing1->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}
                                 @endif
                             </td>
                             <td>
-                                @if ($pembimbing2->C_KODE_DOSEN == auth()->user()->name)
-                                <b>{{$pembimbing2->NAMA_DOSEN}}</b>
+                                @if ($d->pembimbing_II_id == auth()->user()->name)
+                                <b>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</b>
                                 @else
-                                {{$pembimbing2->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji1 == null)
+                                @if (empty($d->penguji_I_id))
                                 {{"-"}}
                                 @else
-                                @if ($penguji1->C_KODE_DOSEN == auth()->user()->name)
-                                <b>{{$penguji1->NAMA_DOSEN}}</b>
+                                @if ($d->penguji_I_id == auth()->user()->name)
+                                <b>{{ helper::getNamaDosenByKode($d->penguji_I_id) }}</b>
                                 @else
-                                {{$penguji1->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->penguji_I_id) }}
                                 @endif
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji2 == null)
+                                @if (empty($d->penguji_II_id))
                                 {{"-"}}
                                 @else
-                                @if ($penguji2->C_KODE_DOSEN == auth()->user()->name)
-                                <b>{{$penguji2->NAMA_DOSEN}}</b>
+                                @if ($d->penguji_II_id == auth()->user()->name)
+                                <b>{{ helper::getNamaDosenByKode($d->penguji_II_id) }}</b>
                                 @else
-                                {{$penguji2->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->penguji_II_id) }}
                                 @endif
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji3 == null)
+                                @if (empty($d->penguji_III_id))
                                 {{"-"}}
                                 @else
-                                @if ($penguji3->C_KODE_DOSEN == auth()->user()->name)
-                                <b>{{$penguji3->NAMA_DOSEN}}</b>
+                                @if ($d->penguji_III_id == auth()->user()->name)
+                                <b>{{ helper::getNamaDosenByKode($d->penguji_III_id) }}</b>
                                 @else
-                                {{$penguji3->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->penguji_III_id) }}
                                 @endif
                                 @endif
                             </td>
                             <td>
-                                @if ($ketuasidang == null)
+                                @if (empty($d->ketua_sidang_id))
                                 {{"-"}}
                                 @else
-                                @if ($ketuasidang->C_KODE_DOSEN == auth()->user()->name)
-                                <b>{{$ketuasidang->NAMA_DOSEN}}</b>
+                                @if ($d->ketua_sidang_id == auth()->user()->name)
+                                <b>{{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}</b>
                                 @else
-                                {{$ketuasidang->NAMA_DOSEN}}
+                                {{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}
                                 @endif
                                 @endif
                             </td>

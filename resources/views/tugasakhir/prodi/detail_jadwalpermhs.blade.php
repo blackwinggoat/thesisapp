@@ -57,58 +57,62 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($data as $i => $d)
+                        @forelse($data as $i => $d)
                             <tr class="odd gradeX">
                                 <td width="1%" align="center">{{++$i}}</td>
                                 <td>{{$d->C_NPM}}</td>
                                 <td>{{$d->NAMA_MAHASISWA}}</td>
                                 @php
-                                    $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                                    $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                                    $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_I_id)->first();
-                                    $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_II_id)->first();
-                                    $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_III_id)->first();
-                                    $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$d->ketua_sidang_id)->first();
+                                    $pembimbing1 = helper::getNamaDosenByKode($d->pembimbing_I_id);
+                                    $pembimbing2 = helper::getNamaDosenByKode($d->pembimbing_II_id);
+                                    $penguji1 = helper::getNamaDosenByKode($d->penguji_I_id);
+                                    $penguji2 = helper::getNamaDosenByKode($d->penguji_II_id);
+                                    $penguji3 = helper::getNamaDosenByKode($d->penguji_III_id);
+                                    $ketuasidang = helper::getNamaDosenByKode($d->ketua_sidang_id);
                                 @endphp
-                                <td>{{$pembimbing1->NAMA_DOSEN}}</td>
-                                <td>{{$pembimbing2->NAMA_DOSEN}}</td>
+                                <td>{{$pembimbing1}}</td>
+                                <td>{{$pembimbing2}}</td>
                                 <td>
-                                    @if ($penguji1 == null)
+                                    @if ($penguji1 == '--')
                                         {{"-"}}
                                     @else
-                                        {{$penguji1->NAMA_DOSEN}}
+                                        {{$penguji1}}
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($penguji2 == null)
+                                    @if ($penguji2 == '--')
                                         {{"-"}}
                                     @else
-                                        {{$penguji2->NAMA_DOSEN}}
+                                        {{$penguji2}}
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($penguji3 == null)
+                                    @if ($penguji3 == '--')
                                         {{"-"}}
                                     @else
-                                        {{$penguji3->NAMA_DOSEN}}
+                                        {{$penguji3}}
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($ketuasidang == null)
+                                    @if ($ketuasidang == '--')
                                         {{"-"}}
                                     @else
-                                        {{$ketuasidang->NAMA_DOSEN}}
+                                        {{$ketuasidang}}
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($penguji1 == null && $penguji2 == null && $penguji3 == null && $ketuasidang == null)
+                                    @if ($penguji1 == '--' && $penguji2 == '--' && $penguji3 == '--' && $ketuasidang == '--')
                                         Silahkan Set Penguji dan Ketua Sidang
                                     @else
                                     <a href="{{ url("prodi/set_jadwalpermhs/$info->pendaftaran_id/$d->C_NPM")}}"><i class="fa fa-file-archive-o icon-square icon-xs icon-dark"></i></a>
                                     @endif
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="10" class="text-center">Belum ada data peserta pada jadwal ini.</td>
+                            </tr>
+                        @endforelse
                         </tbody>
                     </table>
                 </div><!-- /.table-responsive -->

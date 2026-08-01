@@ -18,8 +18,55 @@
             <!-- BEGIN DATA TABLE -->
             <h3 class="page-heading">Daftar Mahasiswa</h3>
             <div class="the-box">
+                <form method="get" action="{{ url('prodi/mahasiswa') }}" class="form-horizontal" style="margin-bottom: 18px;">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label style="display:block;">Cari NIM / Nama</label>
+                            <input type="text" name="q" class="form-control" value="{{ $q ?? '' }}" placeholder="Contoh: 1302022 atau nama mahasiswa">
+                        </div>
+                        <div class="col-md-2">
+                            <label style="display:block;">Angkatan</label>
+                            <select name="angkatan" class="form-control">
+                                <option value="">Semua Angkatan</option>
+                                @foreach (($listAngkatan ?? []) as $itemAngkatan)
+                                    <option value="{{ $itemAngkatan }}" {{ ($angkatan ?? '') === $itemAngkatan ? 'selected' : '' }}>
+                                        {{ $itemAngkatan }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label style="display:block;">Status Akun</label>
+                            <select name="status_akun" class="form-control">
+                                <option value="semua" {{ ($statusAkun ?? 'semua') === 'semua' ? 'selected' : '' }}>Semua</option>
+                                <option value="aktif" {{ ($statusAkun ?? 'semua') === 'aktif' ? 'selected' : '' }}>Sudah Aktif</option>
+                                <option value="belum" {{ ($statusAkun ?? 'semua') === 'belum' ? 'selected' : '' }}>Belum Aktif</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label style="display:block;">Per Halaman</label>
+                            <select name="per_page" class="form-control">
+                                @foreach ([25, 50, 100, 200] as $size)
+                                    <option value="{{ $size }}" {{ (int) ($perPage ?? 25) === $size ? 'selected' : '' }}>{{ $size }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label style="display:block;">Aksi</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Filter</button>
+                                <a href="{{ url('prodi/mahasiswa') }}" class="btn btn-default">Reset</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div style="margin-bottom: 10px;">
+                    Menampilkan <strong>{{ $data->count() }}</strong> dari <strong>{{ $data->total() }}</strong> data mahasiswa
+                </div>
+
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover" id="datatable-example">
+                    <table class="table table-striped table-hover">
                         <thead class="the-box dark full">
                         <tr>
                             <th>No</th>
@@ -31,12 +78,23 @@
                         </tr>
                         </thead>
                         <tbody>
+                        @if ($data->count() === 0)
+                            <tr>
+                                <td colspan="6" class="text-center">Data mahasiswa tidak ditemukan.</td>
+                            </tr>
+                        @endif
                         @foreach ($data as $key => $value)
                             <tr class="odd gradeX">
-                                <td width="1%" align="center">{{++$key}}</td>
+                                <td width="1%" align="center">{{ $data->firstItem() + $key }}</td>
                                 <td>{{$value->C_NPM}}</td>
                                 <td>{{$value->NAMA_MAHASISWA}}</td>
-                                <td><?= helper::getStatusAkunPerMahasiswa($value->C_NPM)?></td>
+                                <td>
+                                    @if ((int) ($value->has_user ?? 0) === 1)
+                                        <i class="fa fa-check-circle text-success"></i>
+                                    @else
+                                        <i class="fa fa-times-circle text-danger"></i>
+                                    @endif
+                                </td>
                                 <td>
                                     <a href="{{ url('prodi/detail_mahasiswa/'.$value->C_NPM)}}"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a>
                                 </td>
@@ -49,6 +107,9 @@
                         </tbody>
                     </table>
                 </div><!-- /.table-responsive -->
+                <div>
+                    {{ $data->links() }}
+                </div>
             </div><!-- /.the-box .default -->
             <!-- END DATA TABLE -->
         </div><!-- /.container-fluid -->
@@ -93,5 +154,4 @@
         }
     </script>
 @endsection
-
 

@@ -46,52 +46,52 @@
                         </div>
                         <br><br>
                         @php
-                            $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$info->pembimbing_I_id)->first();
-                            $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$info->pembimbing_II_id)->first();
-                            $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$info->penguji_I_id)->first();
-                            $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$info->penguji_II_id)->first();
-                            $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$info->penguji_III_id)->first();
-                            $ketua_sidang = \App\Dosen::where("C_KODE_DOSEN",$info->ketua_sidang_id)->first();
+                            $pembimbing1 = helper::getNamaDosenByKode($info->pembimbing_I_id);
+                            $pembimbing2 = helper::getNamaDosenByKode($info->pembimbing_II_id);
+                            $penguji1 = helper::getNamaDosenByKode($info->penguji_I_id);
+                            $penguji2 = helper::getNamaDosenByKode($info->penguji_II_id);
+                            $penguji3 = helper::getNamaDosenByKode($info->penguji_III_id);
+                            $ketua_sidang = helper::getNamaDosenByKode($info->ketua_sidang_id);
                         @endphp
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Pembimbing Utama</label>
                             <div class="col-xs-5">
-                                <div class="form-control bold-border" disabled>{{$pembimbing1->NAMA_DOSEN}}</div>
+                                <div class="form-control bold-border" disabled>{{$pembimbing1}}</div>
                             </div><!-- /.col-xs-5 -->
                         </div>
                         <br><br>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Pembimbing Pendamping</label>
                             <div class="col-xs-5">
-                                <div class="form-control bold-border" disabled>{{$pembimbing2->NAMA_DOSEN}}</div>
+                                <div class="form-control bold-border" disabled>{{$pembimbing2}}</div>
                             </div><!-- /.col-xs-5 -->
                         </div>
                         <br><br>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Penguji I</label>
                             <div class="col-xs-5">
-                                <div class="form-control bold-border" disabled>{{$penguji1->NAMA_DOSEN}}</div>
+                                <div class="form-control bold-border" disabled>{{$penguji1 == '--' ? '-' : $penguji1}}</div>
                             </div><!-- /.col-xs-5 -->
                         </div>
                         <br><br>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Penguji II</label>
                             <div class="col-xs-5">
-                                <div class="form-control bold-border" disabled>{{$penguji2->NAMA_DOSEN}}</div>
+                                <div class="form-control bold-border" disabled>{{$penguji2 == '--' ? '-' : $penguji2}}</div>
                             </div><!-- /.col-xs-5 -->
                         </div>
                         <br><br>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Penguji III</label>
                             <div class="col-xs-5">
-                                <div class="form-control bold-border" disabled>{{$penguji3->NAMA_DOSEN}}</div>
+                                <div class="form-control bold-border" disabled>{{$penguji3 == '--' ? '-' : $penguji3}}</div>
                             </div><!-- /.col-xs-5 -->
                         </div>
                         <br><br>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Ketua Sidang</label>
                             <div class="col-xs-5">
-                                <div class="form-control bold-border" disabled>{{$ketua_sidang->NAMA_DOSEN}}</div>
+                                <div class="form-control bold-border" disabled>{{$ketua_sidang == '--' ? '-' : $ketua_sidang}}</div>
                             </div><!-- /.col-xs-5 -->
                         </div>
                         <br><br>
@@ -156,7 +156,7 @@
         $('#tombol_satu').on('click', function () {
             console.log("Selamat Datang di Bagian Satu");
             var ruangan = $('select[name="ruangan"]').val();
-            var jam_ujian = $('select[name="jam_ujian"]').val();
+            var jam_ujian = $('input[name="jam_ujian"]').val();
             console.log(ruangan);
             console.log(jam_ujian);
             
@@ -183,60 +183,29 @@
             form.submit();
         };
 
-        const ruanganChange = (e, selected = initJamSelected()) => {
+        const ruanganChange = (e) => {
             axios.get(`/api/cek_jamujian/${e.getAttribute("tipe-ujian")}/${e.value}/${e.getAttribute("nim")}/${e.getAttribute("pendaftaran-id")}`).then(res => {
-                let x;
-                let r;
-                @if(!empty($jadwal))
-                    r = "{{$jadwal->ruangan}}";
-                @endif
-                if (selected && r === e.value) {
-                    x = `<option value="${selected}" selected>${selected}</option>`;
-                    x += "<option disabled>--</option>"
-                    x += `<option value="08:30-09.30">08:30-09.30</option>`
-                    x += `<option value="09:30-10.30">09:30-10.30</option>`
-                    x += `<option value="10:30-11.30">10:30-11.30</option>`
-                    x += `<option value="12:30-10.30">12:30-10.30</option>`
-                    x += `<option value="13:30-14.30">13:30-14.30</option>`
-                    x += `<option value="14:30-15.30">14:30-15.30</option>`
-                    x += `<option value="14:30-15.30">14:30-15.30</option>`
-                    x += `<option value="16:30-17.30">16:30-17.30</option>`
-                    x += `<option value="17:30-18.30">17:30-18.30</option>`
-                }
-                // res.data.map(d =>
-                //     x += `<option value="${d}">${d}</option>`
-                // );
-                document.querySelector("select[name=jam_ujian]").innerHTML = x;
+                // Tetap panggil endpoint validasi agar perilaku lama tidak berubah,
+                // tapi jangan lagi overwrite input jam_ujian dengan format rentang.
+                return res;
             });
         };
 
         const initJamSelected = () => {
-            let jam;
-            let tipeUjian = "{{$info->tipe_ujian}}";
-            let pad = "00";
-            let jamSelected;
             @if(!empty($jadwal))
-                jamSelected = "{{$jadwal->jam_ujian}}";
-            if (tipeUjian === "0") {
-                let x = parseInt(jamSelected.substr(0, 2)) + 1;
-                jam = `${jamSelected}-${pad.substr(0, pad.length - x.toString().length) + x}:30`
-            } else if (tipeUjian === "1" || tipeUjian === "2") {
-                let x = parseInt(jamSelected.substr(0, 2)) + 2;
-                jam = `${jamSelected}-${pad.substr(0, pad.length - x.length) + x}:30`
-            }
+                return "{{$jadwal->jam_ujian}}";
             @endif
-                return jam;
+            return "";
         };
 
         (() => {
             let ruanganSelect = document.querySelector("select[name=ruangan]");
-
-            ruanganChange(ruanganSelect, initJamSelected());
+            if (ruanganSelect && ruanganSelect.value !== "") {
+                ruanganChange(ruanganSelect);
+            }
         })()
     </script>
 @endsection
-
-
 
 
 

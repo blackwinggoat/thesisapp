@@ -13,14 +13,22 @@
                     <h4>Welcome,
                         <br /><strong>{{ helper::getDeskripsi(auth()->user()->name) }}{{ helper::getNamaMhs(auth()->user()->name) }}</strong>
                     </h4>
-                    <a style="display: inline-block; width: 30px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;"
-                        href="{{ url('dsn/ubah_password') }}" class="btn btn-success btn-xs"><i
-                            class="fa fa-cog"></i></a>
-                    <a style="display: inline-block; width: 80px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;"
-                        class="btn btn-danger btn-xs" href="{{ route('logout') }}"
-                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                        {{ __('Logout') }}
-                    </a>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        @if (session('login_as_source_user_level') == 5 && !empty(session('login_as_source_user_id')))
+                            <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 12px; height: 30px; color: white; border-radius: 5px;"
+                                href="{{ url('dsn/back_to_prodi') }}" class="btn btn-primary btn-xs">
+                                Back to Prodi
+                            </a>
+                        @endif
+                        <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; height: 30px; color: white; border-radius: 5px;"
+                            href="{{ url('dsn/ubah_password') }}" class="btn btn-success btn-xs"><i
+                                class="fa fa-cog"></i></a>
+                        <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 12px; height: 30px; color: white; border-radius: 5px;"
+                            class="btn btn-danger btn-xs" href="{{ route('logout') }}"
+                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            {{ __('Logout') }}
+                        </a>
+                    </div>
 
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                         @csrf
@@ -38,19 +46,19 @@
         <li class="static">MENU DOSEN</li>
         <li>
             <a href="{{ url('dsn/request_pembimbing') }}">
-                <i class="fa fa-stack-overflow icon-sidebar"></i>
+                <i class="fa fa-user-plus icon-sidebar"></i>
                 Request Pembimbingan
             </a>
         </li>
         <li>
             <a href="{{ url('dsn/usul_judul') }}">
-                <i class="fa fa-stack-overflow icon-sidebar"></i>
+                <i class="fa fa-lightbulb-o icon-sidebar"></i>
                 Usul Judul
             </a>
         </li>
         <li>
             <a href="#fakelink">
-                <i class="fa fa-table icon-sidebar"></i>
+                <i class="fa fa-calendar icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
                 Jadwal Ujian
             </a>
@@ -61,7 +69,7 @@
         </li>
         <li>
             <a href="#fakelink">
-                <i class="fa fa-table icon-sidebar"></i>
+                <i class="fa fa-check-square-o icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
                 Penilaian Ujian
             </a>
@@ -72,7 +80,7 @@
         </li>
         <li>
             <a href="#fakelink">
-                <i class="fa fa-table icon-sidebar"></i>
+                <i class="fa fa-bar-chart-o icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
                 Rekap Nilai Ujian
             </a>
@@ -83,7 +91,7 @@
         </li>
         <li>
             <a href="#fakelink">
-                <i class="fa fa-envelope icon-sidebar"></i>
+                <i class="fa fa-comments icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
                 Bimbingan
             </a>
@@ -106,19 +114,19 @@
         </li> --}}
         <li>
             <a href="{{ url('dsn/detail_pembimbing') }}/{{ auth()->user()->name }}">
-                <i class="fa fa-stack-overflow icon-sidebar"></i>
+                <i class="fa fa-graduation-cap icon-sidebar"></i>
                 Detail Pembimbing
             </a>
         </li>
         <li>
             <a href="{{ url('dsn/tanda_tangan') }}">
-                <i class="fa fa-pencil icon-sidebar"></i>
+                <i class="fa fa-pencil-square-o icon-sidebar"></i>
                 Tanda Tangan
             </a>
         </li>
         <li>
             <a href="{{ url('dsn/honorarium') }}">
-                <i class="fa fa-google-wallet icon-sidebar"></i>
+                <i class="fa fa-money icon-sidebar"></i>
                 Honorarium
             </a>
         </li>

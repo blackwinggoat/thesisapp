@@ -47,7 +47,7 @@
                 </div>
                 <br>
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover" id="datatable-example">
+                    <table class="table table-striped table-hover" id="datatable-dosen-pembimbing">
                         <thead class="the-box dark full">
                         <tr>
                             <th>No</th>
@@ -171,6 +171,9 @@
                                     <button class="btn btn-default" onclick="showModal(this)" data-target="#modalInfo" data-toggle="modal" data-href="{{ url('prodi/reset_userx/'.$value->C_KODE_DOSEN)
                                     }}"><i class="fa
                                     fa-recycle"></i></button>
+                                    <a class="btn btn-info" href="{{ url('prodi/login_as_dosen/'.$value->C_KODE_DOSEN) }}" title="Login sebagai dosen">
+                                        <i class="fa fa-user"></i>
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach
@@ -215,8 +218,18 @@
     <button onclick="goOn(this)" class="btn btn-default">Ubah</button>
 @endsection
 
-@section("script")
+    @section("script")
     <script>
+        $(document).ready(function() {
+            if ($.fn.DataTable && $('#datatable-dosen-pembimbing').length) {
+                $('#datatable-dosen-pembimbing').DataTable({
+                    paging: false,
+                    info: false,
+                    lengthChange: false,
+                });
+            }
+        });
+
         let modal, modalId, modalFooter, link;
         const showModal = e => {
             link = e.getAttribute("data-href");

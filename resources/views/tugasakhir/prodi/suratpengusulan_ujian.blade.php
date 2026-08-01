@@ -165,25 +165,25 @@
                     <td>{{ $value->NAMA_MAHASISWA }} / {{ $value->C_NPM }}</td>
                     <td>{{ $value->judul }}</td>
                     @php
-                        $pembimbing1 = \App\Dosen::where('C_KODE_DOSEN', $value->pembimbing_I_id)->first();
-                        $pembimbing2 = \App\Dosen::where('C_KODE_DOSEN', $value->pembimbing_II_id)->first();
-                        $penguji1 = \App\Dosen::where('C_KODE_DOSEN', $value->penguji_I_id)->first();
-                        $penguji2 = \App\Dosen::where('C_KODE_DOSEN', $value->penguji_II_id)->first();
-                        $penguji3 = \App\Dosen::where('C_KODE_DOSEN', $value->penguji_III_id)->first();
-                        $ketua_sidang = \App\Dosen::where('C_KODE_DOSEN', $value->ketua_sidang_id)->first();
+                        $pembimbing1 = helper::getNamaDosenByKode($value->pembimbing_I_id);
+                        $pembimbing2 = helper::getNamaDosenByKode($value->pembimbing_II_id);
+                        $penguji1 = helper::getNamaDosenByKode($value->penguji_I_id);
+                        $penguji2 = helper::getNamaDosenByKode($value->penguji_II_id);
+                        $penguji3 = helper::getNamaDosenByKode($value->penguji_III_id);
+                        $ketua_sidang = helper::getNamaDosenByKode($value->ketua_sidang_id);
                     @endphp
                     <td>
-                        Ketua Sidang : {{ $ketua_sidang->NAMA_DOSEN }}<br>
+                        Ketua Sidang : {{ $ketua_sidang }}<br>
                         <hr color="black">
-                        Pembimbing Utama : {{ $pembimbing1->NAMA_DOSEN }}<br>
+                        Pembimbing Utama : {{ $pembimbing1 }}<br>
                         <hr color="black">
-                        Pembimbing Pendamping : {{ $pembimbing2->NAMA_DOSEN }}<br>
+                        Pembimbing Pendamping : {{ $pembimbing2 }}<br>
                         <hr color="black">
-                        Penguji I : {{ $penguji1->NAMA_DOSEN }}<br>
+                        Penguji I : {{ $penguji1 }}<br>
                         <hr color="black">
-                        Penguji II : {{ $penguji2->NAMA_DOSEN }}<br>
+                        Penguji II : {{ $penguji2 }}<br>
                         <hr color="black">
-                        Penguji III : {{ $penguji3->NAMA_DOSEN }}<br>
+                        Penguji III : {{ $penguji3 }}<br>
                     </td>
                     <td>{{ $value->tgl_ujian }}</td>
                 </tr>

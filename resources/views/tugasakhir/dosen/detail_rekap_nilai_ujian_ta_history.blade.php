@@ -8,13 +8,18 @@
         <ol class="breadcrumb default square rsaquo sm">
             <li><a href="index.html"><i class="fa fa-home"></i></a></li>
             <li><a href="#fakelink">Home</a></li>
-            <li class="active">Jadwal Ujian Per Mahasiswa</li>
+            <li class="active">History Detail Rekap Nilai Ujian TA</li>
         </ol>
+        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <a href="{{ url('dsn/rekap_nilai_ujian_ta_history') }}" class="btn btn-default btn-sm">
+                <i class="fa fa-arrow-left"></i> Kembali ke History
+            </a>
+        </div>
         <div class="the-box">
             <div class="form-group">
                 <label class="col-lg-2 control-label">Tanggal Ujian</label>
                 <div class="col-lg-6">
-                    <input type="text" class="form-control bold-border" name="jadwal" value="{{$info->tgl_ujian}}"
+                    <input type="text" class="form-control bold-border" name="jadwal" value="{{ $info->tgl_ujian }}"
                         disabled>
                 </div>
             </div>
@@ -23,7 +28,7 @@
                 <label class="col-lg-2 control-label">Jumlah Peserta</label>
                 <div class="col-lg-6">
                     <input type="text" class="form-control datepicker bold-border" name="jml_peserta"
-                        value="{{$info->jml_peserta}}" disabled>
+                        value="{{ $info->jml_peserta }}" disabled>
                 </div>
             </div>
             <br><br>
@@ -37,7 +42,7 @@
                     $tipe = "Ujian Meja";
                     endif;
                     @endphp
-                    <input type="text" class="form-control bold-border" value="{{$tipe}}" name="jml_peserta" disabled>
+                    <input type="text" class="form-control bold-border" value="{{ $tipe }}" name="jml_peserta" disabled>
                 </div>
             </div>
             <br>
@@ -61,14 +66,14 @@
                     <tbody>
                         @foreach($data as $i => $d)
                         <tr class="odd gradeX">
-                            <td width="1%" align="center">{{++$i}}</td>
-                            <td>{{$d->C_NPM}}</td>
-                            <td>{{$d->NAMA_MAHASISWA}}</td>
+                            <td width="1%" align="center">{{ ++$i }}</td>
+                            <td>{{ $d->C_NPM }}</td>
+                            <td>{{ $d->NAMA_MAHASISWA }}</td>
                             <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_I_id, $d->reg_id) ?></td>
                             <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_II_id, $d->reg_id) ?></td>
                             <td>
                                 @if (empty($d->penguji_I_id))
-                                {{"-"}}
+                                -
                                 @else
                                 {{ helper::getNamaDosenByKode($d->penguji_I_id) }}
                                 <?= helper::getStatusPenilaianPerDosen($d->penguji_I_id, $d->reg_id) ?>
@@ -76,7 +81,7 @@
                             </td>
                             <td>
                                 @if (empty($d->penguji_II_id))
-                                {{"-"}}
+                                -
                                 @else
                                 {{ helper::getNamaDosenByKode($d->penguji_II_id) }}
                                 <?= helper::getStatusPenilaianPerDosen($d->penguji_II_id, $d->reg_id) ?>
@@ -84,7 +89,7 @@
                             </td>
                             <td>
                                 @if (empty($d->penguji_III_id))
-                                {{"-"}}
+                                -
                                 @else
                                 {{ helper::getNamaDosenByKode($d->penguji_III_id) }}
                                 <?= helper::getStatusPenilaianPerDosen($d->penguji_III_id, $d->reg_id) ?>
@@ -92,7 +97,7 @@
                             </td>
                             <td>
                                 @if (empty($d->ketua_sidang_id))
-                                {{"-"}}
+                                -
                                 @else
                                 {{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}
                                 <?= helper::getStatusPenilaianPerDosen($d->ketua_sidang_id, $d->reg_id) ?>
@@ -102,7 +107,7 @@
                                 @if (empty($d->penguji_I_id) && empty($d->penguji_II_id) && empty($d->penguji_III_id) && empty($d->ketua_sidang_id))
                                 Silahkan Set Penguji dan Ketua Sidang
                                 @else
-                                        <a href="{{url('dsn/detail_ujian')}}/{{$d->C_NPM}}/0" class="btn btn-info" target="_blank"><i class="fa fa-paperclip"></i></a>
+                                    <a href="{{ url('dsn/detail_ujian') }}/{{ $d->C_NPM }}/2" class="btn btn-info" target="_blank"><i class="fa fa-paperclip"></i></a>
                                 @endif
                             </td>
                         </tr>
@@ -115,76 +120,3 @@
 </div>
 @endsection
 
-{{--ModalSelesai--}}
-@section("modalWarningTitle")
-Selesai
-@endsection
-@section("modalWarningBody")
-Apakah Anda yakin selesai mengkonfirmasi dokumen?
-@endsection
-@section("modalWarningFooter")
-<button onclick="goOn(this)" class="btn btn-default">Selesai</button>
-@endsection
-
-{{--ModalDownload--}}
-@section("modalDefaultTitle")
-Download Lampiran
-@endsection
-@section("modalDefaultBody")
-Apakah Anda yakin ingin men-download lampiran?
-@endsection
-@section("modalDefaultFooter")
-<button onclick="goOnNewTab(this)" class="btn btn-primary">Download</button>
-@endsection
-
-{{--ModalTerima--}}
-@section("modalPrimaryTitle")
-Terima
-@endsection
-@section("modalPrimaryBody")
-Apakah Anda yakin ingin approve hasil ujian ?
-@endsection
-@section("modalPrimaryFooter")
-<button onclick="goOn(this)" class="btn btn-default">Terima</button>
-@endsection
-
-{{--ModalTolak--}}
-@section("modalDangerTitle")
-Tolak
-@endsection
-@section("modalDangerBody")
-Apakah Anda yakin ingin menolak pengajuan dokumen?
-@endsection
-@section("modalDangerFooter")
-<button onclick="goOn(this)" class="btn btn-default">Tolak</button>
-@endsection
-
-@section("script")
-<script>
-    //Modal
-    let modal, modalId, modalFooter, link, form, formaction, sui;
-
-    const showModal = e => {
-        link = e.getAttribute("data-href");
-        modalId = e.getAttribute("data-target");
-        modal = document.querySelector(modalId);
-        modalFooter = modal.querySelector(".modal-footer");
-    };
-
-    const goOn = () => {
-        modal.querySelector(".modal-backdrop").click();
-        window.location.href = link;
-    };
-
-    const goOnNewTab = () => {
-        modal.querySelector(".modal-backdrop").click();
-        window.open(link);
-    };
-
-            const submit = () => {
-            form = document.querySelector(`form[action="${formaction}"]`);
-            form.submit();
-        };
-
-</script>
-@endsection

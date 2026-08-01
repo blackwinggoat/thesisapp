@@ -37,6 +37,9 @@ class fakultas extends Controller
     {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
+        if (!$info || !isset($info->tipe_ujian)) {
+            return response('Data rekap nilai proposal tidak ditemukan.', 404);
+        }
         $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ?", [$id, $info->tipe_ujian]);
         return view('tugasakhir.fakultas.detail_rekap_nilai_proposal', compact("data", "info"));
     }
@@ -53,6 +56,10 @@ class fakultas extends Controller
     {
         $trtjadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("trt_jadwal_ujian.pendaftaran_id", $pendaftaran_id)->first();
+        if (!$trtjadwalujian) {
+            return response('Data jadwal ujian proposal tidak ditemukan.', 404);
+        }
+
         $trtjadwalujianpermhs = TrtJadwalUjianPerMhs::join("mst_ruangan", "mst_ruangan.id", "trt_jadwal_ujian_per_mhs.ruangan")
             ->where([
                 "C_NPM" => $nim,
@@ -60,12 +67,20 @@ class fakultas extends Controller
             ])->first();
         $trt_bimbingan = trt_bimbingan::where("C_NPM", $nim)->first();
         $mst_pendaftaran = mst_pendaftaran::find($pendaftaran_id);
+        if (!$mst_pendaftaran || !$trt_bimbingan) {
+            return response('Data lembaran hasil ujian proposal tidak lengkap.', 404);
+        }
+
         $trt_penguji = TrtPenguji::where([
             "C_NPM" => $nim,
             "tipe_ujian" => $mst_pendaftaran->tipe_ujian
         ])->first();
 
-        $ruangan = MstRuangan::find($trtjadwalujianpermhs->ruangan)->nama_ruangan;
+        $ruangan = '-';
+        if ($trtjadwalujianpermhs && !empty($trtjadwalujianpermhs->ruangan)) {
+            $ruanganModel = MstRuangan::find($trtjadwalujianpermhs->ruangan);
+            $ruangan = $ruanganModel ? $ruanganModel->nama_ruangan : '-';
+        }
         $tgl_ujian = Carbon::parse($trtjadwalujian->tgl_ujian)->formatLocalized("%A, %d %B %Y");
         switch ($mst_pendaftaran->tipe_ujian) {
             case "0":
@@ -89,6 +104,10 @@ class fakultas extends Controller
             ->select("*")
             ->where("trt_bimbingan.C_NPM", $nim)
             ->first();
+
+        if (!$data_dosen_selesai || !$data_dosen_pembimbing) {
+            return response('Data dosen pada lembaran hasil ujian proposal belum lengkap.', 404);
+        }
 
         return view("tugasakhir.fakultas.lembaran_hasilujian_proposal", compact(
             "nim",
@@ -118,6 +137,9 @@ class fakultas extends Controller
     {
         $info = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("mst_pendaftaran.pendaftaran_id", $id)->first();
+        if (!$info || !isset($info->tipe_ujian)) {
+            return response('Data rekap nilai ujian TA tidak ditemukan.', 404);
+        }
         $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ? ", [$id, $info->tipe_ujian]);
         return view('tugasakhir.fakultas.detail_rekap_nilai_ujian_ta', compact("data", "info"));
     }
@@ -128,6 +150,10 @@ class fakultas extends Controller
     {
         $trtjadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("trt_jadwal_ujian.pendaftaran_id", $pendaftaran_id)->first();
+        if (!$trtjadwalujian) {
+            return response('Data jadwal ujian TA tidak ditemukan.', 404);
+        }
+
         $trtjadwalujianpermhs = TrtJadwalUjianPerMhs::join("mst_ruangan", "mst_ruangan.id", "trt_jadwal_ujian_per_mhs.ruangan")
             ->where([
                 "C_NPM" => $nim,
@@ -135,12 +161,20 @@ class fakultas extends Controller
             ])->first();
         $trt_bimbingan = trt_bimbingan::where("C_NPM", $nim)->first();
         $mst_pendaftaran = mst_pendaftaran::find($pendaftaran_id);
+        if (!$mst_pendaftaran || !$trt_bimbingan) {
+            return response('Data lembaran hasil ujian TA tidak lengkap.', 404);
+        }
+
         $trt_penguji = TrtPenguji::where([
             "C_NPM" => $nim,
             "tipe_ujian" => $mst_pendaftaran->tipe_ujian
         ])->first();
 
-        $ruangan = MstRuangan::find($trtjadwalujianpermhs->ruangan)->nama_ruangan;
+        $ruangan = '-';
+        if ($trtjadwalujianpermhs && !empty($trtjadwalujianpermhs->ruangan)) {
+            $ruanganModel = MstRuangan::find($trtjadwalujianpermhs->ruangan);
+            $ruangan = $ruanganModel ? $ruanganModel->nama_ruangan : '-';
+        }
         $tgl_ujian = Carbon::parse($trtjadwalujian->tgl_ujian)->formatLocalized("%A, %d %B %Y");
         switch ($mst_pendaftaran->tipe_ujian) {
             case "0":
@@ -164,6 +198,10 @@ class fakultas extends Controller
             ->select("*")
             ->where("trt_bimbingan.C_NPM", $nim)
             ->first();
+
+        if (!$data_dosen_selesai || !$data_dosen_pembimbing) {
+            return response('Data dosen pada lembaran hasil ujian TA belum lengkap.', 404);
+        }
 
         return view("tugasakhir.fakultas.lembaran_hasilujian_ujian_ta", compact(
             "nim",
@@ -300,6 +338,10 @@ class fakultas extends Controller
 
 
 
+        if ($data_sk->isEmpty()) {
+            return response('Data surat penugasan belum lengkap atau tidak ditemukan.', 404);
+        }
+
         return view('tugasakhir.fakultas.cetakskpenugasan', compact('data_sk'));
     }
 
@@ -328,6 +370,10 @@ class fakultas extends Controller
             ->select('*')
             ->where('mst_sk_pembimbing.nomor_sk', $datapost['nomor'])
             ->get();
+        if ($data_sk->isEmpty()) {
+            return response('Data surat SK pembimbing belum lengkap atau tidak ditemukan.', 404);
+        }
+
         $tgl_ujian = helper::tgl_indo_lengkap(date('Y-m-d'));
         return view('tugasakhir.fakultas.cetakskpembimbing', compact('data_sk', 'tgl_ujian'));
     }

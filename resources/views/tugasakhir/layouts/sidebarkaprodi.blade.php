@@ -45,7 +45,7 @@
         </li>
         <li>
             <a href="{{ url('prodi/dosen_pembimbing')}}">
-                <i class="fa  fa-institution icon-sidebar"></i>
+                <i class="fa fa-graduation-cap icon-sidebar"></i>
                 Dosen Pembimbing
             </a>
         </li>
@@ -68,24 +68,25 @@
                 Master
             </a>
             <ul class="submenu">
+                <li><a href="{{ url('prodi/master/dosen') }}">Dosen</a></li>
                 <li><a href="{{ url('prodi/master/jenis_tugas_akhir') }}">Jenis Tugas Akhir</a></li>
             </ul>
         </li>
         <li>
             <a href="{{ url('prodi/scope_ta')}}">
-                <i class="fa fa-stack-overflow icon-sidebar"></i>
+                <i class="fa fa-sitemap icon-sidebar"></i>
                 Bidang Ilmu TA
             </a>
         </li>
         <li>
             <a href="{{ url('prodi/topik')}}">
-                <i class="fa fa-files-o icon-sidebar"></i>
+                <i class="fa fa-lightbulb-o icon-sidebar"></i>
                 Topik Penelitian
             </a>
         </li>
         <li>
             <a href="{{ url('prodi/usulan_pembimbing')}}">
-                <i class="fa fa-stack-overflow icon-sidebar"></i>
+                <i class="fa fa-user-plus icon-sidebar"></i>
                 Usulan Pembimbing
             </a>
         </li>
@@ -125,7 +126,7 @@
         </li>
         <li>
             <a href="{{ url('prodi/syarat_ujian')}}">
-                <i class="fa fa-file-text icon-sidebar"></i>
+                <i class="fa fa-list-ul icon-sidebar"></i>
                 Persyaratan Ujian
             </a>
         </li>
@@ -148,7 +149,7 @@
         </li>
         <li>
             <a href="#fakelink">
-                <i class="fa fa-paperclip icon-sidebar"></i>
+                <i class="fa fa-gavel icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
                 Surat Keputusan
             </a>
@@ -160,7 +161,7 @@
         </li>
         <li>
             <a href="#fakelink">
-                <i class="fa fa-calendar icon-sidebar"></i>
+                <i class="fa fa-check-square-o icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
                 Approve Hasil Ujian
             </a>

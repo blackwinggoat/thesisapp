@@ -16,7 +16,9 @@
             <!-- End breadcrumb -->
 
             <!-- BEGIN DATA TABLE -->
-            <h3 class="page-heading">Daftar Hasil Ujian Per Periode</h3>
+            <h3 class="page-heading">
+                {{ !empty($isHistory) ? 'Riwayat Hasil Ujian Per Periode' : 'Daftar Hasil Ujian Per Periode' }}
+            </h3>
 
             <?php if(session('status') == 'success'): ?>
                 <div class="alert alert-success alert-block square fade in alert-dismissable">
@@ -33,7 +35,12 @@
             <?php endif; ?>
 
             <div class="the-box">
-                <a href="{{url('prodi/approve_hasilujian_proposal_all_post/')}}" class="btn btn-info mb-5" style="margin-bottom: 20px">Konfirmasi Semua</a>
+                @if (!empty($isHistory))
+                    <a href="{{ url('prodi/approve_hasilujian_proposal') }}" class="btn btn-default mb-5" style="margin-bottom: 20px">Kembali</a>
+                @else
+                    <a href="{{url('prodi/approve_hasilujian_proposal_all_post/')}}" class="btn btn-info mb-5" style="margin-bottom: 20px">Konfirmasi Semua</a>
+                    <a href="{{ url('prodi/approve_hasilujian_proposal_history') }}" class="btn btn-primary mb-5" style="margin-bottom: 20px">Riwayat</a>
+                @endif
                 <div class="table-responsive">
                     <table class="table table-striped table-hover" id="datatable-example">
                         <thead class="the-box dark full">
@@ -43,6 +50,7 @@
                             <th>Nama Periode</th>
                             <th>Kuota</th>
                             <th>Jumlah Peserta</th>
+                            <th>Penilaian</th>
                             <th>Detail Peserta</th>
                         </tr>
                         </thead>
@@ -54,8 +62,18 @@
                                 <td>{{$value->nama_periode}}</td>
                                 <td>{{$value->kuota}}</td>
                                 <td>{{$value->jml_peserta}}</td>
+                                <td>
+                                    <span class="label label-success">Lengkap: {{ (int) ($value->total_penilaian_lengkap ?? 0) }}</span>
+                                    <span class="label label-danger">Tidak Lengkap: {{ (int) ($value->total_penilaian_tidak_lengkap ?? 0) }}</span>
+                                </td>
                                 {{-- <<td>{{$value->status == 0 ? "td>{{$value->status == 0 ? "<td>{{$d->status == 0 ? "Belum terlaksana" : "Terlaksana"}}</td>" : "Terlaksana"}}</td>" : "Terlaksana"}}</td> --}}
-                                <td><a href="{{ url('prodi/detail_hasilujian_proposal/'.$value->pendaftaran_id)}}"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a></td>
+                                <td>
+                                    @if (!empty($isHistory))
+                                        <a href="{{ url('prodi/detail_hasilujian_proposal_history/'.$value->pendaftaran_id) }}"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a>
+                                    @else
+                                        <a href="{{ url('prodi/detail_hasilujian_proposal/'.$value->pendaftaran_id) }}"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                         </tbody>
@@ -65,6 +83,24 @@
             <!-- END DATA TABLE -->
         </div><!-- /.container-fluid -->
     </div>
+@endsection
+
+@section('script')
+    <script>
+        $(document).ready(function() {
+            if ($.fn.DataTable && $('#datatable-example').length > 0) {
+                if ($.fn.dataTable.isDataTable('#datatable-example')) {
+                    $('#datatable-example').DataTable().destroy();
+                }
+
+                $('#datatable-example').DataTable({
+                    paging: false,
+                    info: false,
+                    lengthChange: false
+                });
+            }
+        });
+    </script>
 @endsection
 
 

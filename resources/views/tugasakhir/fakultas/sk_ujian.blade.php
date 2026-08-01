@@ -46,7 +46,7 @@
                                 <td>{{$tipe}}</td>
                                 <td>{{$d->jml_peserta}}</td>
                                 {{-- <td>{{$d->status == 0 ? "<td>{{$value->status == 0 ? "<td>{{$d->status == 0 ? "Belum terlaksana" : "Terlaksana"}}</td>" : "Terlaksana"}}</td>" : "Terlaksana"}}</td> --}}
-                                <td><a href="{{ url('prodi/detail_skujian/'.$d->pendaftaran_id)}}"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a></td>
+                                <td><a href="{{ url('fakultas/detail_skujian/'.$d->pendaftaran_id)}}"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a></td>
                             </tr>
                         @endforeach
                         </tbody>
@@ -57,6 +57,5 @@
         </div><!-- /.container-fluid -->
     </div>
 @endsection
-
 
 
