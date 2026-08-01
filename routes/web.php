@@ -360,6 +360,8 @@ Route::group(['middleware' => 'dekan'], function () {
 
     Route::get('/home', 'HomeController@index')->name('home');
     //DEKAN
+    Route::get('/dekan/ubah_password', 'Dekan@ubah_password');
+    Route::post('/dekan/ubah_password', 'Dekan@ubah_password_post');
     //WAKIL DEKAN
     Route::get('/dekan/sk_pembimbing', 'Dekan@sk_pembimbing');
     Route::get('/dekan/appove_sk_pembimbing/{id}', 'Dekan@approve_sk_pembimbing');
@@ -376,6 +378,8 @@ Route::group(['middleware' => 'wakil_dekan'], function () {
 
     Route::get('/home', 'HomeController@index')->name('home');
     //WAKIL DEKAN
+    Route::get('/wakildekan/ubah_password', 'WakilDekan@ubah_password');
+    Route::post('/wakildekan/ubah_password', 'WakilDekan@ubah_password_post');
     Route::get('/wakildekan/sk_pembimbing', 'WakilDekan@sk_pembimbing');
     Route::get('/wakildekan/appove_sk_pembimbing/{id}', 'WakilDekan@approve_sk_pembimbing');
 

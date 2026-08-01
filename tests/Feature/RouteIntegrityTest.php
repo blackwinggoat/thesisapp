@@ -70,4 +70,26 @@ class RouteIntegrityTest extends TestCase
             );
         }
     }
+
+    public function testExecutivePasswordRoutesAreRegistered()
+    {
+        $expectedRoutes = [
+            'GET dekan/ubah_password' => 'App\\Http\\Controllers\\Dekan@ubah_password',
+            'POST dekan/ubah_password' => 'App\\Http\\Controllers\\Dekan@ubah_password_post',
+            'GET wakildekan/ubah_password' => 'App\\Http\\Controllers\\WakilDekan@ubah_password',
+            'POST wakildekan/ubah_password' => 'App\\Http\\Controllers\\WakilDekan@ubah_password_post',
+        ];
+        $actualRoutes = [];
+
+        foreach ($this->app['router']->getRoutes() as $route) {
+            foreach ($route->methods() as $method) {
+                $actualRoutes["{$method} {$route->uri()}"] = $route->getActionName();
+            }
+        }
+
+        foreach ($expectedRoutes as $route => $action) {
+            $this->assertArrayHasKey($route, $actualRoutes, "Missing route: {$route}");
+            $this->assertSame($action, $actualRoutes[$route], "Unexpected action for route: {$route}");
+        }
+    }
 }

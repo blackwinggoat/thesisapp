@@ -11,7 +11,7 @@
         <ol class="breadcrumb default square rsaquo sm">
             <li><a href="index.html"><i class="fa fa-home"></i></a></li>
             <li><a href="{{ url('/')}}">Home</a></li>
-            <li><a href="{{ url('/fakultas/ubah_password')}}"> Ubah Password</a></li>
+            <li><a href="{{ $passwordAction ?? url('fakultas/ubah_password') }}"> Ubah Password</a></li>
             <li class="active">Set Penguji</li>
         </ol>
 
@@ -20,7 +20,7 @@
         <!-- BEGIN DATA TABLE -->
         <div class="the-box">
 
-            <form method="post" action="{{url('fakultas/ubah_password')}}" enctype="multipart/form-data">
+            <form method="post" action="{{ $passwordAction ?? url('fakultas/ubah_password') }}" enctype="multipart/form-data">
                 {{ csrf_field() }}
                 <fieldset>
                     <input type="hidden" name="name" value="{{auth()->user()->name}}">
@@ -48,7 +48,7 @@
                     <div class="form-group">
                         <div class="col-xs-7" align="right">
                             <button class="btn btn-primary btn-perspective" type="button" onclick="showPostModal(this)"
-                                data-formaction="{{url('fakultas/ubah_password/')}}" data-target="#modalPrimary"
+                                data-formaction="{{ $passwordAction ?? url('fakultas/ubah_password') }}" data-target="#modalPrimary"
                                 data-toggle="modal">Submit</button>
                         </div>
                     </div>
