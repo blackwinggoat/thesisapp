@@ -22,6 +22,8 @@ mkdir -p \
     "${DEPLOY_PATH}/storage/framework" \
     "${DEPLOY_PATH}/public/gambar" \
     "${DEPLOY_PATH}/public/dokumen" \
+    "${DEPLOY_PATH}/public/public/dokumen" \
+    "${DEPLOY_PATH}/public/mobile/controller/simta/uploadedFiles" \
     "${SHARED_PATH}/official-assets" \
     "$BIN_PATH"
 
@@ -51,6 +53,8 @@ printf 'remove me\n' > "${DEPLOY_PATH}/app/obsolete.php"
 printf 'APP_ENV=production\nOFFICIAL_ASSET_PATH=%s/official-assets\n' "$SHARED_PATH" > "${DEPLOY_PATH}/.env"
 printf 'user upload\n' > "${DEPLOY_PATH}/public/gambar/user-upload.png"
 printf 'user document\n' > "${DEPLOY_PATH}/public/dokumen/user-document.pdf"
+printf 'nested user document\n' > "${DEPLOY_PATH}/public/public/dokumen/nested-user-document.pdf"
+printf 'mobile user upload\n' > "${DEPLOY_PATH}/public/mobile/controller/simta/uploadedFiles/mobile-user-upload.pdf"
 printf 'runtime state\n' > "${DEPLOY_PATH}/storage/runtime.txt"
 
 for index in 1 2 3 4 5 6 7; do
@@ -112,6 +116,8 @@ assert_line 'new source' "${DEPLOY_PATH}/app/version.php"
 [[ ! -e "${DEPLOY_PATH}/app/obsolete.php" ]]
 assert_line 'user upload' "${DEPLOY_PATH}/public/gambar/user-upload.png"
 assert_line 'user document' "${DEPLOY_PATH}/public/dokumen/user-document.pdf"
+assert_line 'nested user document' "${DEPLOY_PATH}/public/public/dokumen/nested-user-document.pdf"
+assert_line 'mobile user upload' "${DEPLOY_PATH}/public/mobile/controller/simta/uploadedFiles/mobile-user-upload.pdf"
 assert_line 'runtime state' "${DEPLOY_PATH}/storage/runtime.txt"
 assert_line "OFFICIAL_ASSET_PATH=${SHARED_PATH}/official-assets" "${DEPLOY_PATH}/.env"
 [[ -L "${DEPLOY_PATH}/public/storage" ]]
@@ -140,6 +146,9 @@ set -e
 [[ "$FAILED_DEPLOY_STATUS" -eq 42 ]]
 assert_line 'new source' "${DEPLOY_PATH}/app/version.php"
 assert_line 'user upload' "${DEPLOY_PATH}/public/gambar/user-upload.png"
+assert_line 'user document' "${DEPLOY_PATH}/public/dokumen/user-document.pdf"
+assert_line 'nested user document' "${DEPLOY_PATH}/public/public/dokumen/nested-user-document.pdf"
+assert_line 'mobile user upload' "${DEPLOY_PATH}/public/mobile/controller/simta/uploadedFiles/mobile-user-upload.pdf"
 assert_line 'runtime state' "${DEPLOY_PATH}/storage/runtime.txt"
 [[ ! -e "${DEPLOY_PATH}/storage/framework/down" ]]
 assert_line "$FAILED_COMMIT_SHA" "${SHARED_PATH}/deploy-approved-commit"

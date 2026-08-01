@@ -11,6 +11,8 @@ The following paths must never be replaced by Git:
 - `/home/thesisapp/public_html/storage`
 - `/home/thesisapp/public_html/public/gambar`
 - `/home/thesisapp/public_html/public/dokumen`
+- `/home/thesisapp/public_html/public/public/dokumen`
+- `/home/thesisapp/public_html/public/mobile/controller/simta/uploadedFiles`
 - `/home/thesisapp/public_html/dokumen`
 - `/home/thesisapp/shared/thesisapps/official-assets`
 
