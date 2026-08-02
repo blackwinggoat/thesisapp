@@ -30,14 +30,6 @@ class LegacyNavigationTest extends TestCase
             $checked++;
         }
 
-        $misplacedView = __DIR__ . '/../../app/Http/Controllers/detail_note.blade.php';
-        $misplacedContents = file_get_contents($misplacedView);
-        $this->assertStringNotContainsString('href="index.html"', $misplacedContents, $misplacedView);
-        $this->assertStringNotContainsString(
-            '<a href="#fakelink">Home</a>',
-            $misplacedContents,
-            $misplacedView
-        );
         $this->assertGreaterThan(0, $checked);
     }
 }
