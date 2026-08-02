@@ -2319,28 +2319,39 @@ class Prodi extends Controller
 
     public function jadwal()
     {
-        if (Auth::user()->name == 'proditi') {
-            $pendaftaran = Collection::make(mst_pendaftaran::get())
-                ->where('status_ujian', 0)
-                ->where('status_prodi', 1)
-                ->unique("nama_periode")
-                ->sortByDesc('created_at');
-            $jadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
-                ->where('mst_pendaftaran.status_prodi', 1)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        } else {
-            $pendaftaran = Collection::make(mst_pendaftaran::get())
-                ->where('status_ujian', 0)
-                ->where('status_prodi', 2)
-                ->unique("nama_periode")
-                ->sortByDesc('created_at');
-            $jadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
-                ->where('mst_pendaftaran.status_prodi', 2)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        }
-        return view('tugasakhir.prodi.jadwal', compact('pendaftaran', "jadwalujian"));
+        $statusProdi = Auth::user()->name == 'proditi' ? 1 : 2;
+
+        $pendaftaran = mst_pendaftaran::where('status_ujian', 0)
+            ->where('status_prodi', $statusProdi)
+            ->orderBy('pendaftaran_id', 'asc')
+            ->get()
+            ->unique('nama_periode')
+            ->sortByDesc('created_at')
+            ->values();
+
+        $jumlahTipePeriode = DB::table('mst_pendaftaran')
+            ->whereIn('nama_periode', $pendaftaran->pluck('nama_periode')->filter()->values())
+            ->select('nama_periode', DB::raw('COUNT(*) AS jumlah_tipe_ujian'))
+            ->groupBy('nama_periode')
+            ->pluck('jumlah_tipe_ujian', 'nama_periode');
+
+        $pendaftaran->each(function ($periode) use ($jumlahTipePeriode) {
+            $periode->jumlah_tipe_ujian = (int) $jumlahTipePeriode->get($periode->nama_periode, 0);
+        });
+
+        $mstpendaftaran = mst_pendaftaran::whereNotIn('pendaftaran_id', TrtJadwalUjian::select('pendaftaran_id'))
+            ->where('status_prodi', $statusProdi)
+            ->orderBy('pendaftaran_id', 'asc')
+            ->get()
+            ->unique('nama_periode')
+            ->values();
+
+        $jadwalujian = TrtJadwalUjian::join('mst_pendaftaran', 'mst_pendaftaran.pendaftaran_id', '=', 'trt_jadwal_ujian.pendaftaran_id')
+            ->where('mst_pendaftaran.status_prodi', $statusProdi)
+            ->orderBy('mst_pendaftaran.created_at', 'desc')
+            ->get();
+
+        return view('tugasakhir.prodi.jadwal', compact('pendaftaran', 'mstpendaftaran', 'jadwalujian'));
     }
 
     public function scope_ta()

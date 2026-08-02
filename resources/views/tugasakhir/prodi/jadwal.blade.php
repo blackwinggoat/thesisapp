@@ -99,17 +99,13 @@
                         <tr class="odd gradeX">
                             <td width="1%" align="center">{{++$key}}</td>
                             <td>{{$value->nama_periode}}</td>
-                            @php
-                            $countname = \App\Model\mst_pendaftaran::where("nama_periode",
-                            $value->nama_periode)->count();
-                            @endphp
                             <td>
-                                @if($countname < 3) @if($value->tipe_ujian == 0)
+                                @if($value->jumlah_tipe_ujian < 3) @if($value->tipe_ujian == 0)
                                     Proposal
                                     @elseif($value->tipe_ujian == 2)
                                     Ujian Meja
                                     @endif
-                                    @elseif($countname == 3)
+                                @elseif($value->jumlah_tipe_ujian == 3)
                                     Umum
                                     @endif
                             </td>
@@ -143,19 +139,6 @@
                     <div class="form-group">
                         <label class="col-lg-2 control-label">Nama Periode</label>
                         <div class="col-xs-5">
-                            @php
-                            if (Auth::user()->name == 'proditi') {
-                                $mstpendaftaran = Illuminate\Database\Eloquent\Collection::make(\App\Model\mst_pendaftaran::whereNotIn("pendaftaran_id", \App\TrtJadwalUjian::select("pendaftaran_id"))
-                                ->where('status_prodi', 1)
-                                ->get())
-                                ->unique("nama_periode");
-                            }else{
-                                $mstpendaftaran = Illuminate\Database\Eloquent\Collection::make(\App\Model\mst_pendaftaran::whereNotIn("pendaftaran_id", \App\TrtJadwalUjian::select("pendaftaran_id"))
-                                ->where('status_prodi', 2)
-                                ->get())
-                                ->unique("nama_periode");
-                            }
-                            @endphp
                             <select class="form-control bold-border" name="pendaftaran_id"
                                 onchange="namaPeriodeChange(this)" required>
                                 <option selected disabled>Pilih Periode</option>
