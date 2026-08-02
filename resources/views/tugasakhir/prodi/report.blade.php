@@ -49,6 +49,54 @@
         </div>
 
         <div class="row">
+            <div class="col-sm-12">
+                <div class="the-box">
+                    <h4 class="small-title">
+                        Mahasiswa Aktif Lebih dari Dua Tahun sejak SK Pembimbing
+                        <span class="label label-danger">{{ $mahasiswaMelewatiDuaTahunSk->count() }}</span>
+                    </h4>
+                    <p class="text-muted">SK pertama sebelum {{ \Carbon\Carbon::parse($batasDuaTahunSk)->format('d-m-Y') }}. Data ini belum termasuk mahasiswa lulusan atau nonaktif.</p>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="the-box dark full">
+                                <tr>
+                                    <th>No</th>
+                                    <th>NIM</th>
+                                    <th>Nama Mahasiswa</th>
+                                    <th>Jenis TA</th>
+                                    <th>Tanggal SK</th>
+                                    <th>Lama Sejak SK</th>
+                                    <th>Pembimbing Utama</th>
+                                    <th>Pembimbing Pendamping</th>
+                                    <th>Status Saat Ini</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($mahasiswaMelewatiDuaTahunSk as $key => $mahasiswa)
+                                    <tr>
+                                        <td>{{ $key + 1 }}</td>
+                                        <td>{{ $mahasiswa->C_NPM }}</td>
+                                        <td>{{ $mahasiswa->NAMA_MAHASISWA }}</td>
+                                        <td><span class="label label-info">{{ $mahasiswa->kode_jenis_tugas_akhir }}</span></td>
+                                        <td>{{ $mahasiswa->tanggal_sk_label }}</td>
+                                        <td>{{ $mahasiswa->lama_label }} ({{ $mahasiswa->lama_hari }} hari)</td>
+                                        <td>{{ $mahasiswa->pembimbing_utama }}</td>
+                                        <td>{{ $mahasiswa->pembimbing_pendamping }}</td>
+                                        <td><span class="label label-{{ $mahasiswa->class_status_bimbingan }}">{{ $mahasiswa->label_status_bimbingan }}</span></td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="9" class="text-center">Tidak ada mahasiswa aktif yang telah melewati dua tahun sejak SK pembimbing.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
             <div class="col-sm-6">
                 <div class="the-box">
                     <h4 class="small-title">Komposisi Tahapan Bimbingan</h4>

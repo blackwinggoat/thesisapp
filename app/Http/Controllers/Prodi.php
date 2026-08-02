@@ -3372,6 +3372,60 @@ class Prodi extends Controller
             $reportWarnings
         );
 
+        $batasDuaTahunSk = Carbon::today()->subYears(2)->format('Y-m-d');
+        $mahasiswaMelewatiDuaTahunSk = $this->safeReportSection(
+            'mahasiswa_melewati_dua_tahun_sk',
+            function () use ($nimLike, $batasDuaTahunSk) {
+                $rows = DB::select(
+                    "
+                    SELECT
+                        tb.C_NPM,
+                        m.NAMA_MAHASISWA,
+                        tb.status_bimbingan,
+                        tb.jenis_tugas_akhir_id,
+                        COALESCE(jta.kode_jenis_tugas_akhir, 'TA-SM') AS kode_jenis_tugas_akhir,
+                        sk.tanggal_sk,
+                        DATEDIFF(CURDATE(), sk.tanggal_sk) AS lama_hari,
+                        COALESCE(dosen_utama.NAMA_DOSEN, dosen_utama_lama.NAMA_DOSEN, '-') AS pembimbing_utama,
+                        COALESCE(dosen_pendamping.NAMA_DOSEN, dosen_pendamping_lama.NAMA_DOSEN, '-') AS pembimbing_pendamping
+                    FROM trt_bimbingan tb
+                    INNER JOIN (
+                        SELECT bimbingan_id, MIN(DATE(created_at)) AS tanggal_sk
+                        FROM mst_sk_pembimbing
+                        GROUP BY bimbingan_id
+                    ) sk ON sk.bimbingan_id = tb.bimbingan_id
+                    INNER JOIN t_mst_mahasiswa m ON m.C_NPM = tb.C_NPM
+                    LEFT JOIN mst_jenis_tugas_akhir jta ON jta.jenis_tugas_akhir_id = tb.jenis_tugas_akhir_id
+                    LEFT JOIN t_mst_dosen dosen_utama ON dosen_utama.C_KODE_DOSEN = tb.pembimbing_I_id
+                    LEFT JOIN mig_t_mst_dosen dosen_utama_lama ON dosen_utama_lama.C_KODE_DOSEN = tb.pembimbing_I_id
+                    LEFT JOIN t_mst_dosen dosen_pendamping ON dosen_pendamping.C_KODE_DOSEN = tb.pembimbing_II_id
+                    LEFT JOIN mig_t_mst_dosen dosen_pendamping_lama ON dosen_pendamping_lama.C_KODE_DOSEN = tb.pembimbing_II_id
+                    WHERE tb.C_NPM LIKE ?
+                      AND m.C_KODE_STATUS_AKTIF_MHS = 'A'
+                      AND tb.status_bimbingan IN (0, 1, 2)
+                      AND sk.tanggal_sk < ?
+                    ORDER BY sk.tanggal_sk ASC, m.NAMA_MAHASISWA ASC
+                    ",
+                    [$nimLike, $batasDuaTahunSk]
+                );
+
+                return collect($rows)->map(function ($item) {
+                    $item->label_status_bimbingan = $this->getStatusBimbinganLabel($item->status_bimbingan);
+                    $item->class_status_bimbingan = [
+                        '0' => 'warning',
+                        '1' => 'info',
+                        '2' => 'primary',
+                    ][(string) $item->status_bimbingan] ?? 'default';
+                    $item->tanggal_sk_label = Carbon::parse($item->tanggal_sk)->format('d-m-Y');
+                    $item->lama_label = $this->formatDurationYearsMonths($item->lama_hari);
+
+                    return $item;
+                });
+            },
+            collect(),
+            $reportWarnings
+        );
+
         $summaryCards = [
             ['label' => 'Persiapan Proposal', 'value' => (int) ($statusCounts[0] ?? 0), 'class' => 'success', 'icon' => 'fa-file-text-o'],
             ['label' => 'Persiapan Ujian Meja', 'value' => (int) ($statusCounts[2] ?? 0), 'class' => 'primary', 'icon' => 'fa-graduation-cap'],
@@ -3445,7 +3499,9 @@ class Prodi extends Controller
             'dokumenProposalChart',
             'dokumenUjianMejaChart',
             'skPembimbingChart',
-            'skPenugasanChart'
+            'skPenugasanChart',
+            'mahasiswaMelewatiDuaTahunSk',
+            'batasDuaTahunSk'
         ));
     }
 
@@ -3566,6 +3622,24 @@ class Prodi extends Controller
         }
 
         return implode(' ', $parts);
+    }
+
+    protected function formatDurationYearsMonths($days)
+    {
+        $days = max(0, (int) round((float) $days));
+        $years = (int) floor($days / 365);
+        $months = (int) floor(($days % 365) / 30);
+        $parts = [];
+
+        if ($years > 0) {
+            $parts[] = $years . ' tahun';
+        }
+
+        if ($months > 0) {
+            $parts[] = $months . ' bulan';
+        }
+
+        return empty($parts) ? $days . ' hari' : implode(' ', $parts);
     }
 
     public function persyaratan_proposal()
