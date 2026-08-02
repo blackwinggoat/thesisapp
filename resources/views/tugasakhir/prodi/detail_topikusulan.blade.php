@@ -80,6 +80,7 @@
                                     <th>NIM</th>
                                     <th>Nama</th>
                                     <th>Topik Usulan</th>
+                                    <th>Jenis</th>
                                     <th>Bidang Ilmu</th>
                                     <th>Kerangka Pikir</th>
                                     <th>Status</th>
@@ -96,6 +97,7 @@
                                         <td>{{ $value->C_NPM }}</td>
                                         <td>{{ $value->NAMA_MAHASISWA }}</td>
                                         <th>{{ $value->topik }}</th>
+                                        <th>{{ $value->kode_jenis_tugas_akhir ?: '-' }}</th>
                                         <th>
                                             @php
                                                 $request_pembimbing = \App\RequestPembimbing::where('topik', $value->topik_id)->get();

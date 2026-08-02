@@ -20,6 +20,7 @@
                             <th>Stambuk</th>
                             <th>Nama</th>
                             <th>Judul</th>
+                            <th>Jenis</th>
                             <th>Waktu Usul</th>
                         </tr>
                     </thead>
@@ -30,6 +31,7 @@
                             <td>{{$value->C_NPM}}</td>
                             <td>{{helper::getNamaMhs($value->C_NPM)}}</td>
                             <td>{{$value->judul}}</td>
+                            <td>{{$value->kode_jenis_tugas_akhir ?: '-'}}</td>
                             <td>{{$value->created_at}}</td>
                         </tr>
                         @endforeach

@@ -32,6 +32,12 @@ class BackupJenisTugasAkhir extends Command
             'mst_jenis_tugas_akhir' => DB::table('mst_jenis_tugas_akhir')
                 ->orderBy('jenis_tugas_akhir_id')
                 ->get(['jenis_tugas_akhir_id', 'kode_jenis_tugas_akhir', 'deskripsi', 'created_at', 'updated_at']),
+            'trt_topik' => DB::table('trt_topik')
+                ->orderBy('topik_id')
+                ->get(['topik_id', 'C_NPM', 'topik', 'status', 'updated_at']),
+            'trt_usulan_judul' => DB::table('trt_usulan_judul')
+                ->orderBy('usulan_judul_id')
+                ->get(['usulan_judul_id', 'C_NPM', 'KODE_DOSEN', 'judul', 'created_at', 'updated_at']),
         ];
         $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         if ($json === false || file_put_contents($path, $json, LOCK_EX) === false) {
@@ -42,6 +48,8 @@ class BackupJenisTugasAkhir extends Command
         $this->info('Backup created: ' . $path);
         $this->line('Bimbingan rows: ' . count($payload['trt_bimbingan']));
         $this->line('Master rows: ' . count($payload['mst_jenis_tugas_akhir']));
+        $this->line('Student proposal rows: ' . count($payload['trt_topik']));
+        $this->line('Lecturer proposal rows: ' . count($payload['trt_usulan_judul']));
         $this->line('SHA-256: ' . hash_file('sha256', $path));
 
         return 0;

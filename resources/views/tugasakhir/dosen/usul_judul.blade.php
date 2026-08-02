@@ -38,6 +38,7 @@
                             <th>Nama</th>
                             <th>NIM</th>
                             <th>Judul</th>
+                            <th>Jenis</th>
                             <th>Waktu Usul</th>
                             <th>Aksi</th>
                         </tr>
@@ -49,6 +50,7 @@
                         <td>{{$value->NAMA_MAHASISWA}}</td>
                         <td>{{$value->C_NPM}}</td>
                         <td>{{$value->judul}}</td>
+                        <td>{{$value->kode_jenis_tugas_akhir ?: '-'}}</td>
                         <td>{{$value->created_at}}</td>
                         <td>
                             <button class="btn btn-danger" onclick="showModal(this)" data-target="#modalDanger" data-toggle="modal" data-href="{{url("/dsn/usul_judul/delete/$value->usulan_judul_id")}}"><i class="fa fa-trash"></i></button>

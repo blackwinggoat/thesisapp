@@ -42,6 +42,19 @@
                     </div>
                     <br><br>
                     <div class="form-group">
+                        <label class="col-lg-2 control-label">Jenis Tugas Akhir</label>
+                        <div class="col-lg-5">
+                            <select class="form-control bold-border" name="jenis_tugas_akhir_id" required>
+                                @foreach ($jenisTugasAkhir as $jenis)
+                                <option value="{{$jenis->jenis_tugas_akhir_id}}" @if($jenis->kode_jenis_tugas_akhir === 'TA-SM') selected @endif>
+                                    {{$jenis->kode_jenis_tugas_akhir}} - {{$jenis->deskripsi}}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <br><br>
+                    <div class="form-group">
                         <label class="col-lg-2 control-label">Bidang Ilmu Peminatan</label>
                         <div class="col-lg-5">
                             <select class="form-control" name="bidang_ilmu_peminatan" id="bidang_ilmu_peminatan">
@@ -108,6 +121,13 @@
                     <label class="col-lg-2 control-label">Judul Topik</label>
                     <div class="col-xs-5">
                         <div class="form-control bold-border">{{$topik->topik}}</div>
+                    </div>
+                </div>
+                <br><br>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label">Jenis Tugas Akhir</label>
+                    <div class="col-xs-5">
+                        <div class="form-control bold-border">{{$topik->kode_jenis_tugas_akhir ?: '-'}}</div>
                     </div>
                 </div>
                 <br><br>

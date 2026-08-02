@@ -1398,11 +1398,13 @@ class Prodi extends Controller
 
         $query = DB::table('trt_topik')
             ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->leftJoin('mst_jenis_tugas_akhir', 'trt_topik.jenis_tugas_akhir_id', '=', 'mst_jenis_tugas_akhir.jenis_tugas_akhir_id')
             ->select(
                 'trt_topik.topik_id',
                 't_mst_mahasiswa.C_NPM',
                 't_mst_mahasiswa.NAMA_MAHASISWA',
                 'trt_topik.topik',
+                'mst_jenis_tugas_akhir.kode_jenis_tugas_akhir',
                 'trt_topik.kerangka',
                 'trt_topik.status'
             )
@@ -1448,7 +1450,8 @@ class Prodi extends Controller
         $data_usulan = DB::table('trt_topik')
             ->where('trt_topik.C_NPM', $id)
             ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-            ->select('*')
+            ->leftJoin('mst_jenis_tugas_akhir', 'trt_topik.jenis_tugas_akhir_id', '=', 'mst_jenis_tugas_akhir.jenis_tugas_akhir_id')
+            ->select('trt_topik.*', 't_mst_mahasiswa.*', 'mst_jenis_tugas_akhir.kode_jenis_tugas_akhir')
             ->get();
         return view('tugasakhir.prodi.detail_topikusulan', compact('data', 'data_usulan'));
     }
@@ -1618,9 +1621,11 @@ class Prodi extends Controller
             ->get();
         $currentJenisTugasAkhirId = $status == 2 && isset($cek[0])
             ? $cek[0]->jenis_tugas_akhir_id
-            : DB::table('mst_jenis_tugas_akhir')
-                ->where('kode_jenis_tugas_akhir', 'TA-SM')
-                ->value('jenis_tugas_akhir_id');
+            : ($data_topik && $data_topik->jenis_tugas_akhir_id
+                ? $data_topik->jenis_tugas_akhir_id
+                : DB::table('mst_jenis_tugas_akhir')
+                    ->where('kode_jenis_tugas_akhir', 'TA-SM')
+                    ->value('jenis_tugas_akhir_id'));
 
         return view('tugasakhir.prodi.set_pembimbing', compact('data', 'data_mahasiswa', 'data_topik', 'cek', 'jenisTugasAkhir', 'currentJenisTugasAkhirId'));
     }

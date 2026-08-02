@@ -53,6 +53,18 @@
 									name="usulan_judul">
 							</div><!-- /.input-group -->
 						</div><!-- /.col-sm-8 -->
+						<div class="col-sm-8">
+							<div class="form-group">
+								<label>Jenis Tugas Akhir</label>
+								<select class="form-control" name="jenis_tugas_akhir_id" required>
+									@foreach ($jenisTugasAkhir as $jenis)
+									<option value="{{$jenis->jenis_tugas_akhir_id}}" @if($jenis->kode_jenis_tugas_akhir === 'TA-SM') selected @endif>
+										{{$jenis->kode_jenis_tugas_akhir}} - {{$jenis->deskripsi}}
+									</option>
+									@endforeach
+								</select>
+							</div>
+						</div>
 					</div><!-- /.row -->
 					<div class="form-group">
 						<button type="submit" class="btn btn-primary"><i class="fa fa-rocket"></i>Submit</button>

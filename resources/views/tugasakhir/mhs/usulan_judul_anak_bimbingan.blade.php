@@ -19,6 +19,7 @@
                             <th>No</th>
                             <th>Nama Dosen Pengusul</th>
                             <th>Judul</th>
+                            <th>Jenis</th>
                             <th>Waktu Usul</th>
                         </tr>
                     </thead>
@@ -28,6 +29,7 @@
                             <td width="1%" align="center">{{++$key}}</td>
                             <td>{{$value->NAMA_DOSEN}}</td>
                             <td>{{$value->judul}}</td>
+                            <td>{{$value->kode_jenis_tugas_akhir ?: '-'}}</td>
                             <td>{{$value->created_at}}</td>
                         </tr>
                         @endforeach

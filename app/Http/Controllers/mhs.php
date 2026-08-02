@@ -123,9 +123,10 @@ class mhs extends Controller
     public function usulan_judul_anak_bimbingan()
     {
         $data = DB::table('trt_usulan_judul')
-            ->select('*')
             ->join('t_mst_dosen', 'trt_usulan_judul.KODE_DOSEN', '=', 't_mst_dosen.C_KODE_DOSEN')
-            ->where('C_NPM', auth()->user()->name)
+            ->leftJoin('mst_jenis_tugas_akhir', 'trt_usulan_judul.jenis_tugas_akhir_id', '=', 'mst_jenis_tugas_akhir.jenis_tugas_akhir_id')
+            ->select('trt_usulan_judul.*', 't_mst_dosen.NAMA_DOSEN', 'mst_jenis_tugas_akhir.kode_jenis_tugas_akhir')
+            ->where('trt_usulan_judul.C_NPM', auth()->user()->name)
             ->get();
         return view('tugasakhir.mhs.usulan_judul_anak_bimbingan', compact('data'));
     }
@@ -144,7 +145,12 @@ class mhs extends Controller
     // Halaman Tampilan Judul Usulan
     public function detail_usulan_judul_calon_pembimbing($kode_dosen)
     {
-        $data = DB::select("SELECT * FROM `trt_usulan_judul` WHERE trt_usulan_judul.KODE_DOSEN = ? AND trt_usulan_judul.C_NPM NOT IN (?)", [$kode_dosen, auth()->user()->name]);
+        $data = DB::table('trt_usulan_judul')
+            ->leftJoin('mst_jenis_tugas_akhir', 'trt_usulan_judul.jenis_tugas_akhir_id', '=', 'mst_jenis_tugas_akhir.jenis_tugas_akhir_id')
+            ->select('trt_usulan_judul.*', 'mst_jenis_tugas_akhir.kode_jenis_tugas_akhir')
+            ->where('trt_usulan_judul.KODE_DOSEN', $kode_dosen)
+            ->where('trt_usulan_judul.C_NPM', '<>', auth()->user()->name)
+            ->get();
         return view('tugasakhir.mhs.detail_usulan_judul_calon_pembimbing', compact('data'));
     }
     // Akhir Halaman Tampilan Akhir Usulan
@@ -450,14 +456,27 @@ class mhs extends Controller
             ->select("*")
             ->where("topik_id", $id)
             ->get();
-        return view("tugasakhir.mhs.ubah_judul", compact('data'));
+        $jenisTugasAkhir = DB::table('mst_jenis_tugas_akhir')
+            ->orderBy('kode_jenis_tugas_akhir')
+            ->get();
+        return view("tugasakhir.mhs.ubah_judul", compact('data', 'jenisTugasAkhir'));
     }
 
     public function judul_update(Request $request, $id)
     {
+        $request->merge([
+            'topik' => $this->judulTanpaKodeJenisTugasAkhir($request->topik),
+        ]);
+        $this->validate($request, [
+            'topik' => 'required|max:1000',
+            'jenis_tugas_akhir_id' => 'required|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
+        ]);
+
         trt_topik::where("topik_id", $id)
+            ->where('C_NPM', auth()->user()->name)
             ->update([
-                'topik' => $request->topik,
+                'topik' => trim((string) $request->topik),
+                'jenis_tugas_akhir_id' => $request->jenis_tugas_akhir_id,
             ]);
         return redirect::to('mhs/pengajuan_topik');
     }
@@ -506,10 +525,15 @@ class mhs extends Controller
             ->where('C_NPM', $id)
             ->get();
 
-        $topik = trt_topik::where([
-            'C_NPM' => $id,
-            'status' => 1,
-        ])->first();
+        $topik = DB::table('trt_topik')
+            ->leftJoin('mst_jenis_tugas_akhir', 'trt_topik.jenis_tugas_akhir_id', '=', 'mst_jenis_tugas_akhir.jenis_tugas_akhir_id')
+            ->select('trt_topik.*', 'mst_jenis_tugas_akhir.kode_jenis_tugas_akhir')
+            ->where('trt_topik.C_NPM', $id)
+            ->where('trt_topik.status', 1)
+            ->first();
+        $jenisTugasAkhir = DB::table('mst_jenis_tugas_akhir')
+            ->orderBy('kode_jenis_tugas_akhir')
+            ->get();
         $bidangilmuid = $topik
             ? RequestPembimbing::where([
                 'C_NPM' => $id,
@@ -523,7 +547,8 @@ class mhs extends Controller
             'listdosen',
             'cek',
             'topik',
-            'bidangilmuid'
+            'bidangilmuid',
+            'jenisTugasAkhir'
         ));
     }
     public function pengajuan_topikdel($id)
@@ -540,6 +565,16 @@ class mhs extends Controller
 
     public function pengajuan_topikpost(Request $request)
     {
+        $request->merge([
+            'topik' => $this->judulTanpaKodeJenisTugasAkhir($request->topik),
+            'C_NPM' => auth()->user()->name,
+        ]);
+        $this->validate($request, [
+            'topik' => 'required|max:1000',
+            'jenis_tugas_akhir_id' => 'required|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
+            'bidang_ilmu' => 'required|array|min:1',
+        ]);
+
         $datapost = $request->except(["bidang_ilmu"]);
         $datapost['status'] = 0;
         $datapost['user_id'] = $datapost['C_NPM'];
@@ -567,6 +602,15 @@ class mhs extends Controller
         }
 
         return redirect()->back()->with('success', 'Topik berhasil diajukan.');
+    }
+
+    private function judulTanpaKodeJenisTugasAkhir($judul)
+    {
+        return trim((string) preg_replace(
+            '/^(?:\(\s*[A-Za-z]{2}\s*(?:-|_|\s|\/)\s*[A-Za-z0-9]{2,}\s*\)\s*)+/',
+            '',
+            trim((string) $judul)
+        ));
     }
 
 

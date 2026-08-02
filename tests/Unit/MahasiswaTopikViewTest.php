@@ -15,10 +15,11 @@ class MahasiswaTopikViewTest extends TestCase
             __DIR__ . '/../../resources/views/tugasakhir/mhs/pengajuan_topik.blade.php'
         );
 
-        $this->assertStringContainsString("'status' => 1", $controller);
+        $this->assertStringContainsString("->where('trt_topik.status', 1)", $controller);
         $this->assertStringContainsString("'topik' => \$topik->topik_id", $controller);
         $this->assertStringContainsString("'topik',", $controller);
         $this->assertStringContainsString("'bidangilmuid'", $controller);
+        $this->assertStringContainsString("'jenisTugasAkhir'", $controller);
         $this->assertStringContainsString('@if($topik)', $view);
         $this->assertStringContainsString(
             'Data topik penelitian aktif tidak tersedia untuk bimbingan ini.',

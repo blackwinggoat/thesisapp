@@ -55,6 +55,7 @@
                                 <th>NIM</th>
                                 <th>Nama</th>
                                 <th>Topik</th>
+                                <th>Jenis</th>
                                 <th>Kerangka Pikir</th>
                                 <th>Status</th>
                             </tr>
@@ -62,7 +63,7 @@
                         <tbody>
                             @if ($data_riwayat_usulan->count() === 0)
                                 <tr>
-                                    <td colspan="6" class="text-center">Data riwayat usulan tidak ditemukan.</td>
+                                    <td colspan="7" class="text-center">Data riwayat usulan tidak ditemukan.</td>
                                 </tr>
                             @endif
                             @foreach ($data_riwayat_usulan as $key => $value)
@@ -71,6 +72,7 @@
                                     <td>{{ $value->C_NPM }}</td>
                                     <td>{{ $value->NAMA_MAHASISWA }}</td>
                                     <td>{{ $value->topik }}</td>
+                                    <td>{{ $value->kode_jenis_tugas_akhir ?: '-' }}</td>
                                     <td>
                                         @if ($value->kerangka)
                                             <button class="btn btn-primary" onclick="showModal(this)"

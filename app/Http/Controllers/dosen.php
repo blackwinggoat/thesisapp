@@ -324,21 +324,32 @@ class dosen extends Controller
     public function usul_judul()
     {
         $data = DB::table('trt_usulan_judul')
-            ->select('*')
             ->join('t_mst_mahasiswa', 'trt_usulan_judul.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-            ->where('KODE_DOSEN', auth()->user()->name)
+            ->leftJoin('mst_jenis_tugas_akhir', 'trt_usulan_judul.jenis_tugas_akhir_id', '=', 'mst_jenis_tugas_akhir.jenis_tugas_akhir_id')
+            ->select('trt_usulan_judul.*', 't_mst_mahasiswa.NAMA_MAHASISWA', 'mst_jenis_tugas_akhir.kode_jenis_tugas_akhir')
+            ->where('trt_usulan_judul.KODE_DOSEN', auth()->user()->name)
             ->get();
         return view('tugasakhir.dosen.usul_judul', compact('data'));
     }
 
     public function usul_judul_post(Request $request)
     {
+        $request->merge([
+            'usulan_judul' => $this->judulTanpaKodeJenisTugasAkhir($request->usulan_judul),
+        ]);
+        $this->validate($request, [
+            'penerima_id' => 'required|array|min:1',
+            'usulan_judul' => 'required|max:1000',
+            'jenis_tugas_akhir_id' => 'required|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
+        ]);
+
         $data_mahasiswa_belum_ada_judul = DB::select("SELECT users.* from users left join trt_topik on users.name = trt_topik.C_NPM where trt_topik.C_NPM IS NULL AND users.name LIKE '130%' OR users.name LIKE '131%'");
         foreach ($request->penerima_id as $value) {
             if ($value == "semua_mahasiswa") {
                 foreach ($data_mahasiswa_belum_ada_judul as $value_2) {
                     TrtUsulanJudul::create([
                         "judul" => $request->usulan_judul,
+                        "jenis_tugas_akhir_id" => $request->jenis_tugas_akhir_id,
                         "C_NPM" => $value_2->name,
                         "KODE_DOSEN" => auth()->user()->name,
                     ]);
@@ -346,6 +357,7 @@ class dosen extends Controller
             } else {
                 TrtUsulanJudul::create([
                     "judul" => $request->usulan_judul,
+                    "jenis_tugas_akhir_id" => $request->jenis_tugas_akhir_id,
                     "C_NPM" => $value,
                     "KODE_DOSEN" => auth()->user()->name,
                 ]);
@@ -370,7 +382,19 @@ class dosen extends Controller
         $data2 = DB::table('t_mst_dosen')
             ->select('C_KODE_DOSEN')
             ->get();
-        return view('tugasakhir.dosen.add_usul_judul', compact('data', 'data2', 'data_semua_mahasiswa', 'data_mahasiswa_belum_ada_judul', 'data_mahasiswa_belum_menerima_usulan_judul'));
+        $jenisTugasAkhir = DB::table('mst_jenis_tugas_akhir')
+            ->orderBy('kode_jenis_tugas_akhir')
+            ->get();
+        return view('tugasakhir.dosen.add_usul_judul', compact('data', 'data2', 'data_semua_mahasiswa', 'data_mahasiswa_belum_ada_judul', 'data_mahasiswa_belum_menerima_usulan_judul', 'jenisTugasAkhir'));
+    }
+
+    private function judulTanpaKodeJenisTugasAkhir($judul)
+    {
+        return trim((string) preg_replace(
+            '/^(?:\(\s*[A-Za-z]{2}\s*(?:-|_|\s|\/)\s*[A-Za-z0-9]{2,}\s*\)\s*)+/',
+            '',
+            trim((string) $judul)
+        ));
     }
 
     // Halaman Hasili Ujian Proposal
