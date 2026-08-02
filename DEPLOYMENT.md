@@ -89,3 +89,28 @@ It does not roll back the database.
 
 Database migrations are never run automatically. Any required migration must
 be reviewed, backed up, and approved as a separate operation.
+
+## Refresh the local database from production
+
+Database refresh is strictly one-way from production to the loopback-hosted
+local database. It never copies runtime uploads and never writes to the
+production database.
+
+Inspect both targets without creating a dump:
+
+```bash
+scripts/sync-production-db-to-local.sh --dry-run
+```
+
+Create a private local backup, fetch a new checksummed production snapshot,
+replace the local database, repair view definers, and verify critical tables:
+
+```bash
+scripts/sync-production-db-to-local.sh --apply
+```
+
+The helper refuses a non-`local` target, a local database host that is not a
+loopback address, or identical local and production database names. If restore
+or local verification fails, it restores the pre-sync local backup
+automatically. Private dumps and reports are stored under
+`../.codex-audit/thesisapps-db-sync/<timestamp>` and must never be committed.
