@@ -513,40 +513,33 @@ class dosen extends Controller
         return view('tugasakhir.dosen.hasil_proposal_history', compact('data'));
     }
 
+    private function assessmentStudentData($regid)
+    {
+        return DB::select('SELECT * FROM trt_reg, trt_bimbingan, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = ?', [$regid]);
+    }
+
+    private function assessmentScores($assessment)
+    {
+        return [
+            'nilai_1' => $assessment->nilai_1 ?? null,
+            'nilai_2' => $assessment->nilai_2 ?? null,
+            'nilai_3' => $assessment->nilai_3 ?? null,
+            'nilai_4' => $assessment->nilai_4 ?? null,
+            'nilai_5' => $assessment->nilai_5 ?? null,
+            'saran' => $assessment->saran ?? null,
+        ];
+    }
+
     // Detail Halaman Hasil Ujian
     public function detailhasil_proposal($regid)
     {
         $kodeDosen = Helper::getKodeDosenForTrtHasil();
         $data_hasil = trt_hasil::where('reg_id', $regid)->where('nidn', $kodeDosen)->first();
-        $nilai = array();
-        if ($data_hasil != null) {
-            $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, trt_hasil, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = trt_hasil.reg_id AND trt_reg.reg_id = ? AND trt_hasil.nidn = ?', [$regid, $kodeDosen]);
-            if (empty($data)) {
-                return response('Data hasil ujian proposal tidak ditemukan.', 404);
-            }
-
-            $nilai = [
-                "nilai_1" => $data[0]->nilai_1,
-                "nilai_2" => $data[0]->nilai_2,
-                "nilai_3" => $data[0]->nilai_3,
-                "nilai_4" => $data[0]->nilai_4,
-                "nilai_5" => $data[0]->nilai_5,
-                "saran" => $data[0]->saran,
-            ];
-        } else {
-            $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = ?', [$regid]);
-            if (empty($data)) {
-                return response('Data hasil ujian proposal tidak ditemukan.', 404);
-            }
-            $nilai = [
-                "nilai_1" => null,
-                "nilai_2" => null,
-                "nilai_3" => null,
-                "nilai_4" => null,
-                "nilai_5" => null,
-                "saran" => null,
-            ];
+        $data = $this->assessmentStudentData($regid);
+        if (empty($data)) {
+            return response('Data hasil ujian proposal tidak ditemukan.', 404);
         }
+        $nilai = $this->assessmentScores($data_hasil);
 
         return view('tugasakhir.dosen.detailhasil_proposal', compact('data', 'nilai', 'kodeDosen'));
     }
@@ -762,38 +755,11 @@ class dosen extends Controller
     {
         $kodeDosen = Helper::getKodeDosenForTrtHasil();
         $data_hasil = trt_hasil::where('reg_id', $regid)->where('nidn', $kodeDosen)->first();
-        $nilai = array();
-
-
-
-        if ($data_hasil != null) {
-            $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, trt_hasil, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = trt_hasil.reg_id AND trt_reg.reg_id = ? AND trt_hasil.nidn = ?', [$regid, $kodeDosen]);
-            if (empty($data)) {
-                return response('Data hasil ujian meja tidak ditemukan.', 404);
-            }
-
-            $nilai = [
-                "nilai_1" => $data[0]->nilai_1,
-                "nilai_2" => $data[0]->nilai_2,
-                "nilai_3" => $data[0]->nilai_3,
-                "nilai_4" => $data[0]->nilai_4,
-                "nilai_5" => $data[0]->nilai_5,
-                "saran" => $data[0]->saran,
-            ];
-        } else {
-            $data = DB::select('SELECT * FROM trt_reg, trt_bimbingan, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND t_mst_mahasiswa.C_NPM = trt_bimbingan.C_NPM AND trt_reg.reg_id = ?', [$regid]);
-            if (empty($data)) {
-                return response('Data hasil ujian meja tidak ditemukan.', 404);
-            }
-            $nilai = [
-                "nilai_1" => null,
-                "nilai_2" => null,
-                "nilai_3" => null,
-                "nilai_4" => null,
-                "nilai_5" => null,
-                "saran" => null,
-            ];
+        $data = $this->assessmentStudentData($regid);
+        if (empty($data)) {
+            return response('Data hasil ujian meja tidak ditemukan.', 404);
         }
+        $nilai = $this->assessmentScores($data_hasil);
 
         return view('tugasakhir.dosen.detailhasil_ujianmeja', compact('data', 'nilai', 'kodeDosen'));
     }
