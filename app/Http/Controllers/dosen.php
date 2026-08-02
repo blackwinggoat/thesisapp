@@ -328,6 +328,7 @@ class dosen extends Controller
             ->leftJoin('mst_jenis_tugas_akhir', 'trt_usulan_judul.jenis_tugas_akhir_id', '=', 'mst_jenis_tugas_akhir.jenis_tugas_akhir_id')
             ->select('trt_usulan_judul.*', 't_mst_mahasiswa.NAMA_MAHASISWA', 'mst_jenis_tugas_akhir.kode_jenis_tugas_akhir')
             ->where('trt_usulan_judul.KODE_DOSEN', auth()->user()->name)
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
             ->get();
         return view('tugasakhir.dosen.usul_judul', compact('data'));
     }
@@ -343,7 +344,12 @@ class dosen extends Controller
             'jenis_tugas_akhir_id' => 'required|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
         ]);
 
-        $data_mahasiswa_belum_ada_judul = DB::select("SELECT users.* from users left join trt_topik on users.name = trt_topik.C_NPM where trt_topik.C_NPM IS NULL AND users.name LIKE '130%' OR users.name LIKE '131%'");
+        $data_mahasiswa_belum_ada_judul = DB::table('t_mst_mahasiswa as mahasiswa')
+            ->leftJoin('trt_topik', 'mahasiswa.C_NPM', '=', 'trt_topik.C_NPM')
+            ->where('mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
+            ->whereNull('trt_topik.C_NPM')
+            ->select('mahasiswa.C_NPM as name')
+            ->get();
         foreach ($request->penerima_id as $value) {
             if ($value == "semua_mahasiswa") {
                 foreach ($data_mahasiswa_belum_ada_judul as $value_2) {
@@ -354,7 +360,10 @@ class dosen extends Controller
                         "KODE_DOSEN" => auth()->user()->name,
                     ]);
                 }
-            } else {
+            } elseif (DB::table('t_mst_mahasiswa')
+                ->where('C_NPM', $value)
+                ->where('C_KODE_STATUS_AKTIF_MHS', 'A')
+                ->exists()) {
                 TrtUsulanJudul::create([
                     "judul" => $request->usulan_judul,
                     "jenis_tugas_akhir_id" => $request->jenis_tugas_akhir_id,
@@ -369,14 +378,32 @@ class dosen extends Controller
     public function add_usul_judul()
     {
         $data = DB::table('trt_bimbingan')
-            ->select('C_NPM')
-            ->where('pembimbing_I_id', auth()->user()->name)
-            ->orWhere('pembimbing_II_id', auth()->user()->name)
+            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+            ->select('trt_bimbingan.C_NPM')
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
+            ->where('trt_bimbingan.status_bimbingan', '<>', 4)
+            ->where(function ($query) {
+                $query->where('trt_bimbingan.pembimbing_I_id', auth()->user()->name)
+                    ->orWhere('trt_bimbingan.pembimbing_II_id', auth()->user()->name);
+            })
             ->get();
 
-        $data_semua_mahasiswa = DB::select("SELECT * FROM `users` WHERE name LIKE '130%' OR name LIKE '131%'");
-        $data_mahasiswa_belum_ada_judul = DB::select("SELECT users.* from users left join trt_topik on users.name = trt_topik.C_NPM where trt_topik.C_NPM IS NULL AND users.name LIKE '130%' OR users.name LIKE '131%'");
-        $data_mahasiswa_belum_menerima_usulan_judul = DB::select("SELECT users.* from users left join trt_usulan_judul on users.name = trt_usulan_judul.C_NPM where trt_usulan_judul.C_NPM IS NULL AND users.name LIKE '130%' OR users.name LIKE '131%'");
+        $data_semua_mahasiswa = DB::table('t_mst_mahasiswa')
+            ->where('C_KODE_STATUS_AKTIF_MHS', 'A')
+            ->select('C_NPM as name')
+            ->get();
+        $data_mahasiswa_belum_ada_judul = DB::table('t_mst_mahasiswa as mahasiswa')
+            ->leftJoin('trt_topik', 'mahasiswa.C_NPM', '=', 'trt_topik.C_NPM')
+            ->where('mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
+            ->whereNull('trt_topik.C_NPM')
+            ->select('mahasiswa.C_NPM as name')
+            ->get();
+        $data_mahasiswa_belum_menerima_usulan_judul = DB::table('t_mst_mahasiswa as mahasiswa')
+            ->leftJoin('trt_usulan_judul', 'mahasiswa.C_NPM', '=', 'trt_usulan_judul.C_NPM')
+            ->where('mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
+            ->whereNull('trt_usulan_judul.C_NPM')
+            ->select('mahasiswa.C_NPM as name')
+            ->get();
 
 
         $data2 = DB::table('t_mst_dosen')
@@ -400,7 +427,7 @@ class dosen extends Controller
     // Halaman Hasili Ujian Proposal
     public function hasil_proposal()
     {
-        $data = $this->assessmentCards(0, [2, 3]);
+        $data = $this->assessmentCards(0, [2, 3, 4]);
 
         return view('tugasakhir.dosen.hasil_proposal', compact('data'));
     }
@@ -509,7 +536,7 @@ class dosen extends Controller
 
     public function hasil_ujianmeja()
     {
-        $data = $this->assessmentCards(2, [3]);
+        $data = $this->assessmentCards(2, [3, 4]);
 
         return view('tugasakhir.dosen.hasil_ujianmeja', compact('data'));
     }
@@ -537,6 +564,7 @@ class dosen extends Controller
                     ->orWhere('tb.pembimbing_II_id', $kode);
             })
             ->where('rg.status', $tipeUjian)
+            ->where('mhs.C_KODE_STATUS_AKTIF_MHS', 'A')
             ->whereNotIn('tb.status_bimbingan', $excludedBimbinganStatuses)
             ->select([
                 'rg.reg_id',
@@ -911,27 +939,30 @@ class dosen extends Controller
                 ->keyBy('C_NPM');
         }
 
-        $ppropI = DB::table('trt_bimbingan')
+        $bimbinganAktif = DB::table('trt_bimbingan')
+            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A');
+        $ppropI = (clone $bimbinganAktif)
             ->where('pembimbing_I_id', $id)
             ->where('status_bimbingan', 0)
             ->get();
-        $ppropII = DB::table('trt_bimbingan')
+        $ppropII = (clone $bimbinganAktif)
             ->where('pembimbing_II_id', $id)
             ->where('status_bimbingan', 0)
             ->get();
-        $phasilI = DB::table('trt_bimbingan')
+        $phasilI = (clone $bimbinganAktif)
             ->where('pembimbing_I_id', $id)
             ->where('status_bimbingan', 1)
             ->get();
-        $phasilII = DB::table('trt_bimbingan')
+        $phasilII = (clone $bimbinganAktif)
             ->where('pembimbing_II_id', $id)
             ->where('status_bimbingan', 1)
             ->get();
-        $pmejaI = DB::table('trt_bimbingan')
+        $pmejaI = (clone $bimbinganAktif)
             ->where('pembimbing_I_id', $id)
             ->where('status_bimbingan', 2)
             ->get();
-        $pmejaII = DB::table('trt_bimbingan')
+        $pmejaII = (clone $bimbinganAktif)
             ->where('pembimbing_II_id', $id)
             ->where('status_bimbingan', 2)
             ->get();
@@ -994,12 +1025,15 @@ class dosen extends Controller
         $nim = trim((string) $request->C_NPM);
         $kodeDosen = trim((string) auth()->user()->name);
         $bimbingan = DB::table('trt_bimbingan')
-            ->where('C_NPM', $nim)
+            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+            ->where('trt_bimbingan.C_NPM', $nim)
             ->where(function ($query) use ($kodeDosen) {
-                $query->where('pembimbing_I_id', $kodeDosen)
-                    ->orWhere('pembimbing_II_id', $kodeDosen);
+                $query->where('trt_bimbingan.pembimbing_I_id', $kodeDosen)
+                    ->orWhere('trt_bimbingan.pembimbing_II_id', $kodeDosen);
             })
-            ->where('status_bimbingan', '<>', 3)
+            ->where('trt_bimbingan.status_bimbingan', '<>', 3)
+            ->where('trt_bimbingan.status_bimbingan', '<>', 4)
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
             ->first();
 
         $mahasiswa = DB::table('t_mst_mahasiswa')
@@ -1143,9 +1177,14 @@ class dosen extends Controller
     public function mail_new()
     {
         $data = DB::table('trt_bimbingan')
-            ->select('C_NPM')
-            ->where('pembimbing_I_id', auth()->user()->name)
-            ->orWhere('pembimbing_II_id', auth()->user()->name)
+            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+            ->select('trt_bimbingan.C_NPM')
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
+            ->where('trt_bimbingan.status_bimbingan', '<>', 4)
+            ->where(function ($query) {
+                $query->where('trt_bimbingan.pembimbing_I_id', auth()->user()->name)
+                    ->orWhere('trt_bimbingan.pembimbing_II_id', auth()->user()->name);
+            })
             ->get();
 
         $data2 = DB::table('t_mst_dosen')
@@ -1239,11 +1278,12 @@ class dosen extends Controller
         $data = trt_topik::join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
             ->join('mst_tmp_usulan', 'mst_tmp_usulan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
             ->where('trt_topik.status', 1)
-            ->where('mst_tmp_usulan.pembimbing_I_id', Auth::user()->name)
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
             ->whereNotIn('t_mst_mahasiswa.C_NPM', trt_bimbingan::select("C_NPM"))
-            ->orWhere('mst_tmp_usulan.pembimbing_II_id', Auth::user()->name)
-            ->where('trt_topik.status', 1)
-            ->whereNotIn('t_mst_mahasiswa.C_NPM', trt_bimbingan::select("C_NPM"))
+            ->where(function ($query) {
+                $query->where('mst_tmp_usulan.pembimbing_I_id', Auth::user()->name)
+                    ->orWhere('mst_tmp_usulan.pembimbing_II_id', Auth::user()->name);
+            })
             ->select('t_mst_mahasiswa.*', 'trt_topik.*', 'mst_tmp_usulan.*')
             ->get();
 
@@ -1258,12 +1298,12 @@ class dosen extends Controller
             ->join('mst_tmp_usulan', 'mst_tmp_usulan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
             ->where("t_mst_mahasiswa.C_NPM", $mahasiswa)
             ->where('trt_topik.status', 1)
-            ->where('mst_tmp_usulan.pembimbing_I_id', Auth::user()->name)
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
             ->whereNotIn('t_mst_mahasiswa.C_NPM', trt_bimbingan::select("C_NPM"))
-            ->orWhere('mst_tmp_usulan.pembimbing_II_id', Auth::user()->name)
-            ->where("t_mst_mahasiswa.C_NPM", $mahasiswa)
-            ->where('trt_topik.status', 1)
-            ->whereNotIn('t_mst_mahasiswa.C_NPM', trt_bimbingan::select("C_NPM"))
+            ->where(function ($query) {
+                $query->where('mst_tmp_usulan.pembimbing_I_id', Auth::user()->name)
+                    ->orWhere('mst_tmp_usulan.pembimbing_II_id', Auth::user()->name);
+            })
             ->select('t_mst_mahasiswa.*', 'trt_topik.*', 'mst_tmp_usulan.*')
             ->first();
         if (!$data) {
@@ -1787,6 +1827,8 @@ class dosen extends Controller
                 'mst_sk_pembimbing.created_at as tanggal_sk'
             )
             ->where('trt_bimbingan.' . $kolomPembimbing, $kodeDosen)
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
+            ->where('trt_bimbingan.status_bimbingan', '<>', 4)
             ->whereNotNull('mst_sk_pembimbing.nomor_sk')
             ->whereRaw("TRIM(mst_sk_pembimbing.nomor_sk) <> ''")
             ->orderBy('t_mst_mahasiswa.NAMA_MAHASISWA', 'asc')

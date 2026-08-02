@@ -1487,6 +1487,11 @@ class Helper
             ->select("*")
             ->where('trt_bimbingan.status_bimbingan', $status);
 
+        if ((int) $status !== 3) {
+            $query->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+                ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A');
+        }
+
         if ($isPeriode) {
             $semesterRange = self::getCurrentSemesterDateRange();
             $query->whereBetween('trt_bimbingan.updated_at', [$semesterRange->start, $semesterRange->end]);
@@ -1505,6 +1510,11 @@ class Helper
             ->where('trt_bimbingan.status_bimbingan', $status)
             ->where('trt_bimbingan.C_NPM', 'LIKE', '130%');
 
+        if ((int) $status !== 3) {
+            $query->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+                ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A');
+        }
+
         if ($isPeriode) {
             $semesterRange = self::getCurrentSemesterDateRange();
             $query->whereBetween('trt_bimbingan.updated_at', [$semesterRange->start, $semesterRange->end]);
@@ -1521,6 +1531,11 @@ class Helper
             ->select("*")
             ->where('trt_bimbingan.status_bimbingan', $status)
             ->where('trt_bimbingan.C_NPM', 'LIKE', '131%');
+
+        if ((int) $status !== 3) {
+            $query->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+                ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A');
+        }
 
         if ($isPeriode) {
             $semesterRange = self::getCurrentSemesterDateRange();
@@ -1539,11 +1554,14 @@ class Helper
                 $query->where('trt_bimbingan.pembimbing_I_id', $kode_dosen)
                     ->orWhere('trt_bimbingan.pembimbing_II_id', $kode_dosen);
             });
+        $aktifQuery = (clone $baseQuery)
+            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A');
 
         $data = (object) [
             "y" => "",
-            "PP" => (clone $baseQuery)->where('trt_bimbingan.status_bimbingan', 0)->count(),
-            "PUM" => (clone $baseQuery)->where('trt_bimbingan.status_bimbingan', 2)->count(),
+            "PP" => (clone $aktifQuery)->where('trt_bimbingan.status_bimbingan', 0)->count(),
+            "PUM" => (clone $aktifQuery)->where('trt_bimbingan.status_bimbingan', 2)->count(),
             "L" => (clone $baseQuery)->where('trt_bimbingan.status_bimbingan', 3)->count(),
         ];
 
@@ -1570,6 +1588,8 @@ class Helper
                     ->on('rg.status', '=', 'tp.tipe_ujian');
             })
             ->join('trt_bimbingan as tb', 'tb.C_NPM', '=', 'tp.C_NPM')
+            ->join('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'tp.C_NPM')
+            ->where('mhs.C_KODE_STATUS_AKTIF_MHS', 'A')
             ->whereIn('tp.tipe_ujian', [0, 2]);
 
         $proposal = (clone $base)
@@ -1637,24 +1657,27 @@ class Helper
             ];
         }
 
-        $base = DB::table('trt_bimbingan')->whereIn('status_bimbingan', [0, 2]);
+        $base = DB::table('trt_bimbingan')
+            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
+            ->whereIn('trt_bimbingan.status_bimbingan', [0, 2]);
 
         return [
             'proposal_utama' => (int) (clone $base)
-                ->where('status_bimbingan', 0)
-                ->where('pembimbing_I_id', $kodeDosen)
+                ->where('trt_bimbingan.status_bimbingan', 0)
+                ->where('trt_bimbingan.pembimbing_I_id', $kodeDosen)
                 ->count(),
             'proposal_pendamping' => (int) (clone $base)
-                ->where('status_bimbingan', 0)
-                ->where('pembimbing_II_id', $kodeDosen)
+                ->where('trt_bimbingan.status_bimbingan', 0)
+                ->where('trt_bimbingan.pembimbing_II_id', $kodeDosen)
                 ->count(),
             'ujian_utama' => (int) (clone $base)
-                ->where('status_bimbingan', 2)
-                ->where('pembimbing_I_id', $kodeDosen)
+                ->where('trt_bimbingan.status_bimbingan', 2)
+                ->where('trt_bimbingan.pembimbing_I_id', $kodeDosen)
                 ->count(),
             'ujian_pendamping' => (int) (clone $base)
-                ->where('status_bimbingan', 2)
-                ->where('pembimbing_II_id', $kodeDosen)
+                ->where('trt_bimbingan.status_bimbingan', 2)
+                ->where('trt_bimbingan.pembimbing_II_id', $kodeDosen)
                 ->count(),
         ];
     }
@@ -1681,6 +1704,9 @@ class Helper
             ->where(function ($query) use ($kode_dosen) {
                 $query->where('trt_bimbingan.pembimbing_I_id', $kode_dosen)
                     ->orWhere('trt_bimbingan.pembimbing_II_id', $kode_dosen);
+            })
+            ->when((int) $status !== 3, function ($query) {
+                $query->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A');
             })
             ->orderBy('t_mst_mahasiswa.C_NPM', 'asc')
             ->distinct()
@@ -1743,6 +1769,7 @@ class Helper
                         COALESCE(sk.tgl_sk_penetapan, DATE(tb.created_at), DATE(tb.updated_at), CURDATE())
                     ) AS lama_hari
                 FROM trt_bimbingan tb
+                INNER JOIN t_mst_mahasiswa mhs ON mhs.C_NPM = tb.C_NPM
                 LEFT JOIN (
                     SELECT bimbingan_id, DATE(MIN(created_at)) AS tgl_sk_penetapan
                     FROM mst_sk_pembimbing
@@ -1750,6 +1777,7 @@ class Helper
                 ) sk ON sk.bimbingan_id = tb.bimbingan_id
                 WHERE (tb.pembimbing_I_id = ? OR tb.pembimbing_II_id = ?)
                   AND LEFT(tb.C_NPM, 3) IN ('130', '131')
+                  AND (tb.status_bimbingan = 3 OR (tb.status_bimbingan <> 4 AND mhs.C_KODE_STATUS_AKTIF_MHS = 'A'))
             ) src
             WHERE src.angkatan_tahun REGEXP '^[0-9]{4}$'
               AND src.lama_hari >= 0
@@ -1784,11 +1812,14 @@ class Helper
             if ($nimLike !== '%') {
                 $baseQuery->where('trt_bimbingan.C_NPM', 'LIKE', $nimLike);
             }
+            $aktifQuery = (clone $baseQuery)
+                ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
+                ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A');
 
             return (object) [
                 'y' => '',
-                'PP' => (clone $baseQuery)->where('trt_bimbingan.status_bimbingan', 0)->count(),
-                'PUM' => (clone $baseQuery)->where('trt_bimbingan.status_bimbingan', 2)->count(),
+                'PP' => (clone $aktifQuery)->where('trt_bimbingan.status_bimbingan', 0)->count(),
+                'PUM' => (clone $aktifQuery)->where('trt_bimbingan.status_bimbingan', 2)->count(),
                 'L' => (clone $baseQuery)->where('trt_bimbingan.status_bimbingan', 3)->count(),
             ];
         } catch (\Throwable $e) {
@@ -1830,18 +1861,22 @@ class Helper
                         COALESCE(sk.tgl_sk_penetapan, DATE(tb.created_at), DATE(tb.updated_at), CURDATE())
                     ) AS lama_hari
                 FROM trt_bimbingan tb
+                INNER JOIN t_mst_mahasiswa mhs ON mhs.C_NPM = tb.C_NPM
                 LEFT JOIN (
                     SELECT bimbingan_id, DATE(MIN(created_at)) AS tgl_sk_penetapan
                     FROM mst_sk_pembimbing
                     GROUP BY bimbingan_id
                 ) sk ON sk.bimbingan_id = tb.bimbingan_id
                 WHERE LEFT(tb.C_NPM, 3) IN ('130', '131')
+                  AND (tb.status_bimbingan = 3 OR (tb.status_bimbingan <> 4 AND mhs.C_KODE_STATUS_AKTIF_MHS = 'A'))
+                  AND tb.C_NPM LIKE ?
             ) src
             WHERE src.angkatan_tahun REGEXP '^[0-9]{4}$'
               AND src.lama_hari >= 0
             GROUP BY src.angkatan_tahun
             ORDER BY src.angkatan_tahun ASC
-            "
+            ",
+                [self::getScopeTaNimLikeByUsername($username)]
             );
 
             return collect($rows)->map(function ($row) {
