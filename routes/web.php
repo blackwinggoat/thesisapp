@@ -311,6 +311,8 @@ Route::group(['middleware' => 'akademik_prodi'], function () {
     Route::get('/akademikprodi/reset_userx/{id}', 'AkademikProdi@reset_userx');
 
     Route::get('/home', 'HomeController@index')->name('home');
+    Route::get('/akademikprodi/ubah_password', 'AkademikProdi@ubah_password');
+    Route::post('/akademikprodi/ubah_password', 'AkademikProdi@ubah_password_post');
     Route::get("/akademikprodi/persyaratan_proposal", "AkademikProdi@persyaratan_proposal");
     Route::get("/akademikprodi/persyaratan_ujianmeja", "AkademikProdi@persyaratan_ujianmeja");
     Route::get("/akademikprodi/detail_persyaratan_proposal/{id}", "AkademikProdi@detail_persyaratan_proposal");

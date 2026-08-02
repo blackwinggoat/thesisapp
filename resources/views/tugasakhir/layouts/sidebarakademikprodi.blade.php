@@ -18,9 +18,9 @@
                         
                     </strong></h4>
                     <a style="display: inline-block; width: 30px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;"
-                        href="{{url('akademikprodi/ubah_password')}}" class="btn btn-success btn-xs"><i
+                        href="{{ url('akademikprodi/ubah_password') }}" class="btn btn-success btn-xs"><i
                             class="fa fa-cog"></i></a>
-                    <a style="display: inline-block; width: 80px; padding: 0px; height: 30px; color: wh ite; line-height: 2.3; border-radius: 5px;"
+                    <a style="display: inline-block; width: 80px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;"
                         class="btn btn-danger btn-xs" href="{{ route('logout') }}" onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
                         {{ __('Logout') }}

@@ -80,6 +80,8 @@ class RouteIntegrityTest extends TestCase
             'POST wakildekan/ubah_password' => 'App\\Http\\Controllers\\WakilDekan@ubah_password_post',
             'GET keuanganfakultas/ubah_password' => 'App\\Http\\Controllers\\KeuanganFakultas@ubah_password',
             'POST keuanganfakultas/ubah_password' => 'App\\Http\\Controllers\\KeuanganFakultas@ubah_password_post',
+            'GET akademikprodi/ubah_password' => 'App\\Http\\Controllers\\AkademikProdi@ubah_password',
+            'POST akademikprodi/ubah_password' => 'App\\Http\\Controllers\\AkademikProdi@ubah_password_post',
         ];
         $actualRoutes = [];
 

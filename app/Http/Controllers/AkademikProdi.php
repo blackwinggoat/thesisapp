@@ -35,6 +35,26 @@ use Illuminate\Support\Facades\Auth;
 
 class AkademikProdi extends Controller
 {
+    public function ubah_password()
+    {
+        return view('tugasakhir.fakultas.ubah_password', [
+            'passwordAction' => url('akademikprodi/ubah_password'),
+        ]);
+    }
+
+    public function ubah_password_post(Request $request)
+    {
+        if (!Hash::check($request->password_lama, auth()->user()->password)) {
+            return redirect()->back()->with('error', 'Password lama tidak sesuai');
+        }
+
+        if ($request->password_baru == $request->ulangi_password) {
+            DB::update('update users set password = ? where id = ?', [Hash::make($request->password_baru), auth()->id()]);
+            return redirect()->back()->with('success', 'Password Berhasil Diubah');
+        }
+
+        return redirect()->back()->with('error', 'Password Tidak Sama');
+    }
 
     // Halaman Approve Hasil Ujian TA
     public function rekap_nilai_proposal()

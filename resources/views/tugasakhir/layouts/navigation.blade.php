@@ -83,7 +83,7 @@ BEGIN PAGE
                             @elseif(Auth::user()->level==5)
                                 <li><a href="{{ url('prodi/ubah_password')}}">Change password</a></li>
                             @elseif(Auth::user()->level==6)
-                                <li><a href="{{ url('mhs/ubah_password/')}}">Change password</a></li>
+                                <li><a href="{{ url('akademikprodi/ubah_password')}}">Change password</a></li>
                             @elseif(Auth::user()->level==7)
                                 <li><a href="{{ url('dsn/ubah_password/')}}">Change password</a></li>
                             @elseif(Auth::user()->level==8)
@@ -119,5 +119,4 @@ BEGIN PAGE
         </div><!-- /.top-navbar-inner -->
     </div><!-- /.top-navbar -->
     <!-- END TOP NAV -->
-
 
