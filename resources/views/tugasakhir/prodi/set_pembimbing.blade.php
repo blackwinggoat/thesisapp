@@ -44,7 +44,7 @@
                     <div class="form-group">
                         <label class="col-lg-2 control-label">Judul</label>
                         <div class="col-lg-5">
-                            <div class="form-control bold-border">{{$data_topik->topik}}</div>
+                            <textarea class="form-control bold-border" rows="4" disabled>{{$data_topik->topik}}</textarea>
                         </div>
                     </div>
                     <br><br>

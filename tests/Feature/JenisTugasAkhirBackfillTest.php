@@ -11,6 +11,7 @@ use App\Console\Commands\BackfillJenisTugasAkhirUsulan;
 use App\Console\Commands\StandardizeJenisTugasAkhir;
 use App\Console\Commands\LinkBimbinganTopik;
 use App\Http\Controllers\Prodi;
+use App\Helper;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Tests\TestCase;
@@ -200,6 +201,7 @@ class JenisTugasAkhirBackfillTest extends TestCase
         $this->assertSame(0, DB::table('mst_jenis_tugas_akhir')->where('kode_jenis_tugas_akhir', 'NT-KT')->count());
         $this->assertSame($nsKtId, DB::table('trt_bimbingan')->value('jenis_tugas_akhir_id'));
         $this->assertSame($nsKtId, DB::table('trt_topik')->value('jenis_tugas_akhir_id'));
+        $this->assertSame('[NS-KT] Judul NT', Helper::judulDenganKodeJenisTugasAkhir($nsKtId, 'Judul NT'));
     }
 
     public function testLinkingGuidanceToTopicsSkipsAmbiguousHistory()

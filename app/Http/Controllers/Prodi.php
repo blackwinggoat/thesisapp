@@ -1153,7 +1153,6 @@ class Prodi extends Controller
         }
 
         $q = trim((string) $request->get('q', ''));
-        $angkatan = trim((string) $request->get('angkatan', ''));
         $statusAkun = trim((string) $request->get('status_akun', 'semua'));
         $perPage = (int) $request->get('per_page', 25);
         $allowedPerPage = [25, 50, 100, 200];
@@ -1182,10 +1181,6 @@ class Prodi extends Controller
             });
         }
 
-        if ($angkatan !== '' && preg_match('/^[0-9]{4}$/', $angkatan)) {
-            $query->whereRaw('SUBSTRING(t_mst_mahasiswa.C_NPM, 4, 4) = ?', [$angkatan]);
-        }
-
         if ($statusAkun === 'aktif') {
             $query->whereNotNull('users.id');
         } elseif ($statusAkun === 'belum') {
@@ -1197,21 +1192,7 @@ class Prodi extends Controller
             ->paginate($perPage)
             ->appends($request->query());
 
-        $angkatanQuery = DB::table('t_mst_mahasiswa')
-            ->selectRaw('SUBSTRING(C_NPM, 4, 4) as angkatan')
-            ->whereRaw("SUBSTRING(C_NPM, 4, 4) REGEXP '^[0-9]{4}$'");
-
-        if ($nimPrefix !== '') {
-            $angkatanQuery->where('C_NPM', 'LIKE', $nimPrefix . '%');
-        }
-
-        $listAngkatan = $angkatanQuery
-            ->distinct()
-            ->orderBy('angkatan', 'desc')
-            ->pluck('angkatan')
-            ->toArray();
-
-        return view('tugasakhir.prodi.mahasiswa', compact('data', 'listAngkatan', 'q', 'angkatan', 'statusAkun', 'perPage'));
+        return view('tugasakhir.prodi.mahasiswa', compact('data', 'q', 'statusAkun', 'perPage'));
     }
 
     public function detail_mahasiswa($id)

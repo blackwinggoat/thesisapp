@@ -157,7 +157,7 @@
             <tr>
                 <th>Judul Tugas Akhir</th>
                 <td>:</td>
-                <td>{{ $trt_bimbingan->judul }}</td>
+                <td>{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</td>
             </tr>
         </table>
     </div>
@@ -288,7 +288,7 @@
             <tr>
                 <td>Judul Skripsi</td>
                 <td>:</td>
-                <td>{{ $trt_bimbingan->judul }}</td>
+                <td>{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</td>
             </tr>
             <tr>
                 <td>Ketua Sidang</td>
@@ -428,7 +428,7 @@
             <tr>
                 <td style="position: absolute">Judul Tugas Akhir</td>
                 <td style="vertical-align: top">:</td>
-                <td style="vertical-align: top" colspan="2">{{ $trt_bimbingan->judul }}
+                <td style="vertical-align: top" colspan="2">{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}
                 </td>
             </tr>
             <tr>
@@ -602,7 +602,7 @@
                 <tr>
                     <td style="vertical-align: top">JUDUL/SKRIPSI</td>
                     <td style="vertical-align: top">:</td>
-                    <td style="vertical-align: top" colspan="2">{{ $trt_bimbingan->judul }}</td>
+                    <td style="vertical-align: top" colspan="2">{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</td>
                 </tr>
                 <tr>
                     <td>RUANG</td>
@@ -758,7 +758,7 @@
                 <tr>
                     <td style="vertical-align: top">JUDUL/SKRIPSI</td>
                     <td style="vertical-align: top">:</td>
-                    <td style="vertical-align: top" colspan="2">{{ $trt_bimbingan->judul }}</td>
+                    <td style="vertical-align: top" colspan="2">{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</td>
                 </tr>
                 <tr>
                     <td>RUANG</td>
@@ -908,7 +908,7 @@
                 <tr>
                     <td style="vertical-align: top">JUDUL/SKRIPSI</td>
                     <td style="vertical-align: top">:</td>
-                    <td style="vertical-align: top" colspan="2">{{ $trt_bimbingan->judul }}</td>
+                    <td style="vertical-align: top" colspan="2">{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</td>
                 </tr>
                 <tr>
                     <td>RUANG</td>
@@ -1057,7 +1057,7 @@
                 <tr>
                     <td style="vertical-align: top">JUDUL/SKRIPSI</td>
                     <td style="vertical-align: top">:</td>
-                    <td style="vertical-align: top" colspan="2">{{ $trt_bimbingan->judul }}</td>
+                    <td style="vertical-align: top" colspan="2">{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</td>
                 </tr>
                 <tr>
                     <td>RUANG</td>
@@ -1211,7 +1211,7 @@
                 <tr>
                     <td style="vertical-align: top">JUDUL/SKRIPSI</td>
                     <td style="vertical-align: top">:</td>
-                    <td style="vertical-align: top" colspan="2">{{ $trt_bimbingan->judul }}</td>
+                    <td style="vertical-align: top" colspan="2">{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</td>
                 </tr>
                 <tr>
                     <td>RUANG</td>
@@ -1365,7 +1365,7 @@
                 <tr>
                     <td style="vertical-align: top">JUDUL/SKRIPSI</td>
                     <td style="vertical-align: top">:</td>
-                    <td style="vertical-align: top" colspan="2">{{ $trt_bimbingan->judul }}</td>
+                    <td style="vertical-align: top" colspan="2">{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</td>
                 </tr>
                 <tr>
                     <td>RUANG</td>

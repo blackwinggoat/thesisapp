@@ -20,20 +20,9 @@
             <div class="the-box">
                 <form method="get" action="{{ url('prodi/mahasiswa') }}" class="form-horizontal" style="margin-bottom: 18px;">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             <label style="display:block;">Cari NIM / Nama</label>
                             <input type="text" name="q" class="form-control" value="{{ $q ?? '' }}" placeholder="Contoh: 1302022 atau nama mahasiswa">
-                        </div>
-                        <div class="col-md-2">
-                            <label style="display:block;">Angkatan</label>
-                            <select name="angkatan" class="form-control">
-                                <option value="">Semua Angkatan</option>
-                                @foreach (($listAngkatan ?? []) as $itemAngkatan)
-                                    <option value="{{ $itemAngkatan }}" {{ ($angkatan ?? '') === $itemAngkatan ? 'selected' : '' }}>
-                                        {{ $itemAngkatan }}
-                                    </option>
-                                @endforeach
-                            </select>
                         </div>
                         <div class="col-md-2">
                             <label style="display:block;">Status Akun</label>
@@ -154,4 +143,3 @@
         }
     </script>
 @endsection
-

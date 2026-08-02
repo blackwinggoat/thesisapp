@@ -207,7 +207,7 @@
             <tr>
                 <td width="150px">Judul</td>
                 <td>:</td>
-                <td><b>{{ $bimbingan->judul }}</b></td>
+                <td><b>{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</b></td>
             </tr>
         </table>
     </div>

@@ -2526,7 +2526,7 @@ class Helper
         return $hari . ', ' . $formattedDate;
     }
 
-    public static function jenisTugasAkhirBadge($jenisTugasAkhirId)
+    public static function jenisTugasAkhirKode($jenisTugasAkhirId)
     {
         static $types = null;
 
@@ -2539,7 +2539,20 @@ class Helper
                 ->pluck('kode_jenis_tugas_akhir', 'jenis_tugas_akhir_id');
         }
 
-        $code = $types->get($jenisTugasAkhirId);
+        return $types->get($jenisTugasAkhirId, '');
+    }
+
+    public static function judulDenganKodeJenisTugasAkhir($jenisTugasAkhirId, $judul)
+    {
+        $judul = trim((string) $judul);
+        $code = self::jenisTugasAkhirKode($jenisTugasAkhirId);
+
+        return $code ? '[' . $code . '] ' . $judul : $judul;
+    }
+
+    public static function jenisTugasAkhirBadge($jenisTugasAkhirId)
+    {
+        $code = self::jenisTugasAkhirKode($jenisTugasAkhirId);
         if (!$code) {
             return '';
         }
