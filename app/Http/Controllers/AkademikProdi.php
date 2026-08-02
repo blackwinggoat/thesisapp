@@ -353,20 +353,106 @@ class AkademikProdi extends Controller
         ));
     }
 
-    public function mahasiswa()
+    public function mahasiswa(Request $request)
     {
-        $status = '';
+        $nimPrefix = '';
         if (auth()->user()->name == "prodisi" || auth()->user()->name == "akademikprodisi") {
-            $status = '131';
+            $nimPrefix = '131';
         } else if (auth()->user()->name == "proditi" || auth()->user()->name == "akademikproditi") {
-            $status = '130';
+            $nimPrefix = '130';
         }
 
-        $data = DB::table('t_mst_mahasiswa')
-            ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA')
-            ->where('C_NPM', 'LIKE', '' . $status . '%')
-            ->get();
-        return view('tugasakhir.akademikprodi.mahasiswa', compact('data'));
+        $q = trim((string) $request->get('q', ''));
+        $angkatan = trim((string) $request->get('angkatan', ''));
+        $statusAkun = trim((string) $request->get('status_akun', 'semua'));
+        $perPage = (int) $request->get('per_page', 25);
+        $allowedPerPage = [25, 50, 100, 200];
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 25;
+        }
+
+        if (!in_array($statusAkun, ['semua', 'aktif', 'belum'], true)) {
+            $statusAkun = 'semua';
+        }
+
+        $query = DB::table('t_mst_mahasiswa')
+            ->select(
+                't_mst_mahasiswa.C_NPM',
+                't_mst_mahasiswa.NAMA_MAHASISWA',
+                't_mst_mahasiswa.TAHUN_MASUK'
+            );
+
+        if ($nimPrefix !== '') {
+            $query->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimPrefix . '%');
+        }
+
+        if ($q !== '') {
+            $query->where(function ($subQuery) use ($q) {
+                $subQuery->where('t_mst_mahasiswa.C_NPM', 'LIKE', '%' . $q . '%')
+                    ->orWhere('t_mst_mahasiswa.NAMA_MAHASISWA', 'LIKE', '%' . $q . '%');
+            });
+        }
+
+        if ($angkatan !== '' && preg_match('/^[0-9]{4}$/', $angkatan)) {
+            $query->where('t_mst_mahasiswa.TAHUN_MASUK', $angkatan);
+        } else {
+            $angkatan = '';
+        }
+
+        $accountNames = null;
+        if ($statusAkun !== 'semua') {
+            $accountNames = DB::table('users')
+                ->whereNotNull('name')
+                ->pluck('name')
+                ->all();
+
+            if (empty($accountNames)) {
+                if ($statusAkun === 'aktif') {
+                    $query->whereRaw('1 = 0');
+                }
+            } elseif ($statusAkun === 'aktif') {
+                $query->whereIn('t_mst_mahasiswa.C_NPM', $accountNames);
+            } else {
+                $query->whereNotIn('t_mst_mahasiswa.C_NPM', $accountNames);
+            }
+        }
+
+        $data = $query
+            ->orderBy('t_mst_mahasiswa.C_NPM', 'desc')
+            ->paginate($perPage)
+            ->appends($request->query());
+
+        if ($accountNames === null) {
+            $pageNims = $data->pluck('C_NPM')->all();
+            $accountNames = empty($pageNims)
+                ? []
+                : DB::table('users')->whereIn('name', $pageNims)->pluck('name')->all();
+        }
+
+        $activeAccounts = array_fill_keys($accountNames, true);
+        foreach ($data as $mahasiswa) {
+            $mahasiswa->has_user = isset($activeAccounts[$mahasiswa->C_NPM]);
+        }
+
+        $listAngkatan = DB::table('t_mst_mahasiswa')
+            ->whereNotNull('TAHUN_MASUK')
+            ->where('TAHUN_MASUK', 'REGEXP', '^[0-9]{4}$')
+            ->when($nimPrefix !== '', function ($angkatanQuery) use ($nimPrefix) {
+                return $angkatanQuery->where('C_NPM', 'LIKE', $nimPrefix . '%');
+            })
+            ->distinct()
+            ->orderBy('TAHUN_MASUK', 'desc')
+            ->pluck('TAHUN_MASUK')
+            ->toArray();
+
+        return view('tugasakhir.akademikprodi.mahasiswa', compact(
+            'data',
+            'listAngkatan',
+            'q',
+            'angkatan',
+            'statusAkun',
+            'perPage'
+        ));
     }
 
     public function konfirmasi_persyaratan_ujian($status, $id, $nim)
