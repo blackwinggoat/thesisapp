@@ -336,36 +336,7 @@ class Prodi extends Controller
             });
         }
 
-        $data = $query->get();
-
-        return $data->map(function ($item) use ($isHistory) {
-            $peserta = DB::table('trt_reg as rg')
-                ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
-                ->where('rg.pendaftaran_id', $item->pendaftaran_id)
-                ->where('rg.status', 0)
-                ->when($isHistory, function ($q) {
-                    $q->where('tb.status_bimbingan', '<>', 0);
-                }, function ($q) {
-                    $q->where('tb.status_bimbingan', 0);
-                })
-                ->select('rg.reg_id')
-                ->distinct()
-                ->get();
-
-            $lengkap = 0;
-            $tidakLengkap = 0;
-            foreach ($peserta as $rowPeserta) {
-                if (Helper::isPenilaianLengkapByRegId($rowPeserta->reg_id)) {
-                    $lengkap++;
-                } else {
-                    $tidakLengkap++;
-                }
-            }
-
-            $item->total_penilaian_lengkap = $lengkap;
-            $item->total_penilaian_tidak_lengkap = $tidakLengkap;
-            return $item;
-        });
+        return $this->attachPenilaianCountsToPeriods($query->get(), 0, 0, $isHistory);
     }
     // Akhir Approve Hasil Ujian Proposal
 
@@ -707,35 +678,107 @@ class Prodi extends Controller
             });
         }
 
-        $data = $query->get();
+        return $this->attachPenilaianCountsToPeriods($query->get(), 2, 2, $isHistory);
+    }
 
-        return $data->map(function ($item) use ($isHistory) {
-            $peserta = DB::table('trt_reg as rg')
-                ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
-                ->where('rg.pendaftaran_id', $item->pendaftaran_id)
-                ->where('rg.status', 2)
-                ->when($isHistory, function ($q) {
-                    $q->where('tb.status_bimbingan', '<>', 2);
-                }, function ($q) {
-                    $q->where('tb.status_bimbingan', 2);
-                })
-                ->select('rg.reg_id')
-                ->distinct()
-                ->get();
+    protected function attachPenilaianCountsToPeriods($periods, $tipeUjian, $statusAktif, $isHistory)
+    {
+        if ($periods->isEmpty()) {
+            return $periods;
+        }
 
-            $lengkap = 0;
-            $tidakLengkap = 0;
-            foreach ($peserta as $rowPeserta) {
-                if (Helper::isPenilaianLengkapByRegId($rowPeserta->reg_id)) {
-                    $lengkap++;
-                } else {
-                    $tidakLengkap++;
-                }
+        $registrations = DB::table('trt_reg as rg')
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+            ->leftJoin('trt_penguji as tp', function ($join) {
+                $join->on('tp.C_NPM', '=', 'tb.C_NPM')
+                    ->on('tp.tipe_ujian', '=', 'rg.status');
+            })
+            ->whereIn('rg.pendaftaran_id', $periods->pluck('pendaftaran_id')->all())
+            ->where('rg.status', $tipeUjian)
+            ->when($isHistory, function ($query) use ($statusAktif) {
+                $query->where('tb.status_bimbingan', '<>', $statusAktif);
+            }, function ($query) use ($statusAktif) {
+                $query->where('tb.status_bimbingan', $statusAktif);
+            })
+            ->select(
+                'rg.reg_id',
+                'rg.pendaftaran_id',
+                'tb.pembimbing_I_id',
+                'tb.pembimbing_II_id',
+                'tp.penguji_I_id',
+                'tp.penguji_II_id',
+                'tp.penguji_III_id',
+                'tp.ketua_sidang_id'
+            )
+            ->get()
+            ->unique('reg_id');
+
+        $countsByPeriod = [];
+        foreach ($registrations as $registration) {
+            $periodId = (string) $registration->pendaftaran_id;
+            if (!isset($countsByPeriod[$periodId])) {
+                $countsByPeriod[$periodId] = [
+                    'confirmed' => 0,
+                    'complete' => 0,
+                    'incomplete' => 0,
+                ];
             }
+            $countsByPeriod[$periodId]['confirmed']++;
+        }
 
-            $item->total_penilaian_lengkap = $lengkap;
-            $item->total_penilaian_tidak_lengkap = $tidakLengkap;
-            return $item;
+        if (!$isHistory && $registrations->isNotEmpty()) {
+            $completedAssessments = DB::table('trt_hasil')
+                ->select('reg_id', 'nidn')
+                ->whereIn('reg_id', $registrations->pluck('reg_id')->all())
+                ->whereNotNull('nilai_1')
+                ->whereNotNull('nilai_2')
+                ->whereNotNull('nilai_3')
+                ->whereNotNull('nilai_4')
+                ->whereNotNull('nilai_5')
+                ->where('nilai_1', '>', 0)
+                ->where('nilai_2', '>', 0)
+                ->where('nilai_3', '>', 0)
+                ->where('nilai_4', '>', 0)
+                ->where('nilai_5', '>', 0)
+                ->distinct()
+                ->get()
+                ->groupBy('reg_id');
+
+            foreach ($registrations as $registration) {
+                $requiredAssessors = array_filter(array_unique([
+                    trim((string) $registration->pembimbing_I_id),
+                    trim((string) $registration->pembimbing_II_id),
+                    trim((string) $registration->penguji_I_id),
+                    trim((string) $registration->penguji_II_id),
+                    trim((string) $registration->penguji_III_id),
+                    trim((string) $registration->ketua_sidang_id),
+                ]), function ($value) {
+                    return $value !== '' && $value !== '--';
+                });
+                $completedNidns = $completedAssessments
+                    ->get($registration->reg_id, collect())
+                    ->pluck('nidn')
+                    ->map(function ($nidn) {
+                        return trim((string) $nidn);
+                    })
+                    ->all();
+                $isComplete = !empty($requiredAssessors)
+                    && empty(array_diff($requiredAssessors, $completedNidns));
+                $periodId = (string) $registration->pendaftaran_id;
+                $countsByPeriod[$periodId][$isComplete ? 'complete' : 'incomplete']++;
+            }
+        }
+
+        return $periods->map(function ($period) use ($countsByPeriod) {
+            $counts = $countsByPeriod[(string) $period->pendaftaran_id] ?? [
+                'confirmed' => 0,
+                'complete' => 0,
+                'incomplete' => 0,
+            ];
+            $period->total_terkonfirmasi = $counts['confirmed'];
+            $period->total_penilaian_lengkap = $counts['complete'];
+            $period->total_penilaian_tidak_lengkap = $counts['incomplete'];
+            return $period;
         });
     }
 

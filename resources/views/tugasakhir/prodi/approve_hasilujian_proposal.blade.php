@@ -75,8 +75,12 @@
                                 <td>{{$value->kuota}}</td>
                                 <td>{{$value->jml_peserta}}</td>
                                 <td>
-                                    <span class="label label-success">Lengkap: {{ (int) ($value->total_penilaian_lengkap ?? 0) }}</span>
-                                    <span class="label label-danger">Tidak Lengkap: {{ (int) ($value->total_penilaian_tidak_lengkap ?? 0) }}</span>
+                                    @if (!empty($isHistory))
+                                        <span class="label label-primary">Terkonfirmasi: {{ (int) ($value->total_terkonfirmasi ?? 0) }}</span>
+                                    @else
+                                        <span class="label label-success">Lengkap: {{ (int) ($value->total_penilaian_lengkap ?? 0) }}</span>
+                                        <span class="label label-danger">Tidak Lengkap: {{ (int) ($value->total_penilaian_tidak_lengkap ?? 0) }}</span>
+                                    @endif
                                 </td>
                                 {{-- <<td>{{$value->status == 0 ? "td>{{$value->status == 0 ? "<td>{{$d->status == 0 ? "Belum terlaksana" : "Terlaksana"}}</td>" : "Terlaksana"}}</td>" : "Terlaksana"}}</td> --}}
                                 <td>
@@ -114,4 +118,3 @@
         });
     </script>
 @endsection
-

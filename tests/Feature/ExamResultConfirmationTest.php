@@ -27,6 +27,7 @@ class ExamResultConfirmationTest extends TestCase
             $table->integer('pendaftaran_id')->primary();
             $table->integer('status_prodi');
             $table->integer('tipe_ujian');
+            $table->timestamp('created_at')->nullable();
         });
         Schema::create('trt_bimbingan', function (Blueprint $table) {
             $table->integer('bimbingan_id')->primary();
@@ -159,7 +160,35 @@ class ExamResultConfirmationTest extends TestCase
             $this->assertStringContainsString('method="POST"', $view);
             $this->assertStringContainsString('csrf_field()', $view);
             $this->assertStringContainsString('Konfirmasi Semua Nilai Lengkap', $view);
+            $this->assertStringContainsString('Terkonfirmasi:', $view);
         }
+    }
+
+    public function testCurrentAndHistoricalPeriodCountsUseBatchQueries()
+    {
+        $this->addCandidate(31, 401, 'TA-COMPLETE', 2, 2, 1, ['P31', 'U31', 'K31']);
+        $this->addCandidate(32, 402, 'TA-INCOMPLETE', 2, 2, 1, ['P32', 'U32']);
+
+        $queryCount = 0;
+        DB::listen(function () use (&$queryCount) {
+            $queryCount++;
+        });
+
+        $currentView = (new Prodi())->approve_hasilujian_ta();
+        $currentData = $currentView->getData()['data'];
+
+        $this->assertLessThanOrEqual(3, $queryCount);
+        $this->assertSame(1, (int) $currentData->sum('total_penilaian_lengkap'));
+        $this->assertSame(1, (int) $currentData->sum('total_penilaian_tidak_lengkap'));
+
+        DB::table('trt_bimbingan')->update(['status_bimbingan' => 3]);
+        $queriesBeforeHistory = $queryCount;
+        $historyView = (new Prodi())->approve_hasilujian_ta_history();
+        $historyData = $historyView->getData()['data'];
+
+        $this->assertLessThanOrEqual(2, $queryCount - $queriesBeforeHistory);
+        $this->assertSame(2, (int) $historyData->sum('total_terkonfirmasi'));
+        $this->assertSame(0, (int) $historyData->sum('total_penilaian_tidak_lengkap'));
     }
 
     private function addCandidate($bimbinganId, $regId, $nim, $statusBimbingan, $tipeUjian, $statusProdi, array $filledAssessors, $tipePendaftaran = null, $scheduled = true)
