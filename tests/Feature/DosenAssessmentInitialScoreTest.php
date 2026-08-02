@@ -120,4 +120,35 @@ class DosenAssessmentInitialScoreTest extends TestCase
         $this->assertSame('18', $view->getData()['nilai']['nilai_5']);
         $this->assertSame('Perbaiki daftar pustaka.', $view->getData()['nilai']['saran']);
     }
+
+    public function testEmptyProposalAssessmentShowsUnfilledSliderState()
+    {
+        DB::table('trt_hasil')
+            ->where('reg_id', 20)
+            ->where('nidn', 'DOSEN-01')
+            ->delete();
+
+        $view = (new dosen())->detailhasil_proposal(20);
+        $slider = view('tugasakhir.dosen.partials.score_slider', [
+            'name' => 'nilai_1',
+            'label' => 'Sikap/Presentasi',
+            'value' => $view->getData()['nilai']['nilai_1'],
+            'minimum' => 10,
+            'maximum' => 15,
+        ])->render();
+
+        $this->assertSame([
+            'nilai_1' => null,
+            'nilai_2' => null,
+            'nilai_3' => null,
+            'nilai_4' => null,
+            'nilai_5' => null,
+            'saran' => null,
+        ], $view->getData()['nilai']);
+        $this->assertStringContainsString('assessment-score-slider is-empty', $slider);
+        $this->assertStringContainsString('name="nilai_1" value="0"', $slider);
+        $this->assertStringContainsString('<output class="assessment-score-slider__value" aria-live="polite">--</output>', $slider);
+        $this->assertStringContainsString('value="10"', $slider);
+        $this->assertStringContainsString('aria-valuetext="Belum diisi"', $slider);
+    }
 }
