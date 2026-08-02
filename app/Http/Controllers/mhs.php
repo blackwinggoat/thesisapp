@@ -227,10 +227,14 @@ class mhs extends Controller
                     continue;
                 }
 
+                $nomorTelpon = $this->normalizeNomorTelponDosen($row->NO_HP ?? null, $row->NO_TELP ?? null);
+                $nomorWhatsapp = $this->normalizeNomorWhatsappDosen($row->NO_HP ?? null, $row->NO_TELP ?? null);
+
                 $dosenMap[$kodeDosen] = (object) [
                     'nidn' => $kodeDosen,
                     'nama_dosen' => trim((string) ($row->NAMA_DOSEN ?? '')),
-                    'nomor_telpon' => $this->normalizeNomorTelponDosen($row->NO_HP ?? null, $row->NO_TELP ?? null),
+                    'nomor_telpon' => $nomorWhatsapp ?: $nomorTelpon,
+                    'nomor_whatsapp' => $nomorWhatsapp,
                 ];
             }
         }
@@ -249,12 +253,14 @@ class mhs extends Controller
                 }
 
                 $nomorTelpon = $this->normalizeNomorTelponDosen($row->NO_HP ?? null, $row->NO_TELP ?? null);
+                $nomorWhatsapp = $this->normalizeNomorWhatsappDosen($row->NO_HP ?? null, $row->NO_TELP ?? null);
 
                 if (!isset($dosenMap[$kodeDosen])) {
                     $dosenMap[$kodeDosen] = (object) [
                         'nidn' => $kodeDosen,
                         'nama_dosen' => trim((string) ($row->NAMA_DOSEN ?? '')),
-                        'nomor_telpon' => $nomorTelpon,
+                        'nomor_telpon' => $nomorWhatsapp ?: $nomorTelpon,
+                        'nomor_whatsapp' => $nomorWhatsapp,
                     ];
                     continue;
                 }
@@ -264,7 +270,12 @@ class mhs extends Controller
                 }
 
                 if ($dosenMap[$kodeDosen]->nomor_telpon === '-' && $nomorTelpon !== '-') {
-                    $dosenMap[$kodeDosen]->nomor_telpon = $nomorTelpon;
+                    $dosenMap[$kodeDosen]->nomor_telpon = $nomorWhatsapp ?: $nomorTelpon;
+                }
+
+                if (empty($dosenMap[$kodeDosen]->nomor_whatsapp) && $nomorWhatsapp !== null) {
+                    $dosenMap[$kodeDosen]->nomor_whatsapp = $nomorWhatsapp;
+                    $dosenMap[$kodeDosen]->nomor_telpon = $nomorWhatsapp;
                 }
             }
         }
@@ -1440,6 +1451,29 @@ class mhs extends Controller
         }
 
         return '-';
+    }
+
+    protected function normalizeNomorWhatsappDosen($nomorHp = null, $nomorTelp = null)
+    {
+        foreach ([$nomorHp, $nomorTelp] as $value) {
+            $digits = preg_replace('/[^0-9]/', '', (string) $value);
+
+            if ($digits === '' || $digits === '0') {
+                continue;
+            }
+
+            if (strpos($digits, '0') === 0) {
+                $digits = '62' . substr($digits, 1);
+            } elseif (strpos($digits, '8') === 0) {
+                $digits = '62' . $digits;
+            }
+
+            if (preg_match('/^628[0-9]{7,12}$/', $digits)) {
+                return $digits;
+            }
+        }
+
+        return null;
     }
 
     protected function normalizeNomorWaMahasiswa($value)

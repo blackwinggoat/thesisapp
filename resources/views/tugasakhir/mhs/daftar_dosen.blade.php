@@ -27,7 +27,14 @@
                             <td width="1%" align="center">{{ $key + 1 }}</td>
                             <td>{{ $value->nidn ?? '-' }}</td>
                             <td>{{ $value->nama_dosen ?? '-' }}</td>
-                            <td>{{ $value->nomor_telpon ?? '-' }}</td>
+                            <td>
+                                {{ $value->nomor_telpon ?? '-' }}
+                                @if (!empty($value->nomor_whatsapp))
+                                    <a class="btn btn-success btn-xs" href="https://wa.me/{{ $value->nomor_whatsapp }}" target="_blank" rel="noopener noreferrer" title="Chat melalui WhatsApp" aria-label="Chat {{ $value->nama_dosen ?? 'dosen' }} melalui WhatsApp">
+                                        <i class="fa fa-whatsapp"></i>
+                                    </a>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
