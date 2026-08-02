@@ -104,7 +104,7 @@ set +e
 (
     set -Eeuo pipefail
     cd "$DEPLOY_PATH"
-    "$PHP_BIN" artisan down
+    "$PHP_BIN" artisan down --no-interaction < /dev/null
 
     "$PHP_BIN" "$SYNC_SCRIPT" \
         "$APP_PATH" \
@@ -123,7 +123,7 @@ set +e
     "$PHP_BIN" artisan view:clear
 
     if [[ "$WAS_DOWN" -eq 0 ]]; then
-        "$PHP_BIN" artisan up
+        "$PHP_BIN" artisan up --no-interaction < /dev/null
     fi
 )
 DEPLOY_STATUS=$?
@@ -139,7 +139,7 @@ if [[ "$DEPLOY_STATUS" -ne 0 ]]; then
         "$MANAGED_MANIFEST"
 
     if [[ "$WAS_DOWN" -eq 0 ]]; then
-        (cd "$DEPLOY_PATH" && "$PHP_BIN" artisan up) || true
+        (cd "$DEPLOY_PATH" && "$PHP_BIN" artisan up --no-interaction < /dev/null) || true
     fi
 
     exit "$DEPLOY_STATUS"

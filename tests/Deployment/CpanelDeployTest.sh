@@ -32,6 +32,9 @@ cp "${PROJECT_ROOT}/scripts/deploy-excludes.txt" "${APP_PATH}/scripts/deploy-exc
 cp "${PROJECT_ROOT}/scripts/sync-release.php" "${APP_PATH}/scripts/sync-release.php"
 cp "${PROJECT_ROOT}/scripts/normalize-composer-installed.php" "${APP_PATH}/scripts/normalize-composer-installed.php"
 
+grep -Fqx '    "$PHP_BIN" artisan down --no-interaction < /dev/null' "${APP_PATH}/scripts/deploy-cpanel.sh"
+grep -Fqx '        "$PHP_BIN" artisan up --no-interaction < /dev/null' "${APP_PATH}/scripts/deploy-cpanel.sh"
+
 printf 'new source\n' > "${APP_PATH}/app/version.php"
 printf '<?php return [];\n' > "${APP_PATH}/bootstrap/app.php"
 printf '%s\n' \
