@@ -152,7 +152,7 @@
                                         @endif
                                         @if ($telegramLink !== '')
                                             <a href="{{ $telegramLink }}" target="_blank" rel="noopener noreferrer" class="btn btn-info btn-sm" title="Hubungi melalui Telegram" aria-label="Hubungi {{ $value->NAMA_MAHASISWA ?? 'mahasiswa' }} melalui Telegram">
-                                                <i class="fa fa-telegram"></i>
+                                                <img src="{{ asset('images/icons/telegram.svg') }}" alt="" aria-hidden="true" style="width: 14px; height: 14px; vertical-align: middle;">
                                             </a>
                                         @endif
                                         @if ($canLaporKeProdi)
@@ -281,7 +281,7 @@
                                             @endif
                                             @if ($telegramLink !== '')
                                                 <a href="{{ $telegramLink }}" target="_blank" class="btn btn-info btn-sm" style="min-width: 125px; text-align: left;">
-                                                    <i class="fa fa-telegram" style="font-size: 16px; margin-right: 6px;"></i> Telegram
+                                                    <img src="{{ asset('images/icons/telegram.svg') }}" alt="" aria-hidden="true" style="width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px;"> Telegram
                                                 </a>
                                             @endif
                                         </div>

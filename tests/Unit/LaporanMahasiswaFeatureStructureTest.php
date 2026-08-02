@@ -36,6 +36,8 @@ class LaporanMahasiswaFeatureStructureTest extends TestCase
         $this->assertStringContainsString('Koordinasi Mahasiswa', $view);
         $this->assertStringContainsString('Lapor Prodi', $view);
         $this->assertStringContainsString('modalLaporProdi', $view);
+        $this->assertStringContainsString("images/icons/telegram.svg", $view);
+        $this->assertFileExists(__DIR__ . '/../../public/images/icons/telegram.svg');
         $this->assertStringContainsString("Route::post('/dsn/laporan_mahasiswa'", $routes);
         $this->assertStringContainsString("Route::post('/prodi/laporan_mahasiswa/{id}/tindakan'", $routes);
     }
