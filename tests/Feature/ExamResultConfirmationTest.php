@@ -41,6 +41,10 @@ class ExamResultConfirmationTest extends TestCase
             $table->integer('pendaftaran_id');
             $table->integer('status');
         });
+        Schema::create('trt_jadwal_ujian', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('pendaftaran_id');
+        });
         Schema::create('trt_penguji', function (Blueprint $table) {
             $table->increments('id');
             $table->string('C_NPM');
@@ -72,6 +76,7 @@ class ExamResultConfirmationTest extends TestCase
         $this->addCandidate(4, 104, 'MHS4', 0, 0, 2, ['P4', 'U4', 'K4']);
         $this->addCandidate(5, 105, 'MHS5', 0, 0, 1, ['P5', 'U5', 'K5']);
         $this->addCandidate(6, 107, 'MHS6', 0, 0, 1, ['P6', 'U6', 'K6'], 2);
+        $this->addCandidate(7, 108, 'MHS7', 0, 0, 1, ['P7', 'U7', 'K7'], null, false);
 
         DB::table('trt_reg')->insert([
             'reg_id' => 106,
@@ -88,6 +93,7 @@ class ExamResultConfirmationTest extends TestCase
         $this->assertSame(0, $this->statusBimbingan(4));
         $this->assertSame(0, $this->statusBimbingan(5));
         $this->assertSame(0, $this->statusBimbingan(6));
+        $this->assertSame(0, $this->statusBimbingan(7));
         $this->assertSame('success', $response->getSession()->get('status'));
         $this->assertSame(1, $response->getSession()->get('total'));
         $this->assertSame(2, $response->getSession()->get('total_belum_lengkap'));
@@ -156,7 +162,7 @@ class ExamResultConfirmationTest extends TestCase
         }
     }
 
-    private function addCandidate($bimbinganId, $regId, $nim, $statusBimbingan, $tipeUjian, $statusProdi, array $filledAssessors, $tipePendaftaran = null)
+    private function addCandidate($bimbinganId, $regId, $nim, $statusBimbingan, $tipeUjian, $statusProdi, array $filledAssessors, $tipePendaftaran = null, $scheduled = true)
     {
         DB::table('mst_pendaftaran')->insert([
             'pendaftaran_id' => $regId,
@@ -176,6 +182,9 @@ class ExamResultConfirmationTest extends TestCase
             'pendaftaran_id' => $regId,
             'status' => $tipeUjian,
         ]);
+        if ($scheduled) {
+            DB::table('trt_jadwal_ujian')->insert(['pendaftaran_id' => $regId]);
+        }
         DB::table('trt_penguji')->insert([
             'C_NPM' => $nim,
             'tipe_ujian' => $tipeUjian,

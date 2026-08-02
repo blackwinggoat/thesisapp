@@ -466,6 +466,11 @@ class prodi extends Controller
                 $query->where('mp.tipe_ujian', $tipeUjian)
                     ->orWhere('mp.tipe_ujian', 3);
             })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('trt_jadwal_ujian as ju')
+                    ->whereRaw('ju.pendaftaran_id = rg.pendaftaran_id');
+            })
             ->whereRaw(
                 'rg.reg_id = (SELECT MAX(rg_latest.reg_id) FROM trt_reg AS rg_latest WHERE rg_latest.bimbingan_id = rg.bimbingan_id AND rg_latest.status = ?)',
                 [$tipeUjian]
