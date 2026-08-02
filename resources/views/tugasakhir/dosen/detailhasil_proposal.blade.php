@@ -1,5 +1,6 @@
 @extends('tugasakhir.index')
 @section('isi')
+@include('tugasakhir.dosen.partials.score_slider_styles')
 <!-- BEGIN PAGE CONTENT -->
 <div class="page-content">
     <div class="container-fluid">
@@ -59,36 +60,7 @@
                             <div class="form-group">
                                 <label class="col-lg-4 control-label">Sikap/Presentasi</label>
                                 <div class="col-lg-8">
-                                    <select id="nilai_1" class="form-control bold-border" name="nilai_1">
-                                        @if ($nilai["nilai_1"] == 0)
-                                            <option value="0" selected>--</option>
-                                        @else
-                                            <option value="{{str_replace(",",".",$nilai['nilai_1'])}}" selected>{{str_replace(",",".",$nilai['nilai_1'])}}</option>
-                                        @endif
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                        @for ($i = 10; $i <= 15; $i++)
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                            @if ($i == 15)
-                                                @for ($j = 1; $j < 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @else
-                                                @for ($j = 1; $j <= 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @endif
-                                        @endfor
-                                    </select>
+                                    @include('tugasakhir.dosen.partials.score_slider', ['name' => 'nilai_1', 'label' => 'Sikap/Presentasi', 'value' => $nilai['nilai_1'], 'minimum' => 10, 'maximum' => 15])
                                 </div>
                             </div>
                             <br>
@@ -113,36 +85,7 @@
                             <div class="form-group">
                                 <label class="col-lg-4 control-label">Motivasi Penelitian</label>
                                 <div class="col-lg-8">
-                                <select id="nilai_2" class="form-control bold-border" name="nilai_2">
-                                    @if ($nilai["nilai_2"] == 0)
-                                        <option value="0" selected>--</option>
-                                    @else
-                                        <option value="{{str_replace(",",".",$nilai['nilai_2'])}}" selected>{{str_replace(",",".",$nilai['nilai_2'])}}</option>
-                                    @endif
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                        @for ($i = 16; $i <= 25; $i++)
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                            @if ($i == 25)
-                                                @for ($j = 1; $j < 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @else
-                                                @for ($j = 1; $j <= 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @endif
-                                        @endfor
-                                    </select>
+                                    @include('tugasakhir.dosen.partials.score_slider', ['name' => 'nilai_2', 'label' => 'Motivasi Penelitian', 'value' => $nilai['nilai_2'], 'minimum' => 16, 'maximum' => 25])
                                 </div>
                             </div>
                             <br>
@@ -168,36 +111,7 @@
                             <div class="form-group">
                                 <label class="col-lg-4 control-label">Tinjauan Pustaka</label>
                                 <div class="col-lg-8">
-                                <select id="nilai_3" class="form-control bold-border" name="nilai_3">
-                                    @if ($nilai["nilai_3"] == 0)
-                                        <option value="0" selected>--</option>
-                                    @else
-                                        <option value="{{str_replace(",",".",$nilai['nilai_3'])}}" selected>{{str_replace(",",".",$nilai['nilai_3'])}}</option>
-                                    @endif
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                        @for ($i = 15; $i <= 20; $i++)
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                            @if ($i == 20)
-                                                @for ($j = 1; $j < 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @else
-                                                @for ($j = 1; $j <= 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @endif
-                                        @endfor
-                                    </select>
+                                    @include('tugasakhir.dosen.partials.score_slider', ['name' => 'nilai_3', 'label' => 'Tinjauan Pustaka', 'value' => $nilai['nilai_3'], 'minimum' => 15, 'maximum' => 20])
                                 </div>
                             </div>
                             <br>
@@ -222,37 +136,7 @@
                             <div class="form-group">
                                 <label class="col-lg-4 control-label">Metodologi</label>
                                 <div class="col-lg-8">
-                                <select id="nilai_4" class="form-control bold-border" name="nilai_4">
-                                    @if ($nilai["nilai_4"] == 0)
-                                        <option value="0" selected>--</option>
-                                    @else
-                                        <option value="{{str_replace(",",".",$nilai['nilai_4'])}}" selected>{{str_replace(",",".",$nilai['nilai_4'])}}</option>
-                                    @endif
-                                    
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                        @for ($i = 15; $i <= 20; $i++)
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                            @if ($i == 20)
-                                                @for ($j = 1; $j < 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @else
-                                                @for ($j = 1; $j <= 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @endif
-                                        @endfor
-                                    </select>
+                                    @include('tugasakhir.dosen.partials.score_slider', ['name' => 'nilai_4', 'label' => 'Metodologi', 'value' => $nilai['nilai_4'], 'minimum' => 15, 'maximum' => 20])
                                 </div>
                             </div>
                             <br>
@@ -271,36 +155,7 @@
                             <div class="form-group">
                                 <label class="col-lg-4 control-label">Sistematika Penulisan</label>
                                 <div class="col-lg-8">
-                                <select id="nilai_5" class="form-control bold-border" name="nilai_5">
-                                    @if ($nilai["nilai_5"] == 0)
-                                        <option value="0" selected>--</option>
-                                    @else
-                                        <option value="{{str_replace(",",".",$nilai['nilai_5'])}}" selected>{{str_replace(",",".",$nilai['nilai_5'])}}</option>
-                                    @endif
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                        @for ($i = 15; $i <= 20; $i++)
-                                        @php
-                                            $setelah_koma = 0;
-                                        @endphp
-                                            @if ($i == 20)
-                                                @for ($j = 1; $j < 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @else
-                                                @for ($j = 1; $j <= 2; $j++)
-                                                <option value="{{$i}}.{{$setelah_koma}}">{{$i}}.{{$setelah_koma}}</option>
-                                                @php
-                                                    $setelah_koma = 5;
-                                                @endphp
-                                            @endfor
-                                            @endif
-                                        @endfor
-                                    </select>
+                                    @include('tugasakhir.dosen.partials.score_slider', ['name' => 'nilai_5', 'label' => 'Sistematika Penulisan', 'value' => $nilai['nilai_5'], 'minimum' => 15, 'maximum' => 20])
                                 </div>
                             </div>
                             <br>
@@ -424,6 +279,8 @@
 
     @section("script")
     <script>
+        /* Legacy dropdown handlers retained only for source history. */
+        /*
 
         $('#nilai_1').on('click', function () {
             var nilai_1 = $('select[name="nilai_1"]').val();
@@ -586,9 +443,11 @@
         // }
         // }
 
+        */
         (function ($) {
             var $assessmentForm = $('form[action="{{ url('dsn/detailhasil_proposalpost/') }}"]');
-            var $scoreFields = $assessmentForm.find('select[name^="nilai_"]');
+            var $scoreFields = $assessmentForm.find('input.assessment-score-value');
+            var $sliderControls = $assessmentForm.find('.assessment-score-slider__control');
             var initialAssessmentState = $assessmentForm.serialize();
 
             function scores() {
@@ -624,11 +483,48 @@
                 $('#index_nilai_final').html('<h4 class="badge badge-primary">' + grade(total, complete) + '</h4>');
             }
 
+            function displayScore(value) {
+                return Number(value).toFixed(1);
+            }
+
+            function updateSliderVisual($slider) {
+                var $wrapper = $slider.closest('[data-score-slider]');
+                var $scoreField = $wrapper.find('.assessment-score-value');
+                var score = Number($scoreField.val()) || 0;
+                var minimum = Number($slider.attr('min'));
+                var maximum = Number($slider.attr('max'));
+                var value = score > 0 ? score : minimum;
+                var percent = ((value - minimum) / (maximum - minimum)) * 100;
+                var bubbleOffset = 21 - (percent * 0.42);
+
+                $slider.val(value).attr('aria-valuetext', score > 0 ? displayScore(score) : 'Belum diisi');
+                $wrapper.toggleClass('is-empty', score <= 0);
+                $wrapper.find('.assessment-score-slider__value')
+                    .text(score > 0 ? displayScore(score) : '--')
+                    .css('left', 'calc(' + percent + '% + ' + bubbleOffset + 'px)');
+                $wrapper.find('.assessment-score-slider__fill').css('width', score > 0 ? percent + '%' : '0');
+            }
+
             function hasUnsavedChanges() {
                 return $assessmentForm.length > 0
                     && $assessmentForm.serialize() !== initialAssessmentState
                     && !window.assessmentFormSubmitting;
             }
+
+            $sliderControls.each(function () {
+                updateSliderVisual($(this));
+            });
+
+            $sliderControls.on('input change', function () {
+                var $slider = $(this);
+                $slider.closest('[data-score-slider]')
+                    .find('.assessment-score-value')
+                    .val(displayScore($slider.val()))
+                    .trigger('change');
+                updateSliderVisual($slider);
+            }).on('focus blur', function (event) {
+                $(this).closest('[data-score-slider]').toggleClass('is-focused', event.type === 'focus');
+            });
 
             $scoreFields.on('change', updateAssessmentSummary);
             updateAssessmentSummary();
