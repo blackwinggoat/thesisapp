@@ -24,5 +24,12 @@ class AkademikFakultasNavigationTest extends TestCase
         foreach ($views as $view) {
             $this->assertStringNotContainsString('href="index.html"', file_get_contents($view), $view);
         }
+
+        $sharedSkView = __DIR__ . '/../../resources/views/tugasakhir/prodi/sk_ujian.blade.php';
+        $this->assertStringNotContainsString(
+            'href="index.html"',
+            file_get_contents($sharedSkView),
+            $sharedSkView
+        );
     }
 }
