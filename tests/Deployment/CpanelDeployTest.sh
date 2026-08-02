@@ -200,9 +200,9 @@ assert_line 'retained source' "${DEPLOY_PATH}/app/version.php"
 [[ ! -e "${SHARED_PATH}/deploy-backups/20000101T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json" ]]
 [[ ! -e "${SHARED_PATH}/deploy-backups/20000102T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]]
 [[ ! -e "${SHARED_PATH}/deploy-backups/20000102T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json" ]]
-[[ -d "${SHARED_PATH}/deploy-backups/20000103T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]]
-[[ -f "${SHARED_PATH}/deploy-backups/20000103T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json" ]]
-[[ "$(find "${SHARED_PATH}/deploy-backups" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" -eq 3 ]]
+[[ ! -e "${SHARED_PATH}/deploy-backups/20000103T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]]
+[[ ! -e "${SHARED_PATH}/deploy-backups/20000103T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json" ]]
+[[ "$(find "${SHARED_PATH}/deploy-backups" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" -eq 2 ]]
 
 MALICIOUS_SOURCE="${FIXTURE_ROOT}/malicious-source"
 MALICIOUS_TARGET="${FIXTURE_ROOT}/malicious-target"

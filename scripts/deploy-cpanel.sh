@@ -93,8 +93,6 @@ prune_deploy_backups() {
     done
 }
 
-prune_deploy_backups
-
 TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
 BACKUP_PATH="${BACKUP_ROOT}/${TIMESTAMP}-${CURRENT_COMMIT}"
 BACKUP_MANIFEST="${BACKUP_ROOT}/${TIMESTAMP}-${CURRENT_COMMIT}.json"
@@ -120,6 +118,9 @@ printf 'Backing up current production source to %s\n' "$BACKUP_PATH"
     "$EXCLUDE_FILE" \
     /dev/null \
     "$BACKUP_MANIFEST"
+
+# Keep the newly created rollback snapshot, then enforce the configured limit.
+prune_deploy_backups
 
 PREVIOUS_MANIFEST="$MANAGED_MANIFEST"
 if [[ ! -f "$PREVIOUS_MANIFEST" ]]; then
