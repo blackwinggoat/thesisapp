@@ -487,6 +487,24 @@
                     return Number(value).toFixed(1);
                 }
 
+                function scoreColor(percent) {
+                    return 'hsl(' + Math.round(percent * 1.35) + ', 64%, 42%)';
+                }
+
+                function scoreFocusColor(percent) {
+                    return 'hsla(' + Math.round(percent * 1.35) + ', 64%, 42%, .25)';
+                }
+
+                function setSliderColor($wrapper, percent, hasScore) {
+                    var wrapper = $wrapper.get(0);
+                    if (!wrapper) {
+                        return;
+                    }
+
+                    wrapper.style.setProperty('--assessment-score-color', hasScore ? scoreColor(percent) : '');
+                    wrapper.style.setProperty('--assessment-score-shadow', hasScore ? scoreFocusColor(percent) : '');
+                }
+
                 function updateSliderVisual($slider) {
                     var $wrapper = $slider.closest('[data-score-slider]');
                     var $scoreField = $wrapper.find('.assessment-score-value');
@@ -499,6 +517,7 @@
 
                     $slider.val(value).attr('aria-valuetext', score > 0 ? displayScore(score) : 'Belum diisi');
                     $wrapper.toggleClass('is-empty', score <= 0);
+                    setSliderColor($wrapper, percent, score > 0);
                     $wrapper.find('.assessment-score-slider__value')
                         .text(score > 0 ? displayScore(score) : '--')
                         .css('left', 'calc(' + percent + '% + ' + bubbleOffset + 'px)');

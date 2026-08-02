@@ -23,10 +23,15 @@ class AssessmentFormExperienceTest extends TestCase
         $this->assertStringContainsString('step="0.5"', $slider);
         $this->assertStringContainsString('class="assessment-score-value" name="{{ $name }}"', $slider);
         $this->assertStringContainsString('.assessment-score-slider__value', $styles);
+        $this->assertStringContainsString('linear-gradient(90deg, #d64545 0%, #f0b429 50%, #249a5a 100%)', $styles);
         $this->assertStringContainsString('$sliderControls.on(\'input change\'', $view);
         $this->assertStringContainsString('$sliderControls.on(\'input change\'', $proposalView);
         $this->assertStringContainsString('updateSliderVisual', $view);
         $this->assertStringContainsString('updateSliderVisual', $proposalView);
+        $this->assertStringContainsString('function scoreColor(percent)', $view);
+        $this->assertStringContainsString('function scoreColor(percent)', $proposalView);
+        $this->assertStringContainsString('function setSliderColor($wrapper, percent, hasScore)', $view);
+        $this->assertStringContainsString('function setSliderColor($wrapper, percent, hasScore)', $proposalView);
     }
 
     public function testAssessmentFormsRefreshScoresAndProtectUnsavedChanges()
