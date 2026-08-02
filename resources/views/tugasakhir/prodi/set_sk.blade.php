@@ -63,7 +63,7 @@
                         <td>{{isset($value->C_NPM) ? helper::getNamaMhs($value->C_NPM) :'' }}</td>
                         <td>{{isset($value->pembimbing_I_id) ? helper::getDeskripsi($value->pembimbing_I_id) :'' }}</td>
                         <td>{{isset($value->pembimbing_II_id) ? helper::getDeskripsi($value->pembimbing_II_id) :'' }}</td>
-                        <td>{{$value->judul}}</td>
+                        <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{$value->judul}}</td>
                         <td>
                             <input required type="text" class="form-control bold-border" name="nomor_sk" value="{{isset($value->bimbingan_id) ? helper::getNomorSkPerMhsFromTrtPenguji($value->C_NPM) :'' }}"/>
                             *0000/H.20/FIK-UMI/XII/2019
@@ -86,5 +86,4 @@
         <!-- END DATA TABLE -->
     </div><!-- /.container-fluid -->
 @endsection
-
 

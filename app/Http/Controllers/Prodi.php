@@ -1390,6 +1390,7 @@ class Prodi extends Controller
     {
         $nimPrefix = Auth::user()->name == 'proditi' ? '130%' : '131%';
         $q = trim((string) $request->get('q', ''));
+        $jenisTugasAkhirId = (int) $request->get('jenis_tugas_akhir_id', 0);
         $perPage = (int) $request->get('per_page', 50);
         $allowedPerPage = [25, 50, 100, 200];
         if (!in_array($perPage, $allowedPerPage, true)) {
@@ -1404,6 +1405,7 @@ class Prodi extends Controller
                 't_mst_mahasiswa.C_NPM',
                 't_mst_mahasiswa.NAMA_MAHASISWA',
                 'trt_topik.topik',
+                'trt_topik.jenis_tugas_akhir_id',
                 'mst_jenis_tugas_akhir.kode_jenis_tugas_akhir',
                 'trt_topik.kerangka',
                 'trt_topik.status'
@@ -1418,12 +1420,26 @@ class Prodi extends Controller
             });
         }
 
+        if ($jenisTugasAkhirId > 0) {
+            $query->where('trt_topik.jenis_tugas_akhir_id', $jenisTugasAkhirId);
+        }
+
         $data_riwayat_usulan = $query
             ->orderBy('trt_topik.topik_id', 'desc')
             ->paginate($perPage)
             ->appends($request->query());
 
-        return view('tugasakhir.prodi.topik_riwayat', compact('data_riwayat_usulan', 'q', 'perPage'));
+        $jenisTugasAkhir = DB::table('mst_jenis_tugas_akhir')
+            ->orderBy('kode_jenis_tugas_akhir')
+            ->get();
+
+        return view('tugasakhir.prodi.topik_riwayat', compact(
+            'data_riwayat_usulan',
+            'q',
+            'perPage',
+            'jenisTugasAkhir',
+            'jenisTugasAkhirId'
+        ));
     }
 
     public function topikpost(Request $request)
@@ -1645,6 +1661,7 @@ class Prodi extends Controller
                     't_mst_mahasiswa.C_NPM',
                     't_mst_mahasiswa.NAMA_MAHASISWA',
                     'trt_bimbingan.judul',
+                    'trt_bimbingan.jenis_tugas_akhir_id',
                     'trt_bimbingan.pembimbing_I_id',
                     'trt_bimbingan.pembimbing_II_id'
                 )

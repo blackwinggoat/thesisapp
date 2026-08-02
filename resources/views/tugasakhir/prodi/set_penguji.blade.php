@@ -90,7 +90,7 @@
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Judul</label>
                             <div class="col-lg-5">
-                                <div class="form-control bold-border" disabled>{{$info->judul}}</div>
+                                <div class="form-control bold-border" disabled>{!! helper::jenisTugasAkhirBadge($info->jenis_tugas_akhir_id ?? null) !!} {{$info->judul}}</div>
                             </div>
                         </div>
                         <br><br>
@@ -227,4 +227,3 @@
         }
     </script>
 @endsection
-

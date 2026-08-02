@@ -545,6 +545,7 @@ class dosen extends Controller
                 'mhs.NAMA_MAHASISWA',
                 'mhs.D_FOTO_MAHASISWA',
                 'tb.judul',
+                'tb.jenis_tugas_akhir_id',
                 'tb.status_bimbingan',
                 'tb.pembimbing_I_id',
                 'tb.pembimbing_II_id',

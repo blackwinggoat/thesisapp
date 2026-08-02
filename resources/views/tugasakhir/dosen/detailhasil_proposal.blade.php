@@ -51,6 +51,7 @@
                             <div class="form-group">
                                 <label class="col-lg-4 control-label">Judul Tugas Akhir</label>
                                 <div class="col-lg-8">
+                                    {!! helper::jenisTugasAkhirBadge($data[0]->jenis_tugas_akhir_id ?? null) !!}
                                     <textarea class="form-control bold-border" rows="3" disabled>{{ $data[0]->judul }}</textarea>
                                 </div>
                             </div>

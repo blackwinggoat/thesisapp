@@ -78,7 +78,7 @@
                                     <div><h4 class="assessment-card__name">{{ $d->NAMA_MAHASISWA }}</h4><p class="assessment-card__nim">NIM {{ $d->C_NPM }}</p></div>
                                 </div>
                                 <span class="assessment-card__label">Judul Tugas Akhir</span>
-                                <p class="assessment-card__title">{{ $d->judul ?: '-' }}</p>
+                                <p class="assessment-card__title">{!! helper::jenisTugasAkhirBadge($d->jenis_tugas_akhir_id ?? null) !!} {{ $d->judul ?: '-' }}</p>
                                 <div class="assessment-card__schedule"><i class="fa fa-calendar"></i> <strong>Jadwal Ujian:</strong> {{ $d->jadwal_ujian_label }}</div>
                                 <div class="assessment-card__actions">
                                     <button type="button" class="btn btn-default" data-toggle="modal" data-target="#assessment-detail-{{ $d->reg_id }}"><i class="fa fa-info-circle"></i> Detail</button>
@@ -97,7 +97,7 @@
                             <div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button><h4 class="modal-title" id="assessment-detail-label-{{ $d->reg_id }}">Detail {{ $examLabel }}</h4></div>
                             <div class="modal-body">
                                 <p><strong>{{ $d->NAMA_MAHASISWA }}</strong><br>NIM {{ $d->C_NPM }}</p>
-                                <p><strong>Judul Tugas Akhir</strong><br>{{ $d->judul ?: '-' }}</p>
+                                <p><strong>Judul Tugas Akhir</strong><br>{!! helper::jenisTugasAkhirBadge($d->jenis_tugas_akhir_id ?? null) !!} {{ $d->judul ?: '-' }}</p>
                                 <p><strong>Jadwal Ujian</strong><br>{{ $d->jadwal_ujian_label }}</p>
                                 <p><strong>Status Penilaian Anda</strong><br><i class="fa {{ $d->status_penilaian_icon }}"></i> {{ $d->status_penilaian }}</p>
                                 <hr><strong>Tim Ujian dan Pembimbing</strong>

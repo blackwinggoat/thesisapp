@@ -49,8 +49,8 @@
                             <td width="1%" align="center">{{++$key}}</td>
                         <td>{{$value->NAMA_MAHASISWA}}</td>
                         <td>{{$value->C_NPM}}</td>
-                        <td>{{$value->judul}}</td>
-                        <td>{{$value->kode_jenis_tugas_akhir ?: '-'}}</td>
+                        <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{$value->judul}}</td>
+                        <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!}</td>
                         <td>{{$value->created_at}}</td>
                         <td>
                             <button class="btn btn-danger" onclick="showModal(this)" data-target="#modalDanger" data-toggle="modal" data-href="{{url("/dsn/usul_judul/delete/$value->usulan_judul_id")}}"><i class="fa fa-trash"></i></button>

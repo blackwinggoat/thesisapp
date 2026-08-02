@@ -120,7 +120,7 @@
                 <div class="form-group">
                     <label class="col-lg-2 control-label">Judul Topik</label>
                     <div class="col-xs-5">
-                        <div class="form-control bold-border">{{$topik->topik}}</div>
+                        <div class="form-control bold-border">{!! helper::jenisTugasAkhirBadge($topik->jenis_tugas_akhir_id ?? null) !!} {{$topik->topik}}</div>
                     </div>
                 </div>
                 <br><br>
@@ -287,7 +287,7 @@
                         <tr class="odd gradeX">
                             <td width="1%" align="center">{{++$key}}</td>
                             <td>{{$value->created_at}}</td>
-                            <td>{{$value->topik}}</td>
+                            <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{$value->topik}}</td>
                             <td>
                                 <a class="btn btn-info" href="{{url('mhs/detail_note')}}/{{$value->topik_id}}"><i class="fa fa-newspaper-o"></i></a>    
                             </td>

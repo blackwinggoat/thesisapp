@@ -8,6 +8,7 @@ use Illuminate\Database\Schema\Blueprint;
 use App\Console\Commands\BackfillJenisTugasAkhir;
 use App\Console\Commands\BackupJenisTugasAkhir;
 use App\Console\Commands\BackfillJenisTugasAkhirUsulan;
+use App\Console\Commands\StandardizeJenisTugasAkhir;
 use App\Http\Controllers\Prodi;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -171,6 +172,31 @@ class JenisTugasAkhirBackfillTest extends TestCase
         $secondRun = $command->run(new ArrayInput(['--apply' => true]), $output);
         $this->assertSame(0, $secondRun);
         $this->assertStringContainsString('Backfill complete: 0 rows updated.', $output->fetch());
+    }
+
+    public function testStandardizationUsesOfficialArticleLabelAndMergesNtKt()
+    {
+        foreach ([['NS-AR', 'Kode historis NS-AR'], ['NT-KT', 'Kode historis NT-KT']] as $master) {
+            DB::table('mst_jenis_tugas_akhir')->insert([
+                'kode_jenis_tugas_akhir' => $master[0],
+                'deskripsi' => $master[1],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        $ntKtId = DB::table('mst_jenis_tugas_akhir')->where('kode_jenis_tugas_akhir', 'NT-KT')->value('jenis_tugas_akhir_id');
+        DB::table('trt_bimbingan')->insert(['judul' => 'Judul NT', 'jenis_tugas_akhir_id' => $ntKtId]);
+        DB::table('trt_topik')->insert(['C_NPM' => 'MHS1', 'topik' => 'Topik NT', 'jenis_tugas_akhir_id' => $ntKtId]);
+
+        $command = $this->app->make(StandardizeJenisTugasAkhir::class);
+        $command->setLaravel($this->app);
+        $this->assertSame(0, $command->run(new ArrayInput(['--apply' => true]), new BufferedOutput));
+
+        $nsKtId = DB::table('mst_jenis_tugas_akhir')->where('kode_jenis_tugas_akhir', 'NS-KT')->value('jenis_tugas_akhir_id');
+        $this->assertSame('Non Skripsi Artikel', DB::table('mst_jenis_tugas_akhir')->where('kode_jenis_tugas_akhir', 'NS-AR')->value('deskripsi'));
+        $this->assertSame(0, DB::table('mst_jenis_tugas_akhir')->where('kode_jenis_tugas_akhir', 'NT-KT')->count());
+        $this->assertSame($nsKtId, DB::table('trt_bimbingan')->value('jenis_tugas_akhir_id'));
+        $this->assertSame($nsKtId, DB::table('trt_topik')->value('jenis_tugas_akhir_id'));
     }
 
     private function runBackfill()

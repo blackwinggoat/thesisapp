@@ -130,7 +130,7 @@
                             </tr>
                             <tr>
                                 <th>Judul</th>
-                                <td>{{isset($datax->pembimbing1->judul) ? $datax->pembimbing1->judul: ''}}
+                                <td>{!! helper::jenisTugasAkhirBadge($datax->pembimbing1->jenis_tugas_akhir_id ?? null) !!} {{isset($datax->pembimbing1->judul) ? $datax->pembimbing1->judul: ''}}
                                     @if (isset($datax->pembimbing1->judul))
                                     <a href="{{url('prodi/edit_judul_detail_mahasiswa')}}/{{$datax->C_NPM}}"
                                         style="margin-left: 20px" class="btn btn-primary btn-small">Ubah</a>

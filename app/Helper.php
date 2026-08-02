@@ -2525,4 +2525,38 @@ class Helper
 
         return $hari . ', ' . $formattedDate;
     }
+
+    public static function jenisTugasAkhirBadge($jenisTugasAkhirId)
+    {
+        static $types = null;
+
+        if ($jenisTugasAkhirId === null) {
+            return '';
+        }
+
+        if ($types === null) {
+            $types = DB::table('mst_jenis_tugas_akhir')
+                ->pluck('kode_jenis_tugas_akhir', 'jenis_tugas_akhir_id');
+        }
+
+        $code = $types->get($jenisTugasAkhirId);
+        if (!$code) {
+            return '';
+        }
+
+        $classes = [
+            'NS-AI' => 'label-info',
+            'NS-AR' => 'label-primary',
+            'NS-KK' => 'label-danger',
+            'NS-KP' => 'label-success',
+            'NS-KT' => 'label-warning',
+            'TA-SK' => 'label-info',
+            'TA-SM' => 'label-default',
+        ];
+        $class = $classes[$code] ?? 'label-default';
+
+        return '<span class="label ' . $class . '" style="display: inline-block; margin: 0 6px 4px 0;">'
+            . htmlspecialchars($code, ENT_QUOTES, 'UTF-8')
+            . '</span>';
+    }
 }

@@ -160,7 +160,7 @@ class mhs extends Controller
     {
         $data_riwayat_usulan = DB::table('trt_topik')
             ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-            ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA', 'trt_topik.topik', 'trt_topik.kerangka', 'trt_topik.status')
+            ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA', 'trt_topik.topik', 'trt_topik.jenis_tugas_akhir_id', 'trt_topik.kerangka', 'trt_topik.status')
             ->get();
         return view('tugasakhir.mhs.usulan_judul_semua_mahasiswa', compact('data_riwayat_usulan'));
     }

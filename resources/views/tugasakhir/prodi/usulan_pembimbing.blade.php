@@ -35,7 +35,7 @@
                         <td width="1%" align="center">{{++$key}}</td>
                         <td>{{$value->C_NPM}}</td>
                         <td>{{$value->NAMA_MAHASISWA}}</td>
-                        <td>{{$value->topik}}</td>
+                        <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{$value->topik}}</td>
                         <td><a href="{{ url('prodi/set_pembimbing/'.$value->C_NPM)}}/1"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a></td>
                     </tr>
                     @endforeach
@@ -46,5 +46,4 @@
         <!-- END DATA TABLE -->
     </div><!-- /.container-fluid -->
 @endsection
-
 

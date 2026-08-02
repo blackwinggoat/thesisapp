@@ -25,6 +25,17 @@
                             <input type="text" name="q" class="form-control" value="{{ $q ?? '' }}" placeholder="Masukkan kata kunci">
                         </div>
                         <div class="col-md-2">
+                            <label style="display:block;">Jenis Tugas Akhir</label>
+                            <select name="jenis_tugas_akhir_id" class="form-control">
+                                <option value="">Semua jenis</option>
+                                @foreach ($jenisTugasAkhir as $jenis)
+                                    <option value="{{ $jenis->jenis_tugas_akhir_id }}" {{ (int) ($jenisTugasAkhirId ?? 0) === (int) $jenis->jenis_tugas_akhir_id ? 'selected' : '' }}>
+                                        {{ $jenis->kode_jenis_tugas_akhir }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label style="display:block;">Per Halaman</label>
                             <select name="per_page" class="form-control">
                                 @foreach ([25, 50, 100, 200] as $size)
@@ -32,7 +43,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-3">
                             <label style="display:block;">Aksi</label>
                             <div>
                                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Filter</button>
@@ -71,8 +82,8 @@
                                     <td width="1%" align="center">{{ $data_riwayat_usulan->firstItem() + $key }}</td>
                                     <td>{{ $value->C_NPM }}</td>
                                     <td>{{ $value->NAMA_MAHASISWA }}</td>
-                                    <td>{{ $value->topik }}</td>
-                                    <td>{{ $value->kode_jenis_tugas_akhir ?: '-' }}</td>
+                                    <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{ $value->topik }}</td>
+                                    <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!}</td>
                                     <td>
                                         @if ($value->kerangka)
                                             <button class="btn btn-primary" onclick="showModal(this)"

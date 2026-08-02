@@ -104,7 +104,7 @@
                             <td>{{helper::getNamaMhs($d->C_NPM)}}</td>
                             <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</td>
                             <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</td>
-                            <td>{{$d->judul}}</td>
+                            <td>{!! helper::jenisTugasAkhirBadge($d->jenis_tugas_akhir_id ?? null) !!} {{$d->judul}}</td>
                             <td>{{$d->updated_at}}</td>
                         </tr>
                         @endforeach

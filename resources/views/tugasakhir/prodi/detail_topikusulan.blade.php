@@ -96,8 +96,8 @@
                                         <td width="1%" align="center">{{ ++$key }}</td>
                                         <td>{{ $value->C_NPM }}</td>
                                         <td>{{ $value->NAMA_MAHASISWA }}</td>
-                                        <th>{{ $value->topik }}</th>
-                                        <th>{{ $value->kode_jenis_tugas_akhir ?: '-' }}</th>
+                                        <th>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{ $value->topik }}</th>
+                                        <th>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!}</th>
                                         <th>
                                             @php
                                                 $request_pembimbing = \App\RequestPembimbing::where('topik', $value->topik_id)->get();

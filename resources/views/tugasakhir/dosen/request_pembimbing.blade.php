@@ -49,7 +49,7 @@
                                     <td width="1%" align="center">{{ ++$key }}</td>
                                     <td>{{ $value->C_NPM }}</td>
                                     <td>{{ $value->NAMA_MAHASISWA }}</td>
-                                    <td>{{ $value->topik }}</td>
+                                    <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{ $value->topik }}</td>
                                     <td>
                                         @foreach ($request_pembimbing as $key => $val)
                                             @php

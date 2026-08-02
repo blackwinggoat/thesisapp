@@ -29,7 +29,7 @@
                                 <td width="1%" align="center">{{++$key}}</td>
                                 <td>{{$value->C_NPM}}</td>
                                 <td>{{$value->NAMA_MAHASISWA}}</td>
-                                <th>{{$value->topik}}</th>
+                                <th>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{$value->topik}}</th>
                                 <th>
                                     @if($value->status==0)
                                         Belum dikonfirmasi
