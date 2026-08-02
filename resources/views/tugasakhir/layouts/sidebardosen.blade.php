@@ -11,7 +11,7 @@
                 <p class="pull-left">
 
                     <a href="{{ url('dsn/profil') }}" title="Edit profil dosen">
-                        <img src="{{ $dosenSidebarPhoto }}" class="avatar img-circle media-object"
+                        <img src="{{ $dosenSidebarPhoto }}" class="avatar dosen-profile-avatar media-object"
                             alt="Foto profil dosen">
                     </a>
                 </p>

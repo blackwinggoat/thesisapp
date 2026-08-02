@@ -785,6 +785,15 @@ ul.sidebar-menu li.text-content.profile-summary {
 	margin: 0 10px 20px 0;
 }
 
+.left-profile-summary .dosen-profile-avatar {
+	width: 70px;
+	height: 90px;
+	object-fit: contain;
+	object-position: center;
+	background: #fff;
+	border-radius: 4px;
+}
+
 .sidebar-left {
 	position: fixed;
 	top: 60px;

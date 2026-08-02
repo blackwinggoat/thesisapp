@@ -20,5 +20,10 @@ class DosenProfilViewTest extends TestCase
         $this->assertStringContainsString("'foto_dosen' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048'", $controller);
         $this->assertStringContainsString("->store('dosen', 'public')", $controller);
         $this->assertStringContainsString("'D_FOTO_DOSEN'", $controller);
+
+        $sidebar = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/layouts/sidebardosen.blade.php');
+        $style = file_get_contents(__DIR__ . '/../../public/master/assets/css/style.css');
+        $this->assertStringContainsString('dosen-profile-avatar', $sidebar);
+        $this->assertStringContainsString('object-fit: contain', $style);
     }
 }
