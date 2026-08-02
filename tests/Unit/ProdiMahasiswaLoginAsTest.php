@@ -23,4 +23,14 @@ class ProdiMahasiswaLoginAsTest extends TestCase
         $this->assertStringContainsString("Route::get('/mhs/back_to_prodi', 'mhs@back_to_prodi');", $routes);
         $this->assertStringContainsString("url('mhs/back_to_prodi')", $sidebar);
     }
+
+    public function testLoginAsProdiSkipsMandatoryMahasiswaProfilePrompt()
+    {
+        $helper = file_get_contents(__DIR__ . '/../../app/Helper.php');
+        $middleware = file_get_contents(__DIR__ . '/../../app/Http/Middleware/mhs.php');
+
+        $this->assertStringContainsString("session('login_as_source_user_level') === 5", $helper);
+        $this->assertStringContainsString('return false;', $helper);
+        $this->assertStringContainsString('shouldShowCurrentMahasiswaContactPopup($request->user())', $middleware);
+    }
 }

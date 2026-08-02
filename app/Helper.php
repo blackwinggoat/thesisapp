@@ -744,7 +744,7 @@ class Helper
 
         if ($nim !== '' && Schema::hasTable('t_mst_mahasiswa')) {
             $mahasiswa = DB::table('t_mst_mahasiswa')
-                ->select('C_NPM', 'NAMA_MAHASISWA', 'C_KODE_PRODI')
+                ->select('C_NPM', 'NAMA_MAHASISWA', 'C_KODE_PRODI', 'D_FOTO_MAHASISWA')
                 ->where('C_NPM', $nim)
                 ->first();
         }
@@ -773,12 +773,33 @@ class Helper
             $missing[] = 'Nomor WhatsApp';
         }
 
+        if (trim((string) ($kontak->D_FOTO_MAHASISWA ?? '')) === '') {
+            $missing[] = 'Foto';
+        }
+
         return $missing;
     }
 
     public static function shouldShowCurrentMahasiswaContactPopup($user = null)
     {
+        if ((int) session('login_as_source_user_level') === 5 && !empty(session('login_as_source_user_id'))) {
+            return false;
+        }
+
         return count(self::getCurrentMahasiswaContactMissingFields($user)) > 0;
+    }
+
+    public static function mahasiswaPhotoUrl($photo)
+    {
+        $photo = trim((string) $photo);
+
+        if (!preg_match('/\Amahasiswa\/[a-zA-Z0-9._-]+\.(?:jpe?g|png)\z/i', $photo)) {
+            return self::isSafeOfficialImageName($photo)
+                ? asset('gambar/' . $photo)
+                : asset('gambar/no_image.jpg');
+        }
+
+        return asset('storage/' . $photo);
     }
 
     private static function normalizeNamaOrang($nama)

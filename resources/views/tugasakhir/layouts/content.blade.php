@@ -555,7 +555,7 @@
                 @php
                     $kontakMahasiswa = helper::getCurrentMahasiswaContactByAuthUser();
                     $kontakMahasiswaKurang = helper::getCurrentMahasiswaContactMissingFields();
-                    $showPopupKelengkapanMahasiswa = count($kontakMahasiswaKurang) > 0;
+                    $showPopupKelengkapanMahasiswa = helper::shouldShowCurrentMahasiswaContactPopup();
                 @endphp
                 '
                 <!-- BEGIN EXAMPLE ALERT -->
@@ -637,13 +637,13 @@
                     aria-labelledby="modalKelengkapanMahasiswaLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <form method="post" action="{{ url('/mhs/kelengkapan_kontak') }}">
+                            <form method="post" action="{{ url('/mhs/kelengkapan_kontak') }}" enctype="multipart/form-data">
                                 {{ csrf_field() }}
                                 <div class="modal-header">
-                                    <h4 class="modal-title" id="modalKelengkapanMahasiswaLabel">Lengkapi Kontak Mahasiswa</h4>
+                                    <h4 class="modal-title" id="modalKelengkapanMahasiswaLabel">Lengkapi Data Mahasiswa</h4>
                                 </div>
                                 <div class="modal-body">
-                                    <p>Silakan lengkapi data kontak Anda terlebih dahulu. Nomor WhatsApp wajib diisi sebelum Anda dapat menggunakan fitur lain di sisi mahasiswa.</p>
+                                    <p>Silakan lengkapi data Anda terlebih dahulu. Nomor WhatsApp dan foto wajib diisi sebelum Anda dapat menggunakan fitur lain di sisi mahasiswa.</p>
                                     @if (!empty($kontakMahasiswaKurang))
                                         <p><strong>Data yang masih kosong:</strong> {{ implode(', ', $kontakMahasiswaKurang) }}</p>
                                     @endif
@@ -663,6 +663,12 @@
                                         <small class="text-muted">Wajib diisi. Boleh ketik `0812...`, `62812...`, atau `+62812...`. Sistem akan menyimpan dalam format `62...`.</small>
                                     </div>
                                     <div class="form-group">
+                                        <label>Foto</label>
+                                        <input type="file" class="form-control" name="foto" accept="image/jpeg,image/png"
+                                            @if (empty($kontakMahasiswa->D_FOTO_MAHASISWA)) required @endif>
+                                        <small class="text-muted">Wajib diisi. Format JPEG atau PNG, ukuran maksimal 5 MB.</small>
+                                    </div>
+                                    <div class="form-group">
                                         <label>ID Telegram</label>
                                         <input type="text" class="form-control" name="id_telegram"
                                             value="{{ old('id_telegram', $kontakMahasiswa->id_telegram ?? '') }}"
@@ -671,7 +677,7 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="submit" class="btn btn-primary">Simpan Kontak</button>
+                                    <button type="submit" class="btn btn-primary">Simpan Data</button>
                                 </div>
                             </form>
                         </div>

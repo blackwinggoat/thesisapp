@@ -636,8 +636,7 @@ class dosen extends Controller
                 $item->status_penilaian_class = $belumLengkap ? 'incomplete' : 'complete';
                 $item->status_penilaian_icon = $belumLengkap ? 'fa-exclamation-circle' : 'fa-check-circle';
             }
-            // Foto mahasiswa akan menggunakan field ini setelah alur upload mahasiswa ditambahkan.
-            $item->foto_url = asset('gambar/no_image.jpg');
+            $item->foto_url = Helper::mahasiswaPhotoUrl($item->D_FOTO_MAHASISWA);
             $item->boleh_menilai = !empty($item->penguji_I_id)
                 || !empty($item->penguji_II_id)
                 || !empty($item->penguji_III_id)

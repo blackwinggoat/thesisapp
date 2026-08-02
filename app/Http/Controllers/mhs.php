@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class mhs extends Controller
@@ -281,18 +282,34 @@ class mhs extends Controller
             return redirect()->to('/home')->with('mhs_contact_error', 'Tabel kontak mahasiswa belum tersedia.');
         }
 
-        $this->validate($request, [
-            'no_wa' => 'required|max:20',
-            'id_telegram' => 'nullable|max:100',
-        ], [
-            'no_wa.required' => 'Nomor WhatsApp wajib diisi.',
-        ]);
-
         $nim = trim((string) auth()->user()->name);
 
         if ($nim === '') {
             return redirect()->to('/home')->with('mhs_contact_error', 'NIM akun login tidak ditemukan.');
         }
+
+        $mahasiswa = DB::table('t_mst_mahasiswa')
+            ->select('C_NPM', 'D_FOTO_MAHASISWA')
+            ->where('C_NPM', $nim)
+            ->first();
+
+        if (!$mahasiswa) {
+            return redirect()->to('/home')->with('mhs_contact_error', 'Data mahasiswa tidak ditemukan.');
+        }
+
+        $fotoWajib = trim((string) $mahasiswa->D_FOTO_MAHASISWA) === '';
+
+        $this->validate($request, [
+            'no_wa' => 'required|max:20',
+            'id_telegram' => 'nullable|max:100',
+            'foto' => ($fotoWajib ? 'required' : 'nullable') . '|file|image|mimes:jpeg,jpg,png|max:5120',
+        ], [
+            'no_wa.required' => 'Nomor WhatsApp wajib diisi.',
+            'foto.required' => 'Foto wajib diunggah.',
+            'foto.image' => 'Foto harus berupa gambar.',
+            'foto.mimes' => 'Foto harus berformat JPEG, JPG, atau PNG.',
+            'foto.max' => 'Ukuran foto maksimal 5 MB.',
+        ]);
 
         $nomorWa = $this->normalizeNomorWaMahasiswa($request->no_wa);
         if ($nomorWa === null) {
@@ -304,7 +321,12 @@ class mhs extends Controller
             return redirect()->to('/home')->withInput()->with('mhs_contact_error', 'Format ID Telegram tidak valid. Gunakan format seperti @username_telegram.');
         }
 
+        $fotoBaru = null;
         try {
+            if ($request->hasFile('foto')) {
+                $fotoBaru = $request->file('foto')->store('mahasiswa', 'public');
+            }
+
             $existing = DB::table('trt_kontak_mahasiswa')
                 ->where('C_NPM', $nim)
                 ->first();
@@ -325,8 +347,23 @@ class mhs extends Controller
                 DB::table('trt_kontak_mahasiswa')->insert($payload);
             }
 
-            return redirect()->to('/home')->with('mhs_contact_success', 'Kontak mahasiswa berhasil disimpan.');
+            if ($fotoBaru !== null) {
+                DB::table('t_mst_mahasiswa')
+                    ->where('C_NPM', $nim)
+                    ->update(['D_FOTO_MAHASISWA' => $fotoBaru]);
+
+                $fotoLama = trim((string) $mahasiswa->D_FOTO_MAHASISWA);
+                if (preg_match('/\Amahasiswa\/[a-zA-Z0-9._-]+\.(?:jpe?g|png)\z/i', $fotoLama)) {
+                    Storage::disk('public')->delete($fotoLama);
+                }
+            }
+
+            return redirect()->to('/home')->with('mhs_contact_success', 'Data mahasiswa berhasil disimpan.');
         } catch (Exception $e) {
+            if ($fotoBaru !== null) {
+                Storage::disk('public')->delete($fotoBaru);
+            }
+
             \Log::error('kelengkapan_kontak_mahasiswa_post error', [
                 'nim' => $nim,
                 'message' => $e->getMessage(),
