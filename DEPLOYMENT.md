@@ -114,3 +114,18 @@ loopback address, or identical local and production database names. If restore
 or local verification fails, it restores the pre-sync local backup
 automatically. Private dumps and reports are stored under
 `../.codex-audit/thesisapps-db-sync/<timestamp>` and must never be committed.
+
+## Create an external recovery backup
+
+The recovery command copies only the deployed Git source, the latest production
+database snapshot, and official assets to a destination outside the hosting
+account. It deliberately excludes user uploads, runtime storage, and `.env`.
+
+```bash
+scripts/backup-production-source-db.sh --dry-run
+THESISAPPS_EXTERNAL_BACKUP_PASSPHRASE='use-a-strong-private-passphrase' \
+  scripts/backup-production-source-db.sh --apply
+```
+
+The archive is encrypted, then decrypted into a temporary verification folder
+to validate every component checksum before the command reports success.
