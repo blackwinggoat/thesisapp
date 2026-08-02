@@ -27,5 +27,7 @@ class DosenProfilViewTest extends TestCase
         $this->assertStringContainsString('dosen-sidebar-summary', $sidebar);
         $this->assertStringContainsString('object-fit: contain', $style);
         $this->assertStringContainsString('.dosen-sidebar-actions', $style);
+        $this->assertStringContainsString('.sidebar-left .dosen-sidebar-photo a', $style);
+        $this->assertStringContainsString('overflow: visible', $style);
     }
 }

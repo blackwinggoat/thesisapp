@@ -804,6 +804,15 @@ ul.sidebar-menu li.static.left-profile-summary.dosen-sidebar-summary {
 	margin-bottom: 12px;
 }
 
+.sidebar-left .dosen-sidebar-photo a {
+	display: inline-block;
+	height: auto;
+	overflow: visible;
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+
 .dosen-sidebar-info h4 {
 	margin-bottom: 10px;
 }
