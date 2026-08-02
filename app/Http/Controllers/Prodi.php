@@ -993,7 +993,68 @@ class Prodi extends Controller
             ->leftJoin("trt_level_pembimbing", "trt_level_pembimbing.C_KODE_DOSEN", "=", "t_mst_dosen.C_KODE_DOSEN")
             ->select('t_mst_dosen.*', 'trt_level_pembimbing.level')
             ->get();
-        return view('tugasakhir.prodi.dosen_pembimbing', compact('data'));
+        $semesterRange = Helper::getCurrentSemesterDateRange();
+        $ringkasanBimbingan = $this->getRingkasanBimbinganPerDosen();
+        $ringkasanBimbinganSemester = $this->getRingkasanBimbinganPerDosen($semesterRange);
+
+        foreach ($data as $dosen) {
+            $kodeDosen = (string) $dosen->C_KODE_DOSEN;
+            $dosen->ringkasan_bimbingan = isset($ringkasanBimbingan[$kodeDosen])
+                ? $ringkasanBimbingan[$kodeDosen]
+                : $this->emptyRingkasanBimbingan();
+            $dosen->ringkasan_bimbingan_semester = isset($ringkasanBimbinganSemester[$kodeDosen])
+                ? $ringkasanBimbinganSemester[$kodeDosen]
+                : $this->emptyRingkasanBimbingan();
+        }
+
+        return view('tugasakhir.prodi.dosen_pembimbing', compact('data', 'semesterRange'));
+    }
+
+    protected function getRingkasanBimbinganPerDosen($semesterRange = null)
+    {
+        $ringkasan = [];
+
+        foreach (['pembimbing_I_id', 'pembimbing_II_id'] as $kolomPembimbing) {
+            $query = DB::table('trt_bimbingan as tb')
+                ->leftJoin('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'tb.C_NPM')
+                ->whereNotNull('tb.' . $kolomPembimbing)
+                ->where('tb.' . $kolomPembimbing, '<>', '')
+                ->whereIn('tb.status_bimbingan', [0, 2, 3])
+                ->select(
+                    'tb.' . $kolomPembimbing . ' as kode_dosen',
+                    DB::raw("SUM(CASE WHEN tb.status_bimbingan = 0 AND mhs.C_KODE_STATUS_AKTIF_MHS = 'A' THEN 1 ELSE 0 END) as pp"),
+                    DB::raw("SUM(CASE WHEN tb.status_bimbingan = 2 AND mhs.C_KODE_STATUS_AKTIF_MHS = 'A' THEN 1 ELSE 0 END) as pum"),
+                    DB::raw('SUM(CASE WHEN tb.status_bimbingan = 3 THEN 1 ELSE 0 END) as l')
+                )
+                ->groupBy('tb.' . $kolomPembimbing);
+
+            if ($semesterRange) {
+                $query->whereBetween('tb.created_at', [$semesterRange->start, $semesterRange->end]);
+            }
+
+            foreach ($query->get() as $item) {
+                $kodeDosen = (string) $item->kode_dosen;
+
+                if (!isset($ringkasan[$kodeDosen])) {
+                    $ringkasan[$kodeDosen] = $this->emptyRingkasanBimbingan();
+                }
+
+                $ringkasan[$kodeDosen]->pp += (int) $item->pp;
+                $ringkasan[$kodeDosen]->pum += (int) $item->pum;
+                $ringkasan[$kodeDosen]->l += (int) $item->l;
+            }
+        }
+
+        return $ringkasan;
+    }
+
+    protected function emptyRingkasanBimbingan()
+    {
+        return (object) [
+            'pp' => 0,
+            'pum' => 0,
+            'l' => 0,
+        ];
     }
 
     public function detail_pembimbing($id)
@@ -2342,10 +2403,7 @@ class Prodi extends Controller
 
                 if ($tanggalAcuan !== '') {
                     try {
-                        $tanggal = Carbon::parse($tanggalAcuan);
-                        $tahun = $tanggal->year;
-                        $bulan = $tanggal->month;
-                        $label = $bulan >= 8 ? ($tahun . '/' . ($tahun + 1)) : (($tahun - 1) . '/' . $tahun);
+                        $label = Helper::getSemesterAkademik($tanggalAcuan)->tahun_akademik;
                     } catch (Exception $e) {
                         $label = 'Tidak diketahui';
                     }

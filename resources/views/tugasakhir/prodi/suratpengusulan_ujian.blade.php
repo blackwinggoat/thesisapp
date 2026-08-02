@@ -146,7 +146,7 @@
         Makassar <br><br>
         Assalamualaikum Wr. Wb.<br>
         Dengan Rahmat Allah S.W.T, Sehubungan dengan penyelesaian studi Mahasiswa PRogram Studi {{ $namaProdi }}
-        Fakultas Ilmu Komputer UMI Semester Akhir 2018/2019, maka dengan ini kami mengusulkan nama-nama tim Ujian Tugas
+        Fakultas Ilmu Komputer UMI Semester {{ helper::getNamaSemester(isset($tgl) ? $tgl : null) }} TA {{ helper::getPeriode(isset($tgl) ? $tgl : null) }}, maka dengan ini kami mengusulkan nama-nama tim Ujian Tugas
         Akhir untuk dibuatkan SK penunjukan dengan susunan sebagai berikut:
     </p>
     <center>

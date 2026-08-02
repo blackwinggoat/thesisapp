@@ -1461,24 +1461,45 @@ class Helper
         return isset($v) ? $v : 'Tidak Ada Pengumuman';
     }
 
-    public static function getCurrentSemesterDateRange()
+    public static function getSemesterAkademik($tanggal = null)
     {
-        $now = Carbon::now();
+        $date = $tanggal === null ? Carbon::now()->startOfDay() : self::parseTanggalAcuan($tanggal);
+        $date = $date ?: Carbon::now()->startOfDay();
+        $month = (int) $date->month;
 
-        if ((int) $now->month < 8) {
-            $startDate = Carbon::create($now->year, 1, 1, 0, 0, 0);
-            $endDate = Carbon::create($now->year, 7, 31, 23, 59, 59);
+        if ($month >= 9) {
+            $semester = 'Ganjil';
+            $tahunMulai = (int) $date->year;
+            $startDate = Carbon::create($tahunMulai, 9, 1, 0, 0, 0);
+            $endDate = Carbon::create($tahunMulai + 1, 2, 1, 0, 0, 0)->endOfMonth()->endOfDay();
+        } elseif ($month <= 2) {
+            $semester = 'Ganjil';
+            $tahunMulai = (int) $date->year - 1;
+            $startDate = Carbon::create($tahunMulai, 9, 1, 0, 0, 0);
+            $endDate = Carbon::create($tahunMulai + 1, 2, 1, 0, 0, 0)->endOfMonth()->endOfDay();
         } else {
-            $startDate = Carbon::create($now->year, 8, 1, 0, 0, 0);
-            $endDate = Carbon::create($now->year, 12, 31, 23, 59, 59);
+            $semester = 'Genap';
+            $tahunMulai = (int) $date->year - 1;
+            $startDate = Carbon::create($date->year, 3, 1, 0, 0, 0);
+            $endDate = Carbon::create($date->year, 8, 31, 23, 59, 59);
         }
 
+        $tahunAkademik = $tahunMulai . '/' . ($tahunMulai + 1);
+
         return (object) [
+            'semester' => $semester,
+            'tahun_akademik' => $tahunAkademik,
+            'label' => 'Periode Semester ' . $tahunAkademik . ' ' . $semester,
             'start' => $startDate,
             'end' => $endDate,
             'start_date' => $startDate->format('Y-m-d'),
             'end_date' => $endDate->format('Y-m-d'),
         ];
+    }
+
+    public static function getCurrentSemesterDateRange($tanggal = null)
+    {
+        return self::getSemesterAkademik($tanggal);
     }
 
     public static function getStatusBimbinganByStatus($status, $isPeriode = false)
@@ -1961,10 +1982,7 @@ class Helper
 
                 if ($tanggalAcuan !== '') {
                     try {
-                        $tanggal = Carbon::parse($tanggalAcuan);
-                        $tahun = $tanggal->year;
-                        $bulan = $tanggal->month;
-                        $label = $bulan >= 8 ? ($tahun . '/' . ($tahun + 1)) : (($tahun - 1) . '/' . $tahun);
+                        $label = self::getSemesterAkademik($tanggalAcuan)->tahun_akademik;
                     } catch (\Exception $e) {
                         $label = 'Tidak diketahui';
                     }
@@ -2348,41 +2366,12 @@ class Helper
 
     public static function getPeriode($tgl_ujian)
     {
-        // Map bulan dalam bahasa Indonesia ke bahasa Inggris
-        $bulan_indonesia_ke_inggris = [
-            'Januari' => 'January',
-            'Februari' => 'February',
-            'Maret' => 'March',
-            'April' => 'April',
-            'Mei' => 'May',
-            'Juni' => 'June',
-            'Juli' => 'July',
-            'Agustus' => 'August',
-            'September' => 'September',
-            'Oktober' => 'October',
-            'November' => 'November',
-            'Desember' => 'December'
-        ];
+        return self::getSemesterAkademik($tgl_ujian)->tahun_akademik;
+    }
 
-        // Ganti bulan dalam tanggal ujian ke bahasa Inggris
-        foreach ($bulan_indonesia_ke_inggris as $bulan_id => $bulan_en) {
-            $tgl_ujian = str_replace($bulan_id, $bulan_en, $tgl_ujian);
-        }
-
-        // Parsing tanggal ujian menggunakan format 'd F Y'
-        $date = Carbon::createFromFormat('d F Y', $tgl_ujian);
-        $year = $date->year;
-        $month = $date->month;
-
-        if ($month >= 8 && $month <= 12) {
-            // Agustus - Desember
-            $periode = $year . '/' . ($year + 1);
-        } else {
-            // Januari - Juli
-            $periode = ($year - 1) . '/' . $year;
-        }
-
-        return $periode;
+    public static function getNamaSemester($tanggal = null)
+    {
+        return self::getSemesterAkademik($tanggal)->semester;
     }
 
     public static function convertToIndonesianDate($date)
@@ -2432,21 +2421,9 @@ class Helper
         return $formattedDate;
     }
 
-    public static function getPeriodeSemester()
+    public static function getPeriodeSemester($tanggal = null)
     {
-        $now = Carbon::now();
-        $year = $now->year;
-        $month = $now->month;
-
-        if ($month >= 8 && $month <= 12) {
-            // Agustus - Desember: Semester Ganjil
-            $periode = "Periode Semester " . $year . "/" . ($year + 1) . " Ganjil";
-        } else {
-            // Januari - Juli: Semester Genap
-            $periode = "Periode Semester " . ($year - 1) . "/" . $year . " Genap";
-        }
-
-        return $periode;
+        return self::getSemesterAkademik($tanggal)->label;
     }
 
     public static function formatRupiah($angka)

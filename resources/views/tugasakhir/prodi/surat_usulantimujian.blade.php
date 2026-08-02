@@ -140,7 +140,7 @@
                 <tr>
                     <td>Hal</td>
                     <td>:</td>
-                    <td>Usulan Tim Ujian Tugas Akhir S. Akhir TA. {{ helper::getPeriode($tgl_ujian) }}</td>
+                    <td>Usulan Tim Ujian Tugas Akhir Semester {{ helper::getNamaSemester($tgl_ujian) }} TA. {{ helper::getPeriode($tgl_ujian) }}</td>
                 </tr>
             </table>
         </div>
@@ -152,7 +152,7 @@
             Makassar <br><br>
             <b><i>Assalamu’alaikum Warahmatullahi Wabarakatuh</i></b>.<br>
             Dengan Rahmat Allah S.W.T, Sehubungan dengan penyelesaian studi Mahasiswa PRogram Studi Teknik Informatika
-            Fakultas Ilmu Komputer UMI Semester Akhir TA {{ helper::getPeriode($tgl_ujian) }}, maka dengan ini kami
+            Fakultas Ilmu Komputer UMI Semester {{ helper::getNamaSemester($tgl_ujian) }} TA {{ helper::getPeriode($tgl_ujian) }}, maka dengan ini kami
             mengusulkan nama-nama tim Ujian
             Tugas Akhir untuk dibuatkan SK penunjukan dengan susunan sebagai berikut:
         </p>

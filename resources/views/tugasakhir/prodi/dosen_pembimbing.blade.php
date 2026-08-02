@@ -55,7 +55,7 @@
                             <th>Nama</th>
                             <th>Jabatan Fungsional</th>
                             <th>Jumlah Bimbingan</th>
-                            <th>Jumlah Bimbingan Semester Aktif</th>
+                            <th>Jumlah Bimbingan Semester Aktif<br><small>{{ $semesterRange->semester }} {{ $semesterRange->tahun_akademik }}</small></th>
                             <th>Jumlah Menguji</th>
                             <th>Level Pembimbing</th>
                             <th>Detail</th>
@@ -80,14 +80,13 @@
                                         </thead>
                                         <tbody>
                                             <tr class="text-center">
-                                                <td>{{App\Model\trt_bimbingan::where("pembimbing_I_id",$value->C_KODE_DOSEN)->where("status_bimbingan",0)->count() + App\Model\trt_bimbingan::where("pembimbing_II_id",$value->C_KODE_DOSEN)->where("status_bimbingan",0)->count()}}</td>
-                                                <td>{{App\Model\trt_bimbingan::where("pembimbing_I_id",$value->C_KODE_DOSEN)->where("status_bimbingan",2)->count() + App\Model\trt_bimbingan::where("pembimbing_II_id",$value->C_KODE_DOSEN)->where("status_bimbingan",2)->count()}}</td>
-                                                <td>{{App\Model\trt_bimbingan::where("pembimbing_I_id",$value->C_KODE_DOSEN)->where("status_bimbingan",3)->count() + App\Model\trt_bimbingan::where("pembimbing_II_id",$value->C_KODE_DOSEN)->where("status_bimbingan",3)->count()}}</td>
+                                                <td>{{ $value->ringkasan_bimbingan->pp }}</td>
+                                                <td>{{ $value->ringkasan_bimbingan->pum }}</td>
+                                                <td>{{ $value->ringkasan_bimbingan->l }}</td>
                                             </tr>
                                     </table>
                                 </td>
                                 <td>
-                                    @if(date("Y-m-01") >= date("Y-")."06-01")
                                     <table class="table">
                                         <thead class="bg-primary text-white text-center">
                                             <tr>
@@ -98,28 +97,11 @@
                                         </thead>
                                         <tbody>
                                             <tr class="text-center">
-                                                <td>{{App\Model\trt_bimbingan::where("pembimbing_I_id",$value->C_KODE_DOSEN)->where("status_bimbingan",0)->where("created_at",">=",date("Y-")."07-01")->count()+App\Model\trt_bimbingan::where("pembimbing_II_id",$value->C_KODE_DOSEN)->where("status_bimbingan",0)->where("created_at",">=",date("Y-")."07-01")->count()}}</td>
-                                                <td>{{App\Model\trt_bimbingan::where("pembimbing_I_id",$value->C_KODE_DOSEN)->where("status_bimbingan",2)->where("created_at",">=",date("Y-")."07-01")->count()+App\Model\trt_bimbingan::where("pembimbing_II_id",$value->C_KODE_DOSEN)->where("status_bimbingan",2)->where("created_at",">=",date("Y-")."07-01")->count()}}</td>
-                                                <td>{{App\Model\trt_bimbingan::where("pembimbing_I_id",$value->C_KODE_DOSEN)->where("status_bimbingan",3)->where("created_at",">=",date("Y-")."07-01")->count()+App\Model\trt_bimbingan::where("pembimbing_II_id",$value->C_KODE_DOSEN)->where("status_bimbingan",3)->where("created_at",">=",date("Y-")."07-01")->count()}}</td>
+                                                <td>{{ $value->ringkasan_bimbingan_semester->pp }}</td>
+                                                <td>{{ $value->ringkasan_bimbingan_semester->pum }}</td>
+                                                <td>{{ $value->ringkasan_bimbingan_semester->l }}</td>
                                             </tr>
                                     </table>
-                                    @elseif(date("Y-m-01") <= date("Y-")."06-01")
-                                    <table class="table">
-                                        <thead class="bg-primary text-white text-center">
-                                            <tr>
-                                                <th class="bg-primary pd-5">PP</th>
-                                                <th class="bg-primary pd-5">PUM</th>
-                                                <th class="bg-primary pd-5">L</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="text-center">
-                                                <td>{{App\Model\trt_bimbingan::where("pembimbing_I_id",$value->C_KODE_DOSEN)->where("status_bimbingan",0)->where("created_at",">=",date("2021-")."07-01")->count()+App\Model\trt_bimbingan::where("pembimbing_II_id",$value->C_KODE_DOSEN)->where("status_bimbingan",0)->where("created_at",">=",date("2021-")."07-01")->count()}}</td>
-                                                <td>{{App\Model\trt_bimbingan::where("pembimbing_I_id",$value->C_KODE_DOSEN)->where("status_bimbingan",2)->where("created_at",">=",date("2021-")."07-01")->count()+App\Model\trt_bimbingan::where("pembimbing_II_id",$value->C_KODE_DOSEN)->where("status_bimbingan",2)->where("created_at",">=",date("2021-")."07-01")->count()}}</td>
-                                                <td>{{App\Model\trt_bimbingan::where("pembimbing_I_id",$value->C_KODE_DOSEN)->where("status_bimbingan",3)->where("created_at",">=",date("2021-")."07-01")->count()+App\Model\trt_bimbingan::where("pembimbing_II_id",$value->C_KODE_DOSEN)->where("status_bimbingan",3)->where("created_at",">=",date("2021-")."07-01")->count()}}</td>
-                                            </tr>
-                                    </table>
-                                    @endif
                                 </td>
                                 <td>
                                     <table class="table">
@@ -243,5 +225,4 @@
         };
     </script>
 @endsection
-
 
