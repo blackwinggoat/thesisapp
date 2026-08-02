@@ -26,5 +26,7 @@ class MahasiswaDosenWhatsAppTest extends TestCase
         $this->assertStringContainsString('https://wa.me/{{ $value->nomor_whatsapp }}', $view);
         $this->assertStringContainsString('fa fa-whatsapp', $view);
         $this->assertStringContainsString('target="_blank"', $view);
+        $this->assertStringNotContainsString('{{ $value->nomor_telpon ?? \'-\' }}', $view);
+        $this->assertStringContainsString('@else', $view);
     }
 }
