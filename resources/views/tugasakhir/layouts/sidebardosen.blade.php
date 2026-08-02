@@ -6,43 +6,36 @@
 <div class="sidebar-left sidebar-nicescroller">
     <ul class="sidebar-menu">
 
-        <li class="static left-profile-summary">
-            <div class="media">
-                <p class="pull-left">
-
-                    <a href="{{ url('dsn/profil') }}" title="Edit profil dosen">
-                        <img src="{{ $dosenSidebarPhoto }}" class="avatar dosen-profile-avatar media-object"
-                            alt="Foto profil dosen">
-                    </a>
-                </p>
-                <div class="media-body">
-                    <h4>Welcome,
-                        <br /><strong>{{ helper::getDeskripsi(auth()->user()->name) }}{{ helper::getNamaMhs(auth()->user()->name) }}</strong>
-                    </h4>
-                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+        <li class="static left-profile-summary dosen-sidebar-summary">
+            <div class="dosen-sidebar-photo">
+                <a href="{{ url('dsn/profil') }}" title="Edit profil dosen">
+                    <img src="{{ $dosenSidebarPhoto }}" class="avatar dosen-profile-avatar"
+                        alt="Foto profil dosen">
+                </a>
+            </div>
+            <div class="dosen-sidebar-info">
+                <h4>Welcome,
+                    <br /><strong>{{ helper::getDeskripsi(auth()->user()->name) }}{{ helper::getNamaMhs(auth()->user()->name) }}</strong>
+                </h4>
+                <div class="dosen-sidebar-actions">
                         @if (session('login_as_source_user_level') == 5 && !empty(session('login_as_source_user_id')))
-                            <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 12px; height: 30px; color: white; border-radius: 5px;"
-                                href="{{ url('dsn/back_to_prodi') }}" class="btn btn-primary btn-xs">
+                            <a href="{{ url('dsn/back_to_prodi') }}" class="btn btn-primary btn-xs">
                                 Back to Prodi
                             </a>
                         @endif
-                        <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; height: 30px; color: white; border-radius: 5px;"
-                            href="{{ url('dsn/profil') }}" class="btn btn-primary btn-xs" title="Edit profil dosen"><i
+                        <a href="{{ url('dsn/profil') }}" class="btn btn-primary btn-xs" title="Edit profil dosen"><i
                                 class="fa fa-user"></i></a>
-                        <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; height: 30px; color: white; border-radius: 5px;"
-                            href="{{ url('dsn/ubah_password') }}" class="btn btn-success btn-xs" title="Ubah kata sandi"><i
+                        <a href="{{ url('dsn/ubah_password') }}" class="btn btn-success btn-xs" title="Ubah kata sandi"><i
                                 class="fa fa-cog"></i></a>
-                        <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 12px; height: 30px; color: white; border-radius: 5px;"
-                            class="btn btn-danger btn-xs" href="{{ route('logout') }}"
+                        <a class="btn btn-danger btn-xs" href="{{ route('logout') }}"
                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             {{ __('Logout') }}
                         </a>
-                    </div>
-
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                        @csrf
-                    </form>
                 </div>
+
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
             </div>
         </li>
 

@@ -24,6 +24,8 @@ class DosenProfilViewTest extends TestCase
         $sidebar = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/layouts/sidebardosen.blade.php');
         $style = file_get_contents(__DIR__ . '/../../public/master/assets/css/style.css');
         $this->assertStringContainsString('dosen-profile-avatar', $sidebar);
+        $this->assertStringContainsString('dosen-sidebar-summary', $sidebar);
         $this->assertStringContainsString('object-fit: contain', $style);
+        $this->assertStringContainsString('.dosen-sidebar-actions', $style);
     }
 }

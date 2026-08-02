@@ -786,12 +786,43 @@ ul.sidebar-menu li.text-content.profile-summary {
 }
 
 .left-profile-summary .dosen-profile-avatar {
-	width: 70px;
-	height: 90px;
+	width: 92px;
+	height: 112px;
 	object-fit: contain;
 	object-position: center;
 	background: #fff;
 	border-radius: 4px;
+	margin: 0;
+}
+
+ul.sidebar-menu li.static.left-profile-summary.dosen-sidebar-summary {
+	padding: 24px 15px 16px;
+	text-align: center;
+}
+
+.dosen-sidebar-photo {
+	margin-bottom: 12px;
+}
+
+.dosen-sidebar-info h4 {
+	margin-bottom: 10px;
+}
+
+.dosen-sidebar-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px;
+}
+
+.dosen-sidebar-actions .btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 30px;
+	padding: 0 10px;
+	border-radius: 5px;
+	color: #fff;
 }
 
 .sidebar-left {
