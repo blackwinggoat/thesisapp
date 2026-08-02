@@ -127,6 +127,7 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get('/prodi/make_userx/{id}', 'Prodi@make_userx');
     Route::get('/prodi/reset_userx/{id}', 'Prodi@reset_userx');
     Route::get('/prodi/login_as_dosen/{id}', 'Prodi@login_as_dosen');
+    Route::get('/prodi/login_as_mahasiswa/{nim}', 'Prodi@login_as_mahasiswa');
     Route::get('/prodi/scope_ta', 'Prodi@scope_ta');
     Route::get('/prodi/scope_del/{id}', 'Prodi@scope_del');
     Route::get('/prodi/master/dosen', 'Prodi@master_dosen');
@@ -514,6 +515,7 @@ Route::group(['middleware' => 'dosen'], function () {
 Route::group(['middleware' => 'mhs'], function () {
 
     Route::get('/home', 'HomeController@index')->name('home');
+    Route::get('/mhs/back_to_prodi', 'mhs@back_to_prodi');
     //MAHASISWA
     Route::get('/mhs/pengajuan_topik', 'mhs@pengajuan_topik');
     Route::get('/mhs/detail_note/{id}', 'mhs@detail_note');

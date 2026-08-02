@@ -32,6 +32,40 @@ use Exception;
 class mhs extends Controller
 {
 
+    public function back_to_prodi(Request $request)
+    {
+        $sourceUserId = $request->session()->get('login_as_source_user_id');
+        $sourceUserLevel = (int) $request->session()->get('login_as_source_user_level', 0);
+
+        if (empty($sourceUserId) || $sourceUserLevel !== 5) {
+            return redirect('/')->with('danger', 'Session login as prodi tidak ditemukan.');
+        }
+
+        $sourceUser = DB::table('users')
+            ->select('id', 'level')
+            ->where('id', $sourceUserId)
+            ->first();
+
+        if (!$sourceUser || (int) $sourceUser->level !== 5) {
+            $request->session()->forget([
+                'login_as_source_user_id',
+                'login_as_source_user_name',
+                'login_as_source_user_level',
+            ]);
+            return redirect('/')->with('danger', 'Akun prodi asal tidak valid.');
+        }
+
+        Auth::loginUsingId($sourceUserId);
+        $request->session()->regenerate();
+        $request->session()->forget([
+            'login_as_source_user_id',
+            'login_as_source_user_name',
+            'login_as_source_user_level',
+        ]);
+
+        return redirect('/')->with('success', 'Berhasil kembali ke akun prodi.');
+    }
+
     public function chat()
     {
         return Redirect::to('mhs/mail_inbox');

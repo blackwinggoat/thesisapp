@@ -90,6 +90,9 @@
                                 <td>
                                     <button onclick="showModal(this)" data-target="#modalPrimary" data-toggle="modal" title="Aktifasi Akun" class="btn btn-danger" data-href="{{ url('prodi/make_user/'.$value->C_NPM)}}"><i class="fa fa-sign-in"></i></button>
                                     <button onclick="showModal(this)" data-target="#modalInfo" data-toggle="modal" title="Reset Akun" class="btn btn-default" data-href="{{ url('prodi/reset_user/'.$value->C_NPM)}}"><i class="fa fa-recycle"></i></button>
+                                    <a class="btn btn-info" href="{{ url('prodi/login_as_mahasiswa/'.$value->C_NPM) }}" title="Login sebagai mahasiswa">
+                                        <i class="fa fa-user"></i>
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach

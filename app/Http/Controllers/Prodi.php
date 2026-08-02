@@ -1362,6 +1362,44 @@ class Prodi extends Controller
         return redirect('/')->with('success', 'Berhasil login sebagai dosen.');
     }
 
+    public function login_as_mahasiswa(Request $request, $nim)
+    {
+        $authUser = auth()->user();
+        if (!$authUser || (int) $authUser->level !== 5) {
+            return redirect('/')->with('danger', 'Akses login as hanya untuk akun prodi.');
+        }
+
+        $nimPrefix = $authUser->name === 'prodisi' ? '131' : '130';
+        $mahasiswa = DB::table('t_mst_mahasiswa')
+            ->select('C_NPM')
+            ->where('C_NPM', $nim)
+            ->where('C_NPM', 'LIKE', $nimPrefix . '%')
+            ->first();
+
+        if (!$mahasiswa) {
+            return redirect()->back()->with('danger', 'Mahasiswa tidak ditemukan pada program studi Anda.');
+        }
+
+        $mahasiswaUser = DB::table('users')
+            ->select('id', 'name', 'level')
+            ->where('name', $nim)
+            ->where('level', 8)
+            ->first();
+
+        if (!$mahasiswaUser) {
+            return redirect()->back()->with('danger', 'Akun mahasiswa belum tersedia. Silakan aktifkan akun mahasiswa terlebih dahulu.');
+        }
+
+        $request->session()->put('login_as_source_user_id', $authUser->id);
+        $request->session()->put('login_as_source_user_name', $authUser->name);
+        $request->session()->put('login_as_source_user_level', (int) $authUser->level);
+
+        Auth::loginUsingId($mahasiswaUser->id);
+        $request->session()->regenerate();
+
+        return redirect('/')->with('success', 'Berhasil login sebagai mahasiswa.');
+    }
+
 
     public function surat_pengusulanujianta()
     {
