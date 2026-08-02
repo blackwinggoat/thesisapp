@@ -139,6 +139,35 @@ class ExamResultConfirmationTest extends TestCase
         $this->assertSame('warning', $taResponse->getSession()->get('status'));
     }
 
+    public function testNullScoreIsIncompleteForProposalAndTaApproval()
+    {
+        $this->addCandidate(41, 501, 'P-NULL-SCORE', 0, 0, 1, ['P41', 'U41', 'K41']);
+        $this->addCandidate(42, 502, 'TA-NULL-SCORE', 2, 2, 1, ['P42', 'U42', 'K42']);
+        DB::table('trt_hasil')
+            ->where('reg_id', 501)
+            ->where('nidn', 'U41')
+            ->update(['nilai_3' => null]);
+        DB::table('trt_hasil')
+            ->where('reg_id', 502)
+            ->where('nidn', 'K42')
+            ->update(['nilai_5' => null]);
+
+        $controller = new Prodi();
+        $proposalResponse = $controller->approve_hasilujian_proposal_post(41, 'P-NULL-SCORE', 501);
+        $taResponse = $controller->approve_hasilujian_ta_post(42, 'TA-NULL-SCORE', 502);
+        $proposalPeriods = $controller->approve_hasilujian_proposal()->getData()['data'];
+        $taPeriods = $controller->approve_hasilujian_ta()->getData()['data'];
+
+        $this->assertSame(0, $this->statusBimbingan(41));
+        $this->assertSame(2, $this->statusBimbingan(42));
+        $this->assertSame('warning', $proposalResponse->getSession()->get('status'));
+        $this->assertSame('warning', $taResponse->getSession()->get('status'));
+        $this->assertSame(0, (int) $proposalPeriods->sum('total_penilaian_lengkap'));
+        $this->assertSame(1, (int) $proposalPeriods->sum('total_penilaian_tidak_lengkap'));
+        $this->assertSame(0, (int) $taPeriods->sum('total_penilaian_lengkap'));
+        $this->assertSame(1, (int) $taPeriods->sum('total_penilaian_tidak_lengkap'));
+    }
+
     public function testBulkConfirmationRoutesUsePostFormsWithCsrfProtection()
     {
         $routes = [];
