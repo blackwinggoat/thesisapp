@@ -376,8 +376,7 @@ class dosen extends Controller
     // Halaman Hasili Ujian Proposal
     public function hasil_proposal()
     {
-        $kode = auth()->user()->name;
-        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id  = ? OR trt_penguji.penguji_II_id  = ? OR trt_penguji.penguji_III_id  = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan NOT IN (?, ?)", [$kode, $kode, $kode, $kode, $kode, $kode, 0, 2, 3]);
+        $data = $this->assessmentCards(0, [2, 3]);
 
         return view('tugasakhir.dosen.hasil_proposal', compact('data'));
     }
@@ -484,15 +483,146 @@ class dosen extends Controller
     }
     // Hasil Kirim Detail Hasil Proposal
 
-    // Halaman Hasili Ujian Proposal
     public function hasil_ujianmeja()
     {
-        $kode = auth()->user()->name;
-        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id  = ? OR trt_penguji.penguji_II_id  = ? OR trt_penguji.penguji_III_id  = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ? AND trt_bimbingan.status_bimbingan <> ?", [$kode, $kode, $kode, $kode, $kode, $kode, 2, 3]);
+        $data = $this->assessmentCards(2, [3]);
 
         return view('tugasakhir.dosen.hasil_ujianmeja', compact('data'));
     }
-    // Akhir Halaman Hasil Ujian Proposal
+
+    private function assessmentCards($tipeUjian, array $excludedBimbinganStatuses)
+    {
+        $kode = Helper::getKodeDosenForTrtHasil();
+        $data = DB::table('trt_reg as rg')
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+            ->join('trt_penguji as pu', function ($join) {
+                $join->on('pu.C_NPM', '=', 'tb.C_NPM')
+                    ->on('pu.tipe_ujian', '=', 'rg.status');
+            })
+            ->join('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'tb.C_NPM')
+            ->leftJoin('trt_hasil as hasil', function ($join) use ($kode) {
+                $join->on('hasil.reg_id', '=', 'rg.reg_id')
+                    ->where('hasil.nidn', '=', $kode);
+            })
+            ->where(function ($query) use ($kode) {
+                $query->where('pu.penguji_I_id', $kode)
+                    ->orWhere('pu.penguji_II_id', $kode)
+                    ->orWhere('pu.penguji_III_id', $kode)
+                    ->orWhere('pu.ketua_sidang_id', $kode)
+                    ->orWhere('tb.pembimbing_I_id', $kode)
+                    ->orWhere('tb.pembimbing_II_id', $kode);
+            })
+            ->where('rg.status', $tipeUjian)
+            ->whereNotIn('tb.status_bimbingan', $excludedBimbinganStatuses)
+            ->select([
+                'rg.reg_id',
+                'rg.pendaftaran_id',
+                'tb.C_NPM',
+                'mhs.NAMA_MAHASISWA',
+                'mhs.D_FOTO_MAHASISWA',
+                'tb.judul',
+                'tb.status_bimbingan',
+                'tb.pembimbing_I_id',
+                'tb.pembimbing_II_id',
+                'pu.penguji_I_id',
+                'pu.penguji_II_id',
+                'pu.penguji_III_id',
+                'pu.ketua_sidang_id',
+                'hasil.nilai_id',
+                'hasil.nilai_1',
+                'hasil.nilai_2',
+                'hasil.nilai_3',
+                'hasil.nilai_4',
+                'hasil.nilai_5',
+                DB::raw('(SELECT ju.tgl_ujian FROM trt_jadwal_ujian_per_mhs AS jpm INNER JOIN trt_jadwal_ujian AS ju ON ju.id = jpm.jadwal_ujian WHERE jpm.C_NPM = tb.C_NPM AND ju.pendaftaran_id = rg.pendaftaran_id ORDER BY ju.tgl_ujian DESC, ju.id DESC LIMIT 1) AS tanggal_ujian'),
+                DB::raw('(SELECT jpm.jam_ujian FROM trt_jadwal_ujian_per_mhs AS jpm INNER JOIN trt_jadwal_ujian AS ju ON ju.id = jpm.jadwal_ujian WHERE jpm.C_NPM = tb.C_NPM AND ju.pendaftaran_id = rg.pendaftaran_id ORDER BY ju.tgl_ujian DESC, ju.id DESC LIMIT 1) AS jam_ujian'),
+            ])
+            ->orderBy('tanggal_ujian', 'asc')
+            ->orderBy('mhs.NAMA_MAHASISWA', 'asc')
+            ->get();
+
+        $kodeDosen = $data->flatMap(function ($item) {
+            return [
+                $item->pembimbing_I_id,
+                $item->pembimbing_II_id,
+                $item->penguji_I_id,
+                $item->penguji_II_id,
+                $item->penguji_III_id,
+                $item->ketua_sidang_id,
+            ];
+        })->filter()->unique()->values();
+
+        $namaDosen = DB::table('t_mst_dosen')
+            ->whereIn('C_KODE_DOSEN', $kodeDosen)
+            ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN');
+
+        $peran = [
+            'ketua_sidang_id' => 'Ketua Sidang',
+            'penguji_I_id' => 'Penguji I',
+            'penguji_II_id' => 'Penguji II',
+            'penguji_III_id' => 'Penguji III',
+            'pembimbing_I_id' => 'Pembimbing Utama',
+            'pembimbing_II_id' => 'Pembimbing Pendamping',
+        ];
+
+        $data->transform(function ($item) use ($kode, $namaDosen, $peran) {
+            $item->peran_login = [];
+            $item->tim_ujian = [];
+
+            foreach ($peran as $field => $label) {
+                $kodeTim = trim((string) $item->{$field});
+                if ($kodeTim === '') {
+                    continue;
+                }
+
+                $item->tim_ujian[] = [
+                    'peran' => $label,
+                    'nama' => $namaDosen->get($kodeTim, '--'),
+                    'kode' => $kodeTim,
+                ];
+
+                if ($kodeTim === $kode) {
+                    $item->peran_login[] = $label;
+                }
+            }
+
+            $item->tanggal_ujian_label = $item->tanggal_ujian
+                ? Carbon::parse($item->tanggal_ujian)->format('d/m/Y')
+                : '';
+            $item->jam_ujian_label = $item->jam_ujian
+                ? substr((string) $item->jam_ujian, 0, 5)
+                : '';
+            $item->jadwal_ujian_label = trim($item->tanggal_ujian_label . ($item->jam_ujian_label ? ' pukul ' . $item->jam_ujian_label : ''));
+            if ($item->jadwal_ujian_label === '') {
+                $item->jadwal_ujian_label = 'Jadwal belum tersedia';
+            }
+
+            if (empty($item->nilai_id)) {
+                $item->status_penilaian = 'Belum menilai';
+                $item->status_penilaian_class = 'pending';
+                $item->status_penilaian_icon = 'fa-clock-o';
+            } else {
+                $nilai = [$item->nilai_1, $item->nilai_2, $item->nilai_3, $item->nilai_4, $item->nilai_5];
+                $belumLengkap = collect($nilai)->contains(function ($value) {
+                    return $value === null || (float) $value <= 0;
+                });
+
+                $item->status_penilaian = $belumLengkap ? 'Belum lengkap' : 'Sudah menilai';
+                $item->status_penilaian_class = $belumLengkap ? 'incomplete' : 'complete';
+                $item->status_penilaian_icon = $belumLengkap ? 'fa-exclamation-circle' : 'fa-check-circle';
+            }
+            // Foto mahasiswa akan menggunakan field ini setelah alur upload mahasiswa ditambahkan.
+            $item->foto_url = asset('gambar/no_image.jpg');
+            $item->boleh_menilai = !empty($item->penguji_I_id)
+                || !empty($item->penguji_II_id)
+                || !empty($item->penguji_III_id)
+                || !empty($item->ketua_sidang_id);
+
+            return $item;
+        });
+
+        return $data;
+    }
 
     public function hasil_ujianmeja_history()
     {
