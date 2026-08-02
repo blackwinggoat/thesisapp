@@ -65,46 +65,59 @@
                             <td width="1%" align="center">{{++$i}}</td>
                             <td>{{$d->C_NPM}}</td>
                             <td>{{$d->NAMA_MAHASISWA}}</td>
-                            <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_I_id, $d->reg_id) ?></td>
-                            <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_II_id, $d->reg_id) ?></td>
+                            @php
+                            $pembimbing1 = $dosenByKode->get($d->pembimbing_I_id);
+                            $pembimbing2 = $dosenByKode->get($d->pembimbing_II_id);
+                            $penguji1 = $dosenByKode->get($d->penguji_I_id);
+                            $penguji2 = $dosenByKode->get($d->penguji_II_id);
+                            $penguji3 = $dosenByKode->get($d->penguji_III_id);
+                            $ketuasidang = $dosenByKode->get($d->ketua_sidang_id);
+                            $statusPenilaian = function ($nidn) use ($d, $penilaianLengkap) {
+                                return $penilaianLengkap->has($d->reg_id . ':' . $nidn)
+                                    ? '<i class="fa fa-check-circle text-success"></i>'
+                                    : '<i class="fa fa-times-circle text-danger"></i>';
+                            };
+                            @endphp
+                            <td>{{ $pembimbing1 ? $pembimbing1->NAMA_DOSEN : '-' }} {!! $pembimbing1 ? $statusPenilaian($d->pembimbing_I_id) : '' !!}</td>
+                            <td>{{ $pembimbing2 ? $pembimbing2->NAMA_DOSEN : '-' }} {!! $pembimbing2 ? $statusPenilaian($d->pembimbing_II_id) : '' !!}</td>
                             <td>
-                                @if (helper::getNamaDosenByKode($d->penguji_I_id) == '--')
+                                @if (!$penguji1)
                                 {{ "-" }}
                                 @else
-                                {{ helper::getNamaDosenByKode($d->penguji_I_id) }}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_I_id, $d->reg_id) ?>
+                                {{ $penguji1->NAMA_DOSEN }}
+                                {!! $statusPenilaian($d->penguji_I_id) !!}
                                 @endif
                             </td>
                             <td>
-                                @if (helper::getNamaDosenByKode($d->penguji_II_id) == '--')
+                                @if (!$penguji2)
                                 {{ "-" }}
                                 @else
-                                {{ helper::getNamaDosenByKode($d->penguji_II_id) }}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_II_id, $d->reg_id) ?>
+                                {{ $penguji2->NAMA_DOSEN }}
+                                {!! $statusPenilaian($d->penguji_II_id) !!}
                                 @endif
                             </td>
                             <td>
-                                @if (helper::getNamaDosenByKode($d->penguji_III_id) == '--')
+                                @if (!$penguji3)
                                 {{ "-" }}
                                 @else
-                                {{ helper::getNamaDosenByKode($d->penguji_III_id) }}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_III_id, $d->reg_id) ?>
+                                {{ $penguji3->NAMA_DOSEN }}
+                                {!! $statusPenilaian($d->penguji_III_id) !!}
                                 @endif
                             </td>
                             <td>
-                                @if (helper::getNamaDosenByKode($d->ketua_sidang_id) == '--')
+                                @if (!$ketuasidang)
                                 {{ "-" }}
                                 @else
-                                {{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}
-                                <?= helper::getStatusPenilaianPerDosen($d->ketua_sidang_id, $d->reg_id) ?>
+                                {{ $ketuasidang->NAMA_DOSEN }}
+                                {!! $statusPenilaian($d->ketua_sidang_id) !!}
                                 @endif
                             </td>
                             <td>
                                 @if (
-                                    helper::getNamaDosenByKode($d->penguji_I_id) == '--' &&
-                                    helper::getNamaDosenByKode($d->penguji_II_id) == '--' &&
-                                    helper::getNamaDosenByKode($d->penguji_III_id) == '--' &&
-                                    helper::getNamaDosenByKode($d->ketua_sidang_id) == '--'
+                                    !$penguji1 &&
+                                    !$penguji2 &&
+                                    !$penguji3 &&
+                                    !$ketuasidang
                                 )
                                 Silahkan Set Penguji dan Ketua Sidang
                                 @else

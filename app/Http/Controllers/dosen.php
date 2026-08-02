@@ -20,6 +20,7 @@ use App\Model\trt_sk_ujian_ta;
 use App\Model\trt_konsultasi;
 use App\Model\users;
 use App\MstRuangan;
+use App\RequestPembimbing;
 use App\TrtJadwalUjian;
 use App\TrtJadwalUjianPerMhs;
 use App\TrtLevelPembimbing;
@@ -1407,9 +1408,49 @@ class dosen extends Controller
             ->select('t_mst_mahasiswa.*', 'trt_topik.*', 'mst_tmp_usulan.*')
             ->get();
 
+        $topikIds = $data->pluck('topik_id')->filter()->unique()->values();
+        $requestPembimbingByTopik = $topikIds->isEmpty()
+            ? collect()
+            : RequestPembimbing::whereIn('topik', $topikIds)->get()->groupBy('topik');
 
+        $bidangIlmuIds = $requestPembimbingByTopik->flatten(1)
+            ->pluck('bidang_ilmu')
+            ->filter()
+            ->unique()
+            ->values();
+        $bidangIlmuById = $bidangIlmuIds->isEmpty()
+            ? collect()
+            : mst_bidangilmu::whereIn('bidangilmu_id', $bidangIlmuIds)
+                ->pluck('bidang_ilmu', 'bidangilmu_id');
 
-        return view('tugasakhir.dosen.request_pembimbing', compact("data"));
+        $dosenIds = $data->flatMap(function ($row) {
+            return [$row->pembimbing_I_id, $row->pembimbing_II_id];
+        })->filter()->unique()->values();
+        $dosenByKode = $dosenIds->isEmpty()
+            ? collect()
+            : DB::table('t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $dosenIds)
+                ->get()
+                ->keyBy('C_KODE_DOSEN');
+
+        $missingDosenIds = $dosenIds->reject(function ($kodeDosen) use ($dosenByKode) {
+            return $dosenByKode->has($kodeDosen);
+        });
+        if ($missingDosenIds->isNotEmpty() && Schema::hasTable('mig_t_mst_dosen')) {
+            DB::table('mig_t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $missingDosenIds)
+                ->get()
+                ->each(function ($dosen) use ($dosenByKode) {
+                    $dosenByKode->put($dosen->C_KODE_DOSEN, $dosen);
+                });
+        }
+
+        return view('tugasakhir.dosen.request_pembimbing', compact(
+            'data',
+            'requestPembimbingByTopik',
+            'bidangIlmuById',
+            'dosenByKode'
+        ));
     }
 
     public function request_konfirmasi($status, $mahasiswa)

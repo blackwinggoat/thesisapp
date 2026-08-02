@@ -43,7 +43,9 @@
                         <tbody>
                             @foreach ($data as $key => $value)
                                 @php
-                                    $request_pembimbing = \App\RequestPembimbing::where('topik', $value->topik_id)->get();
+                                    $request_pembimbing = $requestPembimbingByTopik->get($value->topik_id, collect());
+                                    $pembimbingUtama = $dosenByKode->get($value->pembimbing_I_id);
+                                    $pembimbingPendamping = $dosenByKode->get($value->pembimbing_II_id);
                                 @endphp
                                 <tr class="odd gradeX">
                                     <td width="1%" align="center">{{ ++$key }}</td>
@@ -52,10 +54,7 @@
                                     <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{ $value->topik }}</td>
                                     <td>
                                         @foreach ($request_pembimbing as $key => $val)
-                                            @php
-                                                $mst_bidang_ilmu = \App\Model\mst_bidangilmu::find($val->bidang_ilmu);
-                                            @endphp
-                                            {{ ++$key }}. {{ $mst_bidang_ilmu->bidang_ilmu }}<br>
+                                            {{ ++$key }}. {{ $bidangIlmuById->get($val->bidang_ilmu, '-') }}<br>
                                         @endforeach
                                     </td>
                                     <td>
@@ -76,7 +75,7 @@
                                     </td>
                                     <td>
                                         @if (!empty($value->pembimbing_I_id))
-                                            {{ helper::getNamaDosenByKode($value->pembimbing_I_id) }}<br>
+                                            {{ $pembimbingUtama ? $pembimbingUtama->NAMA_DOSEN : '--' }}<br>
                                             @if ($value->pembimbing_I_status == '0')
                                                 <span class="label label-danger">Ditolak</span>
                                             @elseif($value->pembimbing_I_status == '1')
@@ -90,7 +89,7 @@
                                     </td>
                                     <td>
                                         @if (!empty($value->pembimbing_II_id))
-                                            {{ helper::getNamaDosenByKode($value->pembimbing_II_id) }}<br>
+                                            {{ $pembimbingPendamping ? $pembimbingPendamping->NAMA_DOSEN : '--' }}<br>
                                             @if ($value->pembimbing_II_status == '0')
                                                 <span class="label label-danger">Ditolak</span>
                                             @elseif($value->pembimbing_II_status == '1')

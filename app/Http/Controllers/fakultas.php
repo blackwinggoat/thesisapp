@@ -18,11 +18,70 @@ use App\TrtJadwalUjian;
 use App\TrtJadwalUjianPerMhs;
 use App\TrtPenguji;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Carbon;
 use Exception;
 
 class fakultas extends Controller
 {
+    private function prepareRekapNilaiViewData($data)
+    {
+        $data = collect($data);
+        $dosenColumns = [
+            'pembimbing_I_id',
+            'pembimbing_II_id',
+            'penguji_I_id',
+            'penguji_II_id',
+            'penguji_III_id',
+            'ketua_sidang_id',
+        ];
+
+        $dosenIds = $data->flatMap(function ($row) use ($dosenColumns) {
+            return collect($dosenColumns)->map(function ($column) use ($row) {
+                return isset($row->{$column}) ? $row->{$column} : null;
+            });
+        })->filter()->unique()->values();
+
+        $dosenByKode = $dosenIds->isEmpty()
+            ? collect()
+            : DB::table('t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $dosenIds)
+                ->get()
+                ->keyBy('C_KODE_DOSEN');
+
+        $missingDosenIds = $dosenIds->reject(function ($kodeDosen) use ($dosenByKode) {
+            return $dosenByKode->has($kodeDosen);
+        });
+        if ($missingDosenIds->isNotEmpty() && Schema::hasTable('mig_t_mst_dosen')) {
+            DB::table('mig_t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $missingDosenIds)
+                ->get()
+                ->each(function ($dosen) use ($dosenByKode) {
+                    $dosenByKode->put($dosen->C_KODE_DOSEN, $dosen);
+                });
+        }
+
+        $regIds = $data->pluck('reg_id')->filter()->unique()->values();
+        $penilaianLengkap = $regIds->isEmpty()
+            ? collect()
+            : trt_hasil::whereIn('reg_id', $regIds)
+                ->whereNotNull('nilai_1')
+                ->whereNotNull('nilai_2')
+                ->whereNotNull('nilai_3')
+                ->whereNotNull('nilai_4')
+                ->whereNotNull('nilai_5')
+                ->where('nilai_1', '>', 0)
+                ->where('nilai_2', '>', 0)
+                ->where('nilai_3', '>', 0)
+                ->where('nilai_4', '>', 0)
+                ->where('nilai_5', '>', 0)
+                ->get(['reg_id', 'nidn'])
+                ->mapWithKeys(function ($hasil) {
+                    return [$hasil->reg_id . ':' . $hasil->nidn => true];
+                });
+
+        return compact('dosenByKode', 'penilaianLengkap');
+    }
 
     // Halaman Approve Hasil Ujian TA
     public function rekap_nilai_proposal()
@@ -41,7 +100,10 @@ class fakultas extends Controller
             return response('Data rekap nilai proposal tidak ditemukan.', 404);
         }
         $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ?", [$id, $info->tipe_ujian]);
-        return view('tugasakhir.fakultas.detail_rekap_nilai_proposal', compact("data", "info"));
+        return view('tugasakhir.fakultas.detail_rekap_nilai_proposal', array_merge(
+            compact('data', 'info'),
+            $this->prepareRekapNilaiViewData($data)
+        ));
     }
     // Akhir Approve Hasil Ujian TA
 
@@ -141,7 +203,10 @@ class fakultas extends Controller
             return response('Data rekap nilai ujian TA tidak ditemukan.', 404);
         }
         $data = DB::select("SELECT * FROM mst_pendaftaran,trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa WHERE mst_pendaftaran.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND trt_reg.pendaftaran_id = ? AND trt_reg.status = ? ", [$id, $info->tipe_ujian]);
-        return view('tugasakhir.fakultas.detail_rekap_nilai_ujian_ta', compact("data", "info"));
+        return view('tugasakhir.fakultas.detail_rekap_nilai_ujian_ta', array_merge(
+            compact('data', 'info'),
+            $this->prepareRekapNilaiViewData($data)
+        ));
     }
     // Akhir Approve Hasil Ujian TA
 
