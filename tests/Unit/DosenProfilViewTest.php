@@ -25,7 +25,8 @@ class DosenProfilViewTest extends TestCase
         $style = file_get_contents(__DIR__ . '/../../public/master/assets/css/style.css');
         $this->assertStringContainsString('dosen-profile-avatar', $sidebar);
         $this->assertStringContainsString('dosen-sidebar-summary', $sidebar);
-        $this->assertStringContainsString('object-fit: contain', $style);
+        $this->assertStringContainsString('object-fit: cover', $style);
+        $this->assertStringContainsString('border-radius: 50%', $style);
         $this->assertStringContainsString('.dosen-sidebar-actions', $style);
         $this->assertStringContainsString('.sidebar-left .dosen-sidebar-photo a', $style);
         $this->assertStringContainsString('overflow: visible', $style);
