@@ -50,16 +50,16 @@
                             <td>{{$d->tgl_ujian}}</td>
                             <td>
                                 @if ($d->pembimbing_I_id == auth()->user()->name)
-                                <b>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</b>
+                                <b>{{ $d->pembimbing_I_id_nama }}</b>
                                 @else
-                                {{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}
+                                {{ $d->pembimbing_I_id_nama }}
                                 @endif
                             </td>
                             <td>
                                 @if ($d->pembimbing_II_id == auth()->user()->name)
-                                <b>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</b>
+                                <b>{{ $d->pembimbing_II_id_nama }}</b>
                                 @else
-                                {{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}
+                                {{ $d->pembimbing_II_id_nama }}
                                 @endif
                             </td>
                             <td>
@@ -67,9 +67,9 @@
                                 {{"-"}}
                                 @else
                                 @if ($d->penguji_I_id == auth()->user()->name)
-                                <b>{{ helper::getNamaDosenByKode($d->penguji_I_id) }}</b>
+                                <b>{{ $d->penguji_I_id_nama }}</b>
                                 @else
-                                {{ helper::getNamaDosenByKode($d->penguji_I_id) }}
+                                {{ $d->penguji_I_id_nama }}
                                 @endif
                                 @endif
                             </td>
@@ -78,9 +78,9 @@
                                 {{"-"}}
                                 @else
                                 @if ($d->penguji_II_id == auth()->user()->name)
-                                <b>{{ helper::getNamaDosenByKode($d->penguji_II_id) }}</b>
+                                <b>{{ $d->penguji_II_id_nama }}</b>
                                 @else
-                                {{ helper::getNamaDosenByKode($d->penguji_II_id) }}
+                                {{ $d->penguji_II_id_nama }}
                                 @endif
                                 @endif
                             </td>
@@ -89,9 +89,9 @@
                                 {{"-"}}
                                 @else
                                 @if ($d->penguji_III_id == auth()->user()->name)
-                                <b>{{ helper::getNamaDosenByKode($d->penguji_III_id) }}</b>
+                                <b>{{ $d->penguji_III_id_nama }}</b>
                                 @else
-                                {{ helper::getNamaDosenByKode($d->penguji_III_id) }}
+                                {{ $d->penguji_III_id_nama }}
                                 @endif
                                 @endif
                             </td>
@@ -100,13 +100,13 @@
                                 {{"-"}}
                                 @else
                                 @if ($d->ketua_sidang_id == auth()->user()->name)
-                                <b>{{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}</b>
+                                <b>{{ $d->ketua_sidang_id_nama }}</b>
                                 @else
-                                {{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}
+                                {{ $d->ketua_sidang_id_nama }}
                                 @endif
                                 @endif
                             </td>
-                            @if (helper::getStatusSKUjianMejaForMahasiswa($d->C_NPM) != '')
+                            @if ($d->memiliki_sk)
                             <td><a target="_blank"
                                     href="{{ url('dsn/surat_sk_ujian_meja')}}/{{$d->C_NPM}}"><i
                                         class="fa fa-paperclip icon-square icon-xs icon-dark"></i></a></td>

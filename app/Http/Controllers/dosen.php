@@ -785,8 +785,8 @@ class dosen extends Controller
     // Halaman Jadwal Proposal
     public function jadwal_proposal()
     {
-        $kode = auth()->user()->name;
-        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa, trt_jadwal_ujian, trt_jadwal_ujian_per_mhs , mst_ruangan WHERE mst_ruangan.id =  trt_jadwal_ujian_per_mhs.ruangan AND trt_bimbingan.C_NPM = trt_jadwal_ujian_per_mhs.C_NPM AND trt_jadwal_ujian.id = trt_jadwal_ujian_per_mhs.jadwal_ujian AND trt_jadwal_ujian.pendaftaran_id = trt_reg.pendaftaran_id AND trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id  = ? OR trt_penguji.penguji_II_id  = ? OR trt_penguji.penguji_III_id  = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ? ", [$kode, $kode, $kode, $kode, $kode, $kode, 0]);
+        $data = $this->lecturerExamSchedule(0);
+
         return view('tugasakhir.dosen.jadwal_proposal', compact('data'));
     }
     // Akhir Halaman Jadwal Proposal
@@ -794,12 +794,105 @@ class dosen extends Controller
     // Halaman Jadwal Ujian Meja
     public function jadwal_ujianmeja()
     {
-        $kode = auth()->user()->name;
-        $data = DB::select("SELECT * FROM trt_reg, trt_bimbingan, trt_penguji, t_mst_mahasiswa, trt_jadwal_ujian, trt_jadwal_ujian_per_mhs , mst_ruangan WHERE mst_ruangan.id =  trt_jadwal_ujian_per_mhs.ruangan AND trt_bimbingan.C_NPM = trt_jadwal_ujian_per_mhs.C_NPM AND trt_jadwal_ujian.pendaftaran_id = trt_reg.pendaftaran_id AND trt_jadwal_ujian.id = trt_jadwal_ujian_per_mhs.jadwal_ujian AND  trt_reg.bimbingan_id = trt_bimbingan.bimbingan_id AND trt_bimbingan.C_NPM = t_mst_mahasiswa.C_NPM AND trt_penguji.tipe_ujian = trt_reg.status AND  trt_penguji.C_NPM = trt_bimbingan.C_NPM AND (trt_penguji.penguji_I_id  = ? OR trt_penguji.penguji_II_id  = ? OR trt_penguji.penguji_III_id  = ? OR trt_penguji.ketua_sidang_id = ? OR trt_bimbingan.pembimbing_I_id = ? OR trt_bimbingan.pembimbing_II_id = ?) AND trt_reg.status = ? ", [$kode, $kode, $kode, $kode, $kode, $kode, 2]);
+        $data = $this->lecturerExamSchedule(2);
 
         return view('tugasakhir.dosen.jadwal_ujianmeja', compact('data'));
     }
     // Akhir Halaman Ujian Meja
+
+    /**
+     * Fetch a lecturer's exam schedule without per-row database lookups in the view.
+     */
+    private function lecturerExamSchedule($tipeUjian)
+    {
+        $kode = auth()->user()->name;
+        $data = DB::table('trt_reg as rg')
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+            ->join('trt_penguji as pu', function ($join) {
+                $join->on('pu.C_NPM', '=', 'tb.C_NPM')
+                    ->on('pu.tipe_ujian', '=', 'rg.status');
+            })
+            ->join('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'tb.C_NPM')
+            ->join('trt_jadwal_ujian_per_mhs as jpm', 'jpm.C_NPM', '=', 'tb.C_NPM')
+            ->join('trt_jadwal_ujian as ju', function ($join) {
+                $join->on('ju.id', '=', 'jpm.jadwal_ujian')
+                    ->on('ju.pendaftaran_id', '=', 'rg.pendaftaran_id');
+            })
+            ->join('mst_ruangan as ruangan', 'ruangan.id', '=', 'jpm.ruangan')
+            ->where(function ($query) use ($kode) {
+                $query->where('pu.penguji_I_id', $kode)
+                    ->orWhere('pu.penguji_II_id', $kode)
+                    ->orWhere('pu.penguji_III_id', $kode)
+                    ->orWhere('pu.ketua_sidang_id', $kode)
+                    ->orWhere('tb.pembimbing_I_id', $kode)
+                    ->orWhere('tb.pembimbing_II_id', $kode);
+            })
+            ->where('rg.status', $tipeUjian)
+            ->select([
+                'rg.pendaftaran_id',
+                'tb.C_NPM',
+                'mhs.NAMA_MAHASISWA',
+                'rg.status as tipe_ujian',
+                'ruangan.nama_ruangan',
+                'jpm.jam_ujian',
+                'ju.tgl_ujian',
+                'tb.pembimbing_I_id',
+                'tb.pembimbing_II_id',
+                'pu.penguji_I_id',
+                'pu.penguji_II_id',
+                'pu.penguji_III_id',
+                'pu.ketua_sidang_id',
+                'pu.nomor_sk as nomor_sk_proposal',
+            ])
+            ->orderBy('ju.tgl_ujian', 'desc')
+            ->orderBy('jpm.jam_ujian', 'asc')
+            ->get();
+
+        $kodeDosen = $data->flatMap(function ($item) {
+            return [
+                $item->pembimbing_I_id,
+                $item->pembimbing_II_id,
+                $item->penguji_I_id,
+                $item->penguji_II_id,
+                $item->penguji_III_id,
+                $item->ketua_sidang_id,
+            ];
+        })->filter()->unique()->values();
+
+        $namaDosen = DB::table('t_mst_dosen')
+            ->whereIn('C_KODE_DOSEN', $kodeDosen)
+            ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN');
+
+        $nimDenganSkUjianMeja = collect();
+        if ((int) $tipeUjian === 2 && $data->isNotEmpty()) {
+            $nimDenganSkUjianMeja = DB::table('mst_sk_penugasan as sk')
+                ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'sk.bimbingan_id')
+                ->whereIn('tb.C_NPM', $data->pluck('C_NPM')->unique()->values())
+                ->pluck('tb.C_NPM')
+                ->flip();
+        }
+
+        $data->transform(function ($item) use ($namaDosen, $nimDenganSkUjianMeja, $tipeUjian) {
+            foreach ([
+                'pembimbing_I_id',
+                'pembimbing_II_id',
+                'penguji_I_id',
+                'penguji_II_id',
+                'penguji_III_id',
+                'ketua_sidang_id',
+            ] as $field) {
+                $item->{$field . '_nama'} = $namaDosen->get($item->{$field}, '--');
+            }
+
+            $item->memiliki_sk = (int) $tipeUjian === 0
+                ? trim((string) $item->nomor_sk_proposal) !== ''
+                : $nimDenganSkUjianMeja->has($item->C_NPM);
+
+            return $item;
+        });
+
+        return $data;
+    }
 
     // Halaman Ubah Password
     public function ubah_password()
