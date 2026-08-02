@@ -11,6 +11,7 @@ use App\Console\Commands\BackfillJenisTugasAkhirUsulan;
 use App\Console\Commands\StandardizeJenisTugasAkhir;
 use App\Console\Commands\LinkBimbinganTopik;
 use App\Http\Controllers\Prodi;
+use App\Http\Controllers\mhs;
 use App\Helper;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -33,6 +34,7 @@ class JenisTugasAkhirBackfillTest extends TestCase
             $table->increments('jenis_tugas_akhir_id');
             $table->string('kode_jenis_tugas_akhir')->unique();
             $table->string('deskripsi');
+            $table->boolean('tersedia_untuk_mahasiswa')->default(1);
             $table->timestamps();
         });
         Schema::create('trt_bimbingan', function (Blueprint $table) {
@@ -202,6 +204,31 @@ class JenisTugasAkhirBackfillTest extends TestCase
         $this->assertSame($nsKtId, DB::table('trt_bimbingan')->value('jenis_tugas_akhir_id'));
         $this->assertSame($nsKtId, DB::table('trt_topik')->value('jenis_tugas_akhir_id'));
         $this->assertSame('[NS-KT] Judul NT', Helper::judulDenganKodeJenisTugasAkhir($nsKtId, 'Judul NT'));
+    }
+
+    public function testStudentTypeChoicesExcludeDisabledTypesButKeepCurrentHistoricalType()
+    {
+        DB::table('mst_jenis_tugas_akhir')
+            ->where('kode_jenis_tugas_akhir', 'NS-PK')
+            ->update(['tersedia_untuk_mahasiswa' => 0]);
+
+        $queryMethod = new \ReflectionMethod(mhs::class, 'jenisTugasAkhirMahasiswaQuery');
+        $queryMethod->setAccessible(true);
+        $controller = new mhs;
+
+        $available = $queryMethod->invoke($controller)
+            ->orderBy('kode_jenis_tugas_akhir')
+            ->pluck('kode_jenis_tugas_akhir')
+            ->all();
+        $disabledId = DB::table('mst_jenis_tugas_akhir')
+            ->where('kode_jenis_tugas_akhir', 'NS-PK')
+            ->value('jenis_tugas_akhir_id');
+        $includingHistorical = $queryMethod->invoke($controller, $disabledId)
+            ->pluck('kode_jenis_tugas_akhir')
+            ->all();
+
+        $this->assertNotContains('NS-PK', $available);
+        $this->assertContains('NS-PK', $includingHistorical);
     }
 
     public function testLinkingGuidanceToTopicsSkipsAmbiguousHistory()

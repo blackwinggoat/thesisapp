@@ -134,6 +134,7 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get('/prodi/master/dosen/edit/{kode_dosen}', 'Prodi@master_dosen_edit');
     Route::get('/prodi/master/jenis_tugas_akhir', 'Prodi@master_jenis_tugas_akhir');
     Route::get('/prodi/master/jenis_tugas_akhir/delete/{id}', 'Prodi@master_jenis_tugas_akhir_delete');
+    Route::post('/prodi/master/jenis_tugas_akhir/{id}/availability', 'Prodi@master_jenis_tugas_akhir_availability');
     Route::get('/prodi/topik', 'Prodi@topik');
     Route::get('/prodi/topik/riwayat', 'Prodi@topik_riwayat');
     Route::get('/prodi/detail_topikusulan/{id}', 'Prodi@detail_topikusulan');

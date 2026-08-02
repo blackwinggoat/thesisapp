@@ -54,6 +54,18 @@
                         <br><br>
 
                         <div class="form-group">
+                            <label class="col-lg-2 control-label">Tersedia bagi Mahasiswa</label>
+                            <div class="col-lg-5">
+                                <select class="form-control bold-border" name="tersedia_untuk_mahasiswa">
+                                    <option value="1">Tersedia</option>
+                                    <option value="0">Tidak Tersedia</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <br><br>
+
+                        <div class="form-group">
                             <div class="col-xs-7" align="right">
                                 <button class="btn btn-primary btn-perspective" type="button"
                                     onclick="showPostModal(this)"
@@ -74,6 +86,7 @@
                                 <th>No</th>
                                 <th>Kode Jenis Tugas Akhir</th>
                                 <th>Deskripsi</th>
+                                <th>Tersedia bagi Mahasiswa</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -84,6 +97,22 @@
                                     <td>{{ $value->kode_jenis_tugas_akhir }}</td>
                                     <td>{{ $value->deskripsi }}</td>
                                     <td>
+                                        @if (($value->tersedia_untuk_mahasiswa ?? 1) == 1)
+                                            <span class="label label-success">Tersedia</span>
+                                        @else
+                                            <span class="label label-default">Tidak Tersedia</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($hasMahasiswaAvailability)
+                                            <form method="post" action="{{ url('prodi/master/jenis_tugas_akhir/' . $value->jenis_tugas_akhir_id . '/availability') }}" style="display: inline-block; margin-right: 6px;">
+                                                {{ csrf_field() }}
+                                                <input type="hidden" name="tersedia_untuk_mahasiswa" value="{{ ($value->tersedia_untuk_mahasiswa ?? 1) == 1 ? 0 : 1 }}">
+                                                <label title="{{ ($value->tersedia_untuk_mahasiswa ?? 1) == 1 ? 'Sembunyikan dari pilihan mahasiswa' : 'Tampilkan pada pilihan mahasiswa' }}" style="margin: 0; cursor: pointer;">
+                                                    <input type="checkbox" {{ ($value->tersedia_untuk_mahasiswa ?? 1) == 1 ? 'checked' : '' }} onchange="this.form.submit()">
+                                                </label>
+                                            </form>
+                                        @endif
                                         <button class="btn btn-danger" onclick="showModal(this)"
                                             data-target="#modalDanger" data-toggle="modal"
                                             data-href="{{ url('prodi/master/jenis_tugas_akhir/delete/' . $value->jenis_tugas_akhir_id) }}">
@@ -93,7 +122,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center">Belum ada data jenis tugas akhir.</td>
+                                    <td colspan="5" class="text-center">Belum ada data jenis tugas akhir.</td>
                                 </tr>
                             @endforelse
                         </tbody>

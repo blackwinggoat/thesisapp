@@ -527,7 +527,7 @@ class mhs extends Controller
             ->select("*")
             ->where("topik_id", $id)
             ->get();
-        $jenisTugasAkhir = DB::table('mst_jenis_tugas_akhir')
+        $jenisTugasAkhir = $this->jenisTugasAkhirMahasiswaQuery($data[0]->jenis_tugas_akhir_id ?? null)
             ->orderBy('kode_jenis_tugas_akhir')
             ->get();
         return view("tugasakhir.mhs.ubah_judul", compact('data', 'jenisTugasAkhir'));
@@ -535,13 +535,27 @@ class mhs extends Controller
 
     public function judul_update(Request $request, $id)
     {
+        $topik = trt_topik::where('topik_id', $id)
+            ->where('C_NPM', auth()->user()->name)
+            ->first();
+
+        if (!$topik) {
+            return redirect::to('mhs/pengajuan_topik')->with('error', 'Data topik tidak ditemukan.');
+        }
+
         $request->merge([
             'topik' => $this->judulTanpaKodeJenisTugasAkhir($request->topik),
         ]);
         $this->validate($request, [
             'topik' => 'required|max:1000',
-            'jenis_tugas_akhir_id' => 'required|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
+            'jenis_tugas_akhir_id' => 'required|integer',
         ]);
+
+        if (!$this->jenisTugasAkhirMahasiswaDapatDipilih($request->jenis_tugas_akhir_id, $topik->jenis_tugas_akhir_id)) {
+            return redirect()->back()->withInput()->withErrors([
+                'jenis_tugas_akhir_id' => 'Jenis tugas akhir tidak tersedia untuk mahasiswa.',
+            ]);
+        }
 
         DB::transaction(function () use ($request, $id) {
             trt_topik::where("topik_id", $id)
@@ -613,7 +627,7 @@ class mhs extends Controller
             ->where('trt_topik.C_NPM', $id)
             ->where('trt_topik.status', 1)
             ->first();
-        $jenisTugasAkhir = DB::table('mst_jenis_tugas_akhir')
+        $jenisTugasAkhir = $this->jenisTugasAkhirMahasiswaQuery()
             ->orderBy('kode_jenis_tugas_akhir')
             ->get();
         $bidangilmuid = $topik
@@ -653,9 +667,15 @@ class mhs extends Controller
         ]);
         $this->validate($request, [
             'topik' => 'required|max:1000',
-            'jenis_tugas_akhir_id' => 'required|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
+            'jenis_tugas_akhir_id' => 'required|integer',
             'bidang_ilmu' => 'required|array|min:1',
         ]);
+
+        if (!$this->jenisTugasAkhirMahasiswaDapatDipilih($request->jenis_tugas_akhir_id)) {
+            return redirect()->back()->withInput()->withErrors([
+                'jenis_tugas_akhir_id' => 'Jenis tugas akhir tidak tersedia untuk mahasiswa.',
+            ]);
+        }
 
         $datapost = $request->except(["bidang_ilmu"]);
         $datapost['status'] = 0;
@@ -693,6 +713,30 @@ class mhs extends Controller
             '',
             trim((string) $judul)
         ));
+    }
+
+    private function jenisTugasAkhirMahasiswaQuery($selectedJenisTugasAkhirId = null)
+    {
+        $query = DB::table('mst_jenis_tugas_akhir');
+
+        if (Schema::hasColumn('mst_jenis_tugas_akhir', 'tersedia_untuk_mahasiswa')) {
+            $query->where(function ($subQuery) use ($selectedJenisTugasAkhirId) {
+                $subQuery->where('tersedia_untuk_mahasiswa', 1);
+
+                if ($selectedJenisTugasAkhirId !== null) {
+                    $subQuery->orWhere('jenis_tugas_akhir_id', $selectedJenisTugasAkhirId);
+                }
+            });
+        }
+
+        return $query;
+    }
+
+    private function jenisTugasAkhirMahasiswaDapatDipilih($jenisTugasAkhirId, $selectedJenisTugasAkhirId = null)
+    {
+        return $this->jenisTugasAkhirMahasiswaQuery($selectedJenisTugasAkhirId)
+            ->where('jenis_tugas_akhir_id', (int) $jenisTugasAkhirId)
+            ->exists();
     }
 
 

@@ -2309,12 +2309,19 @@ class Prodi extends Controller
 
     public function master_jenis_tugas_akhir()
     {
+        $hasMahasiswaAvailability = Schema::hasColumn('mst_jenis_tugas_akhir', 'tersedia_untuk_mahasiswa');
         $data = DB::table('mst_jenis_tugas_akhir')
             ->select('*')
             ->orderBy('kode_jenis_tugas_akhir')
             ->get();
 
-        return view('tugasakhir.prodi.master_jenis_tugas_akhir', compact('data'));
+        if (!$hasMahasiswaAvailability) {
+            $data->each(function ($jenis) {
+                $jenis->tersedia_untuk_mahasiswa = 1;
+            });
+        }
+
+        return view('tugasakhir.prodi.master_jenis_tugas_akhir', compact('data', 'hasMahasiswaAvailability'));
     }
 
     public function master_dosen()
@@ -2443,10 +2450,16 @@ class Prodi extends Controller
         ]);
 
         try {
-            mst_jenis_tugas_akhir::create([
+            $payload = [
                 'kode_jenis_tugas_akhir' => trim($request->kode_jenis_tugas_akhir),
                 'deskripsi' => trim($request->deskripsi),
-            ]);
+            ];
+
+            if (Schema::hasColumn('mst_jenis_tugas_akhir', 'tersedia_untuk_mahasiswa')) {
+                $payload['tersedia_untuk_mahasiswa'] = (int) $request->input('tersedia_untuk_mahasiswa', 1);
+            }
+
+            mst_jenis_tugas_akhir::create($payload);
 
             return redirect::to('prodi/master/jenis_tugas_akhir')->with('success', 'Data berhasil disimpan.');
         } catch (Exception $e) {
@@ -2549,6 +2562,30 @@ class Prodi extends Controller
         } catch (Exception $e) {
             return redirect::to('prodi/master/jenis_tugas_akhir')->with('danger', 'Data gagal dihapus.');
         }
+    }
+
+    public function master_jenis_tugas_akhir_availability(Request $request, $id)
+    {
+        if (!Schema::hasColumn('mst_jenis_tugas_akhir', 'tersedia_untuk_mahasiswa')) {
+            return redirect::to('prodi/master/jenis_tugas_akhir')->with('danger', 'Pengaturan ketersediaan belum tersedia.');
+        }
+
+        $this->validate($request, [
+            'tersedia_untuk_mahasiswa' => 'required|in:0,1',
+        ]);
+
+        $updated = DB::table('mst_jenis_tugas_akhir')
+            ->where('jenis_tugas_akhir_id', $id)
+            ->update([
+                'tersedia_untuk_mahasiswa' => (int) $request->tersedia_untuk_mahasiswa,
+                'updated_at' => Carbon::now(),
+            ]);
+
+        if (!$updated) {
+            return redirect::to('prodi/master/jenis_tugas_akhir')->with('danger', 'Jenis tugas akhir tidak ditemukan.');
+        }
+
+        return redirect::to('prodi/master/jenis_tugas_akhir')->with('success', 'Ketersediaan jenis tugas akhir berhasil diperbarui.');
     }
 
     public function syaratdel($id)
