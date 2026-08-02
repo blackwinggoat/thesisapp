@@ -1787,6 +1787,8 @@ class dosen extends Controller
                 'mst_sk_pembimbing.created_at as tanggal_sk'
             )
             ->where('trt_bimbingan.' . $kolomPembimbing, $kodeDosen)
+            ->whereNotNull('mst_sk_pembimbing.nomor_sk')
+            ->whereRaw("TRIM(mst_sk_pembimbing.nomor_sk) <> ''")
             ->orderBy('t_mst_mahasiswa.NAMA_MAHASISWA', 'asc')
             ->distinct();
 
