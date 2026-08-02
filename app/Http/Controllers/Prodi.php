@@ -462,6 +462,10 @@ class prodi extends Controller
             ->where('rg.status', $tipeUjian)
             ->where('tb.status_bimbingan', $statusSaatIni)
             ->where('mp.status_prodi', $statusProdi)
+            ->where(function ($query) use ($tipeUjian) {
+                $query->where('mp.tipe_ujian', $tipeUjian)
+                    ->orWhere('mp.tipe_ujian', 3);
+            })
             ->whereRaw(
                 'rg.reg_id = (SELECT MAX(rg_latest.reg_id) FROM trt_reg AS rg_latest WHERE rg_latest.bimbingan_id = rg.bimbingan_id AND rg_latest.status = ?)',
                 [$tipeUjian]

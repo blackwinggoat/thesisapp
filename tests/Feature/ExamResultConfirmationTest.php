@@ -26,6 +26,7 @@ class ExamResultConfirmationTest extends TestCase
         Schema::create('mst_pendaftaran', function (Blueprint $table) {
             $table->integer('pendaftaran_id')->primary();
             $table->integer('status_prodi');
+            $table->integer('tipe_ujian');
         });
         Schema::create('trt_bimbingan', function (Blueprint $table) {
             $table->integer('bimbingan_id')->primary();
@@ -70,6 +71,7 @@ class ExamResultConfirmationTest extends TestCase
         $this->addCandidate(3, 103, 'MHS3', 0, 2, 1, ['P3', 'U3', 'K3']);
         $this->addCandidate(4, 104, 'MHS4', 0, 0, 2, ['P4', 'U4', 'K4']);
         $this->addCandidate(5, 105, 'MHS5', 0, 0, 1, ['P5', 'U5', 'K5']);
+        $this->addCandidate(6, 107, 'MHS6', 0, 0, 1, ['P6', 'U6', 'K6'], 2);
 
         DB::table('trt_reg')->insert([
             'reg_id' => 106,
@@ -85,6 +87,7 @@ class ExamResultConfirmationTest extends TestCase
         $this->assertSame(0, $this->statusBimbingan(3));
         $this->assertSame(0, $this->statusBimbingan(4));
         $this->assertSame(0, $this->statusBimbingan(5));
+        $this->assertSame(0, $this->statusBimbingan(6));
         $this->assertSame('success', $response->getSession()->get('status'));
         $this->assertSame(1, $response->getSession()->get('total'));
         $this->assertSame(2, $response->getSession()->get('total_belum_lengkap'));
@@ -153,11 +156,12 @@ class ExamResultConfirmationTest extends TestCase
         }
     }
 
-    private function addCandidate($bimbinganId, $regId, $nim, $statusBimbingan, $tipeUjian, $statusProdi, array $filledAssessors)
+    private function addCandidate($bimbinganId, $regId, $nim, $statusBimbingan, $tipeUjian, $statusProdi, array $filledAssessors, $tipePendaftaran = null)
     {
         DB::table('mst_pendaftaran')->insert([
             'pendaftaran_id' => $regId,
             'status_prodi' => $statusProdi,
+            'tipe_ujian' => $tipePendaftaran === null ? $tipeUjian : $tipePendaftaran,
         ]);
         DB::table('trt_bimbingan')->insert([
             'bimbingan_id' => $bimbinganId,
