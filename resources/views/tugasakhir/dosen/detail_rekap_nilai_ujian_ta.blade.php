@@ -64,40 +64,7 @@
                             <td width="1%" align="center">{{++$i}}</td>
                             <td>{{$d->C_NPM}}</td>
                             <td>{{$d->NAMA_MAHASISWA}}</td>
-                            <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_I_id, $d->reg_id) ?></td>
-                            <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_II_id, $d->reg_id) ?></td>
-                            <td>
-                                @if (empty($d->penguji_I_id))
-                                {{"-"}}
-                                @else
-                                {{ helper::getNamaDosenByKode($d->penguji_I_id) }}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_I_id, $d->reg_id) ?>
-                                @endif
-                            </td>
-                            <td>
-                                @if (empty($d->penguji_II_id))
-                                {{"-"}}
-                                @else
-                                {{ helper::getNamaDosenByKode($d->penguji_II_id) }}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_II_id, $d->reg_id) ?>
-                                @endif
-                            </td>
-                            <td>
-                                @if (empty($d->penguji_III_id))
-                                {{"-"}}
-                                @else
-                                {{ helper::getNamaDosenByKode($d->penguji_III_id) }}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_III_id, $d->reg_id) ?>
-                                @endif
-                            </td>
-                            <td>
-                                @if (empty($d->ketua_sidang_id))
-                                {{"-"}}
-                                @else
-                                {{ helper::getNamaDosenByKode($d->ketua_sidang_id) }}
-                                <?= helper::getStatusPenilaianPerDosen($d->ketua_sidang_id, $d->reg_id) ?>
-                                @endif
-                            </td>
+                            @include('tugasakhir.dosen.partials.rekap_penilai_cells')
                             <td>
                                 @if (empty($d->penguji_I_id) && empty($d->penguji_II_id) && empty($d->penguji_III_id) && empty($d->ketua_sidang_id))
                                 Silahkan Set Penguji dan Ketua Sidang

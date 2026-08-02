@@ -40,6 +40,64 @@ use Illuminate\Support\Facades\Input;
 
 class Prodi extends Controller
 {
+    private function preparePenilaiBatchViewData($data)
+    {
+        $data = collect($data);
+        $dosenColumns = [
+            'pembimbing_I_id',
+            'pembimbing_II_id',
+            'penguji_I_id',
+            'penguji_II_id',
+            'penguji_III_id',
+            'ketua_sidang_id',
+        ];
+
+        $dosenIds = $data->flatMap(function ($row) use ($dosenColumns) {
+            return collect($dosenColumns)->map(function ($column) use ($row) {
+                return isset($row->{$column}) ? $row->{$column} : null;
+            });
+        })->filter()->unique()->values();
+
+        $dosenByKode = $dosenIds->isEmpty()
+            ? collect()
+            : DB::table('t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $dosenIds)
+                ->get()
+                ->keyBy('C_KODE_DOSEN');
+
+        $missingDosenIds = $dosenIds->reject(function ($kodeDosen) use ($dosenByKode) {
+            return $dosenByKode->has($kodeDosen);
+        });
+        if ($missingDosenIds->isNotEmpty() && Schema::hasTable('mig_t_mst_dosen')) {
+            DB::table('mig_t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $missingDosenIds)
+                ->get()
+                ->each(function ($dosen) use ($dosenByKode) {
+                    $dosenByKode->put($dosen->C_KODE_DOSEN, $dosen);
+                });
+        }
+
+        $regIds = $data->pluck('reg_id')->filter()->unique()->values();
+        $penilaianLengkap = $regIds->isEmpty()
+            ? collect()
+            : trt_hasil::whereIn('reg_id', $regIds)
+                ->whereNotNull('nilai_1')
+                ->whereNotNull('nilai_2')
+                ->whereNotNull('nilai_3')
+                ->whereNotNull('nilai_4')
+                ->whereNotNull('nilai_5')
+                ->where('nilai_1', '>', 0)
+                ->where('nilai_2', '>', 0)
+                ->where('nilai_3', '>', 0)
+                ->where('nilai_4', '>', 0)
+                ->where('nilai_5', '>', 0)
+                ->get(['reg_id', 'nidn'])
+                ->mapWithKeys(function ($hasil) {
+                    return [$hasil->reg_id . ':' . $hasil->nidn => true];
+                });
+
+        return compact('dosenByKode', 'penilaianLengkap');
+    }
 
     // Ubah Pembimbing Per Mahasiswa
     public function ubah_pembimbing_per_mahasiswa($nim)
@@ -331,7 +389,10 @@ class Prodi extends Controller
             't_mst_mahasiswa.NAMA_MAHASISWA'
         )->get();
 
-        return view('tugasakhir.prodi.detail_hasilujian_proposal', compact("data", "info", "isHistory"));
+        return view('tugasakhir.prodi.detail_hasilujian_proposal', array_merge(
+            compact('data', 'info', 'isHistory'),
+            $this->preparePenilaiBatchViewData($data)
+        ));
     }
 
     protected function getDaftarApproveHasilUjianProposalPeriode($isHistory = false)
@@ -672,7 +733,10 @@ class Prodi extends Controller
             't_mst_mahasiswa.NAMA_MAHASISWA'
         )->get();
 
-        return view('tugasakhir.prodi.detail_hasilujian_ta', compact("data", "info", "isHistory"));
+        return view('tugasakhir.prodi.detail_hasilujian_ta', array_merge(
+            compact('data', 'info', 'isHistory'),
+            $this->preparePenilaiBatchViewData($data)
+        ));
     }
     // Akhir Approve Hasil Ujian TA
 

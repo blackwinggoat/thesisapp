@@ -71,59 +71,17 @@
                             <td width="1%" align="center">{{++$i}}</td>
                             <td>{{$d->C_NPM}}</td>
                             <td>{{$d->NAMA_MAHASISWA}}</td>
-                            @php
-                            $pembimbing1 = helper::getNamaDosenByKode($d->pembimbing_I_id);
-                            $pembimbing2 = helper::getNamaDosenByKode($d->pembimbing_II_id);
-                            $penguji1 = helper::getNamaDosenByKode($d->penguji_I_id);
-                            $penguji2 = helper::getNamaDosenByKode($d->penguji_II_id);
-                            $penguji3 = helper::getNamaDosenByKode($d->penguji_III_id);
-                            $ketuasidang = helper::getNamaDosenByKode($d->ketua_sidang_id);
-                            @endphp
-                            <td>{{$pembimbing1}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_I_id, $d->reg_id) ?></td>
-                            <td>{{$pembimbing2}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_II_id, $d->reg_id) ?></td>
-                            <td>
-                                @if ($penguji1 == '--')
-                                {{"-"}}
-                                @else
-                                {{$penguji1}}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_I_id, $d->reg_id) ?>
-                                @endif
-                            </td>
-                            <td>
-                                @if ($penguji2 == '--')
-                                {{"-"}}
-                                @else
-                                {{$penguji2}}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_II_id, $d->reg_id) ?>
-                                @endif
-                            </td>
-                            <td>
-                                @if ($penguji3 == '--')
-                                {{"-"}}
-                                @else
-                                {{$penguji3}}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_III_id, $d->reg_id) ?>
-                                @endif
-                            </td>
-                            <td>
-                                @if ($ketuasidang == '--')
-                                {{"-"}}
-                                @else
-                                {{$ketuasidang}}
-                                <?= helper::getStatusPenilaianPerDosen($d->ketua_sidang_id, $d->reg_id) ?>
-                                @endif
-                            </td>
+                            @include('tugasakhir.prodi.partials.hasil_ujian_penilai_cells')
                             <td>
                                 @if (!empty($isHistory))
                                     <span class="label label-success">Nilai Mahasiswa Telah Diapprove Oleh Prodi</span>
                                 @else
-                                    @if ($penguji1 == '--' && $penguji2 == '--' && $penguji3 == '--' && $ketuasidang ==
-                                    '--')
+                                    @if (empty($d->penguji_I_id) && empty($d->penguji_II_id) && empty($d->penguji_III_id) && empty($d->ketua_sidang_id))
                                     Silahkan Set Penguji dan Ketua Sidang
                                     @else
-                                    @if (helper::getStatusBimbinganByNim($d->C_NPM) == 2)
+                                    @if ((string) $d->status_bimbingan === '2')
                                         @if (helper::isPenilaianLengkapByRegId($d->reg_id))
-                                            @if (helper::getStatusTolakBimbinganMejaByNim($d->C_NPM) == 0)
+                                            @if (($d->status_tolak_meja ?? '') == 0)
                                                 <button onclick="showModal(this)" data-target="#modalPrimary" data-toggle="modal"
                                                 data-href="{{url('/prodi/approve_hasilujian_ta_post/')}}/{{$d->bimbingan_id}}/{{$d->C_NPM}}/{{$d->pendaftaran_id}}"
                                                 class="btn btn-primary">Terima
@@ -155,8 +113,7 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($penguji1 == null && $penguji2 == null && $penguji3 == null && $ketuasidang ==
-                                null)
+                                @if (empty($d->penguji_I_id) && empty($d->penguji_II_id) && empty($d->penguji_III_id) && empty($d->ketua_sidang_id))
                                 Silahkan Set Penguji dan Ketua Sidang
                                 @else
                                     @if (helper::isPenilaianLengkapByRegId($d->reg_id))
