@@ -921,10 +921,39 @@ ul.sidebar-menu li.text-content.profile-summary {
 	left: 0;
 	width: 50px;
 	height: 60px;
+	border: 0;
+	background: transparent;
 	cursor: pointer;
 	text-align: center;
 	font-size: 18px;
 	padding: 17px 0;
+}
+
+.btn-collapse-sidebar-left:focus {
+	outline: 2px solid #3EAFDB;
+	outline-offset: -3px;
+}
+
+.sidebar-backdrop {
+	display: none;
+}
+
+@media (min-width: 992px) {
+	body.sidebar-collapsed .sidebar-left {
+		left: -250px;
+	}
+
+	body.sidebar-collapsed .page-content {
+		margin-left: 0;
+	}
+
+	body.sidebar-collapsed .logo-brand {
+		transform: translateX(-250px);
+	}
+
+	body.sidebar-collapsed .top-nav-content {
+		margin-left: 0;
+	}
 }
 
 .btn-collapse-main-navigation {

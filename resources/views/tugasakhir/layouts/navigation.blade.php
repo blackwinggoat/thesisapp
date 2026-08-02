@@ -33,9 +33,10 @@ BEGIN PAGE
             <div class="top-nav-content">
 
                 <!-- Begin button sidebar left toggle -->
-                <div class="btn-collapse-sidebar-left">
+                <button type="button" class="btn-collapse-sidebar-left" data-sidebar-toggle
+                    aria-label="Tampilkan atau sembunyikan menu" aria-expanded="true" title="Sembunyikan menu">
                     <i class="fa fa-bars"></i>
-                </div><!-- /.btn-collapse-sidebar-left -->
+                </button><!-- /.btn-collapse-sidebar-left -->
                 <!-- End button sidebar left toggle -->
 
 
@@ -50,7 +51,15 @@ BEGIN PAGE
                 <ul class="nav-user navbar-right">
                     <li class="dropdown">
                         <a href="#fakelink" class="dropdown-toggle" data-toggle="dropdown">
-                            <img src="{{ asset('master/assets/img/avatar/avatar-1.jpg')}}" class="avatar img-circle" alt="Avatar">
+                            @php
+                                $navbarAvatar = asset('master/assets/img/avatar/avatar-1.jpg');
+                                if (Auth::check() && (int) Auth::user()->level === 7) {
+                                    $navbarAvatar = helper::dosenPhotoUrl(
+                                        helper::getCurrentDosenProfileByAuthUser()->D_FOTO_DOSEN ?? ''
+                                    );
+                                }
+                            @endphp
+                            <img src="{{ $navbarAvatar }}" class="avatar img-circle" alt="Foto profil">
                             @if(Auth::user()->level==1)
                             @elseif(Auth::user()->level==2)
                              Hi, <strong>Dekan Fakultas Ilmu Komputer</strong>
@@ -85,6 +94,7 @@ BEGIN PAGE
                             @elseif(Auth::user()->level==6)
                                 <li><a href="{{ url('akademikprodi/ubah_password')}}">Change password</a></li>
                             @elseif(Auth::user()->level==7)
+                                <li><a href="{{ url('dsn/profil') }}">Profil Saya</a></li>
                                 <li><a href="{{ url('dsn/ubah_password/')}}">Change password</a></li>
                             @elseif(Auth::user()->level==8)
                                 <li><a href="{{ url('mhs/ubah_password/')}}">Change password</a></li>
@@ -119,4 +129,4 @@ BEGIN PAGE
         </div><!-- /.top-navbar-inner -->
     </div><!-- /.top-navbar -->
     <!-- END TOP NAV -->
-
+    <div class="sidebar-backdrop" data-sidebar-dismiss aria-hidden="true"></div>

@@ -1,4 +1,8 @@
 <!-- BEGIN SIDEBAR LEFT -->
+@php
+    $dosenSidebarProfile = helper::getCurrentDosenProfileByAuthUser();
+    $dosenSidebarPhoto = helper::dosenPhotoUrl($dosenSidebarProfile->D_FOTO_DOSEN ?? '');
+@endphp
 <div class="sidebar-left sidebar-nicescroller">
     <ul class="sidebar-menu">
 
@@ -6,8 +10,10 @@
             <div class="media">
                 <p class="pull-left">
 
-                    <img src="{{ asset('master/assets/img/avatar/avatar-1.jpg') }}" class="avatar img-circle media-object"
-                        alt="Avatar">
+                    <a href="{{ url('dsn/profil') }}" title="Edit profil dosen">
+                        <img src="{{ $dosenSidebarPhoto }}" class="avatar img-circle media-object"
+                            alt="Foto profil dosen">
+                    </a>
                 </p>
                 <div class="media-body">
                     <h4>Welcome,
@@ -21,7 +27,10 @@
                             </a>
                         @endif
                         <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; height: 30px; color: white; border-radius: 5px;"
-                            href="{{ url('dsn/ubah_password') }}" class="btn btn-success btn-xs"><i
+                            href="{{ url('dsn/profil') }}" class="btn btn-primary btn-xs" title="Edit profil dosen"><i
+                                class="fa fa-user"></i></a>
+                        <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; height: 30px; color: white; border-radius: 5px;"
+                            href="{{ url('dsn/ubah_password') }}" class="btn btn-success btn-xs" title="Ubah kata sandi"><i
                                 class="fa fa-cog"></i></a>
                         <a style="display: inline-flex; align-items: center; justify-content: center; padding: 0 12px; height: 30px; color: white; border-radius: 5px;"
                             class="btn btn-danger btn-xs" href="{{ route('logout') }}"
@@ -41,6 +50,12 @@
             <a href="{{ url('/') }}">
                 <i class="fa fa-home icon-sidebar"></i>
                 Home
+            </a>
+        </li>
+        <li>
+            <a href="{{ url('dsn/profil') }}">
+                <i class="fa fa-user icon-sidebar"></i>
+                Profil Saya
             </a>
         </li>
         <li class="static">MENU DOSEN</li>

@@ -40,8 +40,8 @@
 
     <!-- MAIN CSS (REQUIRED ALL PAGE)-->
     <link href="{{ asset('master/assets/plugins/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('master/assets/css/style.css') }}" rel="stylesheet">
-    <link href="{{ asset('master/assets/css/style-responsive.css') }}" rel="stylesheet">
+    <link href="{{ asset('master/assets/css/style.css') }}?v={{ filemtime(public_path('master/assets/css/style.css')) }}" rel="stylesheet">
+    <link href="{{ asset('master/assets/css/style-responsive.css') }}?v={{ filemtime(public_path('master/assets/css/style-responsive.css')) }}" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/buttons/1.6.1/css/buttons.dataTables.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">

@@ -824,6 +824,13 @@ class dosen extends Controller
     }
     // Akhir Ubah Password
 
+    public function profil()
+    {
+        $profil = Helper::getCurrentDosenProfileByAuthUser();
+
+        return view('tugasakhir.dosen.profil', compact('profil'));
+    }
+
     public function kelengkapan_profil_post(Request $request)
     {
         $this->validate($request, [
@@ -833,6 +840,7 @@ class dosen extends Controller
             'EMAIL' => 'required|email|max:50',
             'pangkat' => 'required|max:100',
             'jabatan_fungsional' => 'required|in:Asisten Ahli,Lektor,Lektor Kepala,Guru Besar',
+            'foto_dosen' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
         ], [
             'C_KODE_PRODI.required' => 'Program studi wajib dipilih.',
             'C_KODE_PRODI.in' => 'Program studi tidak valid.',
@@ -853,9 +861,13 @@ class dosen extends Controller
 
         try {
             $payload = $this->buildKelengkapanProfilDosenPayload($request, $profile, $kodeDosen);
+            if ($request->hasFile('foto_dosen')) {
+                $payload['D_FOTO_DOSEN'] = $request->file('foto_dosen')->store('dosen', 'public');
+            }
             $this->syncKelengkapanProfilDosen($payload, $kodeDosen);
 
-            return redirect()->to('/')->with('dosen_profile_success', 'Kelengkapan profil berhasil disimpan.');
+            return redirect()->to($this->dosenProfileRedirectPath($request))
+                ->with('dosen_profile_success', 'Profil dosen berhasil disimpan.');
         } catch (Exception $e) {
             Log::error('kelengkapan_profil_post error', [
                 'kode_dosen' => $kodeDosen,
@@ -863,7 +875,8 @@ class dosen extends Controller
                 'line' => $e->getLine(),
             ]);
 
-            return redirect()->to('/')->withInput()->with('dosen_profile_error', 'Kelengkapan profil gagal disimpan.');
+            return redirect()->to($this->dosenProfileRedirectPath($request))
+                ->withInput()->with('dosen_profile_error', 'Profil dosen gagal disimpan.');
         }
     }
 
@@ -1810,8 +1823,14 @@ class dosen extends Controller
             'user_id',
             'C_KODE_STATUS_AKTIF_DOSEN',
             'F_AKTIF',
+            'D_FOTO_DOSEN',
             'updated_at',
         ]));
+    }
+
+    protected function dosenProfileRedirectPath(Request $request)
+    {
+        return $request->input('return_to') === 'profil' ? '/dsn/profil' : '/';
     }
 
     protected function getMahasiswaBimbinganByPeran($kodeDosen, $kolomPembimbing, $peranPembimbing)

@@ -460,6 +460,7 @@ Route::group(['middleware' => 'dosen'], function () {
     Route::post('/dsn/detail_note/{id}', 'dosen@note_update');
     Route::get("/dsn/ubah_password/", "dosen@ubah_password");
     Route::post("/dsn/ubah_password/", "dosen@ubah_password_post");
+    Route::get("/dsn/profil", "dosen@profil");
     Route::post("/dsn/kelengkapan_profil", "dosen@kelengkapan_profil_post");
     Route::get("/dsn/hasil_proposal/", "dosen@hasil_proposal");
     Route::get("/dsn/hasil_proposal_history/", "dosen@hasil_proposal_history");

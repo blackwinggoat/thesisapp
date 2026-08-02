@@ -30,28 +30,59 @@ $(document).ready(function () {
 
 
 	/** BUTTON TOGGLE FUNCTION **/
-	$(".btn-collapse-sidebar-left").click(function () {
-		"use strict";
-		$(".top-navbar").toggleClass("toggle");
-		$(".sidebar-left").toggleClass("toggle");
-		$(".page-content").toggleClass("toggle");
-		$(".icon-dinamic").toggleClass("rotate-180");
+	var sidebarPreferenceKey = 'thesisapps.sidebar.collapsed';
+	var sidebarToggle = $('[data-sidebar-toggle]');
 
-		if ($(window).width() > 991) {
-			if ($(".sidebar-right").hasClass("toggle-left") === true) {
-				$(".sidebar-right").removeClass("toggle-left");
-				$(".top-navbar").removeClass("toggle-left");
-				$(".page-content").removeClass("toggle-left");
-				$(".sidebar-left").removeClass("toggle-left");
-				if ($(".sidebar-left").hasClass("toggle") === true) {
-					$(".sidebar-left").removeClass("toggle");
-				}
-				if ($(".page-content").hasClass("toggle") === true) {
-					$(".page-content").removeClass("toggle");
-				}
-			}
+	function sidebarIsMobile() {
+		return window.matchMedia('(max-width: 991px)').matches;
+	}
+
+	function setSidebarOpen(isOpen, persistPreference) {
+		var isMobile = sidebarIsMobile();
+
+		$('body')
+			.toggleClass('sidebar-mobile-open', isMobile && isOpen)
+			.toggleClass('sidebar-collapsed', !isMobile && !isOpen);
+
+		sidebarToggle.attr('aria-expanded', isOpen ? 'true' : 'false');
+		sidebarToggle.attr('title', isOpen ? 'Sembunyikan menu' : 'Tampilkan menu');
+		sidebarToggle.find('i')
+			.toggleClass('fa-bars', isOpen)
+			.toggleClass('fa-chevron-right', !isOpen);
+
+		if (persistPreference && !isMobile && window.localStorage) {
+			window.localStorage.setItem(sidebarPreferenceKey, isOpen ? 'false' : 'true');
+		}
+	}
+
+	function restoreSidebarPreference() {
+		if (sidebarIsMobile()) {
+			setSidebarOpen(false, false);
+			return;
+		}
+
+		var isCollapsed = window.localStorage && window.localStorage.getItem(sidebarPreferenceKey) === 'true';
+		setSidebarOpen(!isCollapsed, false);
+	}
+
+	sidebarToggle.on('click', function () {
+		setSidebarOpen($(this).attr('aria-expanded') !== 'true', true);
+	});
+
+	$('[data-sidebar-dismiss]').on('click', function () {
+		if (sidebarIsMobile()) {
+			setSidebarOpen(false, false);
 		}
 	});
+
+	$(document).on('keyup', function (event) {
+		if (event.key === 'Escape' && sidebarIsMobile()) {
+			setSidebarOpen(false, false);
+		}
+	});
+
+	$(window).on('resize', restoreSidebarPreference);
+	restoreSidebarPreference();
 	$(".btn-collapse-sidebar-right").click(function () {
 		"use strict";
 		$(".top-navbar").toggleClass("toggle-left");
