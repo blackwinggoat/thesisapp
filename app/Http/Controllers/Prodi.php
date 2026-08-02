@@ -83,15 +83,27 @@ class Prodi extends Controller
             ->select("*")
             ->where("C_NPM", $nim)
             ->get();
-        return view("tugasakhir.prodi.edit_judul_detail_mahasiswa", compact('data'));
+        $jenisTugasAkhir = DB::table('mst_jenis_tugas_akhir')
+            ->orderBy('kode_jenis_tugas_akhir')
+            ->get();
+        return view("tugasakhir.prodi.edit_judul_detail_mahasiswa", compact('data', 'jenisTugasAkhir'));
     }
     // Akhir Edit Judul mahasiswa
 
     // Edit Judul Mahasiswa
     public function ubah_judul(Request $request, $nim)
     {
+        $request->merge([
+            'topik' => $this->judulTanpaKodeJenisTugasAkhir($request->topik),
+        ]);
+        $this->validate($request, [
+            'topik' => 'required|max:1000',
+            'jenis_tugas_akhir_id' => 'required|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
+        ]);
+
         DB::table("trt_bimbingan")->where('C_NPM', $nim)->update([
-            'judul' => $request->topik,
+            'judul' => trim((string) $request->topik),
+            'jenis_tugas_akhir_id' => $request->jenis_tugas_akhir_id,
         ]);
         return redirect::to('prodi/detail_mahasiswa/' . $nim);
     }
@@ -1481,7 +1493,23 @@ class Prodi extends Controller
 
     public function usulan_pembimbingpostadd(Request $request)
     {
-        $datapost = $request->all();
+        $request->merge([
+            'judul' => $this->judulTanpaKodeJenisTugasAkhir($request->judul),
+        ]);
+        $this->validate($request, [
+            'C_NPM' => 'required|max:50',
+            'judul' => 'required|max:1000',
+            'jenis_tugas_akhir_id' => 'required|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
+        ]);
+
+        $datapost = $request->only([
+            'C_NPM',
+            'judul',
+            'jenis_tugas_akhir_id',
+            'pembimbing_I_id',
+            'pembimbing_II_id',
+        ]);
+        $datapost['judul'] = trim((string) $datapost['judul']);
         $datapost['status_I'] = '0';
         $datapost['status_II'] = '0';
         $datapost['status_bimbingan'] = '0';
@@ -1493,6 +1521,15 @@ class Prodi extends Controller
         mst_tmp_usulan::where("C_NPM", $request->C_NPM)->delete();
 
         return redirect::to('prodi/usulan_pembimbing');
+    }
+
+    private function judulTanpaKodeJenisTugasAkhir($judul)
+    {
+        return trim((string) preg_replace(
+            '/^(?:\(\s*[A-Za-z]{2}\s*(?:-|_|\s)\s*[A-Za-z0-9]{2,}\s*\)\s*)+/',
+            '',
+            trim((string) $judul)
+        ));
     }
 
     public function set_pembimbing_sementara($nim, $dosen1, $dosen2)
@@ -1576,7 +1613,16 @@ class Prodi extends Controller
 
 
 
-        return view('tugasakhir.prodi.set_pembimbing', compact('data', 'data_mahasiswa', 'data_topik', 'cek'));
+        $jenisTugasAkhir = DB::table('mst_jenis_tugas_akhir')
+            ->orderBy('kode_jenis_tugas_akhir')
+            ->get();
+        $currentJenisTugasAkhirId = $status == 2 && isset($cek[0])
+            ? $cek[0]->jenis_tugas_akhir_id
+            : DB::table('mst_jenis_tugas_akhir')
+                ->where('kode_jenis_tugas_akhir', 'TA-SM')
+                ->value('jenis_tugas_akhir_id');
+
+        return view('tugasakhir.prodi.set_pembimbing', compact('data', 'data_mahasiswa', 'data_topik', 'cek', 'jenisTugasAkhir', 'currentJenisTugasAkhirId'));
     }
 
     public function set_penguji($pendaftaran_id, $nim, $tipe_ujian)

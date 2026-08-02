@@ -33,6 +33,19 @@
                     </div>
                     <br><br>
                     <div class="form-group">
+                        <label class="col-lg-2 control-label">Jenis Tugas Akhir</label>
+                        <div class="col-lg-5">
+                            <select class="form-control bold-border" name="jenis_tugas_akhir_id" required>
+                                @foreach ($jenisTugasAkhir as $jenis)
+                                <option value="{{$jenis->jenis_tugas_akhir_id}}" @if((int) $currentJenisTugasAkhirId === (int) $jenis->jenis_tugas_akhir_id) selected @endif>
+                                    {{$jenis->kode_jenis_tugas_akhir}} - {{$jenis->deskripsi}}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <br><br>
+                    <div class="form-group">
                         <label class="col-lg-2 control-label">Nama</label>
                         <div class="col-lg-5">
                             <input type="text" class="form-control bold-border" name="nama"
