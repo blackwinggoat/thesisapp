@@ -526,6 +526,7 @@ Route::group(['middleware' => 'mhs'], function () {
     Route::get('/mhs/pengajuan_topikdel/{id}', 'mhs@pengajuan_topikdel');
     Route::get('/mhs/riwayat_ujian/{nim}', 'mhs@riwayat_ujian');
     Route::get('/mhs/dosen', 'mhs@daftar_dosen');
+    Route::get('/mhs/profil', 'mhs@profil');
     Route::get('/mhs/mail_inbox', 'mhs@mail_inbox');
     Route::get('/mhs/mail_sent', 'mhs@mail_sent');
     Route::get('/mhs/mail_new', 'mhs@mail_new');

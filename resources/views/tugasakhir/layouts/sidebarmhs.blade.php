@@ -31,6 +31,12 @@
                 Home
             </a>
         </li>
+        <li>
+            <a href="{{ url('mhs/profil')}}">
+                <i class="fa fa-user icon-sidebar"></i>
+                Profil Saya
+            </a>
+        </li>
         <li class="static">MENU MAHASISWA</li>
         <li>
             <a href="{{url('mhs/download')}}">
@@ -105,4 +111,3 @@
     </ul>
 </div><!-- /.sidebar-left -->
 <!-- END SIDEBAR LEFT -->
-

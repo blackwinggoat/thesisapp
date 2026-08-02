@@ -289,14 +289,16 @@ class mhs extends Controller
 
     public function kelengkapan_kontak_post(Request $request)
     {
+        $redirectPath = $request->input('return_to') === 'profil' ? '/mhs/profil' : '/home';
+
         if (!Schema::hasTable('trt_kontak_mahasiswa')) {
-            return redirect()->to('/home')->with('mhs_contact_error', 'Tabel kontak mahasiswa belum tersedia.');
+            return redirect()->to($redirectPath)->with('mhs_contact_error', 'Tabel kontak mahasiswa belum tersedia.');
         }
 
         $nim = trim((string) auth()->user()->name);
 
         if ($nim === '') {
-            return redirect()->to('/home')->with('mhs_contact_error', 'NIM akun login tidak ditemukan.');
+            return redirect()->to($redirectPath)->with('mhs_contact_error', 'NIM akun login tidak ditemukan.');
         }
 
         $mahasiswa = DB::table('t_mst_mahasiswa')
@@ -305,7 +307,7 @@ class mhs extends Controller
             ->first();
 
         if (!$mahasiswa) {
-            return redirect()->to('/home')->with('mhs_contact_error', 'Data mahasiswa tidak ditemukan.');
+            return redirect()->to($redirectPath)->with('mhs_contact_error', 'Data mahasiswa tidak ditemukan.');
         }
 
         $fotoWajib = trim((string) $mahasiswa->D_FOTO_MAHASISWA) === '';
@@ -324,12 +326,12 @@ class mhs extends Controller
 
         $nomorWa = $this->normalizeNomorWaMahasiswa($request->no_wa);
         if ($nomorWa === null) {
-            return redirect()->to('/home')->withInput()->with('mhs_contact_error', 'Format nomor WhatsApp tidak valid. Gunakan format seperti 6281234567890 atau 081234567890.');
+            return redirect()->to($redirectPath)->withInput()->with('mhs_contact_error', 'Format nomor WhatsApp tidak valid. Gunakan format seperti 6281234567890 atau 081234567890.');
         }
 
         $idTelegram = $this->normalizeTelegramMahasiswa($request->id_telegram);
         if ($idTelegram === false) {
-            return redirect()->to('/home')->withInput()->with('mhs_contact_error', 'Format ID Telegram tidak valid. Gunakan format seperti @username_telegram.');
+            return redirect()->to($redirectPath)->withInput()->with('mhs_contact_error', 'Format ID Telegram tidak valid. Gunakan format seperti @username_telegram.');
         }
 
         $fotoBaru = null;
@@ -369,7 +371,7 @@ class mhs extends Controller
                 }
             }
 
-            return redirect()->to('/home')->with('mhs_contact_success', 'Data mahasiswa berhasil disimpan.');
+            return redirect()->to($redirectPath)->with('mhs_contact_success', 'Data mahasiswa berhasil disimpan.');
         } catch (Exception $e) {
             if ($fotoBaru !== null) {
                 Storage::disk('public')->delete($fotoBaru);
@@ -381,8 +383,25 @@ class mhs extends Controller
                 'line' => $e->getLine(),
             ]);
 
-            return redirect()->to('/home')->withInput()->with('mhs_contact_error', 'Kontak mahasiswa gagal disimpan.');
+            return redirect()->to($redirectPath)->withInput()->with('mhs_contact_error', 'Kontak mahasiswa gagal disimpan.');
         }
+    }
+
+    public function profil()
+    {
+        $profil = Helper::getCurrentMahasiswaContactByAuthUser();
+
+        if (!empty($profil->C_KODE_PRODI) && Schema::hasTable('trt_prodi')) {
+            $prodi = DB::table('trt_prodi')
+                ->select('nama')
+                ->where('kode_prodi', $profil->C_KODE_PRODI)
+                ->first();
+            $profil->nama_prodi = $prodi->nama ?? $profil->C_KODE_PRODI;
+        } else {
+            $profil->nama_prodi = $profil->C_KODE_PRODI ?? '-';
+        }
+
+        return view('tugasakhir.mhs.profil', compact('profil'));
     }
 
     // Cetak Berita Acara Ujian Proposal
