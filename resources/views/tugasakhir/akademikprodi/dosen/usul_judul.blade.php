@@ -6,7 +6,7 @@
         <h1 class="page-heading">Sistem Informasi Program Studi <small> TUGAS AKHIR</small></h1>
         <ol class="breadcrumb default square rsaquo sm">
             <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
-            <li><a href="#fakelink">Home</a></li>
+            <li><a href="{{ url('/') }}">Home</a></li>
             <li class="active">Daftar Usulan Judul</li>
         </ol>
         <h3 class="page-heading">Usulan Judul Anak Bimbingan</h3>

@@ -9,8 +9,8 @@
 
             <!-- Begin breadcrumb -->
             <ol class="breadcrumb default square rsaquo sm">
-                <li><a href="index.html"><i class="fa fa-home"></i></a></li>
-                <li><a href="#fakelink">Home</a></li>
+                <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
+                <li><a href="{{ url('/') }}">Home</a></li>
                 <li class="active">Syarat Ujian</li>
             </ol>
 

@@ -6,8 +6,8 @@
         <!-- Begin page heading -->
         <h1 class="page-heading">Sistem Informasi Program Studi <small> TUGAS AKHIR</small></h1>
         <ol class="breadcrumb default square rsaquo sm">
-            <li><a href="index.html"><i class="fa fa-home"></i></a></li>
-            <li><a href="#fakelink">Home</a></li>
+            <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
+            <li><a href="{{ url('/') }}">Home</a></li>
             <li class="active">History Detail Rekap Nilai Proposal</li>
         </ol>
         <div style="display: flex; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 8px;">

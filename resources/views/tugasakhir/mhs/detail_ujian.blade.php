@@ -38,8 +38,8 @@ $data_count_nilai = $data_count_nilai+ 1;
 
         <!-- Begin breadcrumb -->
         <ol class="breadcrumb default square rsaquo sm">
-            <li><a href="index.html"><i class="fa fa-home"></i></a></li>
-            <li><a href="#fakelink">Home</a></li>
+            <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
+            <li><a href="{{ url('/') }}">Home</a></li>
             <li><a href="#fakelink">Riwayat Ujian</a></li>
             <li class="active">Detail Ujian</li>
         </ol>
