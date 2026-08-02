@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use App\Console\Commands\BackfillJenisTugasAkhir;
+use App\Console\Commands\BackupJenisTugasAkhir;
 use App\Http\Controllers\Prodi;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -92,6 +93,24 @@ class JenisTugasAkhirBackfillTest extends TestCase
         $normalizer = new \ReflectionMethod(Prodi::class, 'judulTanpaKodeJenisTugasAkhir');
         $normalizer->setAccessible(true);
         $this->assertSame('Judul baru', $normalizer->invoke(new Prodi, '(NS-KT) Judul baru'));
+    }
+
+    public function testBackupWritesOnlyTheRelevantDatabaseData()
+    {
+        DB::table('trt_bimbingan')->insert(['judul' => 'Judul cadangan']);
+        $path = sys_get_temp_dir() . '/thesis-jenis-ta-' . bin2hex(random_bytes(8)) . '.json';
+
+        $command = $this->app->make(BackupJenisTugasAkhir::class);
+        $command->setLaravel($this->app);
+        $exitCode = $command->run(new ArrayInput(['path' => $path]), new BufferedOutput);
+        $backup = json_decode(file_get_contents($path), true);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertSame(1, count($backup['trt_bimbingan']));
+        $this->assertSame(5, count($backup['mst_jenis_tugas_akhir']));
+        $this->assertSame(0600, fileperms($path) & 0777);
+
+        unlink($path);
     }
 
     private function runBackfill()
