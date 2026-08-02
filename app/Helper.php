@@ -793,13 +793,32 @@ class Helper
     {
         $photo = trim((string) $photo);
 
-        if (!preg_match('/\Amahasiswa\/[a-zA-Z0-9._-]+\.(?:jpe?g|png)\z/i', $photo)) {
-            return self::isSafeOfficialImageName($photo)
-                ? asset('gambar/' . $photo)
-                : asset('gambar/no_image.jpg');
+        if (preg_match('/\Amahasiswa\/[a-zA-Z0-9._-]+\.(?:jpe?g|png)\z/i', $photo)
+            && Storage::disk('public')->exists($photo)) {
+            return asset('storage/' . $photo);
         }
 
-        return asset('storage/' . $photo);
+        if (self::isSafeOfficialImageName($photo) && is_file(public_path('gambar/' . $photo))) {
+            return asset('gambar/' . $photo);
+        }
+
+        return asset('images/defaults/student-avatar.png');
+    }
+
+    public static function dosenPhotoUrl($photo)
+    {
+        $photo = trim((string) $photo);
+
+        if (preg_match('/\Adosen\/[a-zA-Z0-9._-]+\.(?:jpe?g|png|webp)\z/i', $photo)
+            && Storage::disk('public')->exists($photo)) {
+            return asset('storage/' . $photo);
+        }
+
+        if (self::isSafeOfficialImageName($photo) && is_file(public_path('gambar/' . $photo))) {
+            return asset('gambar/' . $photo);
+        }
+
+        return asset('gambar/no_image.jpg');
     }
 
     private static function normalizeNamaOrang($nama)

@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 use RuntimeException;
 use Illuminate\Support\Facades\Auth;
@@ -2658,6 +2659,9 @@ class Prodi extends Controller
 
         try {
             $payload = $this->buildMasterDosenPayload($request);
+            if ($request->hasFile('foto_dosen')) {
+                $payload['D_FOTO_DOSEN'] = $request->file('foto_dosen')->store('dosen', 'public');
+            }
             $this->syncMasterDosenTables($payload);
 
             return redirect::to('prodi/master/dosen')->with('success', 'Data dosen berhasil disimpan dan disinkronkan.');
@@ -2698,6 +2702,9 @@ class Prodi extends Controller
 
         try {
             $payload = $this->buildMasterDosenPayload($request, $existing);
+            if ($request->hasFile('foto_dosen')) {
+                $payload['D_FOTO_DOSEN'] = $request->file('foto_dosen')->store('dosen', 'public');
+            }
             $this->syncMasterDosenTables($payload, $kode_dosen);
 
             return redirect::to('prodi/master/dosen')->with('success', 'Data dosen berhasil diperbarui.');
@@ -4567,6 +4574,7 @@ class Prodi extends Controller
             $merged->status_sinkron = $utama && $mig ? 'Lengkap' : 'Perlu Sinkron';
             $merged->nama_prodi = isset($prodiMap[$merged->C_KODE_PRODI]) ? $prodiMap[$merged->C_KODE_PRODI] : $merged->C_KODE_PRODI;
             $merged->status_aktif_label = (int) ($merged->F_AKTIF ?? 0) === 1 ? 'Aktif' : 'Non Aktif';
+            $merged->foto_url = Helper::dosenPhotoUrl($merged->D_FOTO_DOSEN ?? '');
 
             $data->push($merged);
         }
@@ -4645,6 +4653,7 @@ class Prodi extends Controller
             'ALAMAT' => 'nullable',
             'jabatan_fungsional' => 'nullable|in:Asisten Ahli,Lektor,Lektor Kepala,Guru Besar',
             'F_AKTIF' => 'nullable|in:0,1',
+            'foto_dosen' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
         ], [
             'C_KODE_DOSEN.required' => 'Kode dosen wajib diisi.',
             'NAMA_DOSEN.required' => 'Nama dosen wajib diisi.',
@@ -4860,6 +4869,7 @@ class Prodi extends Controller
             'AKRONIM_DOSEN',
             'F_AKTIF',
             'C_KODE_STATUS_AKTIF_DOSEN',
+            'D_FOTO_DOSEN',
             'updated_at',
         ];
 

@@ -586,6 +586,87 @@
         // }
         // }
 
+        (function ($) {
+            var $assessmentForm = $('form[action="{{ url('dsn/detailhasil_proposalpost/') }}"]');
+            var $scoreFields = $assessmentForm.find('select[name^="nilai_"]');
+            var initialAssessmentState = $assessmentForm.serialize();
+
+            function scores() {
+                return $scoreFields.map(function () {
+                    return Number($(this).val()) || 0;
+                }).get();
+            }
+
+            function isComplete() {
+                return scores().every(function (score) {
+                    return score > 0;
+                });
+            }
+
+            function grade(total, complete) {
+                if (!complete) return '--';
+                if (total > 85) return 'A';
+                if (total >= 81) return 'A-';
+                if (total >= 76) return 'B+';
+                if (total >= 71) return 'B';
+                return '--';
+            }
+
+            function updateAssessmentSummary() {
+                var currentScores = scores();
+                var total = currentScores.reduce(function (sum, score) {
+                    return sum + score;
+                }, 0);
+                var complete = isComplete();
+                var displayedTotal = total % 1 === 0 ? total.toFixed(0) : total.toFixed(1);
+
+                $('#total_nilai_final').text(displayedTotal);
+                $('#index_nilai_final').html('<h4 class="badge badge-primary">' + grade(total, complete) + '</h4>');
+            }
+
+            function hasUnsavedChanges() {
+                return $assessmentForm.length > 0
+                    && $assessmentForm.serialize() !== initialAssessmentState
+                    && !window.assessmentFormSubmitting;
+            }
+
+            $scoreFields.on('change', updateAssessmentSummary);
+            updateAssessmentSummary();
+
+            $('#tombol_satu').on('click', function () {
+                updateAssessmentSummary();
+                if (isComplete()) {
+                    $('#status').text('');
+                    $('#tombol_dua').removeAttr('disabled');
+                    return;
+                }
+
+                $('#tombol_dua').attr('disabled', 'disabled');
+                $('#status').text('Lengkapi semua komponen nilai sebelum mengirim penilaian.');
+            });
+
+            $('#tombol_dua').on('click', function () {
+                window.assessmentFormSubmitting = true;
+            });
+
+            $(document).on('click', 'a[href]', function (event) {
+                var href = $(this).attr('href');
+                if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0 || !hasUnsavedChanges()) {
+                    return;
+                }
+
+                if (!window.confirm('Nilai atau saran yang diubah belum disimpan. Keluar tanpa menyimpan?')) {
+                    event.preventDefault();
+                }
+            });
+
+            window.addEventListener('beforeunload', function (event) {
+                if (!hasUnsavedChanges()) return;
+                event.preventDefault();
+                event.returnValue = '';
+            });
+        })(jQuery);
+
         let modal, modalId, modalFooter, link, form, formaction;
 
         const showPostModal = e => {
@@ -609,6 +690,7 @@
 
         const submit = () => {
             form = document.querySelector(`form[action="${formaction}"]`);
+            window.assessmentFormSubmitting = true;
             form.submit();
         };
 

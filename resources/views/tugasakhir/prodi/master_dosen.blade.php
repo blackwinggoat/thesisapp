@@ -70,6 +70,20 @@
                         <br><br>
 
                         <div class="form-group">
+                            <label class="col-lg-2 control-label">Foto Dosen</label>
+                            <div class="col-lg-5">
+                                @if (!empty($editData->D_FOTO_DOSEN))
+                                    <img src="{{ helper::dosenPhotoUrl($editData->D_FOTO_DOSEN) }}" alt="Foto dosen"
+                                        style="width: 72px; height: 72px; margin-bottom: 8px; object-fit: cover;" />
+                                @endif
+                                <input type="file" class="form-control bold-border" name="foto_dosen"
+                                    accept="image/jpeg,image/png,image/webp" />
+                            </div>
+                        </div>
+
+                        <br><br>
+
+                        <div class="form-group">
                             <label class="col-lg-2 control-label">Program Studi</label>
                             <div class="col-lg-5">
                                 <select class="form-control bold-border" name="C_KODE_PRODI">
@@ -206,6 +220,7 @@
                         <thead class="the-box dark full">
                             <tr>
                                 <th>No</th>
+                                <th>Foto</th>
                                 <th>Kode Dosen</th>
                                 <th>Nama</th>
                                 <th>Program Studi</th>
@@ -222,6 +237,10 @@
                             @forelse ($data as $key => $value)
                                 <tr class="odd gradeX">
                                     <td width="1%" align="center">{{ ++$key }}</td>
+                                    <td width="1%">
+                                        <img src="{{ $value->foto_url }}" alt="Foto {{ $value->NAMA_DOSEN }}"
+                                            style="width: 42px; height: 42px; object-fit: cover;" />
+                                    </td>
                                     <td>{{ $value->C_KODE_DOSEN }}</td>
                                     <td>{{ $value->NAMA_DOSEN }}</td>
                                     <td>{{ $value->nama_prodi }}</td>
@@ -246,7 +265,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="11" class="text-center">Belum ada data dosen.</td>
+                                    <td colspan="12" class="text-center">Belum ada data dosen.</td>
                                 </tr>
                             @endforelse
                         </tbody>
