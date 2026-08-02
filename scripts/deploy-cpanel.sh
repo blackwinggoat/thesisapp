@@ -12,6 +12,7 @@ EXCLUDE_FILE="${EXCLUDE_FILE:-${APP_PATH}/scripts/deploy-excludes.txt}"
 SYNC_SCRIPT="${SYNC_SCRIPT:-${APP_PATH}/scripts/sync-release.php}"
 NORMALIZE_COMPOSER_SCRIPT="${NORMALIZE_COMPOSER_SCRIPT:-${APP_PATH}/scripts/normalize-composer-installed.php}"
 BACKUP_ROOT="${BACKUP_ROOT:-${SHARED_PATH}/deploy-backups}"
+BACKUP_RETAIN_COUNT="${BACKUP_RETAIN_COUNT:-10}"
 LOCK_PATH="${LOCK_PATH:-${SHARED_PATH}/deploy.lock}"
 MANAGED_MANIFEST="${MANAGED_MANIFEST:-${SHARED_PATH}/managed-files.json}"
 
@@ -38,6 +39,7 @@ fi
 [[ -f "$EXCLUDE_FILE" ]] || fail 'Deployment exclusion file is missing.'
 [[ -f "$SYNC_SCRIPT" ]] || fail 'Deployment synchronization script is missing.'
 [[ -f "$NORMALIZE_COMPOSER_SCRIPT" ]] || fail 'Composer compatibility script is missing.'
+[[ "$BACKUP_RETAIN_COUNT" =~ ^[1-9][0-9]*$ ]] || fail 'BACKUP_RETAIN_COUNT must be a positive integer.'
 [[ -f "${DEPLOY_PATH}/.env" ]] || fail 'Production .env is missing.'
 [[ -d "${DEPLOY_PATH}/storage" ]] || fail 'Production storage directory is missing.'
 [[ -d "$OFFICIAL_PATH" ]] || fail 'Persistent official asset directory is missing.'
@@ -63,6 +65,35 @@ if ! mkdir "$LOCK_PATH" 2>/dev/null; then
     fail "Another deployment may be active: ${LOCK_PATH}"
 fi
 trap 'rmdir "$LOCK_PATH" 2>/dev/null || true' EXIT
+
+prune_deploy_backups() {
+    local backup_paths=()
+    local backup_path
+    local remove_count
+    local index
+
+    shopt -s nullglob
+    for backup_path in "$BACKUP_ROOT"/*; do
+        if [[ -d "$backup_path" && "$(basename "$backup_path")" =~ ^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{40}$ ]]; then
+            backup_paths+=("$backup_path")
+        fi
+    done
+    shopt -u nullglob
+
+    if (( ${#backup_paths[@]} <= BACKUP_RETAIN_COUNT )); then
+        return
+    fi
+
+    remove_count=$((${#backup_paths[@]} - BACKUP_RETAIN_COUNT))
+
+    for ((index = 0; index < remove_count; index++)); do
+        backup_path="${backup_paths[$index]}"
+        rm -rf -- "$backup_path"
+        rm -f -- "${backup_path}.json"
+    done
+}
+
+prune_deploy_backups
 
 TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
 BACKUP_PATH="${BACKUP_ROOT}/${TIMESTAMP}-${CURRENT_COMMIT}"

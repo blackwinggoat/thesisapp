@@ -174,6 +174,36 @@ assert_line 'server archive' "${DEPLOY_PATH}/public/public_html.zip"
 [[ ! -e "${DEPLOY_PATH}/storage/framework/down" ]]
 assert_line "$FAILED_COMMIT_SHA" "${SHARED_PATH}/deploy-approved-commit"
 
+for index in 1 2 3; do
+    backup_name=$(printf '2000010%sT000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' "$index")
+    mkdir -p "${SHARED_PATH}/deploy-backups/${backup_name}"
+    printf '{}\n' > "${SHARED_PATH}/deploy-backups/${backup_name}.json"
+done
+
+printf 'retained source\n' > "${APP_PATH}/app/version.php"
+git -C "$APP_PATH" add app/version.php
+git -C "$APP_PATH" -c user.name='Deploy Test' -c user.email='deploy-test@example.invalid' commit -qm retained-fixture
+RETAINED_COMMIT_SHA=$(git -C "$APP_PATH" rev-parse HEAD)
+printf '%s\n' "$RETAINED_COMMIT_SHA" > "${SHARED_PATH}/deploy-approved-commit"
+
+BACKUP_RETAIN_COUNT=2 \
+APP_PATH="$APP_PATH" \
+DEPLOY_PATH="$DEPLOY_PATH" \
+SHARED_PATH="$SHARED_PATH" \
+OFFICIAL_PATH="${SHARED_PATH}/official-assets" \
+PHP_BIN="$(command -v php)" \
+COMPOSER_BIN="${BIN_PATH}/composer" \
+bash "${PROJECT_ROOT}/scripts/deploy-cpanel.sh"
+
+assert_line 'retained source' "${DEPLOY_PATH}/app/version.php"
+[[ ! -e "${SHARED_PATH}/deploy-backups/20000101T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]]
+[[ ! -e "${SHARED_PATH}/deploy-backups/20000101T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json" ]]
+[[ ! -e "${SHARED_PATH}/deploy-backups/20000102T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]]
+[[ ! -e "${SHARED_PATH}/deploy-backups/20000102T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json" ]]
+[[ -d "${SHARED_PATH}/deploy-backups/20000103T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]]
+[[ -f "${SHARED_PATH}/deploy-backups/20000103T000000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json" ]]
+[[ "$(find "${SHARED_PATH}/deploy-backups" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" -eq 3 ]]
+
 MALICIOUS_SOURCE="${FIXTURE_ROOT}/malicious-source"
 MALICIOUS_TARGET="${FIXTURE_ROOT}/malicious-target"
 mkdir -p "$MALICIOUS_SOURCE" "$MALICIOUS_TARGET"
