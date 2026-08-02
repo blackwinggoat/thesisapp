@@ -228,7 +228,18 @@ function ensureSafeParent($targetRoot, $relativePath)
         if (!is_dir($current) && !mkdir($current, 0755)) {
             failSync('Unable to create target directory: ' . $current);
         }
+
+        $relativeDirectory = ltrim(substr($current, strlen($targetRoot)), DIRECTORY_SEPARATOR);
+        if (($relativeDirectory === 'public' || strpos($relativeDirectory, 'public/') === 0)
+            && !chmod($current, 0755)) {
+            failSync('Unable to set public target directory permissions: ' . $current);
+        }
     }
+}
+
+function targetFileMode($relativePath, $sourceMode)
+{
+    return strpos($relativePath, 'public/') === 0 ? 0644 : $sourceMode;
 }
 
 function copyEntries($sourceRoot, $targetRoot, array $entries)
@@ -259,9 +270,11 @@ function copyEntries($sourceRoot, $targetRoot, array $entries)
             failSync('Cannot replace target directory with a file: ' . $relativePath);
         }
 
+        $targetMode = targetFileMode($relativePath, $metadata['mode']);
+
         if (is_file($target) && !is_link($target)
             && hash_file('sha256', $target) === $metadata['sha256']) {
-            chmod($target, $metadata['mode']);
+            chmod($target, $targetMode);
             continue;
         }
 
@@ -272,7 +285,7 @@ function copyEntries($sourceRoot, $targetRoot, array $entries)
             failSync('Unable to copy file: ' . $relativePath);
         }
 
-        chmod($temporaryPath, $metadata['mode']);
+        chmod($temporaryPath, $targetMode);
 
         if (hash_file('sha256', $temporaryPath) !== $metadata['sha256']) {
             unlink($temporaryPath);

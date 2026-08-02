@@ -16,6 +16,7 @@ mkdir -p \
     "${APP_PATH}/bootstrap" \
     "${APP_PATH}/scripts" \
     "${APP_PATH}/public" \
+    "${APP_PATH}/public/images/icons" \
     "${DEPLOY_PATH}/app" \
     "${DEPLOY_PATH}/bootstrap/cache" \
     "${DEPLOY_PATH}/storage/app/public" \
@@ -36,6 +37,8 @@ grep -Fqx '    "$PHP_BIN" artisan down --no-interaction < /dev/null' "${APP_PATH
 grep -Fqx '        "$PHP_BIN" artisan up --no-interaction < /dev/null' "${APP_PATH}/scripts/deploy-cpanel.sh"
 
 printf 'new source\n' > "${APP_PATH}/app/version.php"
+printf 'telegram logo\n' > "${APP_PATH}/public/images/icons/telegram.svg"
+chmod 600 "${APP_PATH}/public/images/icons/telegram.svg"
 printf '<?php return [];\n' > "${APP_PATH}/bootstrap/app.php"
 printf '%s\n' \
     '#!/usr/bin/env php' \
@@ -131,6 +134,9 @@ assert_line 'runtime state' "${DEPLOY_PATH}/storage/runtime.txt"
 assert_line 'server archive' "${DEPLOY_PATH}/public/public_html.zip"
 assert_line "OFFICIAL_ASSET_PATH=${SHARED_PATH}/official-assets" "${DEPLOY_PATH}/.env"
 [[ -L "${DEPLOY_PATH}/public/storage" ]]
+php -r 'exit((fileperms($argv[1]) & 0777) === 0755 ? 0 : 1);' "${DEPLOY_PATH}/public/images"
+php -r 'exit((fileperms($argv[1]) & 0777) === 0755 ? 0 : 1);' "${DEPLOY_PATH}/public/images/icons"
+php -r 'exit((fileperms($argv[1]) & 0777) === 0644 ? 0 : 1);' "${DEPLOY_PATH}/public/images/icons/telegram.svg"
 [[ ! -e "${DEPLOY_PATH}/storage/framework/down" ]]
 [[ ! -e "${DEPLOY_PATH}/bootstrap/cache/stale.php" ]]
 [[ ! -e "${SHARED_PATH}/deploy-approved-commit" ]]
