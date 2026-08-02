@@ -13,6 +13,7 @@ class LecturerExamSchedulePerformanceTest extends TestCase
         $mejaView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/dosen/jadwal_ujianmeja.blade.php');
 
         $this->assertStringContainsString('private function lecturerExamSchedule($tipeUjian)', $controller);
+        $this->assertStringContainsString("->whereIn('tb.C_NPM', \$lecturerNims)", $controller);
         $this->assertStringContainsString("->whereIn('C_KODE_DOSEN', \$kodeDosen)", $controller);
         $this->assertStringContainsString("->whereIn('tb.C_NPM'", $controller);
         $this->assertStringContainsString("->join('trt_jadwal_ujian_per_mhs as jpm'", $controller);

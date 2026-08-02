@@ -806,6 +806,26 @@ class dosen extends Controller
     private function lecturerExamSchedule($tipeUjian)
     {
         $kode = auth()->user()->name;
+        $lecturerNims = DB::table('trt_bimbingan')
+            ->select('C_NPM')
+            ->where('pembimbing_I_id', $kode)
+            ->union(
+                DB::table('trt_bimbingan')
+                    ->select('C_NPM')
+                    ->where('pembimbing_II_id', $kode)
+            )
+            ->union(
+                DB::table('trt_penguji')
+                    ->select('C_NPM')
+                    ->where('tipe_ujian', $tipeUjian)
+                    ->where(function ($query) use ($kode) {
+                        $query->where('penguji_I_id', $kode)
+                            ->orWhere('penguji_II_id', $kode)
+                            ->orWhere('penguji_III_id', $kode)
+                            ->orWhere('ketua_sidang_id', $kode);
+                    })
+            );
+
         $data = DB::table('trt_reg as rg')
             ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
             ->join('trt_penguji as pu', function ($join) {
@@ -819,14 +839,7 @@ class dosen extends Controller
                     ->on('ju.pendaftaran_id', '=', 'rg.pendaftaran_id');
             })
             ->join('mst_ruangan as ruangan', 'ruangan.id', '=', 'jpm.ruangan')
-            ->where(function ($query) use ($kode) {
-                $query->where('pu.penguji_I_id', $kode)
-                    ->orWhere('pu.penguji_II_id', $kode)
-                    ->orWhere('pu.penguji_III_id', $kode)
-                    ->orWhere('pu.ketua_sidang_id', $kode)
-                    ->orWhere('tb.pembimbing_I_id', $kode)
-                    ->orWhere('tb.pembimbing_II_id', $kode);
-            })
+            ->whereIn('tb.C_NPM', $lecturerNims)
             ->where('rg.status', $tipeUjian)
             ->select([
                 'rg.pendaftaran_id',
