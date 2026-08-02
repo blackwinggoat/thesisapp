@@ -105,6 +105,7 @@
                             <th>No</th>
                             <th>Peran Pembimbing</th>
                             <th>No SK Bimbingan</th>
+                            <th>Jenis Tugas Akhir</th>
                             <th>NIM</th>
                             <th>Nama</th>
                             <th>Koordinasi Mahasiswa</th>
@@ -127,6 +128,7 @@
                                         -
                                     @endif
                                 </td>
+                                <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) ?: '-' !!}</td>
                                 <td>{{ $value->C_NPM }}</td>
                                 <td>{{ $value->NAMA_MAHASISWA ?? '-' }}</td>
                                 <td>
@@ -175,7 +177,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center">Belum ada mahasiswa bimbingan aktif / belum lulus.</td>
+                                <td colspan="8" class="text-center">Belum ada mahasiswa bimbingan aktif / belum lulus.</td>
                             </tr>
                         @endforelse
                         </tbody>

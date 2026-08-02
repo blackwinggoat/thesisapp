@@ -1948,6 +1948,7 @@ class dosen extends Controller
                 'trt_bimbingan.bimbingan_id',
                 'trt_bimbingan.C_NPM',
                 'trt_bimbingan.status_bimbingan',
+                'trt_bimbingan.jenis_tugas_akhir_id',
                 't_mst_mahasiswa.NAMA_MAHASISWA',
                 'mst_sk_pembimbing.nomor_sk',
                 'mst_sk_pembimbing.created_at as tanggal_sk'
