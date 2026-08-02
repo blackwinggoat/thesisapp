@@ -65,21 +65,26 @@
                             <td>{{$d->C_NPM}}</td>
                             <td>{{$d->NAMA_MAHASISWA}}</td>
                             @php
-                            $pembimbing1 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_I_id)->first();
-                            $pembimbing2 = \App\Dosen::where("C_KODE_DOSEN",$d->pembimbing_II_id)->first();
-                            $penguji1 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_I_id)->first();
-                            $penguji2 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_II_id)->first();
-                            $penguji3 = \App\Dosen::where("C_KODE_DOSEN",$d->penguji_III_id)->first();
-                            $ketuasidang = \App\Dosen::where("C_KODE_DOSEN",$d->ketua_sidang_id)->first();
+                            $pembimbing1 = $dosenByKode->get($d->pembimbing_I_id);
+                            $pembimbing2 = $dosenByKode->get($d->pembimbing_II_id);
+                            $penguji1 = $dosenByKode->get($d->penguji_I_id);
+                            $penguji2 = $dosenByKode->get($d->penguji_II_id);
+                            $penguji3 = $dosenByKode->get($d->penguji_III_id);
+                            $ketuasidang = $dosenByKode->get($d->ketua_sidang_id);
+                            $statusPenilaian = function ($nidn) use ($d, $penilaianLengkap) {
+                                return $penilaianLengkap->has($d->reg_id . ':' . $nidn)
+                                    ? '<i class="fa fa-check-circle text-success"></i>'
+                                    : '<i class="fa fa-times-circle text-danger"></i>';
+                            };
                             @endphp
-                            <td>{{$pembimbing1->NAMA_DOSEN}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_I_id, $d->reg_id) ?></td>
-                            <td>{{$pembimbing2->NAMA_DOSEN}}<?= helper::getStatusPenilaianPerDosen($d->pembimbing_II_id, $d->reg_id) ?></td>
+                            <td>{{ $pembimbing1 ? $pembimbing1->NAMA_DOSEN : '-' }} {!! $pembimbing1 ? $statusPenilaian($d->pembimbing_I_id) : '' !!}</td>
+                            <td>{{ $pembimbing2 ? $pembimbing2->NAMA_DOSEN : '-' }} {!! $pembimbing2 ? $statusPenilaian($d->pembimbing_II_id) : '' !!}</td>
                             <td>
                                 @if ($penguji1 == null)
                                 {{"-"}}
                                 @else
                                 {{$penguji1->NAMA_DOSEN}}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_I_id, $d->reg_id) ?>
+                                {!! $statusPenilaian($d->penguji_I_id) !!}
                                 @endif
                             </td>
                             <td>
@@ -87,7 +92,7 @@
                                 {{"-"}}
                                 @else
                                 {{$penguji2->NAMA_DOSEN}}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_II_id, $d->reg_id) ?>
+                                {!! $statusPenilaian($d->penguji_II_id) !!}
                                 @endif
                             </td>
                             <td>
@@ -95,7 +100,7 @@
                                 {{"-"}}
                                 @else
                                 {{$penguji3->NAMA_DOSEN}}
-                                <?= helper::getStatusPenilaianPerDosen($d->penguji_III_id, $d->reg_id) ?>
+                                {!! $statusPenilaian($d->penguji_III_id) !!}
                                 @endif
                             </td>
                             <td>
@@ -103,7 +108,7 @@
                                 {{"-"}}
                                 @else
                                 {{$ketuasidang->NAMA_DOSEN}}
-                                <?= helper::getStatusPenilaianPerDosen($d->ketua_sidang_id, $d->reg_id) ?>
+                                {!! $statusPenilaian($d->ketua_sidang_id) !!}
                                 @endif
                             </td>
                             <td>
