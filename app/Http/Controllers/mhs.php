@@ -34,7 +34,7 @@ class mhs extends Controller
 
     public function chat()
     {
-        return view('tugasakhir.mhs.chat');
+        return Redirect::to('mhs/mail_inbox');
     }
 
     // Tampil Catatan Pada Syarat Ujian
