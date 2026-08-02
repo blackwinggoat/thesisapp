@@ -505,7 +505,26 @@ class mhs extends Controller
             ->select('*')
             ->where('C_NPM', $id)
             ->get();
-        return view('tugasakhir.mhs.pengajuan_topik', compact('data', 'datatopik', 'listdosen', 'cek'));
+
+        $topik = trt_topik::where([
+            'C_NPM' => $id,
+            'status' => 1,
+        ])->first();
+        $bidangilmuid = $topik
+            ? RequestPembimbing::where([
+                'C_NPM' => $id,
+                'topik' => $topik->topik_id,
+            ])->get()
+            : collect();
+
+        return view('tugasakhir.mhs.pengajuan_topik', compact(
+            'data',
+            'datatopik',
+            'listdosen',
+            'cek',
+            'topik',
+            'bidangilmuid'
+        ));
     }
     public function pengajuan_topikdel($id)
     {

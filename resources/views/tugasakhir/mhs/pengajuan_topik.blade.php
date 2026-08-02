@@ -95,11 +95,7 @@
                 </fieldset>
             </form>
             @else
-            @php
-            $topik = \App\Model\trt_topik::where(["C_NPM" => auth()->user()->name, "status" => 1])->first();
-            $bidangilmuid = \App\RequestPembimbing::where(["C_NPM" => auth()->user()->name, "topik" =>
-            $topik->topik_id])->get();
-            @endphp
+            @if($topik)
             <fieldset>
                 <div class="form-group">
                     <label class="col-lg-2 control-label">Stambuk</label>
@@ -128,6 +124,11 @@
                     </div>
                 </div>
             </fieldset>
+            @else
+            <div class="alert alert-warning" role="alert">
+                Data topik penelitian aktif tidak tersedia untuk bimbingan ini.
+            </div>
+            @endif
             @endif
         </div><!-- /.the-box -->
 
