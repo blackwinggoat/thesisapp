@@ -140,7 +140,7 @@
             <tr>
                 <td style="vertical-align: top;">JUDUL SKRIPSI</td>
                 <td style="vertical-align: top">:</td>
-                <td style="vertical-align: top;" colspan="2">{{ helper::judulDenganKodeJenisTugasAkhir(->jenis_tugas_akhir_id ?? null, ->judul) }}</td>
+                <td style="vertical-align: top;" colspan="2">{{ helper::judulDenganKodeJenisTugasAkhir($trt_bimbingan->jenis_tugas_akhir_id ?? null, $trt_bimbingan->judul) }}</td>
             </tr>
         </table>
     </div>
