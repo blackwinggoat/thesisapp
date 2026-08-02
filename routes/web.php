@@ -119,6 +119,9 @@ Route::group(['middleware' => 'kaprodi'], function () {
     //KA-PRODI
     Route::get('/prodi/dosen_pembimbing', 'Prodi@dosen_pembimbing');
     Route::get('/prodi/report', 'Prodi@report');
+    Route::get('/prodi/laporan_mahasiswa', 'Prodi@laporan_mahasiswa');
+    Route::get('/prodi/laporan_mahasiswa/{id}', 'Prodi@laporan_mahasiswa_detail');
+    Route::post('/prodi/laporan_mahasiswa/{id}/tindakan', 'Prodi@laporan_mahasiswa_tindakan_post');
     Route::get('/prodi/detail_pembimbing/{id}', 'Prodi@detail_pembimbing');
     Route::get('/prodi/mahasiswa', 'Prodi@mahasiswa');
     Route::get('/prodi/detail_mahasiswa/{id}', 'Prodi@detail_mahasiswa');
@@ -449,6 +452,10 @@ Route::group(['middleware' => 'dosen'], function () {
     Route::get('/dsn/request_konfirmasi/{status}/{mahasiswa}', 'dosen@request_konfirmasi');
     Route::post('/dsn/pesanpost', 'dosen@pesanpost');
     Route::get('/dsn/detail_pembimbing/{id}', 'dosen@detail_pembimbing');
+    Route::get('/dsn/laporan_mahasiswa', 'dosen@laporan_mahasiswa');
+    Route::post('/dsn/laporan_mahasiswa', 'dosen@laporan_mahasiswa_store');
+    Route::get('/dsn/laporan_mahasiswa/{id}', 'dosen@laporan_mahasiswa_detail');
+    Route::post('/dsn/laporan_mahasiswa/{id}/pesan', 'dosen@laporan_mahasiswa_pesan_post');
     Route::get('/dsn/detail_note/{id}', 'dosen@detail_note');
     Route::post('/dsn/detail_note/{id}', 'dosen@note_update');
     Route::get("/dsn/ubah_password/", "dosen@ubah_password");

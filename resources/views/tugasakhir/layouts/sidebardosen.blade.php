@@ -119,6 +119,12 @@
             </a>
         </li>
         <li>
+            <a href="{{ url('dsn/laporan_mahasiswa') }}">
+                <i class="fa fa-comments icon-sidebar"></i>
+                Laporan ke Prodi
+            </a>
+        </li>
+        <li>
             <a href="{{ url('dsn/tanda_tangan') }}">
                 <i class="fa fa-pencil-square-o icon-sidebar"></i>
                 Tanda Tangan

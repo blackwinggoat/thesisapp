@@ -107,7 +107,7 @@
                             <th>No SK Bimbingan</th>
                             <th>NIM</th>
                             <th>Nama</th>
-                            <th>Kontak Mahasiswa</th>
+                            <th>Koordinasi Mahasiswa</th>
                             <th>Tahapan Bimbingan</th>
                         </tr>
                         </thead>
@@ -141,24 +141,35 @@
                                         $telegramRaw = trim((string) ($value->id_telegram ?? ''));
                                         $telegramUsername = ltrim($telegramRaw, '@');
                                         $telegramLink = $telegramUsername !== '' ? 'https://t.me/' . $telegramUsername : '';
+                                        $laporanAktif = $laporanAktifByNim->get($value->C_NPM);
                                     @endphp
 
-                                    @if ($waLink !== '' || $telegramLink !== '')
-                                        <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
-                                            @if ($waLink !== '')
-                                                <a href="{{ $waLink }}" target="_blank" class="btn btn-success btn-sm" style="min-width: 125px; text-align: left;">
-                                                    <i class="fa fa-whatsapp" style="font-size: 16px; margin-right: 6px;"></i> WhatsApp
+                                    <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                                        @if ($waLink !== '')
+                                            <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm" title="Hubungi melalui WhatsApp" aria-label="Hubungi {{ $value->NAMA_MAHASISWA ?? 'mahasiswa' }} melalui WhatsApp">
+                                                <i class="fa fa-whatsapp"></i>
+                                            </a>
+                                        @endif
+                                        @if ($telegramLink !== '')
+                                            <a href="{{ $telegramLink }}" target="_blank" rel="noopener noreferrer" class="btn btn-info btn-sm" title="Hubungi melalui Telegram" aria-label="Hubungi {{ $value->NAMA_MAHASISWA ?? 'mahasiswa' }} melalui Telegram">
+                                                <i class="fa fa-telegram"></i>
+                                            </a>
+                                        @endif
+                                        @if ($canLaporKeProdi)
+                                            @if ($laporanAktif)
+                                                <a href="{{ url('dsn/laporan_mahasiswa/' . $laporanAktif->laporan_mahasiswa_id) }}" class="btn btn-primary btn-sm" title="Lanjutkan laporan ke Prodi">
+                                                    <i class="fa fa-comments"></i> Lihat Laporan
                                                 </a>
+                                            @else
+                                                <button type="button" class="btn btn-warning btn-sm btn-lapor-prodi" data-toggle="modal" data-target="#modalLaporProdi" data-nim="{{ $value->C_NPM }}" data-nama="{{ $value->NAMA_MAHASISWA ?? '-' }}" title="Laporkan kepada Program Studi">
+                                                    <i class="fa fa-flag"></i> Lapor Prodi
+                                                </button>
                                             @endif
-                                            @if ($telegramLink !== '')
-                                                <a href="{{ $telegramLink }}" target="_blank" class="btn btn-info btn-sm" style="min-width: 125px; text-align: left;">
-                                                    <i class="fa fa-telegram" style="font-size: 16px; margin-right: 6px;"></i> Telegram
-                                                </a>
-                                            @endif
-                                        </div>
-                                    @else
-                                        -
-                                    @endif
+                                        @endif
+                                        @if ($waLink === '' && $telegramLink === '' && !$canLaporKeProdi)
+                                            -
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>{{ $value->label_status_bimbingan ?? '-' }}</td>
                             </tr>
@@ -172,6 +183,47 @@
                 </div><!-- /.table-responsive -->
             </div><!-- /.the-box .default -->
             <!-- END DATA TABLE -->
+
+            @if ($canLaporKeProdi)
+                <div class="modal fade" id="modalLaporProdi" tabindex="-1" role="dialog" aria-labelledby="modalLaporProdiLabel">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <form method="post" action="{{ url('dsn/laporan_mahasiswa') }}">
+                                {{ csrf_field() }}
+                                <input type="hidden" name="C_NPM" id="laporProdiNim" value="{{ old('C_NPM') }}">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title" id="modalLaporProdiLabel">Lapor ke Program Studi</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-muted" id="laporProdiMahasiswa"></p>
+                                    <div class="form-group">
+                                        <label>Kategori</label>
+                                        <select class="form-control" name="kategori" required>
+                                            <option value="">Pilih kategori</option>
+                                            @foreach ($kategoriLaporanMahasiswa as $kodeKategori => $labelKategori)
+                                                <option value="{{ $kodeKategori }}" {{ old('kategori') === $kodeKategori ? 'selected' : '' }}>{{ $labelKategori }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Perihal</label>
+                                        <input type="text" class="form-control" name="perihal" value="{{ old('perihal') }}" maxlength="255" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Uraian Laporan</label>
+                                        <textarea class="form-control" name="uraian" rows="5" required>{{ old('uraian') }}</textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-warning"><i class="fa fa-paper-plane"></i> Kirim ke Prodi</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <h3 class="page-heading">Daftar Mahasiswa Lulusan</h3>
             <div class="the-box">
@@ -270,6 +322,15 @@
                     pageLength: 10
                 });
             }
+
+            $('.btn-lapor-prodi').on('click', function() {
+                $('#laporProdiNim').val($(this).data('nim'));
+                $('#laporProdiMahasiswa').text($(this).data('nama') + ' (' + $(this).data('nim') + ')');
+            });
+
+            @if (old('C_NPM'))
+                $('#modalLaporProdi').modal('show');
+            @endif
         });
     </script>
 @endsection

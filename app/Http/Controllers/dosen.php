@@ -901,6 +901,16 @@ class dosen extends Controller
             })
             ->values();
 
+        $laporanAktifByNim = collect();
+        if (Schema::hasTable('trt_laporan_mahasiswa')) {
+            $laporanAktifByNim = DB::table('trt_laporan_mahasiswa')
+                ->where('C_KODE_DOSEN', $id)
+                ->whereIn('status', ['baru', 'ditinjau'])
+                ->orderBy('updated_at', 'desc')
+                ->get()
+                ->keyBy('C_NPM');
+        }
+
         $ppropI = DB::table('trt_bimbingan')
             ->where('pembimbing_I_id', $id)
             ->where('status_bimbingan', 0)
@@ -933,6 +943,8 @@ class dosen extends Controller
             ->where('pembimbing_II_id', $id)
             ->where('status_bimbingan', 3)
             ->get();
+        $kategoriLaporanMahasiswa = $this->kategoriLaporanMahasiswa();
+        $canLaporKeProdi = (string) $id === (string) auth()->user()->name;
         return view('tugasakhir.dosen.detail_pembimbing', compact(
             'data',
             'total',
@@ -945,8 +957,169 @@ class dosen extends Controller
             'pmejaI',
             'pmejaII',
             'alumniI',
-            'alumniII'
+            'alumniII',
+            'laporanAktifByNim',
+            'kategoriLaporanMahasiswa',
+            'canLaporKeProdi'
         ));
+    }
+
+    public function laporan_mahasiswa()
+    {
+        if (!Schema::hasTable('trt_laporan_mahasiswa')) {
+            return redirect()->to('dsn/detail_pembimbing/' . auth()->user()->name)
+                ->with('error', 'Fitur laporan mahasiswa belum tersedia.');
+        }
+
+        $laporan = $this->queryLaporanMahasiswaDosen()
+            ->orderBy('trt_laporan_mahasiswa.updated_at', 'desc')
+            ->get();
+
+        return view('tugasakhir.dosen.laporan_mahasiswa', compact('laporan'));
+    }
+
+    public function laporan_mahasiswa_store(Request $request)
+    {
+        if (!Schema::hasTable('trt_laporan_mahasiswa') || !Schema::hasTable('trt_laporan_mahasiswa_pesan')) {
+            return redirect()->back()->with('error', 'Fitur laporan mahasiswa belum tersedia.');
+        }
+
+        $this->validate($request, [
+            'C_NPM' => 'required|max:15',
+            'kategori' => 'required|in:' . implode(',', array_keys($this->kategoriLaporanMahasiswa())),
+            'perihal' => 'required|string|max:255',
+            'uraian' => 'required|string|min:10|max:5000',
+        ]);
+
+        $nim = trim((string) $request->C_NPM);
+        $kodeDosen = trim((string) auth()->user()->name);
+        $bimbingan = DB::table('trt_bimbingan')
+            ->where('C_NPM', $nim)
+            ->where(function ($query) use ($kodeDosen) {
+                $query->where('pembimbing_I_id', $kodeDosen)
+                    ->orWhere('pembimbing_II_id', $kodeDosen);
+            })
+            ->where('status_bimbingan', '<>', 3)
+            ->first();
+
+        $mahasiswa = DB::table('t_mst_mahasiswa')
+            ->select('C_NPM', 'C_KODE_PRODI')
+            ->where('C_NPM', $nim)
+            ->first();
+
+        if (!$bimbingan || !$mahasiswa || trim((string) $mahasiswa->C_KODE_PRODI) === '') {
+            return redirect()->back()->withInput()->with('error', 'Mahasiswa bimbingan aktif tidak ditemukan atau program studi belum tersedia.');
+        }
+
+        $laporanAktif = DB::table('trt_laporan_mahasiswa')
+            ->where('C_NPM', $nim)
+            ->where('C_KODE_DOSEN', $kodeDosen)
+            ->whereIn('status', ['baru', 'ditinjau'])
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if ($laporanAktif) {
+            return redirect()->to('dsn/laporan_mahasiswa/' . $laporanAktif->laporan_mahasiswa_id)
+                ->with('error', 'Masih ada laporan aktif untuk mahasiswa ini. Lanjutkan pada ruang diskusi yang sama.');
+        }
+
+        $laporanId = DB::transaction(function () use ($request, $mahasiswa, $bimbingan, $kodeDosen) {
+            return DB::table('trt_laporan_mahasiswa')->insertGetId([
+                'C_NPM' => $mahasiswa->C_NPM,
+                'C_KODE_DOSEN' => $kodeDosen,
+                'C_KODE_PRODI' => $mahasiswa->C_KODE_PRODI,
+                'bimbingan_id' => $bimbingan->bimbingan_id,
+                'kategori' => $request->kategori,
+                'perihal' => trim((string) $request->perihal),
+                'uraian' => trim((string) $request->uraian),
+                'status' => 'baru',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+        });
+
+        return redirect()->to('dsn/laporan_mahasiswa/' . $laporanId)
+            ->with('success', 'Laporan berhasil dikirim ke Program Studi.');
+    }
+
+    public function laporan_mahasiswa_detail($id)
+    {
+        $laporan = $this->findLaporanMahasiswaDosen($id);
+        if (!$laporan) {
+            return response('Laporan mahasiswa tidak ditemukan.', 404);
+        }
+
+        $pesan = DB::table('trt_laporan_mahasiswa_pesan')
+            ->where('laporan_mahasiswa_id', $laporan->laporan_mahasiswa_id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return view('tugasakhir.dosen.laporan_mahasiswa_detail', compact('laporan', 'pesan'));
+    }
+
+    public function laporan_mahasiswa_pesan_post(Request $request, $id)
+    {
+        $laporan = $this->findLaporanMahasiswaDosen($id);
+        if (!$laporan) {
+            return response('Laporan mahasiswa tidak ditemukan.', 404);
+        }
+
+        if ($laporan->status === 'selesai') {
+            return redirect()->back()->with('error', 'Laporan telah selesai. Hubungi Prodi untuk membuat tindak lanjut baru bila diperlukan.');
+        }
+
+        $this->validate($request, [
+            'pesan' => 'required|string|min:3|max:5000',
+        ]);
+
+        DB::transaction(function () use ($request, $laporan) {
+            DB::table('trt_laporan_mahasiswa_pesan')->insert([
+                'laporan_mahasiswa_id' => $laporan->laporan_mahasiswa_id,
+                'pengirim_user_id' => auth()->id(),
+                'pengirim_peran' => 'dosen',
+                'nama_pengirim' => trim((string) (auth()->user()->name ?? 'Dosen')),
+                'isi_pesan' => trim((string) $request->pesan),
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+
+            DB::table('trt_laporan_mahasiswa')
+                ->where('laporan_mahasiswa_id', $laporan->laporan_mahasiswa_id)
+                ->update(['updated_at' => Carbon::now()]);
+        });
+
+        return redirect()->back()->with('success', 'Pesan untuk Program Studi berhasil dikirim.');
+    }
+
+    protected function queryLaporanMahasiswaDosen()
+    {
+        return DB::table('trt_laporan_mahasiswa')
+            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_laporan_mahasiswa.C_NPM')
+            ->leftJoin('trt_prodi', 'trt_prodi.kode_prodi', '=', 'trt_laporan_mahasiswa.C_KODE_PRODI')
+            ->select(
+                'trt_laporan_mahasiswa.*',
+                't_mst_mahasiswa.NAMA_MAHASISWA',
+                'trt_prodi.nama as nama_prodi'
+            )
+            ->where('trt_laporan_mahasiswa.C_KODE_DOSEN', auth()->user()->name);
+    }
+
+    protected function findLaporanMahasiswaDosen($id)
+    {
+        return $this->queryLaporanMahasiswaDosen()
+            ->where('trt_laporan_mahasiswa.laporan_mahasiswa_id', $id)
+            ->first();
+    }
+
+    protected function kategoriLaporanMahasiswa()
+    {
+        return [
+            'bimbingan' => 'Proses Bimbingan',
+            'kehadiran' => 'Kehadiran atau Respons',
+            'administrasi' => 'Administrasi Akademik',
+            'etik' => 'Etik atau Perilaku',
+            'lainnya' => 'Lainnya',
+        ];
     }
 
     public function mail_inbox()

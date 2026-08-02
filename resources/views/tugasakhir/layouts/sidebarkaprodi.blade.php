@@ -50,6 +50,12 @@
             </a>
         </li>
         <li>
+            <a href="{{ url('prodi/laporan_mahasiswa')}}">
+                <i class="fa fa-comments icon-sidebar"></i>
+                Laporan Mahasiswa
+            </a>
+        </li>
+        <li>
             <a href="{{ url('prodi/mahasiswa')}}">
                 <i class="fa fa-user icon-sidebar"></i>
                 Mahasiswa

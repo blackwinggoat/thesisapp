@@ -1078,6 +1078,118 @@ class Prodi extends Controller
         ));
     }
 
+    public function laporan_mahasiswa()
+    {
+        if (!Schema::hasTable('trt_laporan_mahasiswa')) {
+            return redirect()->to('/')->with('error', 'Fitur laporan mahasiswa belum tersedia.');
+        }
+
+        $laporan = $this->queryLaporanMahasiswaProdi()
+            ->orderBy('trt_laporan_mahasiswa.updated_at', 'desc')
+            ->get();
+
+        return view('tugasakhir.prodi.laporan_mahasiswa', compact('laporan'));
+    }
+
+    public function laporan_mahasiswa_detail($id)
+    {
+        $laporan = $this->findLaporanMahasiswaProdi($id);
+        if (!$laporan) {
+            return response('Laporan mahasiswa tidak ditemukan.', 404);
+        }
+
+        $pesan = DB::table('trt_laporan_mahasiswa_pesan')
+            ->where('laporan_mahasiswa_id', $laporan->laporan_mahasiswa_id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return view('tugasakhir.prodi.laporan_mahasiswa_detail', compact('laporan', 'pesan'));
+    }
+
+    public function laporan_mahasiswa_tindakan_post(Request $request, $id)
+    {
+        $laporan = $this->findLaporanMahasiswaProdi($id);
+        if (!$laporan) {
+            return response('Laporan mahasiswa tidak ditemukan.', 404);
+        }
+
+        $this->validate($request, [
+            'status' => 'required|in:baru,ditinjau,selesai',
+            'pesan' => 'required|string|min:3|max:5000',
+            'tindakan' => 'nullable|string|max:2000',
+        ]);
+
+        DB::transaction(function () use ($request, $laporan) {
+            $now = Carbon::now();
+
+            DB::table('trt_laporan_mahasiswa_pesan')->insert([
+                'laporan_mahasiswa_id' => $laporan->laporan_mahasiswa_id,
+                'pengirim_user_id' => auth()->id(),
+                'pengirim_peran' => 'prodi',
+                'nama_pengirim' => trim((string) (auth()->user()->name ?? 'Program Studi')),
+                'isi_pesan' => trim((string) $request->pesan),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            $payload = [
+                'status' => $request->status,
+                'updated_at' => $now,
+            ];
+            $tindakan = trim((string) $request->tindakan);
+            if ($tindakan !== '') {
+                $payload['tindakan_terakhir'] = $tindakan;
+                $payload['tindakan_oleh_user_id'] = auth()->id();
+                $payload['tindakan_pada'] = $now;
+            }
+
+            DB::table('trt_laporan_mahasiswa')
+                ->where('laporan_mahasiswa_id', $laporan->laporan_mahasiswa_id)
+                ->update($payload);
+        });
+
+        return redirect()->back()->with('success', 'Respons dan status laporan berhasil diperbarui.');
+    }
+
+    protected function queryLaporanMahasiswaProdi()
+    {
+        $kodeProdi = $this->kodeProdiLaporanMahasiswa();
+        if ($kodeProdi === null) {
+            abort(403, 'Akun Program Studi tidak memiliki cakupan laporan mahasiswa.');
+        }
+
+        return DB::table('trt_laporan_mahasiswa')
+            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_laporan_mahasiswa.C_NPM')
+            ->leftJoin('t_mst_dosen', 't_mst_dosen.C_KODE_DOSEN', '=', 'trt_laporan_mahasiswa.C_KODE_DOSEN')
+            ->leftJoin('trt_prodi', 'trt_prodi.kode_prodi', '=', 'trt_laporan_mahasiswa.C_KODE_PRODI')
+            ->select(
+                'trt_laporan_mahasiswa.*',
+                't_mst_mahasiswa.NAMA_MAHASISWA',
+                't_mst_dosen.NAMA_DOSEN',
+                'trt_prodi.nama as nama_prodi'
+            )
+            ->where('trt_laporan_mahasiswa.C_KODE_PRODI', $kodeProdi);
+    }
+
+    protected function findLaporanMahasiswaProdi($id)
+    {
+        return $this->queryLaporanMahasiswaProdi()
+            ->where('trt_laporan_mahasiswa.laporan_mahasiswa_id', $id)
+            ->first();
+    }
+
+    protected function kodeProdiLaporanMahasiswa()
+    {
+        switch ((string) auth()->user()->name) {
+            case 'proditi':
+                return '55201';
+            case 'prodisi':
+                return '57201';
+            default:
+                return null;
+        }
+    }
+
     protected function getMahasiswaBimbinganByPeran($kodeDosen, $kolomPembimbing, $peranPembimbing)
     {
         $query = DB::table('trt_bimbingan')
