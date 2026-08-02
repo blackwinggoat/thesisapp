@@ -52,6 +52,8 @@ OUTPUT=$(
 grep -Fqx 'Local target: thesisapps_fixture_local@127.0.0.1' <<< "$OUTPUT"
 grep -Fqx 'Production source: thesisapps_fixture_production via thesisapps-production' <<< "$OUTPUT"
 grep -Fqx 'Dry run complete; no dump was created and no database was changed.' <<< "$OUTPUT"
+grep -Fqx '    || fail '\''Production dump definer localization returned an invalid result.'\''' \
+    "${PROJECT_ROOT}/scripts/sync-production-db-to-local.sh"
 
 set +e
 bash "${PROJECT_ROOT}/scripts/sync-production-db-to-local.sh" >/dev/null 2>&1

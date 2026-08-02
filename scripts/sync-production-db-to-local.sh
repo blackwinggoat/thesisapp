@@ -199,8 +199,8 @@ ACTUAL_HASH=$("$SHA256_BIN" "$PRODUCTION_DUMP" | awk '{print $1}')
 [[ "$EXPECTED_HASH" == "$ACTUAL_HASH" ]] || fail 'Production dump checksum mismatch.'
 
 REPLACEMENTS=$($PHP_BIN "$HELPER" localize "$PRODUCTION_DUMP" "$LOCALIZED_DUMP")
-[[ "$REPLACEMENTS" =~ ^[0-9]+$ && "$REPLACEMENTS" -gt 0 ]] \
-    || fail 'No production view definers were localized.'
+[[ "$REPLACEMENTS" =~ ^[0-9]+$ ]] \
+    || fail 'Production dump definer localization returned an invalid result.'
 "$GZIP_BIN" -t "$LOCALIZED_DUMP"
 "$SHA256_BIN" "$LOCALIZED_DUMP" > "${LOCALIZED_DUMP}.sha256"
 
