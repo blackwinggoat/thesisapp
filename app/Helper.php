@@ -789,7 +789,7 @@ class Helper
         return count(self::getCurrentMahasiswaContactMissingFields($user)) > 0;
     }
 
-    public static function mahasiswaPhotoUrl($photo)
+    public static function mahasiswaPhotoUrl($photo, $jenisKelamin = null)
     {
         $photo = trim((string) $photo);
 
@@ -802,7 +802,13 @@ class Helper
             return asset('gambar/' . $photo);
         }
 
-        return asset('images/defaults/student-avatar.png');
+        $jenisKelamin = strtoupper(trim((string) $jenisKelamin));
+
+        if (in_array($jenisKelamin, ['P', 'WANITA'], true)) {
+            return asset('images/defaults/student-female.png');
+        }
+
+        return asset('images/defaults/student-male.png');
     }
 
     public static function dosenPhotoUrl($photo)

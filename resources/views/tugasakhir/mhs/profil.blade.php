@@ -20,7 +20,7 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="the-box text-center">
-                    <img src="{{ helper::mahasiswaPhotoUrl($profil->D_FOTO_MAHASISWA ?? '') }}" class="img-circle" alt="Foto mahasiswa" style="width: 150px; height: 150px; object-fit: cover;">
+                    <img src="{{ helper::mahasiswaPhotoUrl($profil->D_FOTO_MAHASISWA ?? '', $profil->JENIS_KELAMIN ?? '') }}" class="img-circle" alt="Foto mahasiswa" style="width: 150px; height: 150px; object-fit: cover;">
                     <h4>{{ $profil->NAMA_MAHASISWA ?? '-' }}</h4>
                     <p class="text-muted">{{ $profil->C_NPM ?? '-' }}</p>
                 </div>

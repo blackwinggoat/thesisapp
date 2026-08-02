@@ -572,6 +572,7 @@ class dosen extends Controller
                 'tb.C_NPM',
                 'mhs.NAMA_MAHASISWA',
                 'mhs.D_FOTO_MAHASISWA',
+                'mhs.JENIS_KELAMIN',
                 'tb.judul',
                 'tb.jenis_tugas_akhir_id',
                 'tb.status_bimbingan',
@@ -664,7 +665,7 @@ class dosen extends Controller
                 $item->status_penilaian_class = $belumLengkap ? 'incomplete' : 'complete';
                 $item->status_penilaian_icon = $belumLengkap ? 'fa-exclamation-circle' : 'fa-check-circle';
             }
-            $item->foto_url = Helper::mahasiswaPhotoUrl($item->D_FOTO_MAHASISWA);
+            $item->foto_url = Helper::mahasiswaPhotoUrl($item->D_FOTO_MAHASISWA, $item->JENIS_KELAMIN);
             $item->boleh_menilai = !empty($item->penguji_I_id)
                 || !empty($item->penguji_II_id)
                 || !empty($item->penguji_III_id)
