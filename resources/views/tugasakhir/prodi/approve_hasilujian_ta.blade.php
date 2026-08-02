@@ -23,13 +23,22 @@
                 <div class="alert alert-success alert-block square fade in alert-dismissable">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                     <p><strong>Status!</strong></p>
-                    <p>Berhasil Konfirmasi Hasil Ujian Meja Semua Mahasiswa. Total Mahasiswa Terkonfirmasi Adalah <b><?= session('total') ?></b></p>
+                    <p><b><?= session('total') ?></b> mahasiswa dengan penilaian ujian TA lengkap berhasil dikonfirmasi.</p>
+                    <?php if((int) session('total_belum_lengkap') > 0): ?>
+                        <p><b><?= session('total_belum_lengkap') ?></b> mahasiswa dilewati karena masih ada penilai yang belum mengisi nilai.</p>
+                    <?php endif; ?>
+                </div>
+            <?php elseif(session('status') == 'warning'): ?>
+                <div class="alert alert-warning alert-block square fade in alert-dismissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <p><strong>Belum dapat dikonfirmasi.</strong></p>
+                    <p>Tidak ada status yang berubah. <b><?= session('total_belum_lengkap') ?></b> mahasiswa masih memiliki penilaian yang belum lengkap.</p>
                 </div>
             <?php elseif(session('status') == 'error'): ?>
                 <div class="alert alert-danger alert-block square fade in alert-dismissable">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                     <p><strong>Status!</strong></p>
-                    <p>Gagal Konfirmasi Hail Ujian Meja Semua Mahasiswa. Total Mahasiswa Terkonfirmasi Adalah <b><?= session('total') ?></b></p>
+                    <p>Konfirmasi hasil ujian TA gagal. Tidak ada status tambahan yang diubah.</p>
                 </div>
             <?php endif; ?>
 
@@ -37,7 +46,10 @@
                 @if (!empty($isHistory))
                     <a href="{{ url('prodi/approve_hasilujian_ta') }}" class="btn btn-default mb-5" style="margin-bottom: 20px">Kembali</a>
                 @else
-                    <a href="{{url('prodi/approve_hasilujian_ta_all_post/')}}" class="btn btn-info mb-5" style="margin-bottom: 20px">Konfirmasi Semua</a>
+                    <form method="POST" action="{{ url('prodi/approve_hasilujian_ta_all_post') }}" style="display: inline-block" onsubmit="return confirm('Konfirmasi semua mahasiswa yang seluruh penilainya sudah lengkap?')">
+                        {{ csrf_field() }}
+                        <button type="submit" class="btn btn-info mb-5" style="margin-bottom: 20px">Konfirmasi Semua Nilai Lengkap</button>
+                    </form>
                     <a href="{{ url('prodi/approve_hasilujian_ta_history') }}" class="btn btn-primary mb-5" style="margin-bottom: 20px">Riwayat</a>
                 @endif
                 <div class="table-responsive">
@@ -101,5 +113,4 @@
         });
     </script>
 @endsection
-
 

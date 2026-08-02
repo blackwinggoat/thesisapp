@@ -1350,6 +1350,16 @@ class Helper
         return (int) DB::table('trt_hasil')
             ->where('reg_id', $reg_id)
             ->whereIn('nidn', $penilaiWajib)
+            ->whereNotNull('nilai_1')
+            ->whereNotNull('nilai_2')
+            ->whereNotNull('nilai_3')
+            ->whereNotNull('nilai_4')
+            ->whereNotNull('nilai_5')
+            ->where('nilai_1', '>', 0)
+            ->where('nilai_2', '>', 0)
+            ->where('nilai_3', '>', 0)
+            ->where('nilai_4', '>', 0)
+            ->where('nilai_5', '>', 0)
             ->distinct()
             ->count('nidn');
     }
@@ -2053,6 +2063,16 @@ class Helper
             ->select('*')
             ->where('trt_hasil.nidn', $nim)
             ->where('trt_hasil.reg_id', $reg_id)
+            ->whereNotNull('nilai_1')
+            ->whereNotNull('nilai_2')
+            ->whereNotNull('nilai_3')
+            ->whereNotNull('nilai_4')
+            ->whereNotNull('nilai_5')
+            ->where('nilai_1', '>', 0)
+            ->where('nilai_2', '>', 0)
+            ->where('nilai_3', '>', 0)
+            ->where('nilai_4', '>', 0)
+            ->where('nilai_5', '>', 0)
             ->first();
         $status = "";
         if ($data == null || $data == '') {

@@ -211,8 +211,8 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get("/prodi/lembaran_hasilujian_proposal/{id}/{nim}/{regid}", "Prodi@lembaran_hasilujian_proposal");
 
     // Approve Semua Hasil Ujian
-    Route::get("/prodi/approve_hasilujian_proposal_all_post", "Prodi@approve_hasilujian_proposal_all_post");
-    Route::get("/prodi/approve_hasilujian_ta_all_post", "Prodi@approve_hasilujian_ta_all_post");
+    Route::post("/prodi/approve_hasilujian_proposal_all_post", "Prodi@approve_hasilujian_proposal_all_post");
+    Route::post("/prodi/approve_hasilujian_ta_all_post", "Prodi@approve_hasilujian_ta_all_post");
 
     Route::get("/prodi/approve_hasilujian_ta/", "Prodi@approve_hasilujian_ta");
     Route::get("/prodi/approve_hasilujian_ta_history/", "Prodi@approve_hasilujian_ta_history");

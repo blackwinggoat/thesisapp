@@ -10,6 +10,12 @@
             <li><a href="{{ url('/') }}">Home</a></li>
             <li class="active">Jadwal Ujian Per Mahasiswa</li>
         </ol>
+        @if (session('status') === 'warning')
+            <div class="alert alert-warning alert-block square fade in alert-dismissable">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <p>{{ session('message') }}</p>
+            </div>
+        @endif
         <div class="the-box">
             <div class="form-group">
                 <label class="col-lg-2 control-label">Tanggal Ujian</label>

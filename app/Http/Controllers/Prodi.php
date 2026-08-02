@@ -372,6 +372,14 @@ class prodi extends Controller
     // Halaman Approve Hasil Ujian Proposal
     public function approve_hasilujian_proposal_post($id, $nim, $pendaftaran_id)
     {
+        if (!$this->isPenilaianUjianLengkap($id, $nim, $pendaftaran_id, 0)) {
+            return redirect('prodi/detail_hasilujian_proposal/' . $pendaftaran_id)
+                ->with([
+                    'status' => 'warning',
+                    'message' => 'Hasil proposal belum dapat dikonfirmasi karena masih ada penilai yang belum mengisi nilai.',
+                ]);
+        }
+
         $bimbingan = DB::table('trt_bimbingan')
             ->select('pembimbing_I_id', 'pembimbing_II_id')
             ->where('C_NPM', $nim)
@@ -419,7 +427,8 @@ class prodi extends Controller
         DB::table('trt_bimbingan')
             ->where([
                 "bimbingan_id" => $id,
-                "C_NPM" => $nim
+                "C_NPM" => $nim,
+                "status_bimbingan" => 0,
             ])
             ->update(['status_bimbingan' => 2]);
 
@@ -432,56 +441,84 @@ class prodi extends Controller
     // Aprrove Semua Hasil Ujian
     public function approve_hasilujian_proposal_all_post()
     {
-        $data = DB::table('trt_bimbingan')
-            ->join("trt_reg", "trt_reg.bimbingan_id", "=", "trt_bimbingan.bimbingan_id")
-            ->select("trt_reg.reg_id", "trt_bimbingan.bimbingan_id")
-            ->where("trt_bimbingan.status_bimbingan", 0)
-            ->get();
-        $data_bimbingan_id = array();
-        foreach ($data as $key => $value) {
-            if (Helper::isPenilaianLengkapByRegId($value->reg_id)) {
-                array_push($data_bimbingan_id, $value->bimbingan_id);
-            }
-        }
-
-        try {
-            DB::table("trt_bimbingan")
-                ->whereIn("bimbingan_id", $data_bimbingan_id)
-                ->update(["status_bimbingan" => 2]);
-
-            return redirect()->back()->with(['status' => 'success', 'total' => count($data_bimbingan_id)]);
-        } catch (\Exception $th) {
-            return redirect()->back()->with(['status' => 'error', 'total' => count($data_bimbingan_id)]);
-        }
+        return $this->approveSemuaHasilUjian(0, 0, 2);
     }
     // Akhir Approve Semua Hasil Ujian
 
     // Aprrove Semua Hasil Ujian
     public function approve_hasilujian_ta_all_post()
     {
-        $data = DB::table('trt_bimbingan')
-            ->join("trt_reg", "trt_reg.bimbingan_id", "=", "trt_bimbingan.bimbingan_id")
-            ->select("trt_reg.reg_id", "trt_bimbingan.bimbingan_id")
-            ->where("trt_bimbingan.status_bimbingan", 2)
+        return $this->approveSemuaHasilUjian(2, 2, 3);
+    }
+    // Akhir Approve Semua Hasil Ujian
+
+    protected function approveSemuaHasilUjian($tipeUjian, $statusSaatIni, $statusTujuan)
+    {
+        $statusProdi = Auth::user()->name == "proditi" ? 1 : 2;
+        $peserta = DB::table('trt_reg as rg')
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+            ->join('mst_pendaftaran as mp', 'mp.pendaftaran_id', '=', 'rg.pendaftaran_id')
+            ->select('rg.reg_id', 'tb.bimbingan_id')
+            ->where('rg.status', $tipeUjian)
+            ->where('tb.status_bimbingan', $statusSaatIni)
+            ->where('mp.status_prodi', $statusProdi)
+            ->whereRaw(
+                'rg.reg_id = (SELECT MAX(rg_latest.reg_id) FROM trt_reg AS rg_latest WHERE rg_latest.bimbingan_id = rg.bimbingan_id AND rg_latest.status = ?)',
+                [$tipeUjian]
+            )
             ->get();
-        $data_bimbingan_id = array();
-        foreach ($data as $key => $value) {
-            if (Helper::isPenilaianLengkapByRegId($value->reg_id)) {
-                array_push($data_bimbingan_id, $value->bimbingan_id);
+
+        $bimbinganIds = [];
+        $totalBelumLengkap = 0;
+        foreach ($peserta as $rowPeserta) {
+            if (Helper::isPenilaianLengkapByRegId($rowPeserta->reg_id)) {
+                $bimbinganIds[] = $rowPeserta->bimbingan_id;
+            } else {
+                $totalBelumLengkap++;
             }
+        }
+        $bimbinganIds = array_values(array_unique($bimbinganIds));
+
+        if (empty($bimbinganIds)) {
+            return redirect()->back()->with([
+                'status' => 'warning',
+                'total' => 0,
+                'total_belum_lengkap' => $totalBelumLengkap,
+            ]);
         }
 
         try {
-            DB::table("trt_bimbingan")
-                ->whereIn("bimbingan_id", $data_bimbingan_id)
-                ->update(["status_bimbingan" => 3]);
+            $total = DB::table('trt_bimbingan')
+                ->where('status_bimbingan', $statusSaatIni)
+                ->whereIn('bimbingan_id', $bimbinganIds)
+                ->update(['status_bimbingan' => $statusTujuan]);
 
-            return redirect()->back()->with(['status' => 'success', 'total' => count($data_bimbingan_id)]);
+            return redirect()->back()->with([
+                'status' => 'success',
+                'total' => $total,
+                'total_belum_lengkap' => $totalBelumLengkap,
+            ]);
         } catch (\Exception $th) {
-            return redirect()->back()->with(['status' => 'error', 'total' => count($data_bimbingan_id)]);
+            return redirect()->back()->with([
+                'status' => 'error',
+                'total' => 0,
+                'total_belum_lengkap' => $totalBelumLengkap,
+            ]);
         }
     }
-    // Akhir Approve Semua Hasil Ujian
+
+    protected function isPenilaianUjianLengkap($bimbinganId, $nim, $pendaftaranId, $tipeUjian)
+    {
+        $regId = DB::table('trt_reg as rg')
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+            ->where('rg.bimbingan_id', $bimbinganId)
+            ->where('rg.pendaftaran_id', $pendaftaranId)
+            ->where('rg.status', $tipeUjian)
+            ->where('tb.C_NPM', $nim)
+            ->max('rg.reg_id');
+
+        return $regId && Helper::isPenilaianLengkapByRegId($regId);
+    }
 
     // Halaman Approve Hasil Ujian Proposal
     public function tolak_hasilujian_proposal_post($id, $nim, $pendaftaran_id)
@@ -696,6 +733,14 @@ class prodi extends Controller
     // Halaman Approve Hasil Ujian TA
     public function approve_hasilujian_ta_post($id, $nim, $pendaftaran_id)
     {
+        if (!$this->isPenilaianUjianLengkap($id, $nim, $pendaftaran_id, 2)) {
+            return redirect('prodi/detail_hasilujian_ta/' . $pendaftaran_id)
+                ->with([
+                    'status' => 'warning',
+                    'message' => 'Hasil ujian TA belum dapat dikonfirmasi karena masih ada penilai yang belum mengisi nilai.',
+                ]);
+        }
+
         $bimbingan = DB::table('trt_bimbingan')
             ->select('pembimbing_I_id', 'pembimbing_II_id')
             ->where('C_NPM', $nim)
@@ -743,7 +788,8 @@ class prodi extends Controller
         DB::table('trt_bimbingan')
             ->where([
                 "bimbingan_id" => $id,
-                "C_NPM" => $nim
+                "C_NPM" => $nim,
+                "status_bimbingan" => 2,
             ])
             ->update(['status_bimbingan' => 3]);
 
