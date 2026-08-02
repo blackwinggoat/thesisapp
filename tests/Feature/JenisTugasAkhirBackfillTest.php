@@ -9,6 +9,7 @@ use App\Console\Commands\BackfillJenisTugasAkhir;
 use App\Console\Commands\BackupJenisTugasAkhir;
 use App\Console\Commands\BackfillJenisTugasAkhirUsulan;
 use App\Console\Commands\StandardizeJenisTugasAkhir;
+use App\Console\Commands\LinkBimbinganTopik;
 use App\Http\Controllers\Prodi;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -35,6 +36,8 @@ class JenisTugasAkhirBackfillTest extends TestCase
         });
         Schema::create('trt_bimbingan', function (Blueprint $table) {
             $table->increments('bimbingan_id');
+            $table->integer('topik_id')->nullable();
+            $table->string('C_NPM')->nullable();
             $table->text('judul');
             $table->integer('jenis_tugas_akhir_id')->nullable();
         });
@@ -197,6 +200,30 @@ class JenisTugasAkhirBackfillTest extends TestCase
         $this->assertSame(0, DB::table('mst_jenis_tugas_akhir')->where('kode_jenis_tugas_akhir', 'NT-KT')->count());
         $this->assertSame($nsKtId, DB::table('trt_bimbingan')->value('jenis_tugas_akhir_id'));
         $this->assertSame($nsKtId, DB::table('trt_topik')->value('jenis_tugas_akhir_id'));
+    }
+
+    public function testLinkingGuidanceToTopicsSkipsAmbiguousHistory()
+    {
+        DB::table('trt_bimbingan')->insert([
+            ['C_NPM' => 'MHS1', 'judul' => 'Judul resmi'],
+            ['C_NPM' => 'MHS2', 'judul' => 'Judul ambigu'],
+        ]);
+        DB::table('trt_topik')->insert([
+            ['C_NPM' => 'MHS1', 'topik' => 'Topik tunggal', 'status' => 1],
+            ['C_NPM' => 'MHS2', 'topik' => 'Topik pertama', 'status' => 1],
+            ['C_NPM' => 'MHS2', 'topik' => 'Topik kedua', 'status' => 1],
+        ]);
+
+        $command = $this->app->make(LinkBimbinganTopik::class);
+        $command->setLaravel($this->app);
+        $this->assertSame(0, $command->run(new ArrayInput(['--apply' => true]), new BufferedOutput));
+
+        $this->assertSame(
+            DB::table('trt_topik')->where('C_NPM', 'MHS1')->value('topik_id'),
+            DB::table('trt_bimbingan')->where('C_NPM', 'MHS1')->value('topik_id')
+        );
+        $this->assertNull(DB::table('trt_bimbingan')->where('C_NPM', 'MHS2')->value('topik_id'));
+        $this->assertSame('Judul resmi', DB::table('trt_bimbingan')->where('C_NPM', 'MHS1')->value('judul'));
     }
 
     private function runBackfill()

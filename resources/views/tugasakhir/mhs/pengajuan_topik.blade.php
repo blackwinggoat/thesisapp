@@ -120,14 +120,14 @@
                 <div class="form-group">
                     <label class="col-lg-2 control-label">Judul Topik</label>
                     <div class="col-xs-5">
-                        <div class="form-control bold-border">{!! helper::jenisTugasAkhirBadge($topik->jenis_tugas_akhir_id ?? null) !!} {{$topik->topik}}</div>
+                        <div class="form-control bold-border">{{$topik->topik}}</div>
                     </div>
                 </div>
                 <br><br>
                 <div class="form-group">
                     <label class="col-lg-2 control-label">Jenis Tugas Akhir</label>
                     <div class="col-xs-5">
-                        <div class="form-control bold-border">{{$topik->kode_jenis_tugas_akhir ?: '-'}}</div>
+                        <div class="form-control bold-border">{!! helper::jenisTugasAkhirBadge($topik->jenis_tugas_akhir_id ?? null) !!}</div>
                     </div>
                 </div>
                 <br><br>

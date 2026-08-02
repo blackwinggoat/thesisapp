@@ -472,12 +472,23 @@ class mhs extends Controller
             'jenis_tugas_akhir_id' => 'required|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
         ]);
 
-        trt_topik::where("topik_id", $id)
-            ->where('C_NPM', auth()->user()->name)
-            ->update([
-                'topik' => trim((string) $request->topik),
-                'jenis_tugas_akhir_id' => $request->jenis_tugas_akhir_id,
-            ]);
+        DB::transaction(function () use ($request, $id) {
+            trt_topik::where("topik_id", $id)
+                ->where('C_NPM', auth()->user()->name)
+                ->update([
+                    'topik' => trim((string) $request->topik),
+                    'jenis_tugas_akhir_id' => $request->jenis_tugas_akhir_id,
+                ]);
+
+            if (Schema::hasColumn('trt_bimbingan', 'topik_id')) {
+                DB::table('trt_bimbingan')
+                    ->where('topik_id', $id)
+                    ->update([
+                        'judul' => trim((string) $request->topik),
+                        'jenis_tugas_akhir_id' => $request->jenis_tugas_akhir_id,
+                    ]);
+            }
+        });
         return redirect::to('mhs/pengajuan_topik');
     }
 

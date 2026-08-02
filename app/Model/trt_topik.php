@@ -14,4 +14,9 @@ class trt_topik extends Model
   {
     return $this->belongsTo('App\\Model\\mst_jenis_tugas_akhir', 'jenis_tugas_akhir_id', 'jenis_tugas_akhir_id');
   }
+
+  public function bimbingan()
+  {
+    return $this->hasOne('App\\Model\\trt_bimbingan', 'topik_id', 'topik_id');
+  }
 }

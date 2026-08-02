@@ -82,7 +82,7 @@
                                     <td width="1%" align="center">{{ $data_riwayat_usulan->firstItem() + $key }}</td>
                                     <td>{{ $value->C_NPM }}</td>
                                     <td>{{ $value->NAMA_MAHASISWA }}</td>
-                                    <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{ $value->topik }}</td>
+                                    <td>{{ $value->topik }}</td>
                                     <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!}</td>
                                     <td>
                                         @if ($value->kerangka)

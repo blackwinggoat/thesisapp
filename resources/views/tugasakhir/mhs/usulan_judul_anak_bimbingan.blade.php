@@ -28,7 +28,7 @@
                         <tr class="odd gradeX">
                             <td width="1%" align="center">{{++$key}}</td>
                             <td>{{$value->NAMA_DOSEN}}</td>
-                            <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!} {{$value->judul}}</td>
+                            <td>{{$value->judul}}</td>
                             <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!}</td>
                             <td>{{$value->created_at}}</td>
                         </tr>
