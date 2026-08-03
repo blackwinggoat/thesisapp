@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\dosen;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -150,5 +151,39 @@ class DosenAssessmentInitialScoreTest extends TestCase
         $this->assertStringContainsString('<output class="assessment-score-slider__value" aria-live="polite">--</output>', $slider);
         $this->assertStringContainsString('value="10"', $slider);
         $this->assertStringContainsString('aria-valuetext="Belum diisi"', $slider);
+    }
+
+    public function testPartialAssessmentSubmissionIsRejectedWithoutChangingSavedScores()
+    {
+        $controller = new dosen();
+        $proposalResponse = $controller->detailhasil_proposalpost(new Request([
+            'reg_id' => 20,
+            'nilai_1' => 0,
+            'nilai_2' => 22,
+            'nilai_3' => 20,
+            'nilai_4' => 18,
+            'nilai_5' => 18,
+        ]));
+        $taResponse = $controller->detailhasil_ujianmejapost(new Request([
+            'reg_id' => 20,
+            'nilai_1' => 0,
+            'nilai_2' => 12,
+            'nilai_3' => 15,
+            'nilai_4' => 24,
+            'nilai_5' => 20,
+        ]));
+
+        $savedScores = DB::table('trt_hasil')
+            ->where('reg_id', 20)
+            ->where('nidn', 'DOSEN-01')
+            ->first(['nilai_1', 'nilai_2', 'nilai_3', 'nilai_4', 'nilai_5']);
+
+        $this->assertSame('Lengkapi semua komponen nilai sesuai rentang penilaian sebelum menyimpan.', $proposalResponse->getSession()->get('error'));
+        $this->assertSame('Lengkapi semua komponen nilai sesuai rentang penilaian sebelum menyimpan.', $taResponse->getSession()->get('error'));
+        $this->assertSame('12', $savedScores->nilai_1);
+        $this->assertSame('22', $savedScores->nilai_2);
+        $this->assertSame('20', $savedScores->nilai_3);
+        $this->assertSame('18', $savedScores->nilai_4);
+        $this->assertSame('18', $savedScores->nilai_5);
     }
 }

@@ -530,6 +530,19 @@ class dosen extends Controller
         ];
     }
 
+    private function hasValidAssessmentScores(Request $request, array $ranges)
+    {
+        foreach ($ranges as $field => $range) {
+            $value = str_replace(',', '.', trim((string) $request->input($field, '')));
+
+            if (!is_numeric($value) || (float) $value < $range[0] || (float) $value > $range[1]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // Detail Halaman Hasil Ujian
     public function detailhasil_proposal($regid)
     {
@@ -558,6 +571,16 @@ class dosen extends Controller
                 'reg_id' => $request->reg_id,
             ]);
             return redirect()->back()->with('error', 'Kode dosen akun login tidak ditemukan. Silakan periksa akun dosen ini.');
+        }
+
+        if (!$this->hasValidAssessmentScores($request, [
+            'nilai_1' => [10, 15],
+            'nilai_2' => [16, 25],
+            'nilai_3' => [15, 20],
+            'nilai_4' => [15, 20],
+            'nilai_5' => [15, 20],
+        ])) {
+            return redirect()->back()->with('error', 'Lengkapi semua komponen nilai sesuai rentang penilaian sebelum menyimpan.');
         }
 
         try {
@@ -778,6 +801,16 @@ class dosen extends Controller
                 'reg_id' => $request->reg_id,
             ]);
             return redirect()->back()->with('error', 'Kode dosen akun login tidak ditemukan. Silakan periksa akun dosen ini.');
+        }
+
+        if (!$this->hasValidAssessmentScores($request, [
+            'nilai_1' => [6, 10],
+            'nilai_2' => [10, 15],
+            'nilai_3' => [15, 20],
+            'nilai_4' => [20, 30],
+            'nilai_5' => [20, 25],
+        ])) {
+            return redirect()->back()->with('error', 'Lengkapi semua komponen nilai sesuai rentang penilaian sebelum menyimpan.');
         }
 
         try {
