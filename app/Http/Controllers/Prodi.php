@@ -3569,6 +3569,11 @@ class Prodi extends Controller
         ));
     }
 
+    public function report_laporan()
+    {
+        return view('tugasakhir.prodi.report_laporan');
+    }
+
     protected function safeReportSection($section, callable $callback, $fallback, array &$warnings = [])
     {
         try {

@@ -62,10 +62,15 @@
             </a>
         </li>
         <li>
-            <a href="{{ url('prodi/report') }}">
+            <a href="#fakelink">
                 <i class="fa fa-bar-chart-o icon-sidebar"></i>
+                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
                 Report
             </a>
+            <ul class="submenu">
+                <li><a href="{{ url('prodi/report') }}">Dashboard</a></li>
+                <li><a href="{{ url('prodi/report/laporan') }}">Pusat Laporan</a></li>
+            </ul>
         </li>
         <li>
             <a href="#fakelink">
