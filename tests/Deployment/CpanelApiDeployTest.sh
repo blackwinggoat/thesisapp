@@ -44,7 +44,7 @@ case "$*" in
         printf '{"status":1,"data":{"path":"approved"},"errors":null}\n'
         ;;
     *'/execute/VersionControlDeployment/create'*)
-        printf '{"status":1,"data":{"deploy_id":12},"errors":null}\n'
+        printf '{"status":1,"data":[{"deploy_id":12}],"errors":null}\n'
         ;;
     *'/execute/VersionControlDeployment/retrieve'*)
         poll_count=0

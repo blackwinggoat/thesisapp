@@ -212,8 +212,14 @@ api_call VersionControlDeployment/create \
     --data-urlencode "repository_root=${REMOTE_REPOSITORY}"
 
 DEPLOY_ID=$(printf '%s' "$API_RESPONSE" | jq -r '
-    (.result? // .) as $response
-    | $response.data.deploy_id // $response.data[0].deploy_id // empty
+    (.result? // .).data as $data
+    | if ($data | type) == "array" then
+        ($data[0].deploy_id? // $data[0]? // empty)
+      elif ($data | type) == "object" then
+        ($data.deploy_id? // empty)
+      else
+        empty
+      end
 ')
 [[ "$DEPLOY_ID" =~ ^[0-9]+$ ]] || fail 'cPanel did not return a valid deployment id.'
 
