@@ -5,6 +5,7 @@ umask 077
 
 PROJECT_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SSH_HOST="${THESISAPPS_SSH_HOST:-thesisapps-production}"
+SSH_CONNECT_TIMEOUT="${THESISAPPS_SSH_CONNECT_TIMEOUT:-10}"
 DEPLOY_BRANCH="${THESISAPPS_DEPLOY_BRANCH:-main}"
 REMOTE_REPOSITORY="${THESISAPPS_REMOTE_REPOSITORY:-/home/thesisapp/repositories/thesisapp}"
 REMOTE_SHARED="${THESISAPPS_REMOTE_SHARED:-/home/thesisapp/shared/thesisapps}"
@@ -52,6 +53,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ "$DEPLOY_BRANCH" =~ ^[A-Za-z0-9._/-]+$ ]] || fail 'Unsafe deployment branch.'
+[[ "$SSH_CONNECT_TIMEOUT" =~ ^[1-9][0-9]*$ ]] || fail 'Unsafe SSH connect timeout.'
 [[ "$REMOTE_REPOSITORY" =~ ^/[A-Za-z0-9._/-]+$ ]] || fail 'Unsafe remote repository path.'
 [[ "$REMOTE_SHARED" =~ ^/[A-Za-z0-9._/-]+$ ]] || fail 'Unsafe remote shared path.'
 
@@ -80,7 +82,13 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
     exit 0
 fi
 
-ssh "$SSH_HOST" \
+if ! ssh \
+    -o BatchMode=yes \
+    -o ConnectTimeout="$SSH_CONNECT_TIMEOUT" \
+    -o ConnectionAttempts=1 \
+    -o ServerAliveInterval=30 \
+    -o ServerAliveCountMax=3 \
+    "$SSH_HOST" \
     "bash -s -- '${TARGET_SHA}' '${DEPLOY_BRANCH}' '${MODE}' '${REMOTE_REPOSITORY}' '${REMOTE_SHARED}'" <<'REMOTE_SCRIPT'
 set -Eeuo pipefail
 umask 077
@@ -118,3 +126,6 @@ printf '%s\n' "$TARGET_SHA" > "$APPROVAL_FILE"
 chmod 600 "$APPROVAL_FILE"
 bash "${REMOTE_REPOSITORY}/scripts/deploy-cpanel.sh"
 REMOTE_SCRIPT
+then
+    fail "SSH connection or remote deployment failed for ${SSH_HOST}. Verify hosting firewall/allowlist and port 1988; cPanel Git HTTPS remains the verified fallback."
+fi
