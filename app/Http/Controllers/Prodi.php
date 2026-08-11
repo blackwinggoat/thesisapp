@@ -3572,12 +3572,13 @@ class Prodi extends Controller
     public function report_laporan(Request $request)
     {
         $reportContext = $this->getReportContext();
+        $reportContext['label'] = 'Semua Program Studi';
         $reportWarnings = [];
         $bimbinganReport = $this->safeReportSection(
             'distribusi_bimbingan_utama',
-            function () use ($request, $reportContext) {
+            function () use ($request) {
                 return $this->getBimbinganDistributionReport(
-                    $reportContext['nim_like'],
+                    '%',
                     $request->input('tahun_ajaran')
                 );
             },
@@ -3590,6 +3591,20 @@ class Prodi extends Controller
             'reportWarnings',
             'bimbinganReport'
         ));
+    }
+
+    public function report_laporan_excel(Request $request)
+    {
+        $report = $this->getBimbinganDistributionReport(
+            '%',
+            $request->input('tahun_ajaran')
+        );
+        $filename = 'distribusi-jumlah-bimbingan-' . str_replace('/', '-', $report['selected_year']) . '.xls';
+
+        return response()
+            ->view('tugasakhir.prodi.report_laporan_excel', compact('report'))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
     protected function getBimbinganDistributionReport($nimLike, $selectedAcademicYear = null)
@@ -3735,15 +3750,24 @@ class Prodi extends Controller
             })
             ->all();
 
+        $totalMahasiswaByProgram = [];
+        foreach ($programs as $program) {
+            $totalMahasiswaByProgram[$program['key']] = collect($rows)->sum(function ($row) use ($program) {
+                return $row['counts'][$program['key']]['Ganjil']
+                    + $row['counts'][$program['key']]['Genap'];
+            });
+        }
+
         return [
             'period_options' => $periodOptions->all(),
             'selected_year' => $selectedAcademicYear,
-            'ganjil_label' => 'Ganjil (' . $ganjilStart->format('M Y') . ' - ' . $ganjilEnd->format('M Y') . ')',
-            'genap_label' => 'Genap (' . $genapStart->format('M Y') . ' - ' . $genapEnd->format('M Y') . ')',
+            'awal_label' => 'Awal (' . $ganjilStart->format('M Y') . ' - ' . $ganjilEnd->format('M Y') . ')',
+            'akhir_label' => 'Akhir (' . $genapStart->format('M Y') . ' - ' . $genapEnd->format('M Y') . ')',
             'programs' => $programs,
             'rows' => $rows,
             'total_dosen' => count($rows),
             'total_mahasiswa' => collect($rows)->sum('total'),
+            'total_mahasiswa_by_program' => $totalMahasiswaByProgram,
         ];
     }
 
@@ -3752,12 +3776,13 @@ class Prodi extends Controller
         return [
             'period_options' => [],
             'selected_year' => Helper::getSemesterAkademik(Carbon::today())->tahun_akademik,
-            'ganjil_label' => 'Ganjil',
-            'genap_label' => 'Genap',
+            'awal_label' => 'Awal',
+            'akhir_label' => 'Akhir',
             'programs' => [],
             'rows' => [],
             'total_dosen' => 0,
             'total_mahasiswa' => 0,
+            'total_mahasiswa_by_program' => [],
         ];
     }
 

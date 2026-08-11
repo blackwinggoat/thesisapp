@@ -39,30 +39,40 @@
                                 </option>
                             @endforelse
                         </select>
+                        <a href="{{ url('prodi/report/laporan/excel') . '?tahun_ajaran=' . urlencode($bimbinganReport['selected_year']) }}"
+                           class="btn btn-success" title="Download Excel">
+                            <i class="fa fa-download"></i> Excel
+                        </a>
                     </form>
                 </div>
             </div>
 
             <div class="row" style="margin-top: 20px;">
-                <div class="col-sm-4">
+                <div class="col-sm-3">
                     <div class="well well-sm text-center" style="margin-bottom: 10px;">
                         <strong>{{ number_format($bimbinganReport['total_dosen']) }}</strong><br>
                         <small>Dosen Pembimbing Utama</small>
                     </div>
                 </div>
-                <div class="col-sm-4">
+                @foreach ($bimbinganReport['programs'] as $program)
+                    <div class="col-sm-3">
+                        <div class="well well-sm text-center" style="margin-bottom: 10px;">
+                            <strong>{{ number_format($bimbinganReport['total_mahasiswa_by_program'][$program['key']] ?? 0) }}</strong><br>
+                            <small>Total Penugasan Mahasiswa - {{ $program['label'] }}</small>
+                        </div>
+                    </div>
+                @endforeach
+                <div class="col-sm-3">
                     <div class="well well-sm text-center" style="margin-bottom: 10px;">
                         <strong>{{ number_format($bimbinganReport['total_mahasiswa']) }}</strong><br>
-                        <small>Total Penugasan Mahasiswa</small>
-                    </div>
-                </div>
-                <div class="col-sm-4">
-                    <div class="well well-sm text-center" style="margin-bottom: 10px;">
-                        <strong>{{ $bimbinganReport['selected_year'] }}</strong><br>
-                        <small>{{ $bimbinganReport['ganjil_label'] }} / {{ $bimbinganReport['genap_label'] }}</small>
+                        <small>Total Penugasan Mahasiswa - Semua Prodi</small>
                     </div>
                 </div>
             </div>
+
+            <p class="text-muted" style="margin: 5px 0 0;">
+                {{ $bimbinganReport['selected_year'] }}: {{ $bimbinganReport['awal_label'] }} / {{ $bimbinganReport['akhir_label'] }}.
+            </p>
 
             <div class="table-responsive" style="margin-top: 20px;">
                 <table class="table table-bordered table-striped table-hover" style="min-width: 720px;">
@@ -77,8 +87,8 @@
                         </tr>
                         <tr>
                             @foreach ($bimbinganReport['programs'] as $program)
-                                <th class="text-center">Ganjil</th>
-                                <th class="text-center">Genap</th>
+                                <th class="text-center">Awal</th>
+                                <th class="text-center">Akhir</th>
                             @endforeach
                         </tr>
                     </thead>
@@ -108,8 +118,8 @@
             </div>
 
             <p class="text-muted" style="margin: 15px 0 0;">
-                Tampilan ini masih tahap review format. Distribusi dihitung dari SK pembimbing: Ganjil September-Februari dan Genap Maret-Agustus.
-                Ekspor Excel akan ditambahkan setelah format tabel disetujui.
+                Distribusi dihitung dari SK pembimbing: Awal September-Februari dan Akhir Maret-Agustus.
+                Laporan menampilkan seluruh program studi untuk akun Prodi.
             </p>
         </div>
     </div>
