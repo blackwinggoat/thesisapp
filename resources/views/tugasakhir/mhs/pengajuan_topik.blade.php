@@ -19,6 +19,22 @@
         <h3 class="page-heading">Form Pengajuan Topik</h3>
         <!-- BEGIN DATA TABLE -->
         <div class="the-box">
+            @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <strong>Pengajuan belum tersimpan.</strong>
+                <ul style="margin-bottom: 0; padding-left: 20px;">
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+            @if (session('success'))
+            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+            @endif
+            @if (session('error'))
+            <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+            @endif
             @php
             $trtbimbingan = \App\Model\trt_bimbingan::where("C_NPM", auth()->user()->name)->get();
             @endphp
@@ -85,7 +101,8 @@
                             <div class="input-group">
                                 <span class="input-group-btn">
                                     <span class="btn btn-default btn-file">
-                                        Browse&hellip; <input type="file" name="kerangka" class="bold-border">
+                                        Browse&hellip; <input type="file" name="kerangka" class="bold-border"
+                                            accept=".pdf,.xls,.doc,.docx,.pptx,.pps,.jpeg,.bmp,.png,.xlsx,.zip,.rar">
                                     </span>
                                 </span>
                                 <input type="text" class="form-control" readonly>
@@ -292,9 +309,13 @@
                                 <a class="btn btn-info" href="{{url('mhs/detail_note')}}/{{$value->topik_id}}"><i class="fa fa-newspaper-o"></i></a>    
                             </td>
                             <td>
+                                @if (!empty($value->kerangka))
                                 <button class="btn btn-primary" onclick="showModal(this)" data-target="#modalDefault"
                                     data-toggle="modal" data-href="{{asset('dokumen/'.$value->kerangka)}}"
                                     target="_blank"><i class="fa fa-paperclip"></i></button>
+                                @else
+                                <span class="text-muted">Tidak ada lampiran</span>
+                                @endif
                             </td>
 
                             @if($value->status == 0)

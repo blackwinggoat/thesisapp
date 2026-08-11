@@ -699,6 +699,7 @@ class mhs extends Controller
             'topik' => 'required|max:1000',
             'jenis_tugas_akhir_id' => 'required|integer',
             'bidang_ilmu' => 'required|array|min:1',
+            'kerangka' => 'nullable|file|mimes:pdf,xls,doc,docx,pptx,pps,jpeg,bmp,png,xlsx,zip,rar',
         ]);
 
         if (!$this->jenisTugasAkhirMahasiswaDapatDipilih($request->jenis_tugas_akhir_id)) {
@@ -713,12 +714,14 @@ class mhs extends Controller
         $datapost['bidang_ilmu_peminatan'] = $datapost['bidang_ilmu_peminatan'];
         $file = isset($datapost['kerangka']) ? $datapost['kerangka'] : '';
 
-        $uploadedFileName = helper::uploadFile($file, 'public/dokumen/', '');
-
-        if ($uploadedFileName) {
-            $datapost['kerangka'] = $uploadedFileName;
+        if ($file) {
+            $uploadPath = public_path('dokumen');
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0775, true);
+            }
+            $datapost['kerangka'] = helper::uploadFile($file, $uploadPath . DIRECTORY_SEPARATOR, '');
         } else {
-            return redirect()->back()->with('error', 'File upload failed. Please try again.');
+            $datapost['kerangka'] = '';
         }
 
         $datapost["note"] = $datapost["note"];
