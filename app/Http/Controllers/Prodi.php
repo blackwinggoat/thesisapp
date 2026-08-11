@@ -4088,15 +4088,7 @@ class Prodi extends Controller
 
     public function rekapJadwalPerMhsExcel($tipe_ujian, Request $request)
     {
-        $jadwalIds = collect((array) $request->input('jadwal_ujian_ids', []))
-            ->map(function ($id) {
-                return (int) $id;
-            })
-            ->filter(function ($id) {
-                return $id > 0;
-            })
-            ->unique()
-            ->values();
+        $jadwalIds = $this->getSelectedJadwalUjianIds($request);
 
         if ($jadwalIds->isEmpty()) {
             return redirect()->back()->with('danger', 'Pilih minimal satu jadwal untuk dibuatkan rekap.');
@@ -4112,6 +4104,78 @@ class Prodi extends Controller
             ->view('tugasakhir.prodi.rekap_jadwalpermhs_excel', compact('rows', 'lecturerSheets', 'namaTipeUjian'))
             ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    public function notifDosenJadwalPerMhs($tipe_ujian, Request $request)
+    {
+        $jadwalIds = $this->getSelectedJadwalUjianIds($request);
+
+        if ($jadwalIds->isEmpty()) {
+            return redirect()->back()->with('danger', 'Pilih minimal satu jadwal untuk dibuatkan notifikasi dosen.');
+        }
+
+        $type = $this->resolveTipeUjianValue($tipe_ujian);
+        $rows = $this->getRekapJadwalPerMhsRows($jadwalIds->all(), $type);
+        $notifications = $this->buildNotifDosenJadwalPerMhs($rows, $tipe_ujian, $jadwalIds->all());
+        $namaTipeUjian = $this->getNamaTipeUjianLabel($tipe_ujian);
+
+        return view('tugasakhir.prodi.notif_jadwalpermhs_dosen', compact(
+            'notifications',
+            'namaTipeUjian',
+            'tipe_ujian'
+        ));
+    }
+
+    public function jadwalDosenLink($token, Request $request)
+    {
+        $payload = $this->decodeDosenScheduleToken($token);
+        if (!$payload) {
+            abort(404);
+        }
+
+        $type = $this->resolveTipeUjianValue($payload['tipe_ujian']);
+        $rows = $this->getRekapJadwalPerMhsRows($payload['jadwal_ids'], $type)
+            ->filter(function ($row) use ($payload) {
+                return in_array($payload['kode_dosen'], array_values($row->lecturer_codes), true);
+            })
+            ->values();
+
+        $dosen = $this->getDosenContactsForRekapJadwal(collect([$payload['kode_dosen']]))
+            ->get($payload['kode_dosen']);
+        $namaDosen = $dosen && trim((string) ($dosen->NAMA_DOSEN ?? '')) !== ''
+            ? trim((string) $dosen->NAMA_DOSEN)
+            : $payload['nama_dosen'];
+        $namaTipeUjian = $this->getNamaTipeUjianLabel($payload['tipe_ujian']);
+        $filename = 'jadwal-' . str_replace(' ', '-', strtolower($namaDosen)) . '-' . date('Ymd-His') . '.xls';
+
+        if ($request->get('download') === 'excel') {
+            $lecturerSheets = collect();
+
+            return response()
+                ->view('tugasakhir.prodi.rekap_jadwalpermhs_excel', compact('rows', 'lecturerSheets', 'namaTipeUjian'))
+                ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        }
+
+        return view('tugasakhir.prodi.jadwal_dosen_link', compact(
+            'rows',
+            'namaDosen',
+            'namaTipeUjian',
+            'token'
+        ));
+    }
+
+    private function getSelectedJadwalUjianIds(Request $request)
+    {
+        return collect((array) $request->input('jadwal_ujian_ids', []))
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->filter(function ($id) {
+                return $id > 0;
+            })
+            ->unique()
+            ->values();
     }
 
     private function jadwalPerMhsByMode($tipe_ujian, $mode = 'aktif')
@@ -4222,6 +4286,14 @@ class Prodi extends Controller
             $row->penguji_2 = $this->getDosenNameFromMap($dosenByKode, $row->penguji_II_id);
             $row->penguji_3 = $this->getDosenNameFromMap($dosenByKode, $row->penguji_III_id);
             $row->ketua_sidang = $this->getDosenNameFromMap($dosenByKode, $row->ketua_sidang_id);
+            $row->lecturer_codes = [
+                'pembimbing_I_id' => trim((string) $row->pembimbing_I_id),
+                'pembimbing_II_id' => trim((string) $row->pembimbing_II_id),
+                'penguji_I_id' => trim((string) $row->penguji_I_id),
+                'penguji_II_id' => trim((string) $row->penguji_II_id),
+                'penguji_III_id' => trim((string) $row->penguji_III_id),
+                'ketua_sidang_id' => trim((string) $row->ketua_sidang_id),
+            ];
             $row->lecturer_assignments = [
                 'pembimbing_I_id' => $row->pembimbing_utama,
                 'pembimbing_II_id' => $row->pembimbing_pendamping,
@@ -4275,6 +4347,205 @@ class Prodi extends Controller
                 return $sheet;
             })
             ->values();
+    }
+
+    private function buildNotifDosenJadwalPerMhs($rows, $tipe_ujian, array $jadwalIds)
+    {
+        $roleLabels = $this->getJadwalDosenRoleLabels();
+        $kodeDosen = $rows->flatMap(function ($row) {
+            return array_values($row->lecturer_codes);
+        })->filter()->unique()->values();
+        $contacts = $this->getDosenContactsForRekapJadwal($kodeDosen);
+        $notifications = [];
+
+        foreach ($rows as $row) {
+            foreach ($row->lecturer_codes as $roleKey => $kode) {
+                $kode = trim((string) $kode);
+                if ($kode === '') {
+                    continue;
+                }
+
+                $name = trim((string) ($row->lecturer_assignments[$roleKey] ?? $kode));
+                $contact = $contacts->get($kode);
+                $notificationKey = $kode;
+
+                if (!isset($notifications[$notificationKey])) {
+                    $token = $this->buildDosenScheduleToken($tipe_ujian, $jadwalIds, $kode, $name);
+                    $scheduleUrl = url('jadwal-dosen/' . $token);
+                    $waNumber = $contact ? $this->normalizeWhatsappNumberForRekap($contact->NO_HP ?? null, $contact->NO_TELP ?? null) : '';
+                    $notifications[$notificationKey] = [
+                        'kode_dosen' => $kode,
+                        'nama_dosen' => $contact && trim((string) ($contact->NAMA_DOSEN ?? '')) !== '' ? trim((string) $contact->NAMA_DOSEN) : $name,
+                        'nomor_whatsapp' => $waNumber,
+                        'schedule_url' => $scheduleUrl,
+                        'rows' => [],
+                    ];
+                }
+
+                $rowKey = $row->C_NPM . ':' . $row->tgl_ujian . ':' . $row->jam_ujian;
+                if (!isset($notifications[$notificationKey]['rows'][$rowKey])) {
+                    $notifications[$notificationKey]['rows'][$rowKey] = [
+                        'row' => $row,
+                        'roles' => [],
+                    ];
+                }
+                $notifications[$notificationKey]['rows'][$rowKey]['roles'][$roleKey] = $roleLabels[$roleKey];
+            }
+        }
+
+        foreach ($notifications as $key => $notification) {
+            $notifications[$key]['rows'] = collect($notification['rows'])->values();
+            $notifications[$key]['message'] = $this->buildWhatsappScheduleMessage($notifications[$key]);
+            $notifications[$key]['wa_url'] = $notification['nomor_whatsapp'] !== ''
+                ? 'https://wa.me/' . $notification['nomor_whatsapp'] . '?text=' . rawurlencode($notifications[$key]['message'])
+                : '';
+        }
+
+        return collect($notifications)->sortBy('nama_dosen')->values();
+    }
+
+    private function buildWhatsappScheduleMessage(array $notification)
+    {
+        $lines = [
+            'Assalamu alaikum Bapak/Ibu ' . $notification['nama_dosen'] . ',',
+            '',
+            'Berikut jadwal ujian yang melibatkan Bapak/Ibu:',
+        ];
+
+        foreach ($notification['rows'] as $item) {
+            $row = $item['row'];
+            $roles = implode(', ', array_values($item['roles']));
+            $lines[] = '- ' . $this->formatTanggalSingkatRekap($row->tgl_ujian)
+                . ' | ' . $row->jam_ujian_rekap
+                . ' | ' . ($row->nama_ruangan ?: '-')
+                . ' | ' . $row->C_NPM
+                . ' - ' . $row->NAMA_MAHASISWA
+                . ' | ' . $roles;
+        }
+
+        $lines[] = '';
+        $lines[] = 'Link rekap jadwal:';
+        $lines[] = $notification['schedule_url'];
+        $lines[] = '';
+        $lines[] = 'Terima kasih.';
+
+        return implode("\n", $lines);
+    }
+
+    private function buildDosenScheduleToken($tipeUjian, array $jadwalIds, $kodeDosen, $namaDosen)
+    {
+        sort($jadwalIds);
+        $payload = [
+            'tipe_ujian' => $tipeUjian,
+            'jadwal_ids' => array_values($jadwalIds),
+            'kode_dosen' => (string) $kodeDosen,
+            'nama_dosen' => (string) $namaDosen,
+            'expires_at' => Carbon::now()->addDays(14)->timestamp,
+        ];
+        $encoded = rtrim(strtr(base64_encode(json_encode($payload)), '+/', '-_'), '=');
+        $signature = hash_hmac('sha256', $encoded, config('app.key'));
+
+        return $encoded . '.' . $signature;
+    }
+
+    private function decodeDosenScheduleToken($token)
+    {
+        $parts = explode('.', (string) $token, 2);
+        if (count($parts) !== 2) {
+            return null;
+        }
+
+        list($encoded, $signature) = $parts;
+        $expectedSignature = hash_hmac('sha256', $encoded, config('app.key'));
+        if (!hash_equals($expectedSignature, $signature)) {
+            return null;
+        }
+
+        $base64Payload = strtr($encoded, '-_', '+/');
+        $base64Payload .= str_repeat('=', (4 - strlen($base64Payload) % 4) % 4);
+        $payloadJson = base64_decode($base64Payload, true);
+        if ($payloadJson === false) {
+            return null;
+        }
+
+        $payload = json_decode($payloadJson, true);
+        if (!is_array($payload) || ($payload['expires_at'] ?? 0) < Carbon::now()->timestamp) {
+            return null;
+        }
+
+        if (empty($payload['tipe_ujian']) || empty($payload['jadwal_ids']) || empty($payload['kode_dosen'])) {
+            return null;
+        }
+
+        $payload['jadwal_ids'] = collect($payload['jadwal_ids'])->map(function ($id) {
+            return (int) $id;
+        })->filter(function ($id) {
+            return $id > 0;
+        })->values()->all();
+
+        return $payload;
+    }
+
+    private function getDosenContactsForRekapJadwal($kodeDosen)
+    {
+        $kodeDosen = collect($kodeDosen)->filter()->unique()->values();
+        if ($kodeDosen->isEmpty()) {
+            return collect();
+        }
+
+        $utama = Schema::hasTable('t_mst_dosen')
+            ? DB::table('t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $kodeDosen)
+                ->get(['C_KODE_DOSEN', 'NAMA_DOSEN', 'NO_HP', 'NO_TELP'])
+                ->keyBy('C_KODE_DOSEN')
+            : collect();
+        $migrasi = Schema::hasTable('mig_t_mst_dosen')
+            ? DB::table('mig_t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $kodeDosen)
+                ->get(['C_KODE_DOSEN', 'NAMA_DOSEN', 'NO_HP', 'NO_TELP'])
+                ->keyBy('C_KODE_DOSEN')
+            : collect();
+
+        return $migrasi->merge($utama);
+    }
+
+    private function normalizeWhatsappNumberForRekap($primaryNumber, $secondaryNumber = null)
+    {
+        $number = preg_replace('/\D+/', '', (string) ($primaryNumber ?: $secondaryNumber));
+        if ($number === '') {
+            return '';
+        }
+
+        if (substr($number, 0, 1) === '0') {
+            return '62' . substr($number, 1);
+        }
+
+        if (substr($number, 0, 2) === '62') {
+            return $number;
+        }
+
+        return $number;
+    }
+
+    private function getJadwalDosenRoleLabels()
+    {
+        return [
+            'pembimbing_I_id' => 'Pembimbing Utama',
+            'pembimbing_II_id' => 'Pembimbing Pendamping',
+            'penguji_I_id' => 'Penguji I',
+            'penguji_II_id' => 'Penguji II',
+            'penguji_III_id' => 'Penguji III',
+            'ketua_sidang_id' => 'Ketua Sidang',
+        ];
+    }
+
+    private function formatTanggalSingkatRekap($tanggal)
+    {
+        if (empty($tanggal)) {
+            return '-';
+        }
+
+        return Carbon::parse($tanggal)->format('d/m/Y');
     }
 
     private function makeExcelWorksheetName($name, array $usedNames)

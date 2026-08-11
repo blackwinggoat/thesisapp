@@ -52,6 +52,7 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         $this->assertStringContainsString('name="jadwal_ujian_ids[]"', $view);
         $this->assertStringContainsString('Checklist Semua', $view);
         $this->assertStringContainsString('Rekap Jadwal', $view);
+        $this->assertStringContainsString('Notif Dosen', $view);
         $this->assertStringContainsString("'Ruangan Ujian'", $excelView);
         $this->assertStringContainsString("'JAM'", $excelView);
         $this->assertStringContainsString("'Jenis Ujian'", $excelView);
@@ -60,5 +61,32 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         $this->assertStringContainsString('ss:ID="Header"', $excelView);
         $this->assertStringContainsString('ss:ID="Marker"', $excelView);
         $this->assertStringContainsString('$sheetRow[\'highlight_roles\']', $excelView);
+    }
+
+    public function testSelectedSchedulesCanBuildWhatsappLecturerNotifications()
+    {
+        $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
+        $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/Prodi.php');
+        $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/jadwalpermhs.blade.php');
+        $notificationView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/notif_jadwalpermhs_dosen.blade.php');
+        $lecturerView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/jadwal_dosen_link.blade.php');
+
+        $this->assertStringContainsString(
+            "Route::post('/prodi/jadwalpermhs/{tipe_ujian}/notif-dosen', 'Prodi@notifDosenJadwalPerMhs')",
+            $routes
+        );
+        $this->assertStringContainsString("Route::get('/jadwal-dosen/{token}', 'Prodi@jadwalDosenLink')", $routes);
+        $this->assertStringContainsString('public function notifDosenJadwalPerMhs', $controller);
+        $this->assertStringContainsString('public function jadwalDosenLink', $controller);
+        $this->assertStringContainsString('private function buildNotifDosenJadwalPerMhs', $controller);
+        $this->assertStringContainsString('private function buildDosenScheduleToken', $controller);
+        $this->assertStringContainsString('private function decodeDosenScheduleToken', $controller);
+        $this->assertStringContainsString('private function normalizeWhatsappNumberForRekap', $controller);
+        $this->assertStringContainsString('formaction="{{ url(\'prodi/jadwalpermhs/\'.$tipeUjian.\'/notif-dosen\') }}"', $view);
+        $this->assertStringContainsString('https://wa.me/', $controller);
+        $this->assertStringContainsString('Kirim WA', $notificationView);
+        $this->assertStringContainsString('Link Rekap', $notificationView);
+        $this->assertStringContainsString('Download Excel', $lecturerView);
+        $this->assertStringContainsString('Buka PDF / Print', $lecturerView);
     }
 }

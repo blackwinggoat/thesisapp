@@ -31,6 +31,7 @@ Route::get('/logout', function (Request $request) {
 });
 
 Route::get('/', 'HomeController@index');
+Route::get('/jadwal-dosen/{token}', 'Prodi@jadwalDosenLink');
 
 
 Route::group(['middleware' => 'admin'], function () {
@@ -179,6 +180,7 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get('/prodi/jadwalpermhs/{tipe_ujian}/riwayat', 'Prodi@jadwalPerMhsRiwayat');
     Route::get('/prodi/jadwalpermhs/{tipe_ujian}', 'Prodi@jadwalPerMhs');
     Route::post('/prodi/jadwalpermhs/{tipe_ujian}/rekap', 'Prodi@rekapJadwalPerMhsExcel');
+    Route::post('/prodi/jadwalpermhs/{tipe_ujian}/notif-dosen', 'Prodi@notifDosenJadwalPerMhs');
     Route::get('/prodi/detail_jadwalpermhs/{pendaftaran_id}', 'Prodi@detailJadwalPermhs');
     Route::get('/prodi/set_jadwalpermhs/{pendaftaran_id}/{nim}', 'Prodi@set_jadwalujianpermhs');
     Route::get('/prodi/cetak_berita_acara/{pendaftaran_id}/{nim}', 'Prodi@cetakBeritaAcara');

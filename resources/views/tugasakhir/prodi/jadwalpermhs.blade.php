@@ -48,6 +48,9 @@
                             </button>
                         </div>
                         <div class="pull-right">
+                            <button type="submit" class="btn btn-info btn-perspective" formaction="{{ url('prodi/jadwalpermhs/'.$tipeUjian.'/notif-dosen') }}">
+                                <i class="fa fa-whatsapp"></i> Notif Dosen
+                            </button>
                             <button type="submit" class="btn btn-success btn-perspective">
                                 <i class="fa fa-file-excel-o"></i> Rekap Jadwal
                             </button>
