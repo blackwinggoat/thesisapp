@@ -40,6 +40,9 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         );
         $this->assertStringContainsString('public function rekapJadwalPerMhsExcel', $controller);
         $this->assertStringContainsString("->view('tugasakhir.prodi.rekap_jadwalpermhs_excel'", $controller);
+        $this->assertStringContainsString('$lecturerSheets = $this->getRekapJadwalPerMhsLecturerSheets($rows);', $controller);
+        $this->assertStringContainsString('private function getRekapJadwalPerMhsLecturerSheets', $controller);
+        $this->assertStringContainsString('private function makeExcelWorksheetName', $controller);
         $this->assertStringContainsString("->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')", $controller);
         $this->assertStringContainsString("->join('trt_jadwal_ujian_per_mhs as jpm'", $controller);
         $this->assertStringContainsString("->leftJoin('mst_ruangan as ruangan'", $controller);
@@ -48,9 +51,13 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         $this->assertStringContainsString('name="jadwal_ujian_ids[]"', $view);
         $this->assertStringContainsString('Checklist Semua', $view);
         $this->assertStringContainsString('Rekap Jadwal', $view);
-        $this->assertStringContainsString('<th>Ruangan Ujian</th>', $excelView);
-        $this->assertStringContainsString('<th>JAM</th>', $excelView);
-        $this->assertStringContainsString('<th>Jenis Ujian</th>', $excelView);
-        $this->assertStringContainsString('class="highlight"', $excelView);
+        $this->assertStringContainsString("'Ruangan Ujian'", $excelView);
+        $this->assertStringContainsString("'JAM'", $excelView);
+        $this->assertStringContainsString("'Jenis Ujian'", $excelView);
+        $this->assertStringContainsString('<Worksheet ss:Name="Rekap Jadwal">', $excelView);
+        $this->assertStringContainsString('@foreach($lecturerSheets as $sheet)', $excelView);
+        $this->assertStringContainsString('ss:ID="Header"', $excelView);
+        $this->assertStringContainsString('ss:ID="Marker"', $excelView);
+        $this->assertStringContainsString('$sheetRow[\'highlight_roles\']', $excelView);
     }
 }

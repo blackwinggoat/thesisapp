@@ -4104,11 +4104,12 @@ class Prodi extends Controller
 
         $type = $this->resolveTipeUjianValue($tipe_ujian);
         $rows = $this->getRekapJadwalPerMhsRows($jadwalIds->all(), $type);
+        $lecturerSheets = $this->getRekapJadwalPerMhsLecturerSheets($rows);
         $namaTipeUjian = $this->getNamaTipeUjianLabel($tipe_ujian);
         $filename = 'rekap-jadwal-' . str_replace('_', '-', $tipe_ujian) . '-' . date('Ymd-His') . '.xls';
 
         return response()
-            ->view('tugasakhir.prodi.rekap_jadwalpermhs_excel', compact('rows', 'namaTipeUjian'))
+            ->view('tugasakhir.prodi.rekap_jadwalpermhs_excel', compact('rows', 'lecturerSheets', 'namaTipeUjian'))
             ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
@@ -4224,9 +4225,80 @@ class Prodi extends Controller
             $row->penguji_2 = $this->getDosenNameFromMap($dosenByKode, $row->penguji_II_id);
             $row->penguji_3 = $this->getDosenNameFromMap($dosenByKode, $row->penguji_III_id);
             $row->ketua_sidang = $this->getDosenNameFromMap($dosenByKode, $row->ketua_sidang_id);
+            $row->lecturer_assignments = [
+                'pembimbing_I_id' => $row->pembimbing_utama,
+                'pembimbing_II_id' => $row->pembimbing_pendamping,
+                'penguji_I_id' => $row->penguji_1,
+                'penguji_II_id' => $row->penguji_2,
+                'penguji_III_id' => $row->penguji_3,
+                'ketua_sidang_id' => $row->ketua_sidang,
+            ];
 
             return $row;
         });
+    }
+
+    private function getRekapJadwalPerMhsLecturerSheets($rows)
+    {
+        $sheets = [];
+        $usedSheetNames = [];
+
+        foreach ($rows as $row) {
+            foreach ($row->lecturer_assignments as $roleKey => $lecturerName) {
+                $lecturerName = trim((string) $lecturerName);
+                if ($lecturerName === '' || $lecturerName === '-') {
+                    continue;
+                }
+
+                if (!isset($sheets[$lecturerName])) {
+                    $sheetName = $this->makeExcelWorksheetName($lecturerName, $usedSheetNames);
+                    $usedSheetNames[] = $sheetName;
+                    $sheets[$lecturerName] = [
+                        'name' => $lecturerName,
+                        'sheet_name' => $sheetName,
+                        'rows' => [],
+                    ];
+                }
+
+                $rowKey = $row->C_NPM . ':' . $row->tgl_ujian . ':' . $row->jam_ujian;
+                if (!isset($sheets[$lecturerName]['rows'][$rowKey])) {
+                    $sheets[$lecturerName]['rows'][$rowKey] = [
+                        'data' => $row,
+                        'highlight_roles' => [],
+                    ];
+                }
+                $sheets[$lecturerName]['rows'][$rowKey]['highlight_roles'][$roleKey] = true;
+            }
+        }
+
+        return collect($sheets)
+            ->sortKeys()
+            ->map(function ($sheet) {
+                $sheet['rows'] = collect($sheet['rows'])->values();
+                return $sheet;
+            })
+            ->values();
+    }
+
+    private function makeExcelWorksheetName($name, array $usedNames)
+    {
+        $name = preg_replace('/[\[\]\:\*\?\/\\\\]/', ' ', (string) $name);
+        $name = trim(preg_replace('/\s+/', ' ', $name));
+        if ($name === '') {
+            $name = 'Dosen';
+        }
+
+        $baseName = substr($name, 0, 31);
+        $sheetName = $baseName;
+        $index = 2;
+
+        while (in_array($sheetName, $usedNames, true)) {
+            $suffix = ' ' . $index;
+            $sheetName = substr($baseName, 0, 31 - strlen($suffix)) . $suffix;
+            $index++;
+        }
+
+        return $sheetName;
     }
 
     private function getDosenNamesForRekapJadwal($rows)
