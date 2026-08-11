@@ -80,13 +80,19 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         $this->assertStringContainsString('public function jadwalDosenLink', $controller);
         $this->assertStringContainsString('private function buildNotifDosenJadwalPerMhs', $controller);
         $this->assertStringContainsString('private function buildDosenScheduleToken', $controller);
+        $this->assertStringContainsString('private function storeShortDosenScheduleToken', $controller);
+        $this->assertStringContainsString('private function resolveShortDosenScheduleToken', $controller);
         $this->assertStringContainsString('private function decodeDosenScheduleToken', $controller);
         $this->assertStringContainsString('private function normalizeWhatsappNumberForRekap', $controller);
         $this->assertStringContainsString('formaction="{{ url(\'prodi/jadwalpermhs/\'.$tipeUjian.\'/notif-dosen\') }}"', $view);
         $this->assertStringContainsString('https://wa.me/', $controller);
+        $this->assertStringContainsString("url('jadwal-dosen/' . \$slug)", $controller);
+        $this->assertStringContainsString("storage_path('app/schedule-links", $controller);
         $this->assertStringContainsString('Kirim WA', $notificationView);
         $this->assertStringContainsString('Link Rekap', $notificationView);
         $this->assertStringContainsString('Download Excel', $lecturerView);
         $this->assertStringContainsString('Buka PDF / Print', $lecturerView);
+        $this->assertStringContainsString('.marker', $lecturerView);
+        $this->assertStringContainsString('$highlightRoles', $lecturerView);
     }
 }

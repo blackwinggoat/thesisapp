@@ -45,6 +45,10 @@
         th {
             background: #ffff00;
         }
+        .marker {
+            background: #f4b6ad;
+            font-weight: bold;
+        }
         @media print {
             .toolbar {
                 display: none;
@@ -81,17 +85,18 @@
         </thead>
         <tbody>
         @forelse($rows as $row)
+            @php($highlightRoles = $row->highlight_roles ?? [])
             <tr>
                 <td>{{ $row->nama_ruangan ?: '-' }}</td>
                 <td>{{ $row->jam_ujian_rekap }}</td>
                 <td>{{ $row->C_NPM }}</td>
                 <td>{{ $row->NAMA_MAHASISWA }}</td>
-                <td>{{ $row->pembimbing_utama }}</td>
-                <td>{{ $row->pembimbing_pendamping }}</td>
-                <td>{{ $row->penguji_1 }}</td>
-                <td>{{ $row->penguji_2 }}</td>
-                <td>{{ $row->penguji_3 }}</td>
-                <td>{{ $row->ketua_sidang }}</td>
+                <td class="{{ isset($highlightRoles['pembimbing_I_id']) ? 'marker' : '' }}">{{ $row->pembimbing_utama }}</td>
+                <td class="{{ isset($highlightRoles['pembimbing_II_id']) ? 'marker' : '' }}">{{ $row->pembimbing_pendamping }}</td>
+                <td class="{{ isset($highlightRoles['penguji_I_id']) ? 'marker' : '' }}">{{ $row->penguji_1 }}</td>
+                <td class="{{ isset($highlightRoles['penguji_II_id']) ? 'marker' : '' }}">{{ $row->penguji_2 }}</td>
+                <td class="{{ isset($highlightRoles['penguji_III_id']) ? 'marker' : '' }}">{{ $row->penguji_3 }}</td>
+                <td class="{{ isset($highlightRoles['ketua_sidang_id']) ? 'marker' : '' }}">{{ $row->ketua_sidang }}</td>
                 <td>{{ $row->kode_jenis_tugas_akhir }}</td>
             </tr>
         @empty

@@ -4138,6 +4138,17 @@ class Prodi extends Controller
             ->filter(function ($row) use ($payload) {
                 return in_array($payload['kode_dosen'], array_values($row->lecturer_codes), true);
             })
+            ->map(function ($row) use ($payload) {
+                $row->highlight_roles = collect($row->lecturer_codes)
+                    ->filter(function ($kodeDosen) use ($payload) {
+                        return $kodeDosen === $payload['kode_dosen'];
+                    })
+                    ->keys()
+                    ->flip()
+                    ->all();
+
+                return $row;
+            })
             ->values();
 
         $dosen = $this->getDosenContactsForRekapJadwal(collect([$payload['kode_dosen']]))
@@ -4371,7 +4382,8 @@ class Prodi extends Controller
 
                 if (!isset($notifications[$notificationKey])) {
                     $token = $this->buildDosenScheduleToken($tipe_ujian, $jadwalIds, $kode, $name);
-                    $scheduleUrl = url('jadwal-dosen/' . $token);
+                    $slug = $this->storeShortDosenScheduleToken($token);
+                    $scheduleUrl = url('jadwal-dosen/' . $slug);
                     $waNumber = $contact ? $this->normalizeWhatsappNumberForRekap($contact->NO_HP ?? null, $contact->NO_TELP ?? null) : '';
                     $notifications[$notificationKey] = [
                         'kode_dosen' => $kode,
@@ -4448,8 +4460,29 @@ class Prodi extends Controller
         return $encoded . '.' . $signature;
     }
 
+    private function storeShortDosenScheduleToken($token)
+    {
+        $directory = storage_path('app/schedule-links');
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        do {
+            $slug = substr(str_shuffle('23456789abcdefghjkmnpqrstuvwxyz'), 0, 8);
+            $path = $directory . '/' . $slug . '.json';
+        } while (file_exists($path));
+
+        file_put_contents($path, json_encode([
+            'token' => $token,
+            'created_at' => Carbon::now()->timestamp,
+        ]));
+
+        return $slug;
+    }
+
     private function decodeDosenScheduleToken($token)
     {
+        $token = $this->resolveShortDosenScheduleToken($token);
         $parts = explode('.', (string) $token, 2);
         if (count($parts) !== 2) {
             return null;
@@ -4484,6 +4517,26 @@ class Prodi extends Controller
         })->values()->all();
 
         return $payload;
+    }
+
+    private function resolveShortDosenScheduleToken($token)
+    {
+        $token = (string) $token;
+        if (strpos($token, '.') !== false) {
+            return $token;
+        }
+
+        if (!preg_match('/^[A-Za-z0-9_-]{4,64}$/', $token)) {
+            return $token;
+        }
+
+        $path = storage_path('app/schedule-links/' . $token . '.json');
+        if (!is_file($path)) {
+            return $token;
+        }
+
+        $payload = json_decode(file_get_contents($path), true);
+        return is_array($payload) && isset($payload['token']) ? $payload['token'] : $token;
     }
 
     private function getDosenContactsForRekapJadwal($kodeDosen)
