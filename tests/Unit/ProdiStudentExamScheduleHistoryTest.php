@@ -83,6 +83,11 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         $this->assertStringContainsString('private function storeShortDosenScheduleToken', $controller);
         $this->assertStringContainsString('private function resolveShortDosenScheduleToken', $controller);
         $this->assertStringContainsString('private function decodeDosenScheduleToken', $controller);
+        $this->assertStringContainsString('private function findDosenRecordForRekap', $controller);
+        $this->assertStringContainsString('private function normalizeKodeDosenForRekap', $controller);
+        $this->assertStringContainsString("TRIM(LEADING '0' FROM TRIM(C_KODE_DOSEN))", $controller);
+        $this->assertStringContainsString('return $this->getDosenContactsForRekapJadwal($kodeDosen)', $controller);
+        $this->assertStringContainsString('$this->normalizeKodeDosenForRekap($kode)', $controller);
         $this->assertStringContainsString('private function normalizeWhatsappNumberForRekap', $controller);
         $this->assertStringContainsString('formaction="{{ url(\'prodi/jadwalpermhs/\'.$tipeUjian.\'/notif-dosen\') }}"', $view);
         $this->assertStringContainsString('https://wa.me/', $controller);

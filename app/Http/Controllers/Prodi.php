@@ -4298,12 +4298,12 @@ class Prodi extends Controller
             $row->penguji_3 = $this->getDosenNameFromMap($dosenByKode, $row->penguji_III_id);
             $row->ketua_sidang = $this->getDosenNameFromMap($dosenByKode, $row->ketua_sidang_id);
             $row->lecturer_codes = [
-                'pembimbing_I_id' => trim((string) $row->pembimbing_I_id),
-                'pembimbing_II_id' => trim((string) $row->pembimbing_II_id),
-                'penguji_I_id' => trim((string) $row->penguji_I_id),
-                'penguji_II_id' => trim((string) $row->penguji_II_id),
-                'penguji_III_id' => trim((string) $row->penguji_III_id),
-                'ketua_sidang_id' => trim((string) $row->ketua_sidang_id),
+                'pembimbing_I_id' => $this->normalizeKodeDosenForRekap($row->pembimbing_I_id),
+                'pembimbing_II_id' => $this->normalizeKodeDosenForRekap($row->pembimbing_II_id),
+                'penguji_I_id' => $this->normalizeKodeDosenForRekap($row->penguji_I_id),
+                'penguji_II_id' => $this->normalizeKodeDosenForRekap($row->penguji_II_id),
+                'penguji_III_id' => $this->normalizeKodeDosenForRekap($row->penguji_III_id),
+                'ketua_sidang_id' => $this->normalizeKodeDosenForRekap($row->ketua_sidang_id),
             ];
             $row->lecturer_assignments = [
                 'pembimbing_I_id' => $row->pembimbing_utama,
@@ -4371,7 +4371,7 @@ class Prodi extends Controller
 
         foreach ($rows as $row) {
             foreach ($row->lecturer_codes as $roleKey => $kode) {
-                $kode = trim((string) $kode);
+                $kode = $this->normalizeKodeDosenForRekap($kode);
                 if ($kode === '') {
                     continue;
                 }
@@ -4541,25 +4541,63 @@ class Prodi extends Controller
 
     private function getDosenContactsForRekapJadwal($kodeDosen)
     {
-        $kodeDosen = collect($kodeDosen)->filter()->unique()->values();
+        $kodeDosen = collect($kodeDosen)
+            ->map(function ($kode) {
+                return $this->normalizeKodeDosenForRekap($kode);
+            })
+            ->filter()
+            ->unique()
+            ->values();
+
         if ($kodeDosen->isEmpty()) {
             return collect();
         }
 
-        $utama = Schema::hasTable('t_mst_dosen')
-            ? DB::table('t_mst_dosen')
-                ->whereIn('C_KODE_DOSEN', $kodeDosen)
-                ->get(['C_KODE_DOSEN', 'NAMA_DOSEN', 'NO_HP', 'NO_TELP'])
-                ->keyBy('C_KODE_DOSEN')
-            : collect();
-        $migrasi = Schema::hasTable('mig_t_mst_dosen')
-            ? DB::table('mig_t_mst_dosen')
-                ->whereIn('C_KODE_DOSEN', $kodeDosen)
-                ->get(['C_KODE_DOSEN', 'NAMA_DOSEN', 'NO_HP', 'NO_TELP'])
-                ->keyBy('C_KODE_DOSEN')
-            : collect();
+        return $kodeDosen->mapWithKeys(function ($kode) {
+            $dosen = $this->findDosenRecordForRekap($kode);
 
-        return $migrasi->merge($utama);
+            return $dosen ? [$kode => $dosen] : [];
+        });
+    }
+
+    private function findDosenRecordForRekap($kodeDosen)
+    {
+        $kodeDosen = $this->normalizeKodeDosenForRekap($kodeDosen);
+        if ($kodeDosen === '') {
+            return null;
+        }
+
+        $kodeTanpaNolDepan = ltrim($kodeDosen, '0');
+        $tables = ['t_mst_dosen', 'mig_t_mst_dosen'];
+
+        foreach ($tables as $table) {
+            if (!Schema::hasTable($table)) {
+                continue;
+            }
+
+            $query = DB::table($table)
+                ->select('C_KODE_DOSEN', 'NAMA_DOSEN', 'NO_HP', 'NO_TELP')
+                ->where(function ($query) use ($kodeDosen, $kodeTanpaNolDepan) {
+                    $query->where('C_KODE_DOSEN', $kodeDosen)
+                        ->orWhereRaw('TRIM(C_KODE_DOSEN) = ?', [$kodeDosen]);
+
+                    if ($kodeTanpaNolDepan !== '' && ctype_digit($kodeDosen)) {
+                        $query->orWhereRaw("TRIM(LEADING '0' FROM TRIM(C_KODE_DOSEN)) = ?", [$kodeTanpaNolDepan]);
+                    }
+                });
+
+            $dosen = $query->first();
+            if ($dosen) {
+                return $dosen;
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeKodeDosenForRekap($kodeDosen)
+    {
+        return preg_replace('/\s+/', '', trim((string) $kodeDosen));
     }
 
     private function normalizeWhatsappNumberForRekap($primaryNumber, $secondaryNumber = null)
@@ -4633,29 +4671,18 @@ class Prodi extends Controller
                 $row->penguji_III_id,
                 $row->ketua_sidang_id,
             ];
-        })->filter()->unique()->values();
+        });
 
-        if ($kodeDosen->isEmpty()) {
-            return collect();
-        }
-
-        $utama = Schema::hasTable('t_mst_dosen')
-            ? DB::table('t_mst_dosen')
-                ->whereIn('C_KODE_DOSEN', $kodeDosen)
-                ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN')
-            : collect();
-        $migrasi = Schema::hasTable('mig_t_mst_dosen')
-            ? DB::table('mig_t_mst_dosen')
-                ->whereIn('C_KODE_DOSEN', $kodeDosen)
-                ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN')
-            : collect();
-
-        return $migrasi->merge($utama);
+        return $this->getDosenContactsForRekapJadwal($kodeDosen)
+            ->map(function ($dosen) {
+                return trim((string) ($dosen->NAMA_DOSEN ?? ''));
+            })
+            ->filter();
     }
 
     private function getDosenNameFromMap($dosenByKode, $kodeDosen)
     {
-        $kodeDosen = trim((string) $kodeDosen);
+        $kodeDosen = $this->normalizeKodeDosenForRekap($kodeDosen);
         if ($kodeDosen === '') {
             return '-';
         }
