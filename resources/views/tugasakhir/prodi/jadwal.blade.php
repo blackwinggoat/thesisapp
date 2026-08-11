@@ -189,7 +189,6 @@
                             <th>Tipe Ujian</th>
                             <th>Jumlah Peserta</th>
                             {{-- {{-- <th>Status Ujian</th> --}}
-                            <th>Detail Peserta</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -211,9 +210,10 @@
                             <td>{{$d->jml_peserta}}</td>
                             {{-- <td>{{$d->status == 0 ? "<td>{{$value->status == 0 ? "<td>{{$d->status == 0 ? "Belum terlaksana" : "Terlaksana"}}
                             </td>" : "Terlaksana"}}</td>" : "Terlaksana"}}</td> --}}
-                            <td><a href="{{ url('prodi/daftar_peserta/'.$d->pendaftaran_id)}}"><i
-                                        class="fa fa-copy icon-square icon-xs icon-primary"></i></a></td>
                             <td>
+                                <a class="btn btn-primary" href="{{ url('prodi/daftar_peserta/'.$d->pendaftaran_id)}}" title="Detail peserta">
+                                    <i class="fa fa-copy"></i>
+                                </a>
                                 <button class="btn btn-danger" onclick="showModal(this)" data-target="#modalDanger"
                                     data-toggle="modal" data-href="{{ url("prodi/jadwalujiandel/$d->pendaftaran_id")}}"><i
                                         class="fa fa-trash-o"></i></button>

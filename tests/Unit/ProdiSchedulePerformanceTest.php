@@ -18,4 +18,16 @@ class ProdiSchedulePerformanceTest extends TestCase
         $this->assertStringNotContainsString('mst_pendaftaran::where("nama_periode"', $view);
         $this->assertStringNotContainsString('TrtJadwalUjian::select("pendaftaran_id")', $view);
     }
+
+    public function testScheduleListKeepsParticipantDetailInsideActionColumn()
+    {
+        $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/jadwal.blade.php');
+
+        $this->assertStringNotContainsString('<th>Detail Peserta</th>', $view);
+        $this->assertStringContainsString('<th>Aksi</th>', $view);
+        $this->assertRegExp(
+            '/<td>\s*<a class="btn btn-primary" href="\{\{ url\(\'prodi\/daftar_peserta\/\'\.\$d->pendaftaran_id\)\}\}" title="Detail peserta">.*?<button class="btn btn-danger"/s',
+            $view
+        );
+    }
 }
