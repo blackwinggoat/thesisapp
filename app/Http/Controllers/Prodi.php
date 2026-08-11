@@ -4078,6 +4078,16 @@ class Prodi extends Controller
 
     public function jadwalPerMhs($tipe_ujian)
     {
+        return $this->jadwalPerMhsByMode($tipe_ujian, 'aktif');
+    }
+
+    public function jadwalPerMhsRiwayat($tipe_ujian)
+    {
+        return $this->jadwalPerMhsByMode($tipe_ujian, 'riwayat');
+    }
+
+    private function jadwalPerMhsByMode($tipe_ujian, $mode = 'aktif')
+    {
         switch ($tipe_ujian):
             case "proposal":
                 $type = 0;
@@ -4088,24 +4098,31 @@ class Prodi extends Controller
             case "ujianmeja":
                 $type = 2;
                 break;
+            default:
+                abort(404);
         endswitch;
 
-        if (Auth::user()->name == 'proditi') {
-            $data = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', $type)
-                ->where('mst_pendaftaran.status_prodi', 1)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        } else {
-            $data = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', $type)
-                ->where('mst_pendaftaran.status_prodi', 2)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        }
-        return view('tugasakhir.prodi.jadwalpermhs', compact('data'));
+        $statusProdi = Auth::user()->name == 'proditi' ? 1 : 2;
+        $isRiwayat = $mode === 'riwayat';
+        $today = Carbon::today()->format('Y-m-d');
+
+        $data = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
+            ->select('mst_pendaftaran.*', 'trt_jadwal_ujian.id as jadwal_ujian_id', 'trt_jadwal_ujian.tgl_ujian', 'trt_jadwal_ujian.status as status_jadwal_ujian')
+            ->where('mst_pendaftaran.status_prodi', $statusProdi)
+            ->where(function ($query) use ($type) {
+                $query->where('mst_pendaftaran.tipe_ujian', $type)
+                    ->orWhere('mst_pendaftaran.tipe_ujian', 3);
+            })
+            ->when($isRiwayat, function ($query) use ($today) {
+                $query->whereDate('trt_jadwal_ujian.tgl_ujian', '<', $today);
+            }, function ($query) use ($today) {
+                $query->whereDate('trt_jadwal_ujian.tgl_ujian', '>=', $today);
+            })
+            ->orderBy('trt_jadwal_ujian.tgl_ujian', $isRiwayat ? 'desc' : 'asc')
+            ->orderBy('mst_pendaftaran.created_at', 'desc')
+            ->get();
+
+        return view('tugasakhir.prodi.jadwalpermhs', compact('data', 'tipe_ujian', 'isRiwayat'));
     }
 
     public function detailJadwalPermhs($pendaftaran_id)

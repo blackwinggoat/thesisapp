@@ -176,6 +176,7 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get("/prodi/detail_persyaratan_ujianmeja/{id}", "Prodi@detail_persyaratan_ujianmeja");
     Route::get("/prodi/konfirmasi_persyaratan_ujian/{status}/{id}/{nim}", "Prodi@konfirmasi_persyaratan_ujian");
     Route::get('/prodi/jadwalujiandel/{id}', 'Prodi@jadwalUjianDel');
+    Route::get('/prodi/jadwalpermhs/{tipe_ujian}/riwayat', 'Prodi@jadwalPerMhsRiwayat');
     Route::get('/prodi/jadwalpermhs/{tipe_ujian}', 'Prodi@jadwalPerMhs');
     Route::get('/prodi/detail_jadwalpermhs/{pendaftaran_id}', 'Prodi@detailJadwalPermhs');
     Route::get('/prodi/set_jadwalpermhs/{pendaftaran_id}/{nim}', 'Prodi@set_jadwalujianpermhs');

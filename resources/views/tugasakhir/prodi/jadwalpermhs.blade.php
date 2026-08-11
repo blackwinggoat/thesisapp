@@ -1,5 +1,13 @@
 @extends('tugasakhir.index')
 @section('isi')
+    @php
+        $isRiwayat = isset($isRiwayat) ? $isRiwayat : false;
+        $tipeUjian = isset($tipe_ujian) ? $tipe_ujian : 'ujianmeja';
+        $namaTipeUjian = $tipeUjian == 'proposal' ? 'Proposal' : ($tipeUjian == 'seminarhasil' ? 'Seminar Hasil' : 'Ujian Meja');
+        $pageTitle = $isRiwayat
+            ? 'Riwayat Jadwal ' . $namaTipeUjian . ' Per Mahasiswa'
+            : 'Daftar Jadwal ' . $namaTipeUjian . ' Per Mahasiswa';
+    @endphp
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
         <div class="container-fluid">
@@ -11,12 +19,25 @@
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
                 <li><a href="{{ url('/') }}">Home</a></li>
-                <li class="active">Peserta Proposal</li>
+                <li class="active">{{$pageTitle}}</li>
             </ol>
             <!-- End breadcrumb -->
 
             <!-- BEGIN DATA TABLE -->
-            <h3 class="page-heading">Daftar Jadwal Ujian Per Mahasiswa</h3>
+            <div class="clearfix">
+                <h3 class="page-heading pull-left">{{$pageTitle}}</h3>
+                <div class="pull-right" style="margin-top: 15px;">
+                    @if($isRiwayat)
+                        <a href="{{ url('prodi/jadwalpermhs/'.$tipeUjian) }}" class="btn btn-primary btn-perspective">
+                            <i class="fa fa-calendar"></i> Jadwal Berjalan
+                        </a>
+                    @else
+                        <a href="{{ url('prodi/jadwalpermhs/'.$tipeUjian.'/riwayat') }}" class="btn btn-default btn-perspective">
+                            <i class="fa fa-history"></i> Lihat Riwayat
+                        </a>
+                    @endif
+                </div>
+            </div>
             <div class="the-box">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover" id="datatable-example">
@@ -32,7 +53,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($data as $key => $value)
+                        @forelse($data as $key => $value)
                             <tr class="odd gradeX">
                                 <td width="1%" align="center">{{++$key}}</td>
                                 <td>{{$value->tgl_ujian}}</td>
@@ -42,7 +63,17 @@
                                 {{-- <<td>{{$value->status == 0 ? "td>{{$value->status == 0 ? "<td>{{$d->status == 0 ? "Belum terlaksana" : "Terlaksana"}}</td>" : "Terlaksana"}}</td>" : "Terlaksana"}}</td> --}}
                                 <td><a href="{{ url('prodi/detail_jadwalpermhs/'.$value->pendaftaran_id)}}"><i class="fa fa-copy icon-square icon-xs icon-primary"></i></a></td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    @if($isRiwayat)
+                                        Belum ada riwayat jadwal ujian yang tanggalnya sudah lewat.
+                                    @else
+                                        Belum ada jadwal ujian hari ini atau yang akan datang.
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforelse
                         </tbody>
                     </table>
                 </div><!-- /.table-responsive -->
@@ -51,5 +82,4 @@
         </div><!-- /.container-fluid -->
     </div>
 @endsection
-
 
