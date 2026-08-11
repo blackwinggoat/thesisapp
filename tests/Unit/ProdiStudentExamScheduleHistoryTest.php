@@ -20,7 +20,7 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         $this->assertStringContainsString("return \$this->jadwalPerMhsByMode(\$tipe_ujian, 'riwayat');", $controller);
         $this->assertStringContainsString("->whereDate('trt_jadwal_ujian.tgl_ujian', '<', \$today)", $controller);
         $this->assertStringContainsString("->whereDate('trt_jadwal_ujian.tgl_ujian', '>=', \$today)", $controller);
-        $this->assertStringContainsString("->where('mst_pendaftaran.status_prodi', \$statusProdi)", $controller);
+        $this->assertStringContainsString("->whereIn('mst_pendaftaran.status_prodi', [1, 2])", $controller);
         $this->assertStringContainsString("->orWhere('mst_pendaftaran.tipe_ujian', 3)", $controller);
         $this->assertStringContainsString("url('prodi/jadwalpermhs/'.\$tipeUjian.'/riwayat')", $view);
         $this->assertStringContainsString('Lihat Riwayat', $view);
@@ -47,6 +47,7 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         $this->assertStringContainsString("->join('trt_jadwal_ujian_per_mhs as jpm'", $controller);
         $this->assertStringContainsString("->leftJoin('mst_ruangan as ruangan'", $controller);
         $this->assertStringContainsString("->leftJoin('mst_jenis_tugas_akhir as jta'", $controller);
+        $this->assertStringContainsString("->whereIn('mp.status_prodi', [1, 2])", $controller);
         $this->assertStringContainsString("->whereColumn('rg.status', 'mp.tipe_ujian')", $controller);
         $this->assertStringContainsString('name="jadwal_ujian_ids[]"', $view);
         $this->assertStringContainsString('Checklist Semua', $view);

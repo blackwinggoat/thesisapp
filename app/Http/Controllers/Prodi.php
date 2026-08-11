@@ -4118,13 +4118,12 @@ class Prodi extends Controller
     {
         $type = $this->resolveTipeUjianValue($tipe_ujian);
 
-        $statusProdi = Auth::user()->name == 'proditi' ? 1 : 2;
         $isRiwayat = $mode === 'riwayat';
         $today = Carbon::today()->format('Y-m-d');
 
         $data = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
             ->select('mst_pendaftaran.*', 'trt_jadwal_ujian.id as jadwal_ujian_id', 'trt_jadwal_ujian.tgl_ujian', 'trt_jadwal_ujian.status as status_jadwal_ujian')
-            ->where('mst_pendaftaran.status_prodi', $statusProdi)
+            ->whereIn('mst_pendaftaran.status_prodi', [1, 2])
             ->where(function ($query) use ($type) {
                 $query->where('mst_pendaftaran.tipe_ujian', $type)
                     ->orWhere('mst_pendaftaran.tipe_ujian', 3);
@@ -4171,8 +4170,6 @@ class Prodi extends Controller
 
     private function getRekapJadwalPerMhsRows(array $jadwalIds, $type)
     {
-        $statusProdi = Auth::user()->name == 'proditi' ? 1 : 2;
-
         $rows = DB::table('trt_jadwal_ujian as ju')
             ->join('mst_pendaftaran as mp', 'mp.pendaftaran_id', '=', 'ju.pendaftaran_id')
             ->join('trt_jadwal_ujian_per_mhs as jpm', 'jpm.jadwal_ujian', '=', 'ju.id')
@@ -4189,7 +4186,7 @@ class Prodi extends Controller
             ->leftJoin('mst_ruangan as ruangan', 'ruangan.id', '=', 'jpm.ruangan')
             ->leftJoin('mst_jenis_tugas_akhir as jta', 'jta.jenis_tugas_akhir_id', '=', 'tb.jenis_tugas_akhir_id')
             ->whereIn('ju.id', $jadwalIds)
-            ->where('mp.status_prodi', $statusProdi)
+            ->whereIn('mp.status_prodi', [1, 2])
             ->where(function ($query) use ($type) {
                 $query->where('mp.tipe_ujian', $type)
                     ->orWhere('mp.tipe_ujian', 3);
