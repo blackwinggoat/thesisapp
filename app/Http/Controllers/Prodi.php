@@ -3569,9 +3569,196 @@ class Prodi extends Controller
         ));
     }
 
-    public function report_laporan()
+    public function report_laporan(Request $request)
     {
-        return view('tugasakhir.prodi.report_laporan');
+        $reportContext = $this->getReportContext();
+        $reportWarnings = [];
+        $bimbinganReport = $this->safeReportSection(
+            'distribusi_bimbingan_utama',
+            function () use ($request, $reportContext) {
+                return $this->getBimbinganDistributionReport(
+                    $reportContext['nim_like'],
+                    $request->input('tahun_ajaran')
+                );
+            },
+            $this->getEmptyBimbinganDistributionReport(),
+            $reportWarnings
+        );
+
+        return view('tugasakhir.prodi.report_laporan', compact(
+            'reportContext',
+            'reportWarnings',
+            'bimbinganReport'
+        ));
+    }
+
+    protected function getBimbinganDistributionReport($nimLike, $selectedAcademicYear = null)
+    {
+        $periodDates = DB::table('mst_sk_pembimbing as sk')
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'sk.bimbingan_id')
+            ->where('tb.C_NPM', 'LIKE', $nimLike)
+            ->whereNotNull('sk.created_at')
+            ->pluck('sk.created_at');
+
+        $periodOptions = collect($periodDates)
+            ->filter()
+            ->map(function ($date) {
+                try {
+                    return Helper::getSemesterAkademik($date)->tahun_akademik;
+                } catch (\Throwable $e) {
+                    return null;
+                }
+            })
+            ->filter()
+            ->unique()
+            ->sortByDesc(function ($value) {
+                return (int) substr($value, 0, 4);
+            })
+            ->values();
+
+        $currentAcademicYear = Helper::getSemesterAkademik(Carbon::today())->tahun_akademik;
+        $selectedAcademicYear = preg_match('/^\d{4}\/\d{4}$/', (string) $selectedAcademicYear)
+            ? $selectedAcademicYear
+            : null;
+
+        if (!$selectedAcademicYear || !$periodOptions->contains($selectedAcademicYear)) {
+            $selectedAcademicYear = $periodOptions->first() ?: $currentAcademicYear;
+        }
+
+        $yearParts = explode('/', $selectedAcademicYear);
+        $academicStartYear = (int) $yearParts[0];
+        $ganjilStart = Carbon::create($academicStartYear, 9, 1)->startOfDay();
+        $ganjilEnd = Carbon::create($academicStartYear + 1, 2, 1)->endOfMonth()->endOfDay();
+        $genapStart = Carbon::create($academicStartYear + 1, 3, 1)->startOfDay();
+        $genapEnd = Carbon::create($academicStartYear + 1, 8, 31)->endOfDay();
+
+        $programs = [
+            [
+                'key' => 'ti',
+                'code' => '55201',
+                'label' => 'Teknik Informatika',
+            ],
+            [
+                'key' => 'si',
+                'code' => '57201',
+                'label' => 'Sistem Informasi',
+            ],
+        ];
+
+        if ($nimLike === '130%') {
+            $programs = array_slice($programs, 0, 1);
+        } elseif ($nimLike === '131%') {
+            $programs = array_slice($programs, 1, 1);
+        }
+
+        $assignmentRows = DB::table('mst_sk_pembimbing as sk')
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'sk.bimbingan_id')
+            ->join('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'tb.C_NPM')
+            ->leftJoin('t_mst_dosen as dosen', 'dosen.C_KODE_DOSEN', '=', 'tb.pembimbing_I_id')
+            ->leftJoin('mig_t_mst_dosen as dosen_lama', 'dosen_lama.C_KODE_DOSEN', '=', 'tb.pembimbing_I_id')
+            ->where('tb.C_NPM', 'LIKE', $nimLike)
+            ->whereBetween('sk.created_at', [$ganjilStart->toDateTimeString(), $genapEnd->toDateTimeString()])
+            ->whereNotNull('tb.pembimbing_I_id')
+            ->where('tb.pembimbing_I_id', '<>', '')
+            ->select(
+                'tb.C_NPM',
+                'tb.pembimbing_I_id as kode_dosen',
+                'mhs.C_KODE_PRODI',
+                'sk.created_at as tanggal_sk',
+                DB::raw('COALESCE(dosen.NAMA_DOSEN, dosen_lama.NAMA_DOSEN, tb.pembimbing_I_id) as nama_dosen')
+            )
+            ->get();
+
+        $grouped = [];
+        foreach ($assignmentRows as $assignment) {
+            try {
+                $semester = Helper::getSemesterAkademik($assignment->tanggal_sk);
+            } catch (\Throwable $e) {
+                continue;
+            }
+
+            if ($semester->tahun_akademik !== $selectedAcademicYear) {
+                continue;
+            }
+
+            $programKey = null;
+            if ((string) $assignment->C_KODE_PRODI === '55201' || substr((string) $assignment->C_NPM, 0, 3) === '130') {
+                $programKey = 'ti';
+            } elseif ((string) $assignment->C_KODE_PRODI === '57201' || substr((string) $assignment->C_NPM, 0, 3) === '131') {
+                $programKey = 'si';
+            }
+
+            if (!$programKey || !collect($programs)->pluck('key')->contains($programKey)) {
+                continue;
+            }
+
+            $kodeDosen = trim((string) $assignment->kode_dosen);
+            if ($kodeDosen === '') {
+                continue;
+            }
+
+            if (!isset($grouped[$kodeDosen])) {
+                $grouped[$kodeDosen] = [
+                    'kode_dosen' => $kodeDosen,
+                    'nama_dosen' => trim((string) $assignment->nama_dosen) ?: $kodeDosen,
+                    'students' => [],
+                ];
+            }
+
+            $grouped[$kodeDosen]['students'][$programKey][$semester->semester][(string) $assignment->C_NPM] = true;
+        }
+
+        $rows = collect($grouped)
+            ->sortBy(function ($item) {
+                return strtolower($item['nama_dosen']);
+            })
+            ->values()
+            ->map(function ($item, $index) use ($programs) {
+                $row = [
+                    'no' => $index + 1,
+                    'kode_dosen' => $item['kode_dosen'],
+                    'nama_dosen' => $item['nama_dosen'],
+                    'total' => 0,
+                ];
+
+                foreach ($programs as $program) {
+                    foreach (['Ganjil', 'Genap'] as $semester) {
+                        $count = isset($item['students'][$program['key']][$semester])
+                            ? count($item['students'][$program['key']][$semester])
+                            : 0;
+                        $row['counts'][$program['key']][$semester] = $count;
+                        $row['total'] += $count;
+                    }
+                }
+
+                return $row;
+            })
+            ->all();
+
+        return [
+            'period_options' => $periodOptions->all(),
+            'selected_year' => $selectedAcademicYear,
+            'ganjil_label' => 'Ganjil (' . $ganjilStart->format('M Y') . ' - ' . $ganjilEnd->format('M Y') . ')',
+            'genap_label' => 'Genap (' . $genapStart->format('M Y') . ' - ' . $genapEnd->format('M Y') . ')',
+            'programs' => $programs,
+            'rows' => $rows,
+            'total_dosen' => count($rows),
+            'total_mahasiswa' => collect($rows)->sum('total'),
+        ];
+    }
+
+    protected function getEmptyBimbinganDistributionReport()
+    {
+        return [
+            'period_options' => [],
+            'selected_year' => Helper::getSemesterAkademik(Carbon::today())->tahun_akademik,
+            'ganjil_label' => 'Ganjil',
+            'genap_label' => 'Genap',
+            'programs' => [],
+            'rows' => [],
+            'total_dosen' => 0,
+            'total_mahasiswa' => 0,
+        ];
     }
 
     protected function safeReportSection($section, callable $callback, $fallback, array &$warnings = [])

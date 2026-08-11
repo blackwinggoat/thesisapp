@@ -2,7 +2,7 @@
 @section('isi')
 <div class="page-content">
     <div class="container-fluid">
-        <h1 class="page-heading">Pusat Laporan <small>Prodi</small></h1>
+        <h1 class="page-heading">Pusat Laporan <small>{{ $reportContext['label'] }}</small></h1>
 
         <ol class="breadcrumb default square rsaquo sm">
             <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
@@ -10,17 +10,107 @@
             <li class="active">Pusat Laporan</li>
         </ol>
 
-        <div class="the-box">
-            <div class="text-center" style="padding: 36px 20px;">
-                <i class="fa fa-files-o" style="font-size: 42px; color: #3BAFDA;"></i>
-                <h3>Pusat Laporan</h3>
-                <p class="text-muted" style="max-width: 620px; margin: 0 auto 20px;">
-                    Laporan akademik dan rekapitulasi Prodi dalam format Excel atau PDF akan dikumpulkan di halaman ini.
-                </p>
-                <a href="{{ url('prodi/report') }}" class="btn btn-primary btn-perspective">
-                    <i class="fa fa-bar-chart-o"></i> Kembali ke Dashboard
-                </a>
+        @if (!empty($reportWarnings))
+            <div class="alert alert-warning">
+                Sebagian laporan belum dapat dimuat. Silakan coba lagi atau periksa konfigurasi database.
             </div>
+        @endif
+
+        <div class="the-box">
+            <div class="row">
+                <div class="col-sm-8">
+                    <h3 class="small-title" style="margin-top: 0;">Distribusi Jumlah Bimbingan Utama</h3>
+                    <p class="text-muted" style="margin-bottom: 0;">
+                        Jumlah mahasiswa yang ditugaskan kepada dosen sebagai Pembimbing Utama berdasarkan tanggal SK pembimbing.
+                        Mahasiswa dihitung satu kali pada setiap semester.
+                    </p>
+                </div>
+                <div class="col-sm-4">
+                    <form method="get" action="{{ url('prodi/report/laporan') }}" class="form-inline text-right">
+                        <label for="tahun-ajaran" class="sr-only">Tahun Ajaran</label>
+                        <select id="tahun-ajaran" name="tahun_ajaran" class="form-control" onchange="this.form.submit()">
+                            @forelse ($bimbinganReport['period_options'] as $period)
+                                <option value="{{ $period }}" {{ $period === $bimbinganReport['selected_year'] ? 'selected' : '' }}>
+                                    Tahun Ajaran {{ $period }}
+                                </option>
+                            @empty
+                                <option value="{{ $bimbinganReport['selected_year'] }}" selected>
+                                    Tahun Ajaran {{ $bimbinganReport['selected_year'] }}
+                                </option>
+                            @endforelse
+                        </select>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 20px;">
+                <div class="col-sm-4">
+                    <div class="well well-sm text-center" style="margin-bottom: 10px;">
+                        <strong>{{ number_format($bimbinganReport['total_dosen']) }}</strong><br>
+                        <small>Dosen Pembimbing Utama</small>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="well well-sm text-center" style="margin-bottom: 10px;">
+                        <strong>{{ number_format($bimbinganReport['total_mahasiswa']) }}</strong><br>
+                        <small>Total Penugasan Mahasiswa</small>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="well well-sm text-center" style="margin-bottom: 10px;">
+                        <strong>{{ $bimbinganReport['selected_year'] }}</strong><br>
+                        <small>{{ $bimbinganReport['ganjil_label'] }} / {{ $bimbinganReport['genap_label'] }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive" style="margin-top: 20px;">
+                <table class="table table-bordered table-striped table-hover" style="min-width: 720px;">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="text-center" style="vertical-align: middle;">No</th>
+                            <th rowspan="2" style="vertical-align: middle;">Nama Dosen</th>
+                            @foreach ($bimbinganReport['programs'] as $program)
+                                <th colspan="2" class="text-center">{{ $program['label'] }}</th>
+                            @endforeach
+                            <th rowspan="2" class="text-center" style="vertical-align: middle;">Total</th>
+                        </tr>
+                        <tr>
+                            @foreach ($bimbinganReport['programs'] as $program)
+                                <th class="text-center">Ganjil</th>
+                                <th class="text-center">Genap</th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($bimbinganReport['rows'] as $row)
+                            <tr>
+                                <td class="text-center">{{ $row['no'] }}</td>
+                                <td>
+                                    <strong>{{ $row['nama_dosen'] }}</strong>
+                                    <small class="text-muted" style="display: block;">{{ $row['kode_dosen'] }}</small>
+                                </td>
+                                @foreach ($bimbinganReport['programs'] as $program)
+                                    <td class="text-center">{{ $row['counts'][$program['key']]['Ganjil'] }}</td>
+                                    <td class="text-center">{{ $row['counts'][$program['key']]['Genap'] }}</td>
+                                @endforeach
+                                <td class="text-center"><strong>{{ $row['total'] }}</strong></td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ 3 + (count($bimbinganReport['programs']) * 2) }}" class="text-center">
+                                    Belum ada data penugasan Pembimbing Utama pada tahun ajaran ini.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-muted" style="margin: 15px 0 0;">
+                Tampilan ini masih tahap review format. Distribusi dihitung dari SK pembimbing: Ganjil September-Februari dan Genap Maret-Agustus.
+                Ekspor Excel akan ditambahkan setelah format tabel disetujui.
+            </p>
         </div>
     </div>
 </div>

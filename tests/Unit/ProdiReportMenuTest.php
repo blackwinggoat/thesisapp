@@ -20,7 +20,7 @@ class ProdiReportMenuTest extends TestCase
         $this->assertStringContainsString("url('prodi/report')", $sidebar);
         $this->assertStringContainsString('Pusat Laporan', $sidebar);
         $this->assertStringContainsString("Route::get('/prodi/report/laporan', 'Prodi@report_laporan')", $routes);
-        $this->assertStringContainsString('public function report_laporan()', $controller);
-        $this->assertStringContainsString('Laporan akademik dan rekapitulasi Prodi', $view);
+        $this->assertStringContainsString('public function report_laporan(', $controller);
+        $this->assertStringContainsString('Distribusi Jumlah Bimbingan Utama', $view);
     }
 }
