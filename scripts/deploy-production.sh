@@ -15,6 +15,7 @@ POLL_INTERVAL="${THESISAPPS_DEPLOY_POLL_INTERVAL:-4}"
 DRY_RUN=0
 FORCE=0
 API_RESPONSE=
+API_ERROR=
 
 usage() {
     cat <<'EOF'
@@ -89,9 +90,10 @@ case "$CPANEL_TOKEN" in
     *[!A-Za-z0-9_-]*) fail 'The cPanel API token has an unexpected format.' ;;
 esac
 
-api_call() {
+try_api_call() {
     local endpoint=$1
     shift
+    API_ERROR=
 
     if ! API_RESPONSE=$(
         printf 'header = "Authorization: cpanel %s:%s"\n' "$CPANEL_USER" "$CPANEL_TOKEN" \
@@ -111,11 +113,12 @@ api_call() {
                 "${CPANEL_HOST}/execute/${endpoint}" \
                 "$@"
     ); then
-        fail "cPanel API request failed: ${endpoint}. Check the network connection and token validity."
+        API_ERROR="cPanel API request failed: ${endpoint}. Check the network connection and token validity."
+        return 1
     fi
 
     printf '%s' "$API_RESPONSE" | jq -e . >/dev/null 2>&1 \
-        || fail "cPanel returned an invalid response for ${endpoint}."
+        || { API_ERROR="cPanel returned an invalid response for ${endpoint}."; return 1; }
 
     local status
     local errors
@@ -123,8 +126,17 @@ api_call() {
     if [[ "$status" != 1 ]]; then
         errors=$(printf '%s' "$API_RESPONSE" \
             | jq -r '((.result? // .).errors // ["unknown cPanel error"]) | if type == "array" then join("; ") else tostring end')
-        fail "cPanel rejected ${endpoint}: ${errors}"
+        API_ERROR="cPanel rejected ${endpoint}: ${errors}"
+        return 2
     fi
+}
+
+api_call() {
+    if try_api_call "$@"; then
+        return
+    fi
+
+    fail "$API_ERROR"
 }
 
 repository_state() {
@@ -207,7 +219,18 @@ DEPLOY_ID=$(printf '%s' "$API_RESPONSE" | jq -r '
 
 STARTED_AT=$(date +%s)
 while true; do
-    api_call VersionControlDeployment/retrieve
+    if try_api_call VersionControlDeployment/retrieve; then
+        :
+    else
+        API_CALL_STATUS=$?
+        [[ "$API_CALL_STATUS" -ne 2 ]] || fail "$API_ERROR"
+        NOW=$(date +%s)
+        (( NOW - STARTED_AT < DEPLOY_TIMEOUT )) \
+            || fail "Timed out waiting for cPanel deployment ${DEPLOY_ID}: ${API_ERROR}"
+        printf 'Deployment is still pending; cPanel status is temporarily unavailable. Retrying.\n'
+        sleep "$POLL_INTERVAL"
+        continue
+    fi
 
     DEPLOY_ITEM=$(printf '%s' "$API_RESPONSE" | jq -c --arg deploy_id "$DEPLOY_ID" '
         [((.result? // .).data // [])[] | select((.deploy_id | tostring) == $deploy_id)][0] // {}

@@ -10,6 +10,7 @@ WORK_PATH="${FIXTURE_ROOT}/work"
 REMOTE_PATH="${FIXTURE_ROOT}/remote.git"
 BIN_PATH="${FIXTURE_ROOT}/bin"
 CURL_LOG="${FIXTURE_ROOT}/curl.log"
+POLL_COUNT="${FIXTURE_ROOT}/poll-count"
 
 mkdir -p "${WORK_PATH}/scripts" "$BIN_PATH"
 cp "${PROJECT_ROOT}/scripts/deploy-production.sh" "${WORK_PATH}/scripts/deploy-production.sh"
@@ -46,6 +47,13 @@ case "$*" in
         printf '{"status":1,"data":{"deploy_id":12},"errors":null}\n'
         ;;
     *'/execute/VersionControlDeployment/retrieve'*)
+        poll_count=0
+        [[ ! -f "$TEST_POLL_COUNT" ]] || poll_count=$(cat "$TEST_POLL_COUNT")
+        poll_count=$((poll_count + 1))
+        printf '%s\n' "$poll_count" > "$TEST_POLL_COUNT"
+        if [[ "$poll_count" -eq 1 ]]; then
+            exit 28
+        fi
         printf '{"status":1,"data":[{"deploy_id":12,"repository_state":{"identifier":"%s"},"timestamps":{"succeeded":1}}],"errors":null}\n' "$TEST_SHA"
         ;;
     *'/execute/VersionControl/retrieve'*)
@@ -59,6 +67,7 @@ EOF
 chmod +x "${BIN_PATH}/curl"
 
 export TEST_CURL_LOG="$CURL_LOG"
+export TEST_POLL_COUNT="$POLL_COUNT"
 export TEST_SHA
 export THESISAPPS_CPANEL_API_TOKEN=dummy_cpanel_token_1234567890
 export PATH="${BIN_PATH}:${PATH}"
@@ -73,6 +82,7 @@ grep -Fq 'DEPLOY NOT NEEDED' <<< "$NOOP_OUTPUT"
 ! grep -Fq '/execute/VersionControl/update' "$CURL_LOG"
 
 : > "$CURL_LOG"
+unlink "$POLL_COUNT" 2>/dev/null || true
 (cd "$WORK_PATH" && bash scripts/deploy-production.sh --force)
 grep -Fq '/execute/VersionControl/update' "$CURL_LOG"
 grep -Fq '/execute/Fileman/save_file_content' "$CURL_LOG"
