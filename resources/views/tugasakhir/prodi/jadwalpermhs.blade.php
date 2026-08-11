@@ -39,10 +39,27 @@
                 </div>
             </div>
             <div class="the-box">
+                <form method="post" action="{{ url('prodi/jadwalpermhs/'.$tipeUjian.'/rekap') }}" id="rekap-jadwal-form">
+                    {{ csrf_field() }}
+                    <div class="clearfix" style="margin-bottom: 12px;">
+                        <div class="pull-left">
+                            <button type="button" class="btn btn-default btn-perspective" id="check-all-jadwal">
+                                <i class="fa fa-check-square-o"></i> Checklist Semua
+                            </button>
+                        </div>
+                        <div class="pull-right">
+                            <button type="submit" class="btn btn-success btn-perspective">
+                                <i class="fa fa-file-excel-o"></i> Rekap Jadwal
+                            </button>
+                        </div>
+                    </div>
                 <div class="table-responsive">
                     <table class="table table-striped table-hover" id="datatable-example">
                         <thead class="the-box dark full">
                         <tr>
+                            <th width="1%">
+                                <input type="checkbox" id="jadwal-check-master" aria-label="Pilih semua jadwal">
+                            </th>
                             <th>No</th>
                             <th>Tanggal Ujian</th>
                             <th>Nama Periode</th>
@@ -55,6 +72,9 @@
                         <tbody>
                         @forelse($data as $key => $value)
                             <tr class="odd gradeX">
+                                <td align="center">
+                                    <input type="checkbox" class="jadwal-check" name="jadwal_ujian_ids[]" value="{{$value->jadwal_ujian_id}}" aria-label="Pilih jadwal {{$value->nama_periode}}">
+                                </td>
                                 <td width="1%" align="center">{{++$key}}</td>
                                 <td>{{$value->tgl_ujian}}</td>
                                 <td>{{$value->nama_periode}}</td>
@@ -65,7 +85,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center">
+                                <td colspan="7" class="text-center">
                                     @if($isRiwayat)
                                         Belum ada riwayat jadwal ujian yang tanggalnya sudah lewat.
                                     @else
@@ -77,9 +97,59 @@
                         </tbody>
                     </table>
                 </div><!-- /.table-responsive -->
+                </form>
             </div><!-- /.the-box .default -->
             <!-- END DATA TABLE -->
         </div><!-- /.container-fluid -->
     </div>
 @endsection
 
+@section('script')
+    <script>
+        (function () {
+            var master = document.getElementById('jadwal-check-master');
+            var button = document.getElementById('check-all-jadwal');
+            var form = document.getElementById('rekap-jadwal-form');
+
+            function boxes() {
+                return Array.prototype.slice.call(document.querySelectorAll('.jadwal-check'));
+            }
+
+            function setAll(checked) {
+                boxes().forEach(function (box) {
+                    box.checked = checked;
+                });
+                if (master) {
+                    master.checked = checked;
+                }
+            }
+
+            if (master) {
+                master.addEventListener('change', function () {
+                    setAll(master.checked);
+                });
+            }
+
+            if (button) {
+                button.addEventListener('click', function () {
+                    var shouldCheck = boxes().some(function (box) {
+                        return !box.checked;
+                    });
+                    setAll(shouldCheck);
+                });
+            }
+
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    var hasChecked = boxes().some(function (box) {
+                        return box.checked;
+                    });
+                    if (!hasChecked) {
+                        event.preventDefault();
+                        alert('Pilih minimal satu jadwal terlebih dahulu.');
+                    }
+                });
+            }
+        })();
+    </script>
+@endsection

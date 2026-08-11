@@ -178,6 +178,7 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get('/prodi/jadwalujiandel/{id}', 'Prodi@jadwalUjianDel');
     Route::get('/prodi/jadwalpermhs/{tipe_ujian}/riwayat', 'Prodi@jadwalPerMhsRiwayat');
     Route::get('/prodi/jadwalpermhs/{tipe_ujian}', 'Prodi@jadwalPerMhs');
+    Route::post('/prodi/jadwalpermhs/{tipe_ujian}/rekap', 'Prodi@rekapJadwalPerMhsExcel');
     Route::get('/prodi/detail_jadwalpermhs/{pendaftaran_id}', 'Prodi@detailJadwalPermhs');
     Route::get('/prodi/set_jadwalpermhs/{pendaftaran_id}/{nim}', 'Prodi@set_jadwalujianpermhs');
     Route::get('/prodi/cetak_berita_acara/{pendaftaran_id}/{nim}', 'Prodi@cetakBeritaAcara');

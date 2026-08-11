@@ -4086,21 +4086,36 @@ class Prodi extends Controller
         return $this->jadwalPerMhsByMode($tipe_ujian, 'riwayat');
     }
 
+    public function rekapJadwalPerMhsExcel($tipe_ujian, Request $request)
+    {
+        $jadwalIds = collect((array) $request->input('jadwal_ujian_ids', []))
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->filter(function ($id) {
+                return $id > 0;
+            })
+            ->unique()
+            ->values();
+
+        if ($jadwalIds->isEmpty()) {
+            return redirect()->back()->with('danger', 'Pilih minimal satu jadwal untuk dibuatkan rekap.');
+        }
+
+        $type = $this->resolveTipeUjianValue($tipe_ujian);
+        $rows = $this->getRekapJadwalPerMhsRows($jadwalIds->all(), $type);
+        $namaTipeUjian = $this->getNamaTipeUjianLabel($tipe_ujian);
+        $filename = 'rekap-jadwal-' . str_replace('_', '-', $tipe_ujian) . '-' . date('Ymd-His') . '.xls';
+
+        return response()
+            ->view('tugasakhir.prodi.rekap_jadwalpermhs_excel', compact('rows', 'namaTipeUjian'))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
     private function jadwalPerMhsByMode($tipe_ujian, $mode = 'aktif')
     {
-        switch ($tipe_ujian):
-            case "proposal":
-                $type = 0;
-                break;
-            case "seminarhasil":
-                $type = 1;
-                break;
-            case "ujianmeja":
-                $type = 2;
-                break;
-            default:
-                abort(404);
-        endswitch;
+        $type = $this->resolveTipeUjianValue($tipe_ujian);
 
         $statusProdi = Auth::user()->name == 'proditi' ? 1 : 2;
         $isRiwayat = $mode === 'riwayat';
@@ -4123,6 +4138,157 @@ class Prodi extends Controller
             ->get();
 
         return view('tugasakhir.prodi.jadwalpermhs', compact('data', 'tipe_ujian', 'isRiwayat'));
+    }
+
+    private function resolveTipeUjianValue($tipe_ujian)
+    {
+        switch ($tipe_ujian):
+            case "proposal":
+                return 0;
+            case "seminarhasil":
+                return 1;
+            case "ujianmeja":
+                return 2;
+            default:
+                abort(404);
+        endswitch;
+    }
+
+    private function getNamaTipeUjianLabel($tipe_ujian)
+    {
+        switch ($tipe_ujian):
+            case "proposal":
+                return 'Proposal';
+            case "seminarhasil":
+                return 'Seminar Hasil';
+            case "ujianmeja":
+                return 'Ujian Meja';
+            default:
+                return 'Ujian';
+        endswitch;
+    }
+
+    private function getRekapJadwalPerMhsRows(array $jadwalIds, $type)
+    {
+        $statusProdi = Auth::user()->name == 'proditi' ? 1 : 2;
+
+        $rows = DB::table('trt_jadwal_ujian as ju')
+            ->join('mst_pendaftaran as mp', 'mp.pendaftaran_id', '=', 'ju.pendaftaran_id')
+            ->join('trt_jadwal_ujian_per_mhs as jpm', 'jpm.jadwal_ujian', '=', 'ju.id')
+            ->join('trt_reg as rg', function ($join) {
+                $join->on('rg.pendaftaran_id', '=', 'mp.pendaftaran_id')
+                    ->on('rg.C_NPM', '=', 'jpm.C_NPM');
+            })
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+            ->join('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'jpm.C_NPM')
+            ->leftJoin('trt_penguji as penguji', function ($join) {
+                $join->on('penguji.C_NPM', '=', 'jpm.C_NPM')
+                    ->on('penguji.tipe_ujian', '=', 'rg.status');
+            })
+            ->leftJoin('mst_ruangan as ruangan', 'ruangan.id', '=', 'jpm.ruangan')
+            ->leftJoin('mst_jenis_tugas_akhir as jta', 'jta.jenis_tugas_akhir_id', '=', 'tb.jenis_tugas_akhir_id')
+            ->whereIn('ju.id', $jadwalIds)
+            ->where('mp.status_prodi', $statusProdi)
+            ->where(function ($query) use ($type) {
+                $query->where('mp.tipe_ujian', $type)
+                    ->orWhere('mp.tipe_ujian', 3);
+            })
+            ->whereColumn('rg.status', 'mp.tipe_ujian')
+            ->select([
+                'ju.tgl_ujian',
+                'jpm.jam_ujian',
+                'ruangan.nama_ruangan',
+                'jpm.C_NPM',
+                'mhs.NAMA_MAHASISWA',
+                'tb.pembimbing_I_id',
+                'tb.pembimbing_II_id',
+                'penguji.penguji_I_id',
+                'penguji.penguji_II_id',
+                'penguji.penguji_III_id',
+                'penguji.ketua_sidang_id',
+                DB::raw("COALESCE(jta.kode_jenis_tugas_akhir, 'TA-SM') as kode_jenis_tugas_akhir"),
+            ])
+            ->orderBy('ju.tgl_ujian', 'asc')
+            ->orderBy('jpm.ruangan', 'asc')
+            ->orderBy('jpm.jam_ujian', 'asc')
+            ->orderBy('mhs.NAMA_MAHASISWA', 'asc')
+            ->get();
+
+        $dosenByKode = $this->getDosenNamesForRekapJadwal($rows);
+
+        return $rows->map(function ($row) use ($dosenByKode) {
+            $row->jam_ujian_rekap = $this->formatJamUjianRekap($row->jam_ujian);
+            $row->pembimbing_utama = $this->getDosenNameFromMap($dosenByKode, $row->pembimbing_I_id);
+            $row->pembimbing_pendamping = $this->getDosenNameFromMap($dosenByKode, $row->pembimbing_II_id);
+            $row->penguji_1 = $this->getDosenNameFromMap($dosenByKode, $row->penguji_I_id);
+            $row->penguji_2 = $this->getDosenNameFromMap($dosenByKode, $row->penguji_II_id);
+            $row->penguji_3 = $this->getDosenNameFromMap($dosenByKode, $row->penguji_III_id);
+            $row->ketua_sidang = $this->getDosenNameFromMap($dosenByKode, $row->ketua_sidang_id);
+
+            return $row;
+        });
+    }
+
+    private function getDosenNamesForRekapJadwal($rows)
+    {
+        $kodeDosen = collect($rows)->flatMap(function ($row) {
+            return [
+                $row->pembimbing_I_id,
+                $row->pembimbing_II_id,
+                $row->penguji_I_id,
+                $row->penguji_II_id,
+                $row->penguji_III_id,
+                $row->ketua_sidang_id,
+            ];
+        })->filter()->unique()->values();
+
+        if ($kodeDosen->isEmpty()) {
+            return collect();
+        }
+
+        $utama = Schema::hasTable('t_mst_dosen')
+            ? DB::table('t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $kodeDosen)
+                ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN')
+            : collect();
+        $migrasi = Schema::hasTable('mig_t_mst_dosen')
+            ? DB::table('mig_t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $kodeDosen)
+                ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN')
+            : collect();
+
+        return $migrasi->merge($utama);
+    }
+
+    private function getDosenNameFromMap($dosenByKode, $kodeDosen)
+    {
+        $kodeDosen = trim((string) $kodeDosen);
+        if ($kodeDosen === '') {
+            return '-';
+        }
+
+        return $dosenByKode->get($kodeDosen, $kodeDosen);
+    }
+
+    private function formatJamUjianRekap($jamUjian)
+    {
+        $jamUjian = trim((string) $jamUjian);
+        if ($jamUjian === '') {
+            return '-';
+        }
+
+        if (strpos($jamUjian, '-') !== false) {
+            return str_replace(':', '.', $jamUjian);
+        }
+
+        if (!preg_match('/^([0-2][0-9]):([0-5][0-9])$/', $jamUjian, $matches)) {
+            return str_replace(':', '.', $jamUjian);
+        }
+
+        $start = Carbon::createFromTime((int) $matches[1], (int) $matches[2], 0);
+        $end = $start->copy()->addMinutes(100);
+
+        return $start->format('H.i') . ' - ' . $end->format('H.i');
     }
 
     public function detailJadwalPermhs($pendaftaran_id)
