@@ -147,6 +147,34 @@ class DosenAssessmentCardRoleTest extends TestCase
         $this->assertSame('13020230001', $cards->first()->C_NPM);
     }
 
+    public function testAssessmentCardsMarkOnlyCompletedLecturerAssessments()
+    {
+        $this->seedAssessmentCardData(2, 25, 105);
+        DB::table('trt_hasil')->insert([
+            'reg_id' => 25,
+            'nidn' => 'KETUA-01',
+            'nilai_1' => 10,
+            'nilai_2' => 20,
+            'nilai_3' => 20,
+            'nilai_4' => 20,
+            'nilai_5' => 20,
+        ]);
+        DB::table('trt_hasil')->insert([
+            'reg_id' => 25,
+            'nidn' => 'DOSEN-PENGUJI-1',
+            'nilai_1' => 10,
+            'nilai_2' => 20,
+            'nilai_3' => null,
+            'nilai_4' => 20,
+            'nilai_5' => 20,
+        ]);
+
+        $cards = $this->assessmentCards(2, [3, 4]);
+
+        $this->assertTrue($cards->first()->penilaian_lengkap_by_dosen['KETUA-01']);
+        $this->assertArrayNotHasKey('DOSEN-PENGUJI-1', $cards->first()->penilaian_lengkap_by_dosen);
+    }
+
     public function testProposalRecapUsesTheSameAssessmentCardsAndGroupsSchedulesByDate()
     {
         $this->seedAssessmentCardData(0, 23, 103);

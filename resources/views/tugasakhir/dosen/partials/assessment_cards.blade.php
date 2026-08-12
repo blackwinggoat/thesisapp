@@ -28,6 +28,9 @@
     .assessment-detail-list li:last-child { border-bottom: 0; }
     .assessment-detail-list__role { color: #607382; display: block; font-size: 12px; font-weight: 700; }
     .assessment-detail-list__name { color: #34495e; display: block; margin-top: 2px; }
+    .assessment-detail-list__check { color: #2d9b61; margin-left: 5px; }
+    .assessment-card-date { border-bottom: 2px solid #186a8c; color: #253746; font-size: 17px; font-weight: 700; margin: 24px 8px 4px; padding-bottom: 7px; }
+    .assessment-card-date:first-child { margin-top: 0; }
     @media (max-width: 767px) {
         .assessment-card__actions { flex-direction: column; }
         .assessment-card__actions .btn { width: 100%; }
@@ -67,8 +70,17 @@
             <div class="assessment-card-empty"><i class="fa fa-calendar-o fa-2x" style="display: block; margin-bottom: 10px;"></i>{{ $emptyMessage }}</div>
         @else
             <div class="alert alert-info assessment-card-no-result">Tidak ada mahasiswa yang sesuai dengan pencarian.</div>
-            <div class="row assessment-card-grid">
-                @foreach($data as $d)
+            @php
+                $assessmentGroups = $data->groupBy(function ($item) {
+                    return $item->tanggal_ujian ?: 'tanpa-jadwal';
+                });
+            @endphp
+            @foreach($assessmentGroups as $tanggal => $assessmentGroup)
+                <div class="assessment-card-date">
+                    {{ $tanggal === 'tanpa-jadwal' ? 'Jadwal Ujian Belum Tersedia' : 'Jadwal Ujian: ' . helper::tgl_indo_lengkap($tanggal) }}
+                </div>
+                <div class="row assessment-card-grid">
+                @foreach($assessmentGroup as $d)
                     <div class="col-xs-12 col-sm-6 col-lg-4 assessment-card-column" data-search="{{ $d->NAMA_MAHASISWA }} {{ $d->C_NPM }}">
                         <article class="assessment-card">
                             <div class="assessment-card__header">
@@ -106,7 +118,15 @@
                                 <hr><strong>Tim Ujian dan Pembimbing</strong>
                                 <ul class="assessment-detail-list" style="margin-top: 8px;">
                                     @foreach($d->tim_ujian as $tim)
-                                        <li><span class="assessment-detail-list__role">{{ $tim['peran'] }}</span><span class="assessment-detail-list__name">{{ $tim['nama'] }} <small>({{ $tim['kode'] }})</small></span></li>
+                                        <li>
+                                            <span class="assessment-detail-list__role">{{ $tim['peran'] }}</span>
+                                            <span class="assessment-detail-list__name">
+                                                {{ $tim['nama'] }} <small>({{ $tim['kode'] }})</small>
+                                                @if(!empty($d->penilaian_lengkap_by_dosen[$tim['kode']]))
+                                                    <i class="fa fa-check-circle assessment-detail-list__check" title="Sudah menilai" aria-label="Sudah menilai"></i>
+                                                @endif
+                                            </span>
+                                        </li>
                                     @endforeach
                                 </ul>
                             </div>
@@ -114,7 +134,8 @@
                         </div></div>
                     </div>
                 @endforeach
-            </div>
+                </div>
+            @endforeach
         @endif
     </div>
 </div>

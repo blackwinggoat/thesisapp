@@ -733,6 +733,12 @@ class dosen extends Controller
             ->whereIn('C_KODE_DOSEN', $kodeDosen)
             ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN');
 
+        $hasilPerReg = $data->pluck('reg_id')->filter()->unique()->isEmpty()
+            ? collect()
+            : trt_hasil::whereIn('reg_id', $data->pluck('reg_id')->filter()->unique()->values())
+                ->get(['reg_id', 'nidn', 'nilai_1', 'nilai_2', 'nilai_3', 'nilai_4', 'nilai_5'])
+                ->groupBy('reg_id');
+
         $peran = [
             'ketua_sidang_id' => 'Ketua Sidang',
             'penguji_I_id' => 'Penguji I',
@@ -742,11 +748,18 @@ class dosen extends Controller
             'pembimbing_II_id' => 'Pembimbing Pendamping',
         ];
 
-        $data->transform(function ($item) use ($kode, $namaDosen, $peran) {
+        $data->transform(function ($item) use ($kode, $namaDosen, $peran, $hasilPerReg) {
             $item->peran_login = [];
             $item->highlight_roles = [];
             $item->tim_ujian = [];
             $item->tim_ujian_by_peran = [];
+            $item->penilaian_lengkap_by_dosen = [];
+
+            foreach ($hasilPerReg->get($item->reg_id, collect()) as $hasil) {
+                if ($this->isCompleteAssessment($hasil)) {
+                    $item->penilaian_lengkap_by_dosen[trim((string) $hasil->nidn)] = true;
+                }
+            }
 
             foreach ($peran as $field => $label) {
                 $kodeTim = trim((string) $item->{$field});
@@ -783,10 +796,13 @@ class dosen extends Controller
                 $item->status_penilaian_class = 'pending';
                 $item->status_penilaian_icon = 'fa-clock-o';
             } else {
-                $nilai = [$item->nilai_1, $item->nilai_2, $item->nilai_3, $item->nilai_4, $item->nilai_5];
-                $belumLengkap = collect($nilai)->contains(function ($value) {
-                    return $value === null || (float) $value <= 0;
-                });
+                $belumLengkap = !$this->isCompleteAssessment((object) [
+                    'nilai_1' => $item->nilai_1,
+                    'nilai_2' => $item->nilai_2,
+                    'nilai_3' => $item->nilai_3,
+                    'nilai_4' => $item->nilai_4,
+                    'nilai_5' => $item->nilai_5,
+                ]);
 
                 $item->status_penilaian = $belumLengkap ? 'Belum lengkap' : 'Sudah menilai';
                 $item->status_penilaian_class = $belumLengkap ? 'incomplete' : 'complete';
@@ -798,7 +814,25 @@ class dosen extends Controller
             return $item;
         });
 
-        return $data;
+        return $data->sortBy(function ($item) {
+            return implode('|', [
+                $item->tanggal_ujian ?: '9999-12-31',
+                $this->getJamMulaiUjianSortKey($item->jam_ujian),
+                $item->nama_ruangan ?: '',
+                $item->NAMA_MAHASISWA,
+            ]);
+        })->values();
+    }
+
+    private function isCompleteAssessment($hasil)
+    {
+        foreach (['nilai_1', 'nilai_2', 'nilai_3', 'nilai_4', 'nilai_5'] as $field) {
+            if ($hasil->{$field} === null || (float) $hasil->{$field} <= 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function getJamMulaiUjianSortKey($jamUjian)
