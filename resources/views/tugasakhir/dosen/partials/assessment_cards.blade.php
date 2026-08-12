@@ -45,7 +45,10 @@
 
         <div class="clearfix" style="margin-bottom: 12px;">
             <h3 class="page-heading pull-left" style="margin: 0;">{{ $assessmentTitle }}</h3>
-            <a href="{{ url($historyPath) }}" class="btn btn-primary btn-sm pull-right"><i class="fa fa-history"></i> History</a>
+            <div class="pull-right">
+                <a href="{{ url($recapPath) }}" class="btn btn-success btn-sm"><i class="fa fa-table"></i> Rekap</a>
+                <a href="{{ url($historyPath) }}" class="btn btn-primary btn-sm"><i class="fa fa-history"></i> History</a>
+            </div>
         </div>
 
         <div class="assessment-card-search">

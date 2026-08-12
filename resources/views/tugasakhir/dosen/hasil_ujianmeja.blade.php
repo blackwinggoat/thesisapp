@@ -5,6 +5,7 @@
     'assessmentTitle' => 'Penilaian Ujian Akhir',
     'examLabel' => 'Ujian Akhir',
     'historyPath' => 'dsn/hasil_ujianmeja_history',
+    'recapPath' => 'dsn/hasil_ujianmeja/rekap',
     'detailPath' => 'dsn/detailhasil_ujianmeja',
     'emptyMessage' => 'Tidak ada peserta ujian akhir yang menunggu penilaian Anda.',
 ])

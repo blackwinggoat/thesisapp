@@ -469,10 +469,12 @@ Route::group(['middleware' => 'dosen'], function () {
     Route::get("/dsn/profil", "dosen@profil");
     Route::post("/dsn/kelengkapan_profil", "dosen@kelengkapan_profil_post");
     Route::get("/dsn/hasil_proposal/", "dosen@hasil_proposal");
+    Route::get("/dsn/hasil_proposal/rekap", "dosen@rekap_hasil_proposal");
     Route::get("/dsn/hasil_proposal_history/", "dosen@hasil_proposal_history");
     Route::get("/dsn/detailhasil_proposal/{regid}", "dosen@detailhasil_proposal");
     Route::post("/dsn/detailhasil_proposalpost/", "dosen@detailhasil_proposalpost");
     Route::get("/dsn/hasil_ujianmeja/", "dosen@hasil_ujianmeja");
+    Route::get("/dsn/hasil_ujianmeja/rekap", "dosen@rekap_hasil_ujianmeja");
     Route::get("/dsn/hasil_ujianmeja_history/", "dosen@hasil_ujianmeja_history");
     Route::get("/dsn/detailhasil_ujianmeja/{regid}", "dosen@detailhasil_ujianmeja");
     Route::post("/dsn/detailhasil_ujianmejapost/", "dosen@detailhasil_ujianmejapost");

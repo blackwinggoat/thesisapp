@@ -503,6 +503,11 @@ class dosen extends Controller
 
         return view('tugasakhir.dosen.hasil_proposal', compact('data'));
     }
+
+    public function rekap_hasil_proposal()
+    {
+        return $this->rekapHasilPenilaian(0, [2, 3, 4], 'Proposal', 'dsn/hasil_proposal');
+    }
     // Akhir Halaman Hasil Ujian Proposal
 
     public function hasil_proposal_history()
@@ -629,6 +634,36 @@ class dosen extends Controller
         return view('tugasakhir.dosen.hasil_ujianmeja', compact('data'));
     }
 
+    public function rekap_hasil_ujianmeja()
+    {
+        return $this->rekapHasilPenilaian(2, [3, 4], 'Ujian Akhir', 'dsn/hasil_ujianmeja');
+    }
+
+    private function rekapHasilPenilaian($tipeUjian, array $excludedBimbinganStatuses, $namaUjian, $backPath)
+    {
+        $data = $this->assessmentCards($tipeUjian, $excludedBimbinganStatuses)
+            ->sortBy(function ($item) {
+                return implode('|', [
+                    $item->tanggal_ujian ?: '9999-12-31',
+                    $this->getJamMulaiUjianSortKey($item->jam_ujian),
+                    $item->nama_ruangan ?: '',
+                    $item->NAMA_MAHASISWA,
+                ]);
+            })
+            ->values();
+
+        $rekapPerTanggal = $data->groupBy(function ($item) {
+            return $item->tanggal_ujian ?: 'tanpa-jadwal';
+        });
+
+        return view('tugasakhir.dosen.rekap_hasil_penilaian', compact(
+            'data',
+            'rekapPerTanggal',
+            'namaUjian',
+            'backPath'
+        ));
+    }
+
     private function assessmentCards($tipeUjian, array $excludedBimbinganStatuses)
     {
         $kode = Helper::getKodeDosenForTrtHasil();
@@ -677,6 +712,7 @@ class dosen extends Controller
                 'hasil.nilai_5',
                 DB::raw('(SELECT ju.tgl_ujian FROM trt_jadwal_ujian_per_mhs AS jpm INNER JOIN trt_jadwal_ujian AS ju ON ju.id = jpm.jadwal_ujian WHERE jpm.C_NPM = tb.C_NPM AND ju.pendaftaran_id = rg.pendaftaran_id ORDER BY ju.tgl_ujian DESC, ju.id DESC LIMIT 1) AS tanggal_ujian'),
                 DB::raw('(SELECT jpm.jam_ujian FROM trt_jadwal_ujian_per_mhs AS jpm INNER JOIN trt_jadwal_ujian AS ju ON ju.id = jpm.jadwal_ujian WHERE jpm.C_NPM = tb.C_NPM AND ju.pendaftaran_id = rg.pendaftaran_id ORDER BY ju.tgl_ujian DESC, ju.id DESC LIMIT 1) AS jam_ujian'),
+                DB::raw('(SELECT ruangan.nama_ruangan FROM trt_jadwal_ujian_per_mhs AS jpm INNER JOIN trt_jadwal_ujian AS ju ON ju.id = jpm.jadwal_ujian LEFT JOIN mst_ruangan AS ruangan ON ruangan.id = jpm.ruangan WHERE jpm.C_NPM = tb.C_NPM AND ju.pendaftaran_id = rg.pendaftaran_id ORDER BY ju.tgl_ujian DESC, ju.id DESC LIMIT 1) AS nama_ruangan'),
             ])
             ->orderBy('tanggal_ujian', 'asc')
             ->orderBy('mhs.NAMA_MAHASISWA', 'asc')
@@ -708,7 +744,9 @@ class dosen extends Controller
 
         $data->transform(function ($item) use ($kode, $namaDosen, $peran) {
             $item->peran_login = [];
+            $item->highlight_roles = [];
             $item->tim_ujian = [];
+            $item->tim_ujian_by_peran = [];
 
             foreach ($peran as $field => $label) {
                 $kodeTim = trim((string) $item->{$field});
@@ -721,9 +759,11 @@ class dosen extends Controller
                     'nama' => $namaDosen->get($kodeTim, '--'),
                     'kode' => $kodeTim,
                 ];
+                $item->tim_ujian_by_peran[$field] = $namaDosen->get($kodeTim, '--');
 
                 if ($kodeTim === $kode) {
                     $item->peran_login[] = $label;
+                    $item->highlight_roles[$field] = true;
                 }
             }
 
@@ -759,6 +799,16 @@ class dosen extends Controller
         });
 
         return $data;
+    }
+
+    private function getJamMulaiUjianSortKey($jamUjian)
+    {
+        $jamUjian = trim((string) $jamUjian);
+        if (preg_match('/([0-2]?\d)[:.]([0-5]\d)/', $jamUjian, $matches)) {
+            return sprintf('%02d:%02d', $matches[1], $matches[2]);
+        }
+
+        return $jamUjian;
     }
 
     public function hasil_ujianmeja_history()

@@ -82,7 +82,12 @@ class DosenAssessmentCardRoleTest extends TestCase
             $table->increments('id');
             $table->string('C_NPM');
             $table->integer('jadwal_ujian');
+            $table->integer('ruangan')->nullable();
             $table->time('jam_ujian')->nullable();
+        });
+        Schema::create('mst_ruangan', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('nama_ruangan')->nullable();
         });
 
         DB::table('mig_t_mst_dosen')->insert([
@@ -142,6 +147,37 @@ class DosenAssessmentCardRoleTest extends TestCase
         $this->assertSame('13020230001', $cards->first()->C_NPM);
     }
 
+    public function testProposalRecapUsesTheSameAssessmentCardsAndGroupsSchedulesByDate()
+    {
+        $this->seedAssessmentCardData(0, 23, 103);
+
+        $view = (new dosen())->rekap_hasil_proposal();
+
+        $this->assertSame('tugasakhir.dosen.rekap_hasil_penilaian', $view->getName());
+        $this->assertCount(1, $view->getData()['data']);
+        $this->assertArrayHasKey('2026-08-12', $view->getData()['rekapPerTanggal']->all());
+        $this->assertTrue($view->getData()['data']->first()->highlight_roles['ketua_sidang_id']);
+    }
+
+    public function testUjianMejaRecapUsesTheSameAssessmentCardsAndGroupsSchedulesByDate()
+    {
+        $this->seedAssessmentCardData(2, 24, 104);
+
+        $view = (new dosen())->rekap_hasil_ujianmeja();
+
+        $this->assertSame('tugasakhir.dosen.rekap_hasil_penilaian', $view->getName());
+        $this->assertCount(1, $view->getData()['data']);
+        $this->assertArrayHasKey('2026-08-12', $view->getData()['rekapPerTanggal']->all());
+    }
+
+    public function testAssessmentRecapRoutesAreProtectedByLecturerMiddleware()
+    {
+        $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
+
+        $this->assertStringContainsString('Route::get("/dsn/hasil_proposal/rekap", "dosen@rekap_hasil_proposal")', $routes);
+        $this->assertStringContainsString('Route::get("/dsn/hasil_ujianmeja/rekap", "dosen@rekap_hasil_ujianmeja")', $routes);
+    }
+
     private function assessmentCards($tipeUjian, array $excludedBimbinganStatuses)
     {
         $controller = new dosen();
@@ -183,6 +219,7 @@ class DosenAssessmentCardRoleTest extends TestCase
         DB::table('trt_jadwal_ujian_per_mhs')->insert([
             'C_NPM' => '13020230001',
             'jadwal_ujian' => $regId,
+            'ruangan' => null,
             'jam_ujian' => '09:00:00',
         ]);
     }

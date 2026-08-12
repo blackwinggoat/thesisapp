@@ -5,6 +5,7 @@
     'assessmentTitle' => 'Penilaian Proposal',
     'examLabel' => 'Proposal',
     'historyPath' => 'dsn/hasil_proposal_history',
+    'recapPath' => 'dsn/hasil_proposal/rekap',
     'detailPath' => 'dsn/detailhasil_proposal',
     'emptyMessage' => 'Tidak ada peserta seminar proposal yang menunggu penilaian Anda.',
 ])
