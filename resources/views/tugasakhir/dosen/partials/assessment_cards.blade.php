@@ -28,7 +28,10 @@
     .assessment-detail-list li:last-child { border-bottom: 0; }
     .assessment-detail-list__role { color: #607382; display: block; font-size: 12px; font-weight: 700; }
     .assessment-detail-list__name { color: #34495e; display: block; margin-top: 2px; }
-    .assessment-detail-list__check { color: #2d9b61; margin-left: 5px; }
+    .assessment-detail-list__status { margin-left: 5px; }
+    .assessment-detail-list__status--complete { color: #2d9b61; }
+    .assessment-detail-list__status--incomplete { color: #e67e22; }
+    .assessment-detail-list__status--pending { color: #d64545; }
     .assessment-card-date { border-bottom: 2px solid #186a8c; color: #253746; font-size: 17px; font-weight: 700; margin: 24px 8px 4px; padding-bottom: 7px; }
     .assessment-card-date:first-child { margin-top: 0; }
     @media (max-width: 767px) {
@@ -122,9 +125,10 @@
                                             <span class="assessment-detail-list__role">{{ $tim['peran'] }}</span>
                                             <span class="assessment-detail-list__name">
                                                 {{ $tim['nama'] }} <small>({{ $tim['kode'] }})</small>
-                                                @if(!empty($d->penilaian_lengkap_by_dosen[$tim['kode']]))
-                                                    <i class="fa fa-check-circle assessment-detail-list__check" title="Sudah menilai" aria-label="Sudah menilai"></i>
-                                                @endif
+                                                @php($statusPenilaian = $d->penilaian_status_by_dosen[$tim['kode']] ?? 'pending')
+                                                @php($statusIcon = ['complete' => 'fa-check-circle', 'incomplete' => 'fa-exclamation-circle', 'pending' => 'fa-times-circle'][$statusPenilaian])
+                                                @php($statusLabel = ['complete' => 'Sudah menilai lengkap', 'incomplete' => 'Penilaian belum lengkap', 'pending' => 'Belum menilai'][$statusPenilaian])
+                                                <i class="fa {{ $statusIcon }} assessment-detail-list__status assessment-detail-list__status--{{ $statusPenilaian }}" title="{{ $statusLabel }}" aria-label="{{ $statusLabel }}"></i>
                                             </span>
                                         </li>
                                     @endforeach

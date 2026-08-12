@@ -173,6 +173,9 @@ class DosenAssessmentCardRoleTest extends TestCase
 
         $this->assertTrue($cards->first()->penilaian_lengkap_by_dosen['KETUA-01']);
         $this->assertArrayNotHasKey('DOSEN-PENGUJI-1', $cards->first()->penilaian_lengkap_by_dosen);
+        $this->assertSame('complete', $cards->first()->penilaian_status_by_dosen['KETUA-01']);
+        $this->assertSame('incomplete', $cards->first()->penilaian_status_by_dosen['DOSEN-PENGUJI-1']);
+        $this->assertArrayNotHasKey('DOSEN-PENGUJI-2', $cards->first()->penilaian_status_by_dosen);
     }
 
     public function testProposalRecapUsesTheSameAssessmentCardsAndGroupsSchedulesByDate()

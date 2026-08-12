@@ -754,10 +754,16 @@ class dosen extends Controller
             $item->tim_ujian = [];
             $item->tim_ujian_by_peran = [];
             $item->penilaian_lengkap_by_dosen = [];
+            $item->penilaian_status_by_dosen = [];
 
             foreach ($hasilPerReg->get($item->reg_id, collect()) as $hasil) {
-                if ($this->isCompleteAssessment($hasil)) {
-                    $item->penilaian_lengkap_by_dosen[trim((string) $hasil->nidn)] = true;
+                $kodePenilai = trim((string) $hasil->nidn);
+                $statusPenilaian = $this->isCompleteAssessment($hasil) ? 'complete' : 'incomplete';
+                if (!isset($item->penilaian_status_by_dosen[$kodePenilai]) || $statusPenilaian === 'complete') {
+                    $item->penilaian_status_by_dosen[$kodePenilai] = $statusPenilaian;
+                }
+                if ($statusPenilaian === 'complete') {
+                    $item->penilaian_lengkap_by_dosen[$kodePenilai] = true;
                 }
             }
 
