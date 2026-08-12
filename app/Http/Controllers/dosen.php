@@ -754,10 +754,7 @@ class dosen extends Controller
                 $item->status_penilaian_icon = $belumLengkap ? 'fa-exclamation-circle' : 'fa-check-circle';
             }
             $item->foto_url = Helper::mahasiswaPhotoUrl($item->D_FOTO_MAHASISWA, $item->JENIS_KELAMIN);
-            $item->boleh_menilai = !empty($item->penguji_I_id)
-                || !empty($item->penguji_II_id)
-                || !empty($item->penguji_III_id)
-                || !empty($item->ketua_sidang_id);
+            $item->boleh_menilai = !empty($item->peran_login);
 
             return $item;
         });
