@@ -129,6 +129,19 @@ class DosenAssessmentCardRoleTest extends TestCase
         $this->assertTrue($cards->first()->boleh_menilai);
     }
 
+    public function testAssessmentCardsIncludeStudentRegardlessOfActiveStatus()
+    {
+        DB::table('t_mst_mahasiswa')
+            ->where('C_NPM', '13020230001')
+            ->update(['C_KODE_STATUS_AKTIF_MHS' => 'N']);
+        $this->seedAssessmentCardData(2, 22, 102);
+
+        $cards = $this->assessmentCards(2, [3, 4]);
+
+        $this->assertCount(1, $cards);
+        $this->assertSame('13020230001', $cards->first()->C_NPM);
+    }
+
     private function assessmentCards($tipeUjian, array $excludedBimbinganStatuses)
     {
         $controller = new dosen();

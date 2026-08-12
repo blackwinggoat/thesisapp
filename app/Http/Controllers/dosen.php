@@ -652,7 +652,6 @@ class dosen extends Controller
                     ->orWhere('tb.pembimbing_II_id', $kode);
             })
             ->where('rg.status', $tipeUjian)
-            ->where('mhs.C_KODE_STATUS_AKTIF_MHS', 'A')
             ->whereNotIn('tb.status_bimbingan', $excludedBimbinganStatuses)
             ->select([
                 'rg.reg_id',
