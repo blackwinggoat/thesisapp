@@ -49,6 +49,17 @@
             background: #f4b6ad;
             font-weight: bold;
         }
+        .schedule-date {
+            margin: 28px 0 8px;
+            font-size: 17px;
+            font-weight: bold;
+        }
+        .schedule-date:first-of-type {
+            margin-top: 0;
+        }
+        .schedule-table {
+            margin-bottom: 18px;
+        }
         @media print {
             .toolbar {
                 display: none;
@@ -67,7 +78,9 @@
         <button class="btn btn-print" type="button" onclick="window.print()">Buka PDF / Print</button>
     </div>
 
-    <table>
+    @forelse($jadwalPerTanggal as $tanggal => $jadwalHariIni)
+    <div class="schedule-date">Jadwal Ujian: {{ helper::tgl_indo_lengkap($tanggal) }}</div>
+    <table class="schedule-table">
         <thead>
         <tr>
             <th>Ruangan Ujian</th>
@@ -84,7 +97,7 @@
         </tr>
         </thead>
         <tbody>
-        @forelse($rows as $row)
+        @foreach($jadwalHariIni as $row)
             @php($highlightRoles = $row->highlight_roles ?? [])
             <tr>
                 <td>{{ $row->nama_ruangan ?: '-' }}</td>
@@ -99,12 +112,17 @@
                 <td class="{{ isset($highlightRoles['ketua_sidang_id']) ? 'marker' : '' }}">{{ $row->ketua_sidang }}</td>
                 <td>{{ $row->kode_jenis_tugas_akhir }}</td>
             </tr>
-        @empty
-            <tr>
-                <td colspan="11">Tidak ada jadwal untuk dosen ini.</td>
-            </tr>
-        @endforelse
+        @endforeach
         </tbody>
     </table>
+    @empty
+    <table>
+        <tbody>
+        <tr>
+            <td colspan="11">Tidak ada jadwal untuk dosen ini.</td>
+        </tr>
+        </tbody>
+    </table>
+    @endforelse
 </body>
 </html>

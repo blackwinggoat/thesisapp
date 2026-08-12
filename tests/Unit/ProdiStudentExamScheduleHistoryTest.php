@@ -100,4 +100,19 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         $this->assertStringContainsString('.marker', $lecturerView);
         $this->assertStringContainsString('$highlightRoles', $lecturerView);
     }
+
+    public function testLecturerScheduleIsGroupedByDateAndSortedByStartTime()
+    {
+        $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/Prodi.php');
+        $lecturerView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/jadwal_dosen_link.blade.php');
+
+        $this->assertStringContainsString('->sortBy(function ($row)', $controller);
+        $this->assertStringContainsString('$this->getJamMulaiUjianSortKey($row->jam_ujian)', $controller);
+        $this->assertStringContainsString('$jadwalPerTanggal = $rows->groupBy', $controller);
+        $this->assertStringContainsString("'jadwalPerTanggal'", $controller);
+        $this->assertStringContainsString('private function getJamMulaiUjianSortKey', $controller);
+        $this->assertStringContainsString('@forelse($jadwalPerTanggal as $tanggal => $jadwalHariIni)', $lecturerView);
+        $this->assertStringContainsString('Jadwal Ujian: {{ helper::tgl_indo_lengkap($tanggal) }}', $lecturerView);
+        $this->assertStringContainsString('@foreach($jadwalHariIni as $row)', $lecturerView);
+    }
 }

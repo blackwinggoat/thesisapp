@@ -4149,7 +4149,19 @@ class Prodi extends Controller
 
                 return $row;
             })
+            ->sortBy(function ($row) {
+                return implode('|', [
+                    $row->tgl_ujian,
+                    $this->getJamMulaiUjianSortKey($row->jam_ujian),
+                    $row->nama_ruangan,
+                    $row->NAMA_MAHASISWA,
+                ]);
+            })
             ->values();
+
+        $jadwalPerTanggal = $rows->groupBy(function ($row) {
+            return Carbon::parse($row->tgl_ujian)->format('Y-m-d');
+        });
 
         $dosen = $this->getDosenContactsForRekapJadwal(collect([$payload['kode_dosen']]))
             ->get($payload['kode_dosen']);
@@ -4170,6 +4182,7 @@ class Prodi extends Controller
 
         return view('tugasakhir.prodi.jadwal_dosen_link', compact(
             'rows',
+            'jadwalPerTanggal',
             'namaDosen',
             'namaTipeUjian',
             'token'
@@ -4709,6 +4722,16 @@ class Prodi extends Controller
         $end = $start->copy()->addMinutes(100);
 
         return $start->format('H.i') . ' - ' . $end->format('H.i');
+    }
+
+    private function getJamMulaiUjianSortKey($jamUjian)
+    {
+        $jamUjian = trim((string) $jamUjian);
+        if (preg_match('/([0-2]?\d)[:.]([0-5]\d)/', $jamUjian, $matches)) {
+            return sprintf('%02d:%02d', $matches[1], $matches[2]);
+        }
+
+        return $jamUjian;
     }
 
     public function detailJadwalPermhs($pendaftaran_id)
