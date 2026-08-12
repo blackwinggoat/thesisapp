@@ -100,6 +100,8 @@ try_api_call() {
             | curl \
                 -4 \
                 --config - \
+                --tlsv1.2 \
+                --tls-max 1.2 \
                 --get \
                 --retry 6 \
                 --retry-all-errors \
