@@ -5,8 +5,13 @@
     .assessment-recap-date { margin: 24px 0 8px; font-size: 16px; font-weight: 700; }
     .assessment-recap-table { margin-bottom: 22px; min-width: 1460px; }
     .assessment-recap-table th { background: #ffff00; color: #1f2933; text-align: center; vertical-align: middle !important; }
+    .assessment-recap-table tbody tr,
+    .assessment-recap-table tbody tr:nth-of-type(odd),
+    .assessment-recap-table tbody tr:nth-of-type(even),
+    .assessment-recap-table tbody td,
+    .assessment-recap-table tbody td.marker { background: #ffffff !important; }
     .assessment-recap-table td { vertical-align: middle !important; }
-    .assessment-recap-table .marker { background: #f4b6ad; font-weight: 700; }
+    .assessment-recap-table .marker { font-weight: 700; }
     .assessment-recap-table .student-title { min-width: 240px; text-align: left; }
     @media print {
         .assessment-recap-toolbar, .main-sidebar, .top-navbar, .sidebar, .navbar { display: none !important; }
