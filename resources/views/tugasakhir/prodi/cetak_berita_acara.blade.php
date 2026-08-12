@@ -153,12 +153,12 @@
 
 <body>
     @php
-        $namaProdi = helper::getProgramStudiByNim($nim);
+        $namaProdi = helper::getProgramStudiByStambuk($nim);
         $kaprodi = helper::getKaprodiByNimAndTanggal($nim, $trt_penguji->created_at ?? null);
         $stempelKaprodi = $namaProdi == 'Teknik Informatika' ? 'stempelprodi.png' : 'stempelprodi_si.png';
         $tinggiTtdKaprodi = $namaProdi == 'Teknik Informatika' ? '70px' : '120px';
         $styleTtdKaprodi = $namaProdi == 'Teknik Informatika' ? 'position: absolute; right: 90px' : 'position: absolute; right: 20px; top: -10px';
-        $headerProgramStudi = $namaProdi == 'Teknik Informatika' ? 'PROGRAM STUDI TEKNIK INFORMATIKA' : 'PROGRAM STUDI SISTEM INFORMASI';
+        $headerProgramStudi = 'PROGRAM STUDI ' . strtoupper($namaProdi);
         $headerEmailProdi = $namaProdi == 'Teknik Informatika' ? 'S1.teknik.informatika@umi.ac.id' : 's1.sisteminformasi@umi.ac.id';
     @endphp
     <div class="header"
@@ -215,7 +215,7 @@
             <tr>
                 <th>Program Studi</th>
                 <td>:</td>
-                <td>{{ helper::getProgramStudiByNim($nim) }}</td>
+                <td>{{ $namaProdi }}</td>
             </tr>
             <tr>
                 <th>Judul Tugas Akhir</th>
@@ -324,10 +324,10 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
+             @if ($namaProdi == 'Teknik Informatika')
+                <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4><br>
             @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
+                <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4><br>
             @endif
         </div>
     </div>
@@ -336,7 +336,7 @@
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
         Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
         Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        <br>website: fikom.umi.ac.id, email: {{ $headerEmailProdi }}
     </div>
     <br>
     <div class="title">
@@ -344,7 +344,7 @@
     </div>
     <p align="center">
         Pada Hari ini............. Tanggal.......... Bulan......... Tahun.......... Pukul............ WITA <br>
-        Bertempat di Ruang Sidang Prodi {{ helper::getProgramStudiByNim($nim) }} Telah Dilaksanakan <br>
+        Bertempat di Ruang Sidang Prodi {{ $namaProdi }} Telah Dilaksanakan <br>
         Ujian <b><u>{{ $tipe_ujian }}</u></b>, Mahasiswa (i);
     </p>
     <div>
@@ -450,10 +450,10 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
+             @if ($namaProdi == 'Teknik Informatika')
+                <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4><br>
             @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
+                <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4><br>
             @endif
         </div>
     </div>
@@ -462,7 +462,7 @@
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
         Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
         Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        <br>website: fikom.umi.ac.id, email: {{ $headerEmailProdi }}
     </div>
     <br>
     <div class="title">
@@ -486,7 +486,7 @@
             <tr>
                 <td style="padding-right: 50px">Fakultas/Proram Studi</td>
                 <td>:</td>
-                <td colspan="2">Ilmu Komputer/{{ helper::getProgramStudiByNim($nim) }}</td>
+        <td colspan="2">Ilmu Komputer/{{ $namaProdi }}</td>
             </tr>
             <tr>
                 <td style="vertical-align: top">Peminatan</td>
@@ -633,11 +633,11 @@
                 <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
                 <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
                 <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-                @if (Auth::user()->name == 'proditi')
-                    <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4>
+                 @if ($namaProdi == 'Teknik Informatika')
+                    <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4>
                     <br>
                 @else
-                    <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
+                    <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4><br>
                 @endif
             </div>
         </div>
@@ -646,7 +646,7 @@
         <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
             Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
             Fax (0411) - 453009 Makassar 90231
-            <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+            <br>website: fikom.umi.ac.id, email: {{ $headerEmailProdi }}
         </div>
         <br>
 
@@ -786,11 +786,11 @@
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-                    @if (Auth::user()->name == 'proditi')
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA
+                     @if ($namaProdi == 'Teknik Informatika')
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}
                         </h4><br>
                     @else
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4>
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4>
                         <br>
                     @endif
                 </div>
@@ -801,7 +801,7 @@
                 Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411)
                 449775-453308-453818,
                 Fax (0411) - 453009 Makassar 90231
-                <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+                <br>website: fikom.umi.ac.id, email: {{ $headerEmailProdi }}
             </div>
             <br>
             <div class="title">
@@ -940,11 +940,11 @@
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-                    @if (Auth::user()->name == 'proditi')
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA
+                     @if ($namaProdi == 'Teknik Informatika')
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}
                         </h4><br>
                     @else
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4>
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4>
                         <br>
                     @endif
                 </div>
@@ -955,7 +955,7 @@
                 Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411)
                 449775-453308-453818,
                 Fax (0411) - 453009 Makassar 90231
-                <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+                <br>website: fikom.umi.ac.id, email: {{ $headerEmailProdi }}
             </div>
             <br>
             <div class="title">
@@ -1093,11 +1093,11 @@
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-                    @if (Auth::user()->name == 'proditi')
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA
+                     @if ($namaProdi == 'Teknik Informatika')
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}
                         </h4><br>
                     @else
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4>
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4>
                         <br>
                     @endif
                 </div>
@@ -1108,7 +1108,7 @@
                 Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411)
                 449775-453308-453818,
                 Fax (0411) - 453009 Makassar 90231
-                <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+                <br>website: fikom.umi.ac.id, email: {{ $headerEmailProdi }}
             </div>
             <br>
             <span style="border: solid 0.5px; width: 100%; display: flex"></span>
@@ -1248,11 +1248,11 @@
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-                    @if (Auth::user()->name == 'proditi')
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA
+                     @if ($namaProdi == 'Teknik Informatika')
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}
                         </h4><br>
                     @else
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4>
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4>
                         <br>
                     @endif
                 </div>
@@ -1263,7 +1263,7 @@
                 Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411)
                 449775-453308-453818,
                 Fax (0411) - 453009 Makassar 90231
-                <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+                <br>website: fikom.umi.ac.id, email: {{ $headerEmailProdi }}
             </div>
             <br>
             <span style="border: solid 0.5px; width: 100%; display: flex"></span>
@@ -1403,11 +1403,11 @@
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
                     <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-                    @if (Auth::user()->name == 'proditi')
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA
+                     @if ($namaProdi == 'Teknik Informatika')
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}
                         </h4><br>
                     @else
-                        <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4>
+                        <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $headerProgramStudi }}</h4>
                         <br>
                     @endif
                 </div>
@@ -1418,7 +1418,7 @@
                 Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411)
                 449775-453308-453818,
                 Fax (0411) - 453009 Makassar 90231
-                <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+                <br>website: fikom.umi.ac.id, email: {{ $headerEmailProdi }}
             </div>
             <br>
             <span style="border: solid 0.5px; width: 100%; display: flex"></span>

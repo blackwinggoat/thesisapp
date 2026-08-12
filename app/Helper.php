@@ -1037,6 +1037,25 @@ class Helper
         return isset($v) ? $v->nama : '';
     }
 
+    /**
+     * Resolve a student's program for documents using the authoritative NIM prefix.
+     */
+    public static function getProgramStudiByStambuk($nim)
+    {
+        $stambuk = preg_replace('/\D+/', '', (string) $nim);
+        $prefix = substr($stambuk, 0, 3);
+
+        if ($prefix === '130') {
+            return 'Teknik Informatika';
+        }
+
+        if ($prefix === '131') {
+            return 'Sistem Informasi';
+        }
+
+        return self::getProgramStudiByNim($nim);
+    }
+
     public static function getProgramStudiByAuthUser($username = null)
     {
         $username = strtolower(trim($username ?? auth()->user()->name ?? ''));
