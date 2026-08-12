@@ -65,6 +65,71 @@
             cursor: pointer;
             position: relative;
         }
+
+        .receipt-team-table {
+            table-layout: fixed;
+        }
+
+        .receipt-team-table th,
+        .receipt-team-table td {
+            padding: 2px;
+        }
+
+        .receipt-team-table .receipt-signature-cell {
+            width: 100px;
+            min-width: 100px;
+            height: 30px;
+            vertical-align: middle;
+        }
+
+        .assessment-identity-table {
+            width: 550px;
+            margin: 0 auto;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        .assessment-identity-table td:first-child {
+            width: 175px;
+            padding-right: 0 !important;
+            vertical-align: top;
+        }
+
+        .assessment-identity-table td:nth-child(2) {
+            width: 18px;
+            padding-right: 0 !important;
+            vertical-align: top;
+            text-align: center;
+        }
+
+        .assessment-identity-table td:nth-child(3) {
+            vertical-align: top;
+            overflow-wrap: break-word;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            #btnPrint {
+                display: none !important;
+            }
+
+            .assessment-identity-table,
+            .assessment-score-table,
+            .receipt-team-table {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .legalitor {
+                clear: both;
+                float: none;
+                text-align: right;
+            }
+        }
     </style>
     <script>
         function prints() {
@@ -161,59 +226,60 @@
     </div>
     <br>
     <div>
-        <table border="1" width="550px" cellpadding="4" cellspacing="0">
+        <table class="receipt-team-table" border="1" width="550px" cellpadding="4" cellspacing="0">
+            <colgroup>
+                <col style="width: 35px">
+                <col style="width: 95px">
+                <col style="width: 190px">
+                <col style="width: 100px">
+                <col style="width: 80px">
+            </colgroup>
             <tr>
                 <th>No.</th>
                 <th colspan="2">Nama Tim Penguji</th>
-                <th colspan="2">Tanda Tangan</th>
+                <th class="receipt-signature-cell">Tanda Tangan</th>
                 <th width="130px">Tanggal Terima</th>
             </tr>
             <tr>
                 <td>1</td>
                 <td width="100px">Ketua Sidang</td>
                 <td>{{ helper::getNamaDosenByKode($trt_penguji->ketua_sidang_id) }}</td>
-                <td width="30px">1</td>
-                <td></td>
+                <td class="receipt-signature-cell"></td>
                 <td></td>
             </tr>
             <tr>
                 <td>2</td>
                 <td>Pembimbing Utama</td>
                 <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_I_id) }}</td>
-                <td></td>
-                <td>2</td>
+                <td class="receipt-signature-cell"></td>
                 <td></td>
             </tr>
             <tr>
                 <td>3</td>
                 <td>Pembimbing Pendamping</td>
                 <td>{{ helper::getNamaDosenByKode($trt_bimbingan->pembimbing_II_id) }}</td>
-                <td>3</td>
-                <td></td>
+                <td class="receipt-signature-cell"></td>
                 <td></td>
             </tr>
             <tr>
                 <td>4</td>
                 <td>Penguji 1</td>
                 <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_I_id) }}</td>
-                <td></td>
-                <td>4</td>
+                <td class="receipt-signature-cell"></td>
                 <td></td>
             </tr>
             <tr>
                 <td>5</td>
                 <td>Penguji 2</td>
                 <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_II_id) }}</td>
-                <td>5</td>
-                <td></td>
+                <td class="receipt-signature-cell"></td>
                 <td></td>
             </tr>
             <tr>
                 <td>6</td>
                 <td>Penguji 3</td>
                 <td>{{ helper::getNamaDosenByKode($trt_penguji->penguji_III_id) }}</td>
-                <td></td>
-                <td>6</td>
+                <td class="receipt-signature-cell"></td>
                 <td></td>
             </tr>
         </table>
@@ -441,7 +507,7 @@
             <tr>
                 <td>Lama Seminar</td>
                 <td>:</td>
-                <td colspan="2">(.........Jam) Mulai jam ........... Sampai jam ..................</td>
+                <td colspan="2">(.........Menit) Mulai jam ........... Sampai jam ..................</td>
             <tr>
                 <td><b>Formasi Tim Penguji</b></td>
                 <td>:</td>
@@ -588,7 +654,7 @@
             <h4><b>LEMBAR PENILAIAN UJIAN {{ strtoupper($tipe_ujian) }}</b></h4>
         </div>
         <div>
-            <table>
+            <table class="assessment-identity-table">
                 <tr>
                     <td>STAMBUK</td>
                     <td>:</td>
@@ -618,8 +684,8 @@
                 </tr>
             </table>
         </div>
-        <div style="position: relative">
-            <table style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
+        <div class="assessment-score-panel" style="position: relative">
+            <table class="assessment-score-table" style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
                 <tr>
                     <th width="10px">NO.</th>
                     <th>MATERI PENILAIAN</th>
@@ -708,8 +774,7 @@
         </div>
         <br><br>
         <br><br>
-        <div class="header" style="page-break-before: always">
-            <div class="header"
+        <div class="header"
                 style="position: relative; display: flex; align-items: center; justify-content: space-between; page-break-before: always !important;">
                 <div style="display: flex; align-items: center; margin-right: 30px !important;">
                     <img src="{{ asset('umi.png') }}" alt="Logo Institusi"
@@ -743,7 +808,7 @@
                 <h4><b>LEMBAR PENILAIAN UJIAN {{ strtoupper($tipe_ujian) }}</b></h4>
             </div>
             <div>
-                <table>
+                <table class="assessment-identity-table">
                     <tr>
                         <td>STAMBUK</td>
                         <td>:</td>
@@ -773,8 +838,8 @@
                     </tr>
                 </table>
             </div>
-            <div style="position: relative">
-                <table style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
+            <div class="assessment-score-panel" style="position: relative">
+                <table class="assessment-score-table" style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
                     <tr>
                         <th width="10px">NO.</th>
                         <th>MATERI PENILAIAN</th>
@@ -897,7 +962,7 @@
                 <h4><b>LEMBAR PENILAIAN UJIAN {{ strtoupper($tipe_ujian) }}</b></h4>
             </div>
             <div>
-                <table>
+                <table class="assessment-identity-table">
                     <tr>
                         <td>STAMBUK</td>
                         <td>:</td>
@@ -927,8 +992,8 @@
                     </tr>
                 </table>
             </div>
-            <div style="position: relative">
-                <table style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
+            <div class="assessment-score-panel" style="position: relative">
+                <table class="assessment-score-table" style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
                     <tr>
                         <th width="10px">NO.</th>
                         <th>MATERI PENILAIAN</th>
@@ -1052,7 +1117,7 @@
                 <h4><b>LEMBAR PENILAIAN UJIAN {{ strtoupper($tipe_ujian) }}</b></h4>
             </div>
             <div>
-                <table>
+                <table class="assessment-identity-table">
                     <tr>
                         <td>STAMBUK</td>
                         <td>:</td>
@@ -1082,8 +1147,8 @@
                     </tr>
                 </table>
             </div>
-            <div style="position: relative">
-                <table style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
+            <div class="assessment-score-panel" style="position: relative">
+                <table class="assessment-score-table" style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
                     <tr>
                         <th width="10px">NO.</th>
                         <th>MATERI PENILAIAN</th>
@@ -1207,7 +1272,7 @@
                 <h4><b>LEMBAR PENILAIAN UJIAN {{ strtoupper($tipe_ujian) }}</b></h4>
             </div>
             <div>
-                <table>
+                <table class="assessment-identity-table">
                     <tr>
                         <td>STAMBUK</td>
                         <td>:</td>
@@ -1237,8 +1302,8 @@
                     </tr>
                 </table>
             </div>
-            <div style="position: relative">
-                <table style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
+            <div class="assessment-score-panel" style="position: relative">
+                <table class="assessment-score-table" style=" margin: 0 auto" border="1" width="550px" cellpadding="4" cellspacing="0">
                     <tr>
                         <th width="10px">NO.</th>
                         <th>MATERI PENILAIAN</th>
@@ -1362,7 +1427,7 @@
                 <h4><b>REKAPITULASI NILAI UJIAN {{ strtoupper($tipe_ujian) }}</b></h4>
             </div>
             <div>
-                <table>
+                <table class="assessment-identity-table">
                     <tr>
                         <td>STAMBUK</td>
                         <td>:</td>
@@ -1393,7 +1458,7 @@
                 </table>
             </div>
             <div style="position: relative">
-                <table border="1" width="550px" cellpadding="4" cellspacing="0" style="margin: 0 auto">
+                <table class="assessment-score-table" border="1" width="550px" cellpadding="4" cellspacing="0" style="margin: 0 auto">
                     <tr>
                         <th>No.</th>
                         <th colspan="2">Nama Tim Penguji</th>
