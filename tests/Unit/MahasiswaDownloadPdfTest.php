@@ -18,6 +18,7 @@ class MahasiswaDownloadPdfTest extends TestCase
         $downloadView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/mhs/download.blade.php');
         $this->assertStringContainsString("url('mhs/surat_sk_ujian_meja')", $downloadView);
         $this->assertStringContainsString('publicImageDataUri', $view);
+        $this->assertStringContainsString('pdfOfficialImageDataUri', $view);
         $this->assertStringContainsString('$namaMahasiswa = optional($mahasiswa)->NAMA_MAHASISWA ?: \'-\';', $view);
         $this->assertStringContainsString("substr(\$" . "imageData, -12, 4) === 'IEND'", file_get_contents(__DIR__ . '/../../app/Helper.php'));
     }

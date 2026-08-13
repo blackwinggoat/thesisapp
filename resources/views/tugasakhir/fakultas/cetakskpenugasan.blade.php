@@ -93,7 +93,18 @@
         $mahasiswa = \App\Model\t_mst_mahasiswa::where('C_NPM', $data_sk[0]->C_NPM)->first();
         $namaMahasiswa = optional($mahasiswa)->NAMA_MAHASISWA ?: '-';
         $tanggalUjian = $data_sk[0]->tgl_ujian ?: date('Y-m-d');
-        $tanggalUjianCarbon = Illuminate\Support\Carbon::parse($tanggalUjian);
+        try {
+            $tanggalUjianCarbon = Illuminate\Support\Carbon::parse($tanggalUjian);
+        } catch (\Exception $exception) {
+            $tanggalUjianCarbon = Illuminate\Support\Carbon::today();
+        }
+        try {
+            $tanggalSurat = $data_sk[0]->created_at
+                ? Illuminate\Support\Carbon::parse(substr($data_sk[0]->created_at, 0, 10))
+                : Illuminate\Support\Carbon::today();
+        } catch (\Exception $exception) {
+            $tanggalSurat = Illuminate\Support\Carbon::today();
+        }
     @endphp
     <div class="header"
         style="position: relative; display: flex; align-items: center; justify-content: space-between; page-break-before: always !important;">
@@ -258,7 +269,7 @@
 
     <div class="legalitor">
         Makassar,
-        {{ $data_sk[0]->created_at ? helper::tgl_indo_lengkap(Illuminate\Support\Carbon::parse(substr($data_sk[0]->created_at, 0, 10))->formatLocalized('%Y-%m-%d')) : helper::tgl_indo_lengkap(date('Y-m-d')) }}
+        {{ helper::tgl_indo_lengkap($tanggalSurat->formatLocalized('%Y-%m-%d')) }}
         <br>
         Dekan
     </div>
@@ -269,10 +280,10 @@
         @elseif(helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 1)
 
         @elseif(helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 2)
-            <img src="{{ \App\Helper::officialImageDataUri('stempelfakultas.png') }}" alt="" height="100px"
+            <img src="{{ \App\Helper::pdfOfficialImageDataUri('stempelfakultas.png') }}" alt="" height="100px"
                 style="position: absolute; right: 140px">
             @if (!empty($dekan->ttd))
-                <img src="{{ \App\Helper::officialImageDataUri($dekan->ttd) }}" alt="" height="70px"
+                <img src="{{ \App\Helper::pdfOfficialImageDataUri($dekan->ttd) }}" alt="" height="70px"
                     style="position: absolute; right: -20px">
             @endif
         @endif
@@ -285,7 +296,7 @@
         @if (helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 0)
         @elseif(helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 1 ||
                 helper::getStatusFromSkPenugasan($data_sk[0]->sk_penugasan_id) == 2)
-            <img src="{{ \App\Helper::officialImageDataUri('paraf_wd.png') }}" alt="" height="50px"
+            <img src="{{ \App\Helper::pdfOfficialImageDataUri('paraf_wd.png') }}" alt="" height="50px"
                 style="position: absolute; right: -20px">
         @endif
     </div>

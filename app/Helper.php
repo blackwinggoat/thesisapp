@@ -286,6 +286,41 @@ class Helper
         return 'data:' . $mime . ';base64,' . base64_encode($contents);
     }
 
+    /**
+     * Return a validated local image data URI for PDF rendering.
+     * Dompdf must not receive a broken or remote fallback image.
+     */
+    public static function pdfOfficialImageDataUri($fileName)
+    {
+        $dataUri = self::officialImageDataUri($fileName);
+
+        if (strpos($dataUri, 'data:') !== 0) {
+            return self::publicImageDataUri('master/assets/img/logo-login.png');
+        }
+
+        $parts = explode(',', $dataUri, 2);
+        $imageData = isset($parts[1]) ? base64_decode($parts[1], true) : false;
+
+        if ($imageData === false || $imageData === '') {
+            return self::publicImageDataUri('master/assets/img/logo-login.png');
+        }
+
+        $mime = strtolower(substr($parts[0], 5));
+        $isValid = true;
+
+        if ($mime === 'image/png') {
+            $isValid = strlen($imageData) >= 12
+                && substr($imageData, 0, 8) === "\x89PNG\r\n\x1a\n"
+                && substr($imageData, -12, 4) === 'IEND';
+        } elseif ($mime === 'image/jpeg' || $mime === 'image/jpg') {
+            $isValid = strlen($imageData) >= 4
+                && substr($imageData, 0, 2) === "\xff\xd8"
+                && substr($imageData, -2) === "\xff\xd9";
+        }
+
+        return $isValid ? $dataUri : self::publicImageDataUri('master/assets/img/logo-login.png');
+    }
+
     public static function publicImageDataUri($fileName)
     {
         $fileName = ltrim((string) $fileName, '/');
