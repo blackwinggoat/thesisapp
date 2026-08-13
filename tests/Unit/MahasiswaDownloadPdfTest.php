@@ -14,6 +14,7 @@ class MahasiswaDownloadPdfTest extends TestCase
         $this->assertStringContainsString("PDF::loadView('tugasakhir.fakultas.cetakskpenugasan'", $controller);
         $this->assertStringContainsString("->setPaper('a4', 'portrait')", $controller);
         $this->assertStringContainsString("->stream('SK-Ujian-Meja-'", $controller);
+        $this->assertStringContainsString("preg_replace('/[^A-Za-z0-9._-]+/', '-',", $controller);
         $this->assertStringContainsString("url('mhs/surat_sk_ujian_meja')", $view);
     }
 }

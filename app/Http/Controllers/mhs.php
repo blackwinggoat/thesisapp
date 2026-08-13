@@ -1397,9 +1397,11 @@ class mhs extends Controller
             return response('Data surat SK ujian meja belum lengkap.', 404);
         }
 
+        $safeNomorSk = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $data_sk[0]->nomor_sk);
+
         return PDF::loadView('tugasakhir.fakultas.cetakskpenugasan', compact('data_sk'))
             ->setPaper('a4', 'portrait')
-            ->stream('SK-Ujian-Meja-' . $data_sk[0]->nomor_sk . '.pdf');
+            ->stream('SK-Ujian-Meja-' . trim($safeNomorSk, '-') . '.pdf');
     }
 
     // Surat Ujian Proposal

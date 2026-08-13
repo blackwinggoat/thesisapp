@@ -254,7 +254,7 @@
 
     <div class="legalitor">
         Makassar,
-        {{ helper::tgl_indo_lengkap(Illuminate\Support\Carbon::parse(substr($data_sk[0]->created_at, 0, 10))->formatLocalized('%Y-%m-%d')) }}
+        {{ $data_sk[0]->created_at ? helper::tgl_indo_lengkap(Illuminate\Support\Carbon::parse(substr($data_sk[0]->created_at, 0, 10))->formatLocalized('%Y-%m-%d')) : helper::tgl_indo_lengkap(date('Y-m-d')) }}
         <br>
         Dekan
     </div>
