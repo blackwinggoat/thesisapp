@@ -11,11 +11,11 @@
         .letterhead { padding: 2px 0 0; }
         .letterhead table { border-collapse: collapse; width: 100%; }
         .letterhead td { vertical-align: middle; }
-        .logo-umi { height: 46px; width: auto; }
-        .logo-fikom { height: 36px; width: auto; }
-        .letterhead-title { font-size: 9.5pt; font-weight: bold; line-height: 1.1; padding-left: 8px; text-align: left; }
+        .logo-umi { height: 50px; width: auto; }
+        .logo-fikom { height: 40px; width: auto; }
+        .letterhead-title { font-size: 11.5pt; font-weight: bold; line-height: 1.05; padding-left: 0; text-align: right; }
         .letterhead-divider { border-top: 3px double #000; margin-top: 7px; }
-        .address { font-size: 7.3pt; line-height: 1.12; margin-top: 8px; text-align: center; }
+        .address { font-size: 7.3pt; line-height: 1.12; margin-top: 0; padding-top: 7px; text-align: center; }
         .invocation { font-size: 12pt; font-style: italic; font-weight: bold; margin: 18px 0 13px; text-align: center; }
         .document-title { font-size: 12pt; font-weight: bold; margin: 0 0 2px; text-align: center; text-decoration: underline; }
         .document-number { font-size: 11pt; font-weight: bold; margin-bottom: 30px; text-align: center; }
