@@ -20,6 +20,7 @@ use App\TrtJadwalUjianPerMhs;
 use App\TrtPengajuanDokumen;
 use App\TrtPenguji;
 use App\TrtSyaratUjian;
+use Barryvdh\DomPDF\Facade as PDF;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -1396,7 +1397,9 @@ class mhs extends Controller
             return response('Data surat SK ujian meja belum lengkap.', 404);
         }
 
-        return view('tugasakhir.fakultas.cetakskpenugasan', compact('data_sk'));
+        return PDF::loadView('tugasakhir.fakultas.cetakskpenugasan', compact('data_sk'))
+            ->setPaper('a4', 'portrait')
+            ->stream('SK-Ujian-Meja-' . $data_sk[0]->nomor_sk . '.pdf');
     }
 
     // Surat Ujian Proposal
