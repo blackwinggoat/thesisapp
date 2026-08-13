@@ -90,13 +90,17 @@
     @php
         $tanggalAcuanDekan = $data_sk[0]->created_at ?? null;
         $dekan = helper::getDekanByTanggal($tanggalAcuanDekan);
+        $mahasiswa = \App\Model\t_mst_mahasiswa::where('C_NPM', $data_sk[0]->C_NPM)->first();
+        $namaMahasiswa = optional($mahasiswa)->NAMA_MAHASISWA ?: '-';
+        $tanggalUjian = $data_sk[0]->tgl_ujian ?: date('Y-m-d');
+        $tanggalUjianCarbon = Illuminate\Support\Carbon::parse($tanggalUjian);
     @endphp
     <div class="header"
         style="position: relative; display: flex; align-items: center; justify-content: space-between; page-break-before: always !important;">
         <div style="display: flex; align-items: center; margin-right: 30px !important;">
-            <img src="{{ asset('umi.png') }}" alt="Logo Institusi"
+            <img src="{{ \App\Helper::publicImageDataUri('umi.png') }}" alt="Logo Institusi"
                 style="width: 50px; height: auto; margin-right: 10px;" />
-            <img src="{{ asset('fikom-logo.png') }}" alt="Logo Institusi" style="width: 150px; height: auto;" />
+            <img src="{{ \App\Helper::publicImageDataUri('fikom-logo.png') }}" alt="Logo Institusi" style="width: 150px; height: auto;" />
         </div>
         <div style="text-align: left;">
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
@@ -185,7 +189,7 @@
             <tr>
                 <td width="150px">Nama / Stambuk</td>
                 <td>:</td>
-                <td>{{ \App\Model\t_mst_mahasiswa::where('C_NPM', $data_sk[0]->C_NPM)->first()->NAMA_MAHASISWA }} /
+                <td>{{ $namaMahasiswa }} /
                     {{ $data_sk[0]->C_NPM }}</td>
             </tr>
         </table>
@@ -201,10 +205,10 @@
     </div>
     <div>
         @php
-            $tanggal = Illuminate\Support\Carbon::parse($data_sk[0]->tgl_ujian)->formatLocalized('%d');
-            $bulan = Illuminate\Support\Carbon::parse($data_sk[0]->tgl_ujian)->formatLocalized('%m');
-            $tahun = Illuminate\Support\Carbon::parse($data_sk[0]->tgl_ujian)->formatLocalized('%Y');
-            $tgl_ujian = Illuminate\Support\Carbon::parse($data_sk[0]->tgl_ujian)->formatLocalized('%A, %d %B %Y');
+            $tanggal = $tanggalUjianCarbon->formatLocalized('%d');
+            $bulan = $tanggalUjianCarbon->formatLocalized('%m');
+            $tahun = $tanggalUjianCarbon->formatLocalized('%Y');
+            $tgl_ujian = $tanggalUjianCarbon->formatLocalized('%A, %d %B %Y');
         @endphp
         <table>
             <tr>

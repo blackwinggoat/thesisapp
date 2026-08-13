@@ -286,6 +286,38 @@ class Helper
         return 'data:' . $mime . ';base64,' . base64_encode($contents);
     }
 
+    public static function publicImageDataUri($fileName)
+    {
+        $fileName = ltrim((string) $fileName, '/');
+        if (strpos($fileName, '..') !== false
+            || !preg_match('/\A[a-zA-Z0-9._\/-]+\.(?:gif|jpe?g|png)\z/i', $fileName)) {
+            $fileName = 'master/assets/img/logo-login.png';
+        }
+
+        $path = public_path($fileName);
+        $imageData = is_file($path) && is_readable($path) ? @file_get_contents($path) : false;
+        $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $imageIsValid = $imageData !== false;
+
+        if ($imageIsValid && $extension === 'png') {
+            $imageIsValid = strlen($imageData) >= 12
+                && substr($imageData, 0, 8) === "\x89PNG\r\n\x1a\n"
+                && substr($imageData, -12, 4) === 'IEND';
+        }
+
+        if (!$imageIsValid) {
+            $fallback = public_path('master/assets/img/logo-login.png');
+            $fileName = 'master/assets/img/logo-login.png';
+            $path = $fallback;
+            $imageData = file_get_contents($path);
+            $extension = 'png';
+        }
+
+        $mime = $extension === 'png' ? 'image/png' : ($extension === 'gif' ? 'image/gif' : 'image/jpeg');
+
+        return 'data:' . $mime . ';base64,' . base64_encode($imageData);
+    }
+
     public static function deleteManagedOfficialImage($fileName)
     {
         if (!self::isManagedOfficialImage($fileName)) {
