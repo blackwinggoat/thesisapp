@@ -4,35 +4,40 @@
     <meta charset="utf-8">
     <title>SK Penugasan Ujian Tugas Akhir</title>
     <style>
-        @page { margin: 12mm 14mm 11mm; }
+        @page { margin: 13mm 14mm 12mm; }
         * { box-sizing: border-box; }
-        body { color: #111; font-family: "Times New Roman", serif; font-size: 10pt; line-height: 1.2; margin: 0; }
-        .letterhead { border-bottom: 3px double #111; padding-bottom: 5px; }
+        body { color: #000; font-family: "Times New Roman", serif; font-size: 10.5pt; line-height: 1.17; margin: 0; }
+        .document { margin: 0 auto; width: 555px; }
+        .letterhead { padding: 2px 0 0; }
         .letterhead table { border-collapse: collapse; width: 100%; }
         .letterhead td { vertical-align: middle; }
-        .logo-umi { height: 52px; width: auto; }
-        .logo-fikom { height: 37px; width: auto; }
-        .letterhead-title { font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold; line-height: 1.35; text-align: center; }
-        .address { font-family: Arial, sans-serif; font-size: 7.5pt; line-height: 1.25; margin-top: 4px; text-align: center; }
-        .document-title { font-size: 12pt; font-weight: bold; margin: 15px 0 2px; text-align: center; text-decoration: underline; }
-        .document-number { font-size: 10pt; margin-bottom: 13px; text-align: center; }
-        p { margin: 0 0 8px; text-align: justify; }
-        .section-label { font-weight: bold; margin: 9px 0 4px; }
-        .details { border-collapse: collapse; margin: 0 0 8px; width: 100%; }
-        .details td { padding: 1.5px 0; vertical-align: top; }
-        .details .label { width: 31%; }
+        .logo-umi { height: 46px; width: auto; }
+        .logo-fikom { height: 36px; width: auto; }
+        .letterhead-title { font-size: 9.5pt; font-weight: bold; line-height: 1.1; padding-left: 8px; text-align: left; }
+        .letterhead-divider { border-top: 3px double #000; margin-top: 7px; }
+        .address { font-size: 7.3pt; line-height: 1.12; margin-top: 8px; text-align: center; }
+        .invocation { font-size: 12pt; font-style: italic; font-weight: bold; margin: 18px 0 13px; text-align: center; }
+        .document-title { font-size: 12pt; font-weight: bold; margin: 0 0 2px; text-align: center; text-decoration: underline; }
+        .document-number { font-size: 11pt; font-weight: bold; margin-bottom: 30px; text-align: center; }
+        p { margin: 0 0 14px; text-align: justify; }
+        .opening { line-height: 1.2; }
+        .section-label { margin: 28px 0 16px; }
+        .details { border-collapse: collapse; margin: 0 0 20px; width: 100%; }
+        .details td { padding: 2px 0; vertical-align: top; }
+        .details .label { width: 29%; }
         .details .separator { text-align: center; width: 3%; }
-        .details .value { width: 66%; }
+        .details .value { padding-left: 4px; width: 68%; }
         .examiner { padding-left: 4px; }
-        .signature { margin-top: 14px; width: 100%; }
+        .panel-gap td { padding-bottom: 22px; }
+        .signature { margin-top: 45px; width: 100%; }
         .signature td { vertical-align: top; }
-        .signature-left { font-size: 9pt; padding-top: 57px; width: 50%; }
+        .signature-left { font-size: 10.5pt; padding-top: 104px; width: 50%; }
         .signature-right { text-align: center; width: 50%; }
-        .signature-space { height: 65px; position: relative; }
-        .stamp { bottom: 0; height: 62px; position: absolute; right: 58px; width: auto; }
-        .sign { bottom: 8px; height: 45px; position: absolute; right: 13px; width: auto; }
+        .signature-space { height: 94px; position: relative; }
+        .stamp { bottom: 0; height: 88px; position: absolute; right: 83px; width: auto; }
+        .sign { bottom: 13px; height: 64px; position: absolute; right: 5px; width: auto; }
         .dekan-name { font-weight: bold; text-decoration: underline; }
-        .tembusan { font-size: 8.7pt; line-height: 1.3; margin-top: 6px; }
+        .tembusan { font-size: 10.5pt; font-style: italic; line-height: 1.32; margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -61,41 +66,43 @@
             : ($jamUjian ?: '-');
     @endphp
 
+    <div class="document">
     <div class="letterhead">
         <table>
             <tr>
-                <td width="16%"><img class="logo-umi" src="{{ \App\Helper::publicImageDataUri('images/branding/umi-pdf.jpg') }}" alt="Logo UMI"></td>
-                <td class="letterhead-title" width="52%">YAYASAN WAKAF UMI<br>UNIVERSITAS MUSLIM INDONESIA<br>FAKULTAS ILMU KOMPUTER</td>
-                <td width="32%" style="text-align:right"><img class="logo-fikom" src="{{ \App\Helper::publicImageDataUri('images/branding/fikom-pdf.jpg') }}" alt="Logo FIKOM"></td>
+                <td width="51%"><img class="logo-umi" src="{{ \App\Helper::publicImageDataUri('images/branding/umi-pdf.jpg') }}" alt="Logo UMI"><img class="logo-fikom" src="{{ \App\Helper::publicImageDataUri('images/branding/fikom-pdf.jpg') }}" alt="Logo FIKOM" style="margin-left:12px; vertical-align:middle"></td>
+                <td class="letterhead-title" width="49%">YAYASAN WAKAF UMI<br>UNIVERSITAS MUSLIM INDONESIA<br>FAKULTAS ILMU KOMPUTER</td>
             </tr>
         </table>
-        <div class="address">Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI, Makassar 90231<br>fikom.umi.ac.id</div>
+        <div class="letterhead-divider"></div>
+        <div class="address">Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818, Fax (0411) - 453009 Makassar 90231<br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id</div>
     </div>
 
+    <div class="invocation">Bismillahir Rahmanir Rahiim</div>
     <div class="document-title">SURAT PENUGASAN</div>
-    <div class="document-number">Nomor: {{ $data_sk[0]->nomor_sk }}</div>
+    <div class="document-number">Nomor : {{ $data_sk[0]->nomor_sk }}</div>
 
-    <p>Dengan rahmat Allah SWT, sesuai Peraturan Akademik Universitas Muslim Indonesia dan Surat Ketua Program Studi {{ helper::getProgramStudiByStambuk($data_sk[0]->C_NPM) }} nomor {{ helper::getNomorSKPenugasanWithBimbinganId($data_sk[0]->pendaftaran_id) }}, maka dengan ini menetapkan Panitia Ujian Tugas Akhir sebagai berikut.</p>
+    <p class="opening">Dengan rahmat Allah SWT, sesuai peraturan Akademik Universitas Muslim Indonesia dan Surat Ketua Program Studi {{ helper::getProgramStudiByStambuk($data_sk[0]->C_NPM) }} nomor : {{ helper::getNomorSKPenugasanWithBimbinganId($data_sk[0]->pendaftaran_id) }}, tertanggal {{ helper::tgl_indo_lengkap($tanggalUjian->format('Y-m-d')) }}, maka dengan ini menetapkan Panitia Ujian Tugas Akhir sebagai berikut</p>
 
     <table class="details">
         <tr><td class="label">Pembimbing Utama</td><td class="separator">:</td><td class="value">{{ helper::getNamaDosenByKode($data_sk[0]->pembimbing_I_id) }}</td></tr>
-        <tr><td class="label">Pembimbing Pendamping</td><td class="separator">:</td><td class="value">{{ helper::getNamaDosenByKode($data_sk[0]->pembimbing_II_id) }}</td></tr>
-        <tr><td class="label">Ketua Sidang</td><td class="separator">:</td><td class="value">{{ helper::getNamaDosenByKode($data_sk[0]->ketua_sidang_id) }}</td></tr>
-        <tr><td class="label">Penguji I</td><td class="separator">:</td><td class="value examiner">{{ helper::getNamaDosenByKode($data_sk[0]->penguji_I_id) }}</td></tr>
-        <tr><td class="label">Penguji II</td><td class="separator">:</td><td class="value examiner">{{ helper::getNamaDosenByKode($data_sk[0]->penguji_II_id) }}</td></tr>
-        <tr><td class="label">Penguji III</td><td class="separator">:</td><td class="value examiner">{{ helper::getNamaDosenByKode($data_sk[0]->penguji_III_id) }}</td></tr>
+        <tr class="panel-gap"><td class="label">Pembimbing<br>Pendamping</td><td class="separator">:</td><td class="value">{{ helper::getNamaDosenByKode($data_sk[0]->pembimbing_II_id) }}</td></tr>
+        <tr class="panel-gap"><td class="label">Ketua Sidang</td><td class="separator">:</td><td class="value">{{ helper::getNamaDosenByKode($data_sk[0]->ketua_sidang_id) }}</td></tr>
+        <tr><td class="label">Penguji</td><td class="separator">:</td><td class="value examiner">1. {{ helper::getNamaDosenByKode($data_sk[0]->penguji_I_id) }}</td></tr>
+        <tr><td class="label"></td><td class="separator"></td><td class="value examiner">2. {{ helper::getNamaDosenByKode($data_sk[0]->penguji_II_id) }}</td></tr>
+        <tr class="panel-gap"><td class="label"></td><td class="separator"></td><td class="value examiner">3. {{ helper::getNamaDosenByKode($data_sk[0]->penguji_III_id) }}</td></tr>
     </table>
 
-    <p class="section-label">Untuk melaksanakan Ujian Tugas Akhir bagi mahasiswa:</p>
+    <p class="section-label">Untuk melaksanakan Ujian Tugas Akhir bagi mahasiswa :</p>
     <table class="details">
         <tr><td class="label">Nama / Stambuk</td><td class="separator">:</td><td class="value">{{ $namaMahasiswa }} / {{ $data_sk[0]->C_NPM }}</td></tr>
         <tr><td class="label">Judul Tugas Akhir</td><td class="separator">:</td><td class="value">{{ $judulTugasAkhir }}</td></tr>
-        <tr><td class="label">Hari / Tanggal</td><td class="separator">:</td><td class="value">{{ helper::getHari($tanggalUjian->format('Y-m-d')) }}, {{ $tanggalUjian->format('d') }} {{ helper::getBulan((int) $tanggalUjian->format('m')) }} {{ $tanggalUjian->format('Y') }}</td></tr>
+        <tr><td class="label">Hari/Tanggal</td><td class="separator">:</td><td class="value">{{ helper::getHari($tanggalUjian->format('Y-m-d')) }}, {{ $tanggalUjian->format('d') }} {{ helper::getBulan((int) $tanggalUjian->format('m')) }} {{ $tanggalUjian->format('Y') }}</td></tr>
         <tr><td class="label">Waktu</td><td class="separator">:</td><td class="value">{{ $waktuUjian }}</td></tr>
         <tr><td class="label">Tempat</td><td class="separator">:</td><td class="value">{{ $data_sk[0]->nama_ruangan ?: '-' }}</td></tr>
     </table>
 
-    <p>Demikian surat penugasan ini disampaikan. Atas perhatian dan kehadiran Bapak/Ibu diucapkan terima kasih.</p>
+    <p>Demikian surat penugasan ini disampaikan, atas perhatian dan kehadiran Bapak diucapkan terima kasih</p>
     <p>Waalahu Waliyyut Taufiq wal-Hidayah.</p>
 
     <table class="signature">
@@ -114,5 +121,6 @@
             </td>
         </tr>
     </table>
+    </div>
 </body>
 </html>
