@@ -109,9 +109,9 @@
     <div class="header"
         style="position: relative; display: flex; align-items: center; justify-content: space-between; page-break-before: always !important;">
         <div style="display: flex; align-items: center; margin-right: 30px !important;">
-            <img src="{{ \App\Helper::publicImageDataUri('umi.png') }}" alt="Logo Institusi"
+            <img src="{{ \App\Helper::publicImageDataUri('images/branding/umi-pdf.jpg') }}" alt="Logo Institusi"
                 style="width: 50px; height: auto; margin-right: 10px;" />
-            <img src="{{ \App\Helper::publicImageDataUri('fikom-logo.png') }}" alt="Logo Institusi" style="width: 150px; height: auto;" />
+            <img src="{{ \App\Helper::publicImageDataUri('images/branding/fikom-pdf.jpg') }}" alt="Logo Institusi" style="width: 150px; height: auto;" />
         </div>
         <div style="text-align: left;">
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>

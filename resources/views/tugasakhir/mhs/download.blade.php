@@ -25,7 +25,8 @@
                     <tr>
                         <th>No</th>
                         <th>Nama File</th>
-                        <th>Dokumen</th>
+                        <th class="text-center" width="110">Tampilan Web</th>
+                        <th class="text-center" width="110">Dokumen PDF</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -33,34 +34,38 @@
                         <td width="1%" align="center">1</td>
                         <td>SK Pembimbing</td>
                         @if (helper::getStatusSKPembimbingForMahasiswa(auth()->user()->name) != '')
-                            <td><a target="_blank" href="{{ url('mhs/surat_sk_pembimbing')}}/{{str_replace("/","",helper::getStatusSKPembimbingForMahasiswa(auth()->user()->name)->nomor_sk)}}"><i class="fa fa-paperclip icon-square icon-xs icon-dark"></i></a></td>
+                            <td class="text-center"><a target="_blank" title="Buka tampilan web" href="{{ url('mhs/surat_sk_pembimbing')}}/{{str_replace("/","",helper::getStatusSKPembimbingForMahasiswa(auth()->user()->name)->nomor_sk)}}"><i class="fa fa-external-link icon-square icon-xs icon-dark"></i></a></td>
+                            <td class="text-center"><span class="text-muted" title="PDF belum tersedia">-</span></td>
                         @else
-                            <td><span class="badge badge-danger">SK Pembimbing Belum Ada</span></td>
+                            <td colspan="2"><span class="badge badge-danger">SK Pembimbing Belum Ada</span></td>
                         @endif
                     </tr>
                     <tr class="odd gradeX">
                         <td width="1%" align="center">2</td>
                         <td>SK Ujian Proposal</td>
                         @if (helper::getStatusSKUjianProposalForMahasiswa(auth()->user()->name) != '')
-                            <td><a target="_blank" href="{{ url('mhs/surat_sk_proposal')}}/{{helper::getPendaftaranIdForMahasiswa()}}"><i class="fa fa-paperclip icon-square icon-xs icon-dark"></i></a></td>
+                            <td class="text-center"><a target="_blank" title="Buka tampilan web" href="{{ url('mhs/surat_sk_proposal')}}/{{helper::getPendaftaranIdForMahasiswa()}}"><i class="fa fa-external-link icon-square icon-xs icon-dark"></i></a></td>
+                            <td class="text-center"><span class="text-muted" title="PDF belum tersedia">-</span></td>
                         @else
-                            <td><span class="badge badge-danger">SK Ujian Proposal Belum Ada</span></td>
+                            <td colspan="2"><span class="badge badge-danger">SK Ujian Proposal Belum Ada</span></td>
                         @endif
                     </tr>
                     <tr class="odd gradeX">
                         <td width="1%" align="center">3</td>
                         <td>SK Ujian Meja</td>
                         @if (helper::getStatusSKUjianMejaForMahasiswa(auth()->user()->name) != '')
-                            <td><a target="_blank" href="{{ url('mhs/surat_sk_ujian_meja')}}/{{str_replace("/","",helper::getStatusSKUjianMejaForMahasiswa(auth()->user()->name)->nomor_sk)}}"><i class="fa fa-paperclip icon-square icon-xs icon-dark"></i></a></td>
+                            <td class="text-center"><a target="_blank" title="Buka tampilan web" href="{{ url('mhs/surat_sk_ujian_meja')}}/{{str_replace("/","",helper::getStatusSKUjianMejaForMahasiswa(auth()->user()->name)->nomor_sk)}}"><i class="fa fa-external-link icon-square icon-xs icon-dark"></i></a></td>
+                            <td class="text-center"><a target="_blank" title="Unduh dokumen PDF" href="{{ url('mhs/surat_sk_ujian_meja_pdf')}}/{{str_replace("/","",helper::getStatusSKUjianMejaForMahasiswa(auth()->user()->name)->nomor_sk)}}"><i class="fa fa-file-pdf-o icon-square icon-xs icon-danger"></i></a></td>
                         @else
-                            <td><span class="badge badge-danger">SK Ujian Meja Belum Ada</span></td>
+                            <td colspan="2"><span class="badge badge-danger">SK Ujian Meja Belum Ada</span></td>
                         @endif
                     </tr>
                     @foreach ($data as $key => $value)
                         <tr class="odd gradeX">
                             <td width="1%" align="center">{{++$key+3}}</td>
                             <td>{{$value->nama_dokumen}}</td>
-                            <td><a href="{{$value->link_download}}" target="_blank"><i class="fa fa-paperclip icon-square icon-xs icon-dark"></i></a></td>
+                            <td class="text-center"><span class="text-muted">-</span></td>
+                            <td class="text-center"><a href="{{$value->link_download}}" target="_blank" title="Buka dokumen"><i class="fa fa-file-o icon-square icon-xs icon-dark"></i></a></td>
                         </tr>
                     @endforeach
                     </tbody>
@@ -71,5 +76,4 @@
     </div><!-- /.container-fluid -->
 
 @endsection
-
 

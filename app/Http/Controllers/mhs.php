@@ -1399,7 +1399,48 @@ class mhs extends Controller
 
         $safeNomorSk = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $data_sk[0]->nomor_sk);
 
-        return PDF::loadView('tugasakhir.fakultas.cetakskpenugasan', compact('data_sk'))
+        return view('tugasakhir.fakultas.cetakskpenugasan', compact('data_sk'));
+    }
+
+    public function surat_sk_ujian_meja_pdf($nomor)
+    {
+        $data = DB::table('mst_sk_penugasan')
+            ->join('trt_bimbingan', 'mst_sk_penugasan.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
+            ->select('*')
+            ->get();
+
+        $id_bimbingan = '';
+
+        foreach ($data as $value) {
+            if (str_replace('/', '', $value->nomor_sk) == $nomor) {
+                $id_bimbingan = $value->bimbingan_id;
+                break;
+            }
+        }
+
+        if ($id_bimbingan === '') {
+            return response('Data surat SK ujian meja tidak ditemukan.', 404);
+        }
+
+        $data_sk = DB::table('mst_sk_penugasan')
+            ->join('trt_bimbingan', 'mst_sk_penugasan.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
+            ->join('trt_penguji', 'trt_penguji.C_NPM', '=', 'trt_bimbingan.C_NPM')
+            ->join('trt_jadwal_ujian_per_mhs', 'trt_jadwal_ujian_per_mhs.C_NPM', '=', 'trt_bimbingan.C_NPM')
+            ->join('trt_jadwal_ujian', 'trt_jadwal_ujian.id', '=', 'trt_jadwal_ujian_per_mhs.jadwal_ujian')
+            ->join('mst_ruangan', 'mst_ruangan.id', '=', 'trt_jadwal_ujian_per_mhs.ruangan')
+            ->select(['mst_sk_penugasan.created_at', 'mst_sk_penugasan.sk_penugasan_id', 'mst_sk_penugasan.nomor_sk', 'trt_bimbingan.pembimbing_I_id', 'trt_bimbingan.pembimbing_II_id', 'trt_penguji.ketua_sidang_id', 'trt_penguji.penguji_I_id', 'trt_penguji.penguji_II_id', 'trt_penguji.penguji_III_id', 'trt_penguji.C_NPM', 'trt_jadwal_ujian.tgl_ujian', 'trt_jadwal_ujian_per_mhs.jam_ujian', 'mst_ruangan.nama_ruangan', 'trt_jadwal_ujian.pendaftaran_id'])
+            ->where('trt_bimbingan.bimbingan_id', $id_bimbingan)
+            ->where('trt_penguji.tipe_ujian', 2)
+            ->where('trt_jadwal_ujian.status', 2)
+            ->get();
+
+        if ($data_sk->isEmpty()) {
+            return response('Data surat SK ujian meja belum lengkap.', 404);
+        }
+
+        $safeNomorSk = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $data_sk[0]->nomor_sk);
+
+        return PDF::loadView('tugasakhir.fakultas.cetakskpenugasan_pdf', compact('data_sk'))
             ->setPaper('a4', 'portrait')
             ->stream('SK-Ujian-Meja-' . trim($safeNomorSk, '-') . '.pdf');
     }
