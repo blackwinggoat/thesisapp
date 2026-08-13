@@ -1357,6 +1357,38 @@ class mhs extends Controller
         return view('tugasakhir.fakultas.cetakskpembimbing', compact('data_sk', 'tgl_ujian'));
     }
 
+    public function surat_sk_pembimbing_pdf($nomor)
+    {
+        $nim = (string) auth()->user()->name;
+        $data_sk = DB::table('mst_sk_pembimbing as sk')
+            ->join('trt_bimbingan as bimbingan', 'sk.bimbingan_id', '=', 'bimbingan.bimbingan_id')
+            ->select([
+                'sk.sk_pembimbing_id',
+                'sk.nomor_sk',
+                'sk.status as status_sk',
+                'sk.created_at as sk_created_at',
+                'bimbingan.bimbingan_id',
+                'bimbingan.C_NPM',
+                'bimbingan.pembimbing_I_id',
+                'bimbingan.pembimbing_II_id',
+                'bimbingan.judul',
+                'bimbingan.jenis_tugas_akhir_id',
+            ])
+            ->where('bimbingan.C_NPM', $nim)
+            ->whereRaw("REPLACE(sk.nomor_sk, '/', '') = ?", [$nomor])
+            ->first();
+
+        if (!$data_sk) {
+            return response('Data surat SK pembimbing tidak ditemukan.', 404);
+        }
+
+        $safeNomorSk = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $data_sk->nomor_sk);
+
+        return PDF::loadView('tugasakhir.fakultas.cetakskpembimbing_pdf', compact('data_sk'))
+            ->setPaper('a4', 'portrait')
+            ->stream('SK-Pembimbing-' . trim($safeNomorSk, '-') . '.pdf');
+    }
+
     // SK Ujian Meja
     public function surat_sk_ujian_meja($nomor)
     {
@@ -1506,6 +1538,52 @@ class mhs extends Controller
         } catch (Exception $error) {
             return redirect('mhs/download');
         }
+    }
+
+    public function surat_sk_proposal_pdf($pendaftaran_id)
+    {
+        $nim = (string) auth()->user()->name;
+        $surat = DB::table('trt_jadwal_ujian as jadwal')
+            ->join('mst_pendaftaran as pendaftaran', 'pendaftaran.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
+            ->join('trt_jadwal_ujian_per_mhs as peserta', 'peserta.jadwal_ujian', '=', 'jadwal.id')
+            ->join('mst_ruangan as ruangan', 'ruangan.id', '=', 'peserta.ruangan')
+            ->join('trt_penguji as penguji', function ($join) {
+                $join->on('penguji.C_NPM', '=', 'peserta.C_NPM')
+                    ->where('penguji.tipe_ujian', '=', 0);
+            })
+            ->join('trt_bimbingan as bimbingan', 'bimbingan.C_NPM', '=', 'peserta.C_NPM')
+            ->select([
+                'jadwal.id as jadwal_id',
+                'jadwal.pendaftaran_id',
+                'jadwal.tgl_ujian',
+                'peserta.C_NPM',
+                'peserta.jam_ujian',
+                'ruangan.nama_ruangan',
+                'penguji.nomor_sk',
+                'penguji.created_at as penguji_created_at',
+                'penguji.penguji_I_id',
+                'penguji.penguji_II_id',
+                'penguji.penguji_III_id',
+                'penguji.ketua_sidang_id',
+                'bimbingan.pembimbing_I_id',
+                'bimbingan.pembimbing_II_id',
+                'bimbingan.judul',
+                'bimbingan.jenis_tugas_akhir_id',
+            ])
+            ->where('jadwal.pendaftaran_id', $pendaftaran_id)
+            ->where('pendaftaran.tipe_ujian', 0)
+            ->where('peserta.C_NPM', $nim)
+            ->first();
+
+        if (!$surat) {
+            return response('Data surat SK ujian proposal tidak ditemukan.', 404);
+        }
+
+        $safeNomorSk = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $surat->nomor_sk);
+
+        return PDF::loadView('tugasakhir.prodi.cetakskpenguji_pdf', compact('surat'))
+            ->setPaper('a4', 'portrait')
+            ->stream('SK-Ujian-Proposal-' . trim($safeNomorSk, '-') . '.pdf');
     }
 
     protected function normalizeNomorTelponDosen($nomorHp = null, $nomorTelp = null)

@@ -598,7 +598,9 @@ Route::group(['middleware' => 'mhs'], function () {
 
     // Catatan
     Route::get('/mhs/surat_sk_pembimbing/{nomor}', 'mhs@surat_sk_pembimbing');
+    Route::get('/mhs/surat_sk_pembimbing_pdf/{nomor}', 'mhs@surat_sk_pembimbing_pdf');
     Route::get('/mhs/surat_sk_proposal/{pendaftaran_id}', 'mhs@surat_sk_proposal');
+    Route::get('/mhs/surat_sk_proposal_pdf/{pendaftaran_id}', 'mhs@surat_sk_proposal_pdf');
     Route::get('/mhs/surat_sk_ujian_meja/{nomor}', 'mhs@surat_sk_ujian_meja');
     Route::get('/mhs/surat_sk_ujian_meja_pdf/{nomor}', 'mhs@surat_sk_ujian_meja_pdf');
 });

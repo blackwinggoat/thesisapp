@@ -6,10 +6,10 @@ use Tests\TestCase;
 
 class MahasiswaSkUjianMejaPdfTest extends TestCase
 {
-    public function testPdfEndpointIsProtectedByStudentMiddleware()
+    public function testPdfEndpointsAreProtectedByStudentMiddleware()
     {
-        $response = $this->get('/mhs/surat_sk_ujian_meja_pdf/contoh');
-
-        $response->assertStatus(302);
+        $this->get('/mhs/surat_sk_ujian_meja_pdf/contoh')->assertStatus(302);
+        $this->get('/mhs/surat_sk_pembimbing_pdf/contoh')->assertStatus(302);
+        $this->get('/mhs/surat_sk_proposal_pdf/1')->assertStatus(302);
     }
 }
