@@ -1057,10 +1057,13 @@ class Prodi extends Controller
         $data = DB::table('t_mst_dosen')
             ->leftJoin("trt_level_pembimbing", "trt_level_pembimbing.C_KODE_DOSEN", "=", "t_mst_dosen.C_KODE_DOSEN")
             ->select('t_mst_dosen.*', 'trt_level_pembimbing.level')
+            ->orderBy('t_mst_dosen.NAMA_DOSEN')
             ->get();
         $semesterRange = Helper::getCurrentSemesterDateRange();
+        $semesterAktifLabel = $this->getSemesterAktifLabel($semesterRange);
         $ringkasanBimbingan = $this->getRingkasanBimbinganPerDosen();
         $ringkasanBimbinganSemester = $this->getRingkasanBimbinganPerDosen($semesterRange);
+        $ringkasanMenguji = $this->getRingkasanMengujiPerDosen();
 
         foreach ($data as $dosen) {
             $kodeDosen = (string) $dosen->C_KODE_DOSEN;
@@ -1070,9 +1073,12 @@ class Prodi extends Controller
             $dosen->ringkasan_bimbingan_semester = isset($ringkasanBimbinganSemester[$kodeDosen])
                 ? $ringkasanBimbinganSemester[$kodeDosen]
                 : $this->emptyRingkasanBimbingan();
+            $dosen->ringkasan_menguji = isset($ringkasanMenguji[$kodeDosen])
+                ? $ringkasanMenguji[$kodeDosen]
+                : $this->emptyRingkasanMenguji();
         }
 
-        return view('tugasakhir.prodi.dosen_pembimbing', compact('data', 'semesterRange'));
+        return view('tugasakhir.prodi.dosen_pembimbing', compact('data', 'semesterRange', 'semesterAktifLabel'));
     }
 
     protected function getRingkasanBimbinganPerDosen($semesterRange = null)
@@ -1120,6 +1126,76 @@ class Prodi extends Controller
             'pum' => 0,
             'l' => 0,
         ];
+    }
+
+    protected function getRingkasanMengujiPerDosen()
+    {
+        $ringkasan = [];
+        $pengujiFields = ['penguji_I_id', 'penguji_II_id', 'penguji_III_id'];
+
+        $rows = DB::table('trt_penguji as tp')
+            ->leftJoin('trt_bimbingan as tb', 'tb.C_NPM', '=', 'tp.C_NPM')
+            ->select(
+                'tp.tipe_ujian',
+                'tp.ketua_sidang_id',
+                'tp.penguji_I_id',
+                'tp.penguji_II_id',
+                'tp.penguji_III_id',
+                'tb.status_bimbingan'
+            )
+            ->get();
+
+        foreach ($rows as $row) {
+            $ketuaSidang = trim((string) $row->ketua_sidang_id);
+            if ($ketuaSidang !== '') {
+                if (!isset($ringkasan[$ketuaSidang])) {
+                    $ringkasan[$ketuaSidang] = $this->emptyRingkasanMenguji();
+                }
+
+                $ringkasan[$ketuaSidang]->ks++;
+            }
+
+            if (!in_array((int) $row->tipe_ujian, [0, 2], true)) {
+                continue;
+            }
+
+            foreach ($pengujiFields as $field) {
+                $kodeDosen = trim((string) $row->{$field});
+                if ($kodeDosen === '') {
+                    continue;
+                }
+
+                if (!isset($ringkasan[$kodeDosen])) {
+                    $ringkasan[$kodeDosen] = $this->emptyRingkasanMenguji();
+                }
+
+                if ((int) $row->status_bimbingan === 3) {
+                    $ringkasan[$kodeDosen]->selesai++;
+                } else {
+                    $ringkasan[$kodeDosen]->aktif++;
+                }
+            }
+        }
+
+        return $ringkasan;
+    }
+
+    protected function emptyRingkasanMenguji()
+    {
+        return (object) [
+            'aktif' => 0,
+            'selesai' => 0,
+            'ks' => 0,
+        ];
+    }
+
+    protected function getSemesterAktifLabel($semesterRange)
+    {
+        $periode = $semesterRange->semester === 'Ganjil'
+            ? 'Awal (September-Februari)'
+            : 'Akhir (Maret-Agustus)';
+
+        return $periode;
     }
 
     public function detail_pembimbing($id)

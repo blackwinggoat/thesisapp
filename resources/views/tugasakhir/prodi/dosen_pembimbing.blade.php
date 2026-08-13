@@ -1,5 +1,11 @@
 @extends('tugasakhir.index')
 @section('isi')
+    @php
+        $semesterRange = $semesterRange ?? helper::getCurrentSemesterDateRange();
+        $semesterAktifLabel = $semesterAktifLabel ?? ($semesterRange->semester === 'Ganjil'
+            ? 'Awal (September-Februari)'
+            : 'Akhir (Maret-Agustus)');
+    @endphp
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
         <div class="container-fluid">
@@ -55,7 +61,7 @@
                             <th>Nama</th>
                             <th>Jabatan Fungsional</th>
                             <th>Jumlah Bimbingan</th>
-                            <th>Jumlah Bimbingan Semester Aktif<br><small>{{ $semesterRange->semester }} {{ $semesterRange->tahun_akademik }}</small></th>
+                            <th>Jumlah Bimbingan Semester Aktif<br><small>{{ $semesterAktifLabel }} {{ $semesterRange->tahun_akademik }}</small></th>
                             <th>Jumlah Menguji</th>
                             <th>Level Pembimbing</th>
                             <th>Detail</th>
@@ -80,9 +86,9 @@
                                         </thead>
                                         <tbody>
                                             <tr class="text-center">
-                                                <td>{{ $value->ringkasan_bimbingan->pp }}</td>
-                                                <td>{{ $value->ringkasan_bimbingan->pum }}</td>
-                                                <td>{{ $value->ringkasan_bimbingan->l }}</td>
+                                                <td>{{ data_get($value, 'ringkasan_bimbingan.pp', 0) }}</td>
+                                                <td>{{ data_get($value, 'ringkasan_bimbingan.pum', 0) }}</td>
+                                                <td>{{ data_get($value, 'ringkasan_bimbingan.l', 0) }}</td>
                                             </tr>
                                     </table>
                                 </td>
@@ -97,9 +103,9 @@
                                         </thead>
                                         <tbody>
                                             <tr class="text-center">
-                                                <td>{{ $value->ringkasan_bimbingan_semester->pp }}</td>
-                                                <td>{{ $value->ringkasan_bimbingan_semester->pum }}</td>
-                                                <td>{{ $value->ringkasan_bimbingan_semester->l }}</td>
+                                                <td>{{ data_get($value, 'ringkasan_bimbingan_semester.pp', 0) }}</td>
+                                                <td>{{ data_get($value, 'ringkasan_bimbingan_semester.pum', 0) }}</td>
+                                                <td>{{ data_get($value, 'ringkasan_bimbingan_semester.l', 0) }}</td>
                                             </tr>
                                     </table>
                                 </td>
@@ -114,18 +120,9 @@
                                         </thead>
                                         <tbody>
                                             <tr class="text-center">
-                                                <td>{{
-                                                    ((App\TrtPenguji::where("penguji_I_id",$value->C_KODE_DOSEN)->where("tipe_ujian",0)->count() + App\TrtPenguji::where("penguji_II_id",$value->C_KODE_DOSEN)->where("tipe_ujian",0)->count() + App\TrtPenguji::where("penguji_III_id",$value->C_KODE_DOSEN)->where("tipe_ujian",0)->count() + App\TrtPenguji::where("penguji_I_id",$value->C_KODE_DOSEN)->where("tipe_ujian",2)->count() + App\TrtPenguji::where("penguji_II_id",$value->C_KODE_DOSEN)->where("tipe_ujian",2)->count() + App\TrtPenguji::where("penguji_III_id",$value->C_KODE_DOSEN)->where("tipe_ujian",2)->count()) - (DB::table('trt_penguji')->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 'trt_penguji.C_NPM')->where("trt_penguji.penguji_I_id", $value->C_KODE_DOSEN)->where('trt_bimbingan.status_bimbingan', '=', 3)->count() + DB::table('trt_penguji')->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 'trt_penguji.C_NPM')->where("trt_penguji.penguji_II_id", $value->C_KODE_DOSEN)->where('trt_bimbingan.status_bimbingan', '=', 3)->count() + DB::table('trt_penguji')->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 'trt_penguji.C_NPM')->where("trt_penguji.penguji_III_id", $value->C_KODE_DOSEN)->where('trt_bimbingan.status_bimbingan', '=', 3)->count()))
-                                                    }}</td>
-                                                <td>{{
-                                                    DB::table('trt_penguji')->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 'trt_penguji.C_NPM')->where("trt_penguji.penguji_I_id", $value->C_KODE_DOSEN)->where('trt_bimbingan.status_bimbingan', '=', 3)->count() + DB::table('trt_penguji')->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 'trt_penguji.C_NPM')->where("trt_penguji.penguji_II_id", $value->C_KODE_DOSEN)->where('trt_bimbingan.status_bimbingan', '=', 3)->count() + DB::table('trt_penguji')->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 'trt_penguji.C_NPM')->where("trt_penguji.penguji_III_id", $value->C_KODE_DOSEN)->where('trt_bimbingan.status_bimbingan', '=', 3)->count()
-                                                    }}
-                                                </td>
-                                                <td>
-                                                    {{
-                                                        App\TrtPenguji::where("ketua_sidang_id",$value->C_KODE_DOSEN)->count()
-                                                    }}
-                                                </td>
+                                                <td>{{ data_get($value, 'ringkasan_menguji.aktif', 0) }}</td>
+                                                <td>{{ data_get($value, 'ringkasan_menguji.selesai', 0) }}</td>
+                                                <td>{{ data_get($value, 'ringkasan_menguji.ks', 0) }}</td>
                                             </tr>
                                     </table>
                                 </td>
@@ -225,4 +222,3 @@
         };
     </script>
 @endsection
-
