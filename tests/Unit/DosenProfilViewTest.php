@@ -18,8 +18,10 @@ class DosenProfilViewTest extends TestCase
         $this->assertStringNotContainsString('name="C_KODE_DOSEN"', $view);
         $this->assertStringNotContainsString('name="NAMA_DOSEN"', $view);
         $this->assertStringContainsString("'foto_dosen' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048'", $controller);
+        $this->assertStringContainsString("'foto_dosen.uploaded' => 'Upload foto profil dosen gagal diproses server. Coba gunakan file yang lebih kecil lalu unggah kembali.'", $controller);
         $this->assertStringContainsString("->store('dosen', 'public')", $controller);
         $this->assertStringContainsString("'D_FOTO_DOSEN'", $controller);
+        $this->assertStringContainsString('Periksa kembali data profil/foto:', $view);
 
         $sidebar = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/layouts/sidebardosen.blade.php');
         $style = file_get_contents(__DIR__ . '/../../public/master/assets/css/style.css');

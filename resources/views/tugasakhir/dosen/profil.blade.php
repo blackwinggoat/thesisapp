@@ -16,6 +16,16 @@
         @if (session('dosen_profile_error'))
             <div class="alert alert-danger" role="alert"><strong>Gagal! </strong>{{ session('dosen_profile_error') }}</div>
         @endif
+        @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <strong>Periksa kembali data profil/foto:</strong>
+                <ul style="margin: 8px 0 0 18px; padding: 0;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <div class="row">
             <div class="col-md-4">

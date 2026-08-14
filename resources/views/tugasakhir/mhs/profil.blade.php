@@ -16,6 +16,16 @@
         @if (session('mhs_contact_error'))
             <div class="alert alert-danger" role="alert"><strong>Gagal! </strong>{{ session('mhs_contact_error') }}</div>
         @endif
+        @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <strong>Periksa kembali data foto/kontak:</strong>
+                <ul style="margin: 8px 0 0 18px; padding: 0;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <div class="row">
             <div class="col-md-4">
@@ -55,8 +65,8 @@
                         </div>
                         <div class="form-group">
                             <label>Ganti Foto</label>
-                            <input type="file" class="form-control" name="foto" accept="image/jpeg,image/png">
-                            <small class="text-muted">Kosongkan bila foto tidak diubah. Format JPEG atau PNG, maksimal 5 MB.</small>
+                            <input type="file" class="form-control" name="foto" accept="image/jpeg,image/png,image/webp">
+                            <small class="text-muted">Kosongkan bila foto tidak diubah. Format JPEG, PNG, atau WebP, maksimal 5 MB.</small>
                         </div>
                         <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Perubahan</button>
                     </form>

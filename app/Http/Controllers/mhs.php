@@ -316,12 +316,13 @@ class mhs extends Controller
         $this->validate($request, [
             'no_wa' => 'required|max:20',
             'id_telegram' => 'nullable|max:100',
-            'foto' => ($fotoWajib ? 'required' : 'nullable') . '|file|image|mimes:jpeg,jpg,png|max:5120',
+            'foto' => ($fotoWajib ? 'required' : 'nullable') . '|file|image|mimes:jpeg,jpg,png,webp|max:5120',
         ], [
             'no_wa.required' => 'Nomor WhatsApp wajib diisi.',
             'foto.required' => 'Foto wajib diunggah.',
             'foto.image' => 'Foto harus berupa gambar.',
-            'foto.mimes' => 'Foto harus berformat JPEG, JPG, atau PNG.',
+            'foto.uploaded' => 'Upload foto gagal diproses server. Coba gunakan file yang lebih kecil lalu unggah kembali.',
+            'foto.mimes' => 'Foto harus berformat JPEG, JPG, PNG, atau WebP.',
             'foto.max' => 'Ukuran foto maksimal 5 MB.',
         ]);
 

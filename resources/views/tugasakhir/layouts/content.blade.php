@@ -644,6 +644,16 @@
                                 </div>
                                 <div class="modal-body">
                                     <p>Silakan lengkapi data Anda terlebih dahulu. Nomor WhatsApp dan foto wajib diisi sebelum Anda dapat menggunakan fitur lain di sisi mahasiswa.</p>
+                                    @if ($errors->any())
+                                        <div class="alert alert-danger" role="alert">
+                                            <strong>Periksa kembali data foto/kontak:</strong>
+                                            <ul style="margin: 8px 0 0 18px; padding: 0;">
+                                                @foreach ($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
                                     @if (!empty($kontakMahasiswaKurang))
                                         <p><strong>Data yang masih kosong:</strong> {{ implode(', ', $kontakMahasiswaKurang) }}</p>
                                     @endif
@@ -664,9 +674,9 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Foto</label>
-                                        <input type="file" class="form-control" name="foto" accept="image/jpeg,image/png"
+                                        <input type="file" class="form-control" name="foto" accept="image/jpeg,image/png,image/webp"
                                             @if (empty($kontakMahasiswa->D_FOTO_MAHASISWA)) required @endif>
-                                        <small class="text-muted">Wajib diisi. Format JPEG atau PNG, ukuran maksimal 5 MB.</small>
+                                        <small class="text-muted">Wajib diisi. Format JPEG, PNG, atau WebP, ukuran maksimal 5 MB.</small>
                                     </div>
                                     <div class="form-group">
                                         <label>ID Telegram</label>

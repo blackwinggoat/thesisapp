@@ -860,7 +860,7 @@ class Helper
     {
         $photo = trim((string) $photo);
 
-        if (preg_match('/\Amahasiswa\/[a-zA-Z0-9._-]+\.(?:jpe?g|png)\z/i', $photo)
+        if (preg_match('/\Amahasiswa\/[a-zA-Z0-9._-]+\.(?:jpe?g|png|webp)\z/i', $photo)
             && Storage::disk('public')->exists($photo)) {
             return asset('storage/' . $photo);
         }

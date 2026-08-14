@@ -1113,6 +1113,10 @@ class dosen extends Controller
             'EMAIL.email' => 'Format email tidak valid.',
             'pangkat.required' => 'Pangkat wajib diisi.',
             'jabatan_fungsional.required' => 'Jabatan fungsional wajib dipilih.',
+            'foto_dosen.image' => 'Foto profil dosen harus berupa gambar.',
+            'foto_dosen.uploaded' => 'Upload foto profil dosen gagal diproses server. Coba gunakan file yang lebih kecil lalu unggah kembali.',
+            'foto_dosen.mimes' => 'Foto profil dosen harus berformat JPEG, JPG, PNG, atau WebP.',
+            'foto_dosen.max' => 'Ukuran foto profil dosen maksimal 2 MB.',
         ]);
 
         $profile = Helper::getCurrentDosenProfileByAuthUser();
