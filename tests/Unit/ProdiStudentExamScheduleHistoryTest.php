@@ -93,6 +93,9 @@ class ProdiStudentExamScheduleHistoryTest extends TestCase
         $this->assertStringContainsString('https://wa.me/', $controller);
         $this->assertStringContainsString("url('jadwal-dosen/' . \$slug)", $controller);
         $this->assertStringContainsString("storage_path('app/schedule-links", $controller);
+        $this->assertStringContainsString("->groupBy(function (\$item) {", $controller);
+        $this->assertStringContainsString("\$this->getJamMulaiUjianSortKey(\$row->jam_ujian)", $controller);
+        $this->assertStringContainsString("\$lines[] = \$this->formatTanggalSingkatRekap(\$tanggal);", $controller);
         $this->assertStringContainsString('Kirim WA', $notificationView);
         $this->assertStringContainsString('Link Rekap', $notificationView);
         $this->assertStringContainsString('Download Excel', $lecturerView);

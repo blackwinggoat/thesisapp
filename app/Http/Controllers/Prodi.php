@@ -4513,15 +4513,33 @@ class Prodi extends Controller
             'Berikut jadwal ujian yang melibatkan Bapak/Ibu:',
         ];
 
-        foreach ($notification['rows'] as $item) {
-            $row = $item['row'];
-            $roles = implode(', ', array_values($item['roles']));
-            $lines[] = '- ' . $this->formatTanggalSingkatRekap($row->tgl_ujian)
-                . ' | ' . $row->jam_ujian_rekap
-                . ' | ' . ($row->nama_ruangan ?: '-')
-                . ' | ' . $row->C_NPM
-                . ' - ' . $row->NAMA_MAHASISWA
-                . ' | ' . $roles;
+        $groupedRows = collect($notification['rows'])
+            ->sortBy(function ($item) {
+                $row = $item['row'];
+
+                return [
+                    (string) $row->tgl_ujian,
+                    $this->getJamMulaiUjianSortKey($row->jam_ujian),
+                    (string) $row->NAMA_MAHASISWA,
+                ];
+            })
+            ->groupBy(function ($item) {
+                return (string) $item['row']->tgl_ujian;
+            });
+
+        foreach ($groupedRows as $tanggal => $items) {
+            $lines[] = '';
+            $lines[] = $this->formatTanggalSingkatRekap($tanggal);
+
+            foreach ($items as $item) {
+                $row = $item['row'];
+                $roles = implode(', ', array_values($item['roles']));
+                $lines[] = '- ' . $row->jam_ujian_rekap
+                    . ' | ' . ($row->nama_ruangan ?: '-')
+                    . ' | ' . $row->C_NPM
+                    . ' - ' . $row->NAMA_MAHASISWA
+                    . ' | ' . $roles;
+            }
         }
 
         $lines[] = '';
