@@ -51,6 +51,12 @@
             </a>
         </li>
         <li>
+            <a href="{{url('mhs/draft_final')}}">
+                <i class="fa fa-cloud-upload icon-sidebar"></i>
+                Draft Final
+            </a>
+        </li>
+        <li>
             <a href="{{url('mhs/riwayat_ujian')}}/{{auth()->user()->name}}">
                 <i class="fa fa-history icon-sidebar"></i>
                 Riwayat Ujian

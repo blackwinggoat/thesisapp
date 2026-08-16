@@ -104,8 +104,36 @@
 									<div class="col-sm-8">
 										<div class="form-group">
 											<label>Perihal Pesan</label>
-											<input type="text" class="form-control input-lg" placeholder="perihal_Pesan" name="perihal_pesan" required>
+											<input type="text" class="form-control input-lg" placeholder="perihal_Pesan" name="perihal_pesan" value="{{ old('perihal_pesan', $perihalDefault ?? '') }}" required>
 										</div><!-- /.input-group -->
+										@if(!empty($draftFinal))
+											<div class="form-group">
+												<label>Lampirkan Link Draft Final</label>
+												<div class="checkbox">
+													<label>
+														<input type="checkbox" name="draft_final_links[]" value="proposal" {{ old('draft_final_links') && in_array('proposal', old('draft_final_links', [])) ? 'checked' : (($draftDefault ?? '') == 'proposal' ? 'checked' : '') }} {{ empty($draftFinal->draft_proposal_url) ? 'disabled' : '' }}>
+														Draft Final Proposal
+														@if(empty($draftFinal->draft_proposal_url))
+															<span class="text-muted">(belum tersedia)</span>
+														@endif
+													</label>
+												</div>
+												<div class="checkbox">
+													<label>
+														<input type="checkbox" name="draft_final_links[]" value="tugas_akhir" {{ old('draft_final_links') && in_array('tugas_akhir', old('draft_final_links', [])) ? 'checked' : (($draftDefault ?? '') == 'tugas_akhir' ? 'checked' : '') }} {{ empty($draftFinal->draft_tugas_akhir_url) ? 'disabled' : '' }}>
+														Draft Final Tugas Akhir
+														@if(empty($draftFinal->draft_tugas_akhir_url))
+															<span class="text-muted">(belum tersedia)</span>
+														@endif
+													</label>
+												</div>
+												<small class="text-muted">Link yang dipilih akan otomatis ditambahkan ke isi pesan saat dikirim.</small>
+											</div>
+										@else
+											<div class="alert alert-info">
+												Link Draft Final belum tersimpan. <a href="{{ url('mhs/draft_final') }}">Isi Draft Final</a> agar bisa dilampirkan ke pesan dosen.
+											</div>
+										@endif
 										<div class="form-group">
 											<textarea class="summernote-sm" name="isi_pesan">Assalamualaikum, </textarea>
 										</div><!-- /.input-group -->
@@ -124,4 +152,3 @@
 		</div><!-- /.wrapper -->
 		<!-- END PAGE CONTENT -->
 @endsection
-

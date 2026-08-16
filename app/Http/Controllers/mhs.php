@@ -406,6 +406,75 @@ class mhs extends Controller
         return view('tugasakhir.mhs.profil', compact('profil'));
     }
 
+    public function draft_final()
+    {
+        $nim = (string) auth()->user()->name;
+        $draft = null;
+
+        if (Schema::hasTable('trt_draft_final_mahasiswa')) {
+            $draft = DB::table('trt_draft_final_mahasiswa')
+                ->where('C_NPM', $nim)
+                ->first();
+        }
+
+        return view('tugasakhir.mhs.draft_final', compact('draft'));
+    }
+
+    public function draft_final_post(Request $request)
+    {
+        $nim = (string) auth()->user()->name;
+        $proposalUrl = trim((string) $request->input('draft_proposal_url'));
+        $tugasAkhirUrl = trim((string) $request->input('draft_tugas_akhir_url'));
+        $errors = [];
+
+        $proposalInfo = $this->parseGoogleDriveFileLink($proposalUrl);
+        $tugasAkhirInfo = $this->parseGoogleDriveFileLink($tugasAkhirUrl);
+
+        if ($proposalUrl !== '' && !$proposalInfo['valid']) {
+            $errors['draft_proposal_url'] = $proposalInfo['message'];
+        }
+
+        if ($tugasAkhirUrl !== '' && !$tugasAkhirInfo['valid']) {
+            $errors['draft_tugas_akhir_url'] = $tugasAkhirInfo['message'];
+        }
+
+        if ($proposalUrl === '' && $tugasAkhirUrl === '') {
+            $errors['draft_proposal_url'] = 'Isi minimal satu link draft final Proposal atau Tugas Akhir.';
+        }
+
+        if (!empty($errors)) {
+            return redirect('mhs/draft_final')->withInput()->withErrors($errors);
+        }
+
+        if (!Schema::hasTable('trt_draft_final_mahasiswa')) {
+            return redirect('mhs/draft_final')->withInput()->with('draft_final_error', 'Tabel draft final belum tersedia. Jalankan migration terlebih dahulu.');
+        }
+
+        $existing = DB::table('trt_draft_final_mahasiswa')
+            ->where('C_NPM', $nim)
+            ->first();
+
+        $payload = [
+            'draft_proposal_url' => $proposalUrl !== '' ? $proposalUrl : null,
+            'draft_proposal_file_id' => $proposalInfo['file_id'] ?? null,
+            'draft_tugas_akhir_url' => $tugasAkhirUrl !== '' ? $tugasAkhirUrl : null,
+            'draft_tugas_akhir_file_id' => $tugasAkhirInfo['file_id'] ?? null,
+            'updated_at' => Carbon::now(),
+        ];
+
+        if ($existing) {
+            DB::table('trt_draft_final_mahasiswa')
+                ->where('C_NPM', $nim)
+                ->update($payload);
+        } else {
+            $payload['C_NPM'] = $nim;
+            $payload['created_at'] = Carbon::now();
+            DB::table('trt_draft_final_mahasiswa')->insert($payload);
+        }
+
+        return redirect('mhs/draft_final')->with('draft_final_success', 'Link draft final berhasil disimpan.');
+    }
+
     // Cetak Berita Acara Ujian Proposal
     public function cetak_beritaacara_proposal($pendaftaran_id, $nim)
     {
@@ -809,7 +878,11 @@ class mhs extends Controller
             ->where('C_NPM', auth()->user()->name)
             ->get();
 
-        return view('tugasakhir.mhs.mail_new', compact('data'));
+        $draftFinal = $this->getDraftFinalMahasiswa();
+        $draftDefault = request()->query('draft', '');
+        $perihalDefault = request()->query('perihal', '');
+
+        return view('tugasakhir.mhs.mail_new', compact('data', 'draftFinal', 'draftDefault', 'perihalDefault'));
     }
 
     public function pesanpost(Request $request)
@@ -825,9 +898,20 @@ class mhs extends Controller
                 }
             }
 
+            $isiPesan = $request->isi_pesan;
+            $draftLinks = $this->buildDraftFinalMessageLinks($request->input('draft_final_links', []));
+
+            if (!empty($draftLinks)) {
+                $isiPesan .= '<hr><p><strong>Lampiran Link Draft Final:</strong></p><ul>';
+                foreach ($draftLinks as $label => $url) {
+                    $isiPesan .= '<li>' . e($label) . ': <a href="' . e($url) . '" target="_blank">' . e($url) . '</a></li>';
+                }
+                $isiPesan .= '</ul>';
+            }
+
             $mstpesan = mst_pesan::create([
                 "perihal_pesan" => $request->perihal_pesan,
-                "isi_pesan" => $request->isi_pesan,
+                "isi_pesan" => $isiPesan,
             ]);
             if ($request->lampiran != null) {
                 foreach ($request->lampiran as $lampiran) {
@@ -1621,6 +1705,87 @@ class mhs extends Controller
         }
 
         return null;
+    }
+
+    protected function getDraftFinalMahasiswa()
+    {
+        if (!Schema::hasTable('trt_draft_final_mahasiswa')) {
+            return null;
+        }
+
+        return DB::table('trt_draft_final_mahasiswa')
+            ->where('C_NPM', auth()->user()->name)
+            ->first();
+    }
+
+    protected function buildDraftFinalMessageLinks($selectedTypes)
+    {
+        $selectedTypes = is_array($selectedTypes) ? $selectedTypes : [];
+        $draft = $this->getDraftFinalMahasiswa();
+        $links = [];
+
+        if (!$draft) {
+            return $links;
+        }
+
+        if (in_array('proposal', $selectedTypes) && !empty($draft->draft_proposal_url)) {
+            $links['Draft Final Proposal'] = $draft->draft_proposal_url;
+        }
+
+        if (in_array('tugas_akhir', $selectedTypes) && !empty($draft->draft_tugas_akhir_url)) {
+            $links['Draft Final Tugas Akhir'] = $draft->draft_tugas_akhir_url;
+        }
+
+        return $links;
+    }
+
+    protected function parseGoogleDriveFileLink($url)
+    {
+        $url = trim((string) $url);
+
+        if ($url === '') {
+            return ['valid' => true, 'file_id' => null, 'message' => null];
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return ['valid' => false, 'file_id' => null, 'message' => 'Link harus berupa URL lengkap Google Drive atau Google Docs.'];
+        }
+
+        $parts = parse_url($url);
+        $host = strtolower($parts['host'] ?? '');
+        $path = $parts['path'] ?? '';
+        $query = $parts['query'] ?? '';
+
+        if ($host === 'www.drive.google.com') {
+            $host = 'drive.google.com';
+        }
+
+        if ($host === 'www.docs.google.com') {
+            $host = 'docs.google.com';
+        }
+
+        if (!in_array($host, ['drive.google.com', 'docs.google.com'])) {
+            return ['valid' => false, 'file_id' => null, 'message' => 'Link harus berasal dari Google Drive atau Google Docs.'];
+        }
+
+        if (strpos($path, '/folders/') !== false || strpos($path, '/drive/folders/') !== false) {
+            return ['valid' => false, 'file_id' => null, 'message' => 'Link folder Google Drive tidak diterima. Gunakan link file dokumen draft final.'];
+        }
+
+        if ($host === 'drive.google.com' && preg_match('#/file/d/([^/]+)#', $path, $matches)) {
+            return ['valid' => true, 'file_id' => $matches[1], 'message' => null];
+        }
+
+        if ($host === 'docs.google.com' && preg_match('#^/(document|spreadsheets|presentation)/d/([^/]+)#', $path, $matches)) {
+            return ['valid' => true, 'file_id' => $matches[2], 'message' => null];
+        }
+
+        parse_str($query, $queryParams);
+        if ($host === 'drive.google.com' && !empty($queryParams['id'])) {
+            return ['valid' => true, 'file_id' => $queryParams['id'], 'message' => null];
+        }
+
+        return ['valid' => false, 'file_id' => null, 'message' => 'Link belum dikenali sebagai link file. Buka file di Google Drive, klik Share, lalu salin link file tersebut.'];
     }
 
     protected function normalizeNomorWaMahasiswa($value)

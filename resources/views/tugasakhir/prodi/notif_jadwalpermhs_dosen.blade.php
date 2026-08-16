@@ -52,7 +52,14 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <textarea class="form-control" rows="6" readonly>{{ $notification['message'] }}</textarea>
+                                    <div class="input-group" style="max-width: 460px;">
+                                        <textarea class="form-control message-review-box" rows="4" readonly style="height: 112px; resize: vertical; min-height: 96px; max-height: 140px;">{{ $notification['message'] }}</textarea>
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-default copy-wa-message" data-message="{{ e($notification['message']) }}">
+                                                <i class="fa fa-copy"></i> Copy
+                                            </button>
+                                        </span>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -66,4 +73,32 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('script')
+    <style>
+        .message-review-box {
+            overflow: auto;
+            word-break: break-word;
+        }
+    </style>
+    <script>
+        (function () {
+            var copyButtons = document.querySelectorAll('.copy-wa-message');
+            copyButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var text = button.getAttribute('data-message') || '';
+                    if (!text || !navigator.clipboard || !navigator.clipboard.writeText) {
+                        return;
+                    }
+                    navigator.clipboard.writeText(text).then(function () {
+                        button.innerHTML = '<i class="fa fa-check"></i> Tersalin';
+                        setTimeout(function () {
+                            button.innerHTML = '<i class="fa fa-copy"></i> Copy';
+                        }, 1200);
+                    });
+                });
+            });
+        })();
+    </script>
 @endsection
