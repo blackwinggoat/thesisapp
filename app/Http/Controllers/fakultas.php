@@ -17,6 +17,7 @@ use App\MstRuangan;
 use App\TrtJadwalUjian;
 use App\TrtJadwalUjianPerMhs;
 use App\TrtPenguji;
+use Barryvdh\DomPDF\Facade as PDF;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Carbon;
@@ -441,6 +442,41 @@ class fakultas extends Controller
 
         $tgl_ujian = helper::tgl_indo_lengkap(date('Y-m-d'));
         return view('tugasakhir.fakultas.cetakskpembimbing', compact('data_sk', 'tgl_ujian'));
+    }
+
+    public function cetakskpembimbing_pdf(Request $request)
+    {
+        $data_sk = $this->getSkPembimbingForPdf($request->input('nomor'));
+
+        if (!$data_sk) {
+            return response('Data surat SK pembimbing belum lengkap atau tidak ditemukan.', 404);
+        }
+
+        $safeNomorSk = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $data_sk->nomor_sk);
+
+        return PDF::loadView('tugasakhir.fakultas.cetakskpembimbing_pdf', compact('data_sk'))
+            ->setPaper('a4', 'portrait')
+            ->stream('SK-Pembimbing-' . trim($safeNomorSk, '-') . '.pdf');
+    }
+
+    private function getSkPembimbingForPdf($nomor)
+    {
+        return DB::table('mst_sk_pembimbing as sk')
+            ->join('trt_bimbingan as bimbingan', 'sk.bimbingan_id', '=', 'bimbingan.bimbingan_id')
+            ->select([
+                'sk.sk_pembimbing_id',
+                'sk.nomor_sk',
+                'sk.status as status_sk',
+                'sk.created_at as sk_created_at',
+                'bimbingan.bimbingan_id',
+                'bimbingan.C_NPM',
+                'bimbingan.pembimbing_I_id',
+                'bimbingan.pembimbing_II_id',
+                'bimbingan.judul',
+                'bimbingan.jenis_tugas_akhir_id',
+            ])
+            ->where('sk.nomor_sk', $nomor)
+            ->first();
     }
 
     public function sk_pembimbing()

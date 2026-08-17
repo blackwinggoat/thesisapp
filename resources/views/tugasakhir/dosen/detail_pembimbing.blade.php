@@ -122,7 +122,8 @@
                                         <form action="{{ url('dsn/cetak_sk_pembimbing/') }}" method="post" target="_blank">
                                             @csrf
                                             <input type="hidden" name="nomor" value="{{ $value->nomor_sk }}">
-                                            <button type="submit" class="btn btn-primary">{{ $value->nomor_sk }}</button>
+                                            <button type="submit" class="btn btn-primary" title="Buka tampilan web"><i class="fa fa-external-link"></i> {{ $value->nomor_sk }}</button>
+                                            <button type="submit" class="btn btn-danger" formaction="{{ url('dsn/cetak_sk_pembimbing_pdf/') }}" title="Unduh dokumen PDF"><i class="fa fa-file-pdf-o"></i></button>
                                         </form>
                                     @else
                                         -
@@ -252,7 +253,8 @@
                                         <form action="{{ url('dsn/cetak_sk_pembimbing/') }}" method="post" target="_blank">
                                             @csrf
                                             <input type="hidden" name="nomor" value="{{ $value->nomor_sk }}">
-                                            <button type="submit" class="btn btn-primary">{{ $value->nomor_sk }}</button>
+                                            <button type="submit" class="btn btn-primary" title="Buka tampilan web"><i class="fa fa-external-link"></i> {{ $value->nomor_sk }}</button>
+                                            <button type="submit" class="btn btn-danger" formaction="{{ url('dsn/cetak_sk_pembimbing_pdf/') }}" title="Unduh dokumen PDF"><i class="fa fa-file-pdf-o"></i></button>
                                         </form>
                                     @else
                                         -

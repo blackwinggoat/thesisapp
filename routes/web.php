@@ -244,6 +244,8 @@ Route::group(['middleware' => 'kaprodi'], function () {
 
     Route::get('/prodi/set_sk/{id}', 'Prodi@set_sk');
     Route::post('/prodi/add_sk_pembimbing', 'Prodi@add_sk_pembimbing');
+    Route::post('/prodi/cetakskpembimbing', 'Prodi@cetakskpembimbing');
+    Route::post('/prodi/cetakskpembimbing_pdf', 'Prodi@cetakskpembimbing_pdf');
 
     // Catatan
     Route::get('/prodi/detail_persyaratan_proposal/catatan/{id}/{nim}', 'Prodi@detail_persyaratan_proposal_catatan');
@@ -416,6 +418,7 @@ Route::group(['middleware' => 'akademik_fakultas'], function () {
     Route::post('/fakultas/addskpembimbing/', 'fakultas@addskpembimbing');
     Route::post('/fakultas/add_sk_penugasan_per_mahasiswa/', 'fakultas@add_sk_penugasan_per_mahasiswa');
     Route::post('/fakultas/cetakskpembimbing/', 'fakultas@cetakskpembimbing');
+    Route::post('/fakultas/cetakskpembimbing_pdf/', 'fakultas@cetakskpembimbing_pdf');
     Route::post('/fakultas/cetakskpenugasan/', 'fakultas@cetakskpenugasan');
     Route::get('/fakultas/usulan_timujianta/{id}', 'fakultas@usulan_timujianta');
     Route::get("/fakultas/ubah_password/", "fakultas@ubah_password");
@@ -505,6 +508,7 @@ Route::group(['middleware' => 'dosen'], function () {
 
     // Sk Pembimbing
     Route::post('/dsn/cetak_sk_pembimbing/', 'dosen@cetak_sk_pembimbing');
+    Route::post('/dsn/cetak_sk_pembimbing_pdf/', 'dosen@cetak_sk_pembimbing_pdf');
 
     Route::get('/dsn/surat_sk_proposal/{pendaftaran_id}/{nim}', 'dosen@surat_sk_proposal');
     Route::get('/dsn/surat_sk_ujian_meja/{nim}', 'dosen@surat_sk_ujian_meja');

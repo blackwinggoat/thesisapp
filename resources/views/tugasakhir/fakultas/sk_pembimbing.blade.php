@@ -68,7 +68,9 @@
                                 </td>
                                 <td>
                                     <button class="btn btn-primary fa fa-paperclip btn-perspective" name="nomor"
-                                        value="{{$value->nomor_sk}}" type="submit"></button>
+                                        value="{{$value->nomor_sk}}" type="submit" title="Buka tampilan web"></button>
+                                    <button class="btn btn-danger fa fa-file-pdf-o btn-perspective" name="nomor"
+                                        value="{{$value->nomor_sk}}" type="submit" formaction="{{url('fakultas/cetakskpembimbing_pdf')}}" title="Unduh dokumen PDF"></button>
                                 </td>
                             </tr>
                             @endforeach

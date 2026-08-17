@@ -31,7 +31,7 @@
         @endif
         <div class="the-box">
             <div class="table-responsive">
-                <form method="post" action="{{url('fakultas/cetakskpembimbing')}}" target="_blank">
+                <form method="post" action="{{url('prodi/cetakskpembimbing')}}" target="_blank">
                     {{ csrf_field() }}
                     <table class="table table-striped table-hover" id="datatable-example">
                         <thead class="the-box dark full">
@@ -68,7 +68,9 @@
                                 </td>
                                 <td>
                                     <button class="btn btn-primary fa fa-paperclip btn-perspective" name="nomor"
-                                        value="{{$value->nomor_sk}}" type="submit"></button>
+                                        value="{{$value->nomor_sk}}" type="submit" title="Buka tampilan web"></button>
+                                    <button class="btn btn-danger fa fa-file-pdf-o btn-perspective" name="nomor"
+                                        value="{{$value->nomor_sk}}" type="submit" formaction="{{url('prodi/cetakskpembimbing_pdf')}}" title="Unduh dokumen PDF"></button>
                                 </td>
                             </tr>
                             @endforeach
