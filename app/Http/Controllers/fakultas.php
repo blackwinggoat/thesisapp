@@ -430,33 +430,12 @@ class fakultas extends Controller
 
     public function cetakskpembimbing(Request $request)
     {
-        $datapost = $request->all();
-        $data_sk = DB::table('mst_sk_pembimbing')
-            ->join('trt_bimbingan', 'mst_sk_pembimbing.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
-            ->select('*')
-            ->where('mst_sk_pembimbing.nomor_sk', $datapost['nomor'])
-            ->get();
-        if ($data_sk->isEmpty()) {
-            return response('Data surat SK pembimbing belum lengkap atau tidak ditemukan.', 404);
-        }
-
-        $tgl_ujian = helper::tgl_indo_lengkap(date('Y-m-d'));
-        return view('tugasakhir.fakultas.cetakskpembimbing', compact('data_sk', 'tgl_ujian'));
+        return redirect('sk_pembimbing/' . str_replace('/', '', (string) $request->input('nomor')));
     }
 
     public function cetakskpembimbing_pdf(Request $request)
     {
-        $data_sk = $this->getSkPembimbingForPdf($request->input('nomor'));
-
-        if (!$data_sk) {
-            return response('Data surat SK pembimbing belum lengkap atau tidak ditemukan.', 404);
-        }
-
-        $safeNomorSk = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $data_sk->nomor_sk);
-
-        return PDF::loadView('tugasakhir.fakultas.cetakskpembimbing_pdf', compact('data_sk'))
-            ->setPaper('a4', 'portrait')
-            ->stream('SK-Pembimbing-' . trim($safeNomorSk, '-') . '.pdf');
+        return redirect('sk_pembimbing_pdf/' . str_replace('/', '', (string) $request->input('nomor')));
     }
 
     private function getSkPembimbingForPdf($nomor)

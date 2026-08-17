@@ -1408,70 +1408,12 @@ class mhs extends Controller
     // Surat Sk Pembimbing
     public function surat_sk_pembimbing($nomor)
     {
-
-        $data = DB::table('mst_sk_pembimbing')
-            ->join('trt_bimbingan', 'mst_sk_pembimbing.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
-            ->select('*')
-            ->get();
-
-        $status = 'tidak';
-        $new_nomor = "";
-
-        foreach ($data as $value) {
-            if (str_replace("/", "", $value->nomor_sk) == $nomor) {
-                $status = "ada";
-                $new_nomor = $value->nomor_sk;
-            }
-        }
-
-        if ($status !== 'ada' || $new_nomor === '') {
-            return response('Data surat SK pembimbing tidak ditemukan.', 404);
-        }
-
-        $data_sk = DB::table('mst_sk_pembimbing')
-            ->join('trt_bimbingan', 'mst_sk_pembimbing.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
-            ->select('*')
-            ->where('mst_sk_pembimbing.nomor_sk', $new_nomor)
-            ->get();
-
-        if ($data_sk->isEmpty()) {
-            return response('Data surat SK pembimbing belum lengkap.', 404);
-        }
-
-        $tgl_ujian = helper::tgl_indo_lengkap(date('Y-m-d'));
-        return view('tugasakhir.fakultas.cetakskpembimbing', compact('data_sk', 'tgl_ujian'));
+        return redirect('sk_pembimbing/' . $nomor);
     }
 
     public function surat_sk_pembimbing_pdf($nomor)
     {
-        $nim = (string) auth()->user()->name;
-        $data_sk = DB::table('mst_sk_pembimbing as sk')
-            ->join('trt_bimbingan as bimbingan', 'sk.bimbingan_id', '=', 'bimbingan.bimbingan_id')
-            ->select([
-                'sk.sk_pembimbing_id',
-                'sk.nomor_sk',
-                'sk.status as status_sk',
-                'sk.created_at as sk_created_at',
-                'bimbingan.bimbingan_id',
-                'bimbingan.C_NPM',
-                'bimbingan.pembimbing_I_id',
-                'bimbingan.pembimbing_II_id',
-                'bimbingan.judul',
-                'bimbingan.jenis_tugas_akhir_id',
-            ])
-            ->where('bimbingan.C_NPM', $nim)
-            ->whereRaw("REPLACE(sk.nomor_sk, '/', '') = ?", [$nomor])
-            ->first();
-
-        if (!$data_sk) {
-            return response('Data surat SK pembimbing tidak ditemukan.', 404);
-        }
-
-        $safeNomorSk = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $data_sk->nomor_sk);
-
-        return PDF::loadView('tugasakhir.fakultas.cetakskpembimbing_pdf', compact('data_sk'))
-            ->setPaper('a4', 'portrait')
-            ->stream('SK-Pembimbing-' . trim($safeNomorSk, '-') . '.pdf');
+        return redirect('sk_pembimbing_pdf/' . $nomor);
     }
 
     // SK Ujian Meja

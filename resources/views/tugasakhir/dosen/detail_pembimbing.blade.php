@@ -119,12 +119,8 @@
                                 <td>{{ $value->peran_pembimbing ?? '-' }}</td>
                                 <td>
                                     @if (!empty($value->nomor_sk))
-                                        <form action="{{ url('dsn/cetak_sk_pembimbing/') }}" method="post" target="_blank">
-                                            @csrf
-                                            <input type="hidden" name="nomor" value="{{ $value->nomor_sk }}">
-                                            <button type="submit" class="btn btn-primary" title="Buka tampilan web"><i class="fa fa-external-link"></i> {{ $value->nomor_sk }}</button>
-                                            <button type="submit" class="btn btn-danger" formaction="{{ url('dsn/cetak_sk_pembimbing_pdf/') }}" title="Unduh dokumen PDF"><i class="fa fa-file-pdf-o"></i></button>
-                                        </form>
+                                        <a href="{{ url('sk_pembimbing') }}/{{ str_replace('/', '', $value->nomor_sk) }}" target="_blank" class="btn btn-primary" title="Buka tampilan web"><i class="fa fa-external-link"></i> {{ $value->nomor_sk }}</a>
+                                        <a href="{{ url('sk_pembimbing_pdf') }}/{{ str_replace('/', '', $value->nomor_sk) }}" target="_blank" class="btn btn-danger" title="Unduh dokumen PDF"><i class="fa fa-file-pdf-o"></i></a>
                                     @else
                                         -
                                     @endif
@@ -250,12 +246,8 @@
                                 <td>{{ $value->peran_pembimbing ?? '-' }}</td>
                                 <td>
                                     @if (!empty($value->nomor_sk))
-                                        <form action="{{ url('dsn/cetak_sk_pembimbing/') }}" method="post" target="_blank">
-                                            @csrf
-                                            <input type="hidden" name="nomor" value="{{ $value->nomor_sk }}">
-                                            <button type="submit" class="btn btn-primary" title="Buka tampilan web"><i class="fa fa-external-link"></i> {{ $value->nomor_sk }}</button>
-                                            <button type="submit" class="btn btn-danger" formaction="{{ url('dsn/cetak_sk_pembimbing_pdf/') }}" title="Unduh dokumen PDF"><i class="fa fa-file-pdf-o"></i></button>
-                                        </form>
+                                        <a href="{{ url('sk_pembimbing') }}/{{ str_replace('/', '', $value->nomor_sk) }}" target="_blank" class="btn btn-primary" title="Buka tampilan web"><i class="fa fa-external-link"></i> {{ $value->nomor_sk }}</a>
+                                        <a href="{{ url('sk_pembimbing_pdf') }}/{{ str_replace('/', '', $value->nomor_sk) }}" target="_blank" class="btn btn-danger" title="Unduh dokumen PDF"><i class="fa fa-file-pdf-o"></i></a>
                                     @else
                                         -
                                     @endif

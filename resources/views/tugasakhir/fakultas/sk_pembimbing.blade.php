@@ -67,10 +67,8 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <button class="btn btn-primary fa fa-paperclip btn-perspective" name="nomor"
-                                        value="{{$value->nomor_sk}}" type="submit" title="Buka tampilan web"></button>
-                                    <button class="btn btn-danger fa fa-file-pdf-o btn-perspective" name="nomor"
-                                        value="{{$value->nomor_sk}}" type="submit" formaction="{{url('fakultas/cetakskpembimbing_pdf')}}" title="Unduh dokumen PDF"></button>
+                                    <a class="btn btn-primary fa fa-paperclip btn-perspective" href="{{ url('sk_pembimbing') }}/{{ str_replace('/', '', $value->nomor_sk) }}" target="_blank" title="Buka tampilan web"></a>
+                                    <a class="btn btn-danger fa fa-file-pdf-o btn-perspective" href="{{ url('sk_pembimbing_pdf') }}/{{ str_replace('/', '', $value->nomor_sk) }}" target="_blank" title="Unduh dokumen PDF"></a>
                                 </td>
                             </tr>
                             @endforeach

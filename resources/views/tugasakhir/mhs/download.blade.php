@@ -33,7 +33,7 @@
                         <td width="1%" align="center">1</td>
                         <td>SK Pembimbing</td>
                         @if (helper::getStatusSKPembimbingForMahasiswa(auth()->user()->name) != '')
-                            <td class="text-center"><a target="_blank" title="Buka tampilan web" href="{{ url('mhs/surat_sk_pembimbing')}}/{{str_replace("/","",helper::getStatusSKPembimbingForMahasiswa(auth()->user()->name)->nomor_sk)}}"><i class="fa fa-external-link icon-square icon-xs icon-dark"></i></a> <a target="_blank" title="Unduh dokumen PDF" href="{{ url('mhs/surat_sk_pembimbing_pdf')}}/{{str_replace("/","",helper::getStatusSKPembimbingForMahasiswa(auth()->user()->name)->nomor_sk)}}"><i class="fa fa-file-pdf-o icon-square icon-xs icon-danger"></i></a></td>
+                            <td class="text-center"><a target="_blank" title="Buka tampilan web" href="{{ url('sk_pembimbing')}}/{{str_replace("/","",helper::getStatusSKPembimbingForMahasiswa(auth()->user()->name)->nomor_sk)}}"><i class="fa fa-external-link icon-square icon-xs icon-dark"></i></a> <a target="_blank" title="Unduh dokumen PDF" href="{{ url('sk_pembimbing_pdf')}}/{{str_replace("/","",helper::getStatusSKPembimbingForMahasiswa(auth()->user()->name)->nomor_sk)}}"><i class="fa fa-file-pdf-o icon-square icon-xs icon-danger"></i></a></td>
                         @else
                             <td><span class="badge badge-danger">SK Pembimbing Belum Ada</span></td>
                         @endif

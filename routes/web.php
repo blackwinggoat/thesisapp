@@ -32,6 +32,8 @@ Route::get('/logout', function (Request $request) {
 
 Route::get('/', 'HomeController@index');
 Route::get('/jadwal-dosen/{token}', 'Prodi@jadwalDosenLink');
+Route::get('/sk_pembimbing/{nomor}', 'HomeController@surat_sk_pembimbing')->middleware('auth');
+Route::get('/sk_pembimbing_pdf/{nomor}', 'HomeController@surat_sk_pembimbing_pdf')->middleware('auth');
 
 
 Route::group(['middleware' => 'admin'], function () {
