@@ -64,6 +64,22 @@
             cursor: pointer;
             position: relative;
         }
+
+        .verification-qr-wrap {
+            float: right;
+            text-align: center;
+            width: 180px;
+        }
+
+        .verification-qr-wrap img {
+            height: 110px;
+            width: 110px;
+        }
+
+        .verification-label {
+            font-size: 10px;
+            margin-top: 4px;
+        }
     </style>
     <script>
         function prints() {
@@ -88,6 +104,7 @@
     @php
         $tanggalAcuanDekan = $data_sk[0]->created_at ?? null;
         $dekan = helper::getDekanByTanggal($tanggalAcuanDekan);
+        $verificationUrl = url('sk_pembimbing/' . str_replace('/', '', $data_sk[0]->nomor_sk ?? ''));
     @endphp
     <div class="header"
         style="position: relative; display: flex; align-items: center; justify-content: space-between; page-break-before: always !important;">
@@ -207,31 +224,17 @@
         Dekan
     </div>
     <br>
-    <br>
-    <div style="text-align: center; position: relative">
-        @if (helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 0)
-        @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 1)
-
-        @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
-            <img src="{{ \App\Helper::officialImageDataUri('stempelfakultas.png') }}" alt="" height="100px"
-                style="position: absolute; right: 140px">
-            @if (!empty($dekan->ttd))
-                <img src="{{ \App\Helper::officialImageDataUri($dekan->ttd) }}" alt="" height="70px"
-                    style="position: absolute; right: -20px">
-            @endif
+    <div class="verification-qr-wrap">
+        @if (helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
+            <a href="{{ $verificationUrl }}" target="_blank">
+                <img src="{{ \App\Helper::qrCodeDataUri($verificationUrl, 150) }}" alt="QR verifikasi SK Pembimbing">
+            </a>
+            <div class="verification-label">Scan/klik untuk verifikasi</div>
         @endif
     </div>
-    <br><br><br><br>
+    <br><br><br><br><br><br>
     <div class="legalitor">
         <b><u>{{ $dekan->nama }}</u></b>
-    </div>
-    <div style="text-align: center; position: relative">
-        @if (helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 0)
-        @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 1 ||
-                helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
-            <img src="{{ \App\Helper::officialImageDataUri('paraf_wd.png') }}" alt="" height="50px"
-                style="position: absolute; right: -20px">
-        @endif
     </div>
     <p align="justify">
         <i><u>Tembusan : </u>
@@ -366,30 +369,17 @@
         Dekan
     </div>
     <br>
-    <div style="text-align: center; position: relative">
-        @if (helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 0)
-        @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 1)
-
-        @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
-            <img src="{{ \App\Helper::officialImageDataUri('stempelfakultas.png') }}" alt="" height="100px"
-                style="position: absolute; right: 140px">
-            @if (!empty($dekan->ttd))
-                <img src="{{ \App\Helper::officialImageDataUri($dekan->ttd) }}" alt="" height="70px"
-                    style="position: absolute; right: -20px">
-            @endif
+    <div class="verification-qr-wrap">
+        @if (helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
+            <a href="{{ $verificationUrl }}" target="_blank">
+                <img src="{{ \App\Helper::qrCodeDataUri($verificationUrl, 150) }}" alt="QR verifikasi SK Pembimbing">
+            </a>
+            <div class="verification-label">Scan/klik untuk verifikasi</div>
         @endif
     </div>
-    <br><br><br><br>
+    <br><br><br><br><br><br>
     <div class="legalitor">
         <b><u>{{ $dekan->nama }}</u></b>
-    </div>
-    <div style="text-align: center; position: relative">
-        @if (helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 0)
-        @elseif(helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 1 ||
-                helper::getStatusApproveWakilDekan($value->sk_pembimbing_id) == 2)
-            <img src="{{ \App\Helper::officialImageDataUri('paraf_wd.png') }}" alt="" height="50px"
-                style="position: absolute; right: -20px">
-        @endif
     </div>
     <p align="justify">
         <i><u>Tembusan : </u>

@@ -32,8 +32,8 @@
         .signature-left { font-size: 10.5pt; padding-top: 104px; width: 50%; }
         .signature-right { text-align: center; width: 50%; }
         .signature-space { height: 94px; position: relative; }
-        .stamp { bottom: 0; height: 88px; position: absolute; right: 83px; width: auto; }
-        .sign { bottom: 13px; height: 64px; position: absolute; right: 5px; width: auto; }
+        .verification-qr { height: 82px; margin-top: 7px; width: 82px; }
+        .verification-label { font-size: 7.3pt; line-height: 1.1; margin-top: 2px; }
         .official-name { font-weight: bold; text-decoration: underline; }
         .tembusan { font-size: 10.5pt; font-style: italic; line-height: 1.32; margin-top: 6px; }
     </style>
@@ -54,6 +54,7 @@
             ['jabatan' => 'Pembimbing Utama', 'kode' => $data_sk->pembimbing_I_id],
             ['jabatan' => 'Pembimbing Pendamping', 'kode' => $data_sk->pembimbing_II_id],
         ];
+        $verificationUrl = url('sk_pembimbing/' . str_replace('/', '', $data_sk->nomor_sk));
     @endphp
 
     @foreach ($pembimbing as $penugasan)
@@ -95,10 +96,8 @@
                         <td class="signature-right">Makassar, {{ helper::tgl_indo_lengkap($tanggalSurat->format('Y-m-d')) }}<br>Dekan
                             <div class="signature-space">
                                 @if ((int) $data_sk->status_sk === 2)
-                                    <img class="stamp" src="{{ \App\Helper::pdfOfficialImageDataUri('stempelfakultas.png') }}" alt="">
-                                    @if (!empty($dekan->ttd))
-                                        <img class="sign" src="{{ \App\Helper::pdfOfficialImageDataUri($dekan->ttd) }}" alt="">
-                                    @endif
+                                    <a href="{{ $verificationUrl }}"><img class="verification-qr" src="{{ \App\Helper::qrCodeDataUri($verificationUrl, 130) }}" alt="QR verifikasi SK Pembimbing"></a>
+                                    <div class="verification-label">Scan/klik untuk verifikasi</div>
                                 @endif
                             </div>
                             <span class="official-name">{{ $dekan->nama ?: '-' }}</span>

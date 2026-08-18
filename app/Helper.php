@@ -2,6 +2,10 @@
 
 namespace App;
 
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -319,6 +323,20 @@ class Helper
         }
 
         return $isValid ? $dataUri : self::publicImageDataUri('master/assets/img/logo-login.png');
+    }
+
+    public static function qrCodeDataUri($value, $size = 130)
+    {
+        $size = max(80, min(240, (int) $size));
+        $renderer = new ImageRenderer(
+            new RendererStyle($size),
+            new SvgImageBackEnd()
+        );
+
+        $writer = new Writer($renderer);
+        $svg = $writer->writeString((string) $value);
+
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 
     public static function publicImageDataUri($fileName)
