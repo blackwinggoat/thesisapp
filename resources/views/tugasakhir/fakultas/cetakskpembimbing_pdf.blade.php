@@ -33,7 +33,6 @@
         .signature-right { text-align: center; width: 50%; }
         .signature-space { height: 94px; position: relative; }
         .verification-qr { height: 82px; margin-top: 7px; width: 82px; }
-        .verification-label { font-size: 7.3pt; line-height: 1.1; margin-top: 2px; }
         .official-name { font-weight: bold; text-decoration: underline; }
         .tembusan { font-size: 10.5pt; font-style: italic; line-height: 1.32; margin-top: 6px; }
     </style>
@@ -97,7 +96,6 @@
                             <div class="signature-space">
                                 @if ((int) $data_sk->status_sk === 2)
                                     <a href="{{ $verificationUrl }}"><img class="verification-qr" src="{{ \App\Helper::qrCodeDataUri($verificationUrl, 130) }}" alt="QR verifikasi SK Pembimbing"></a>
-                                    <div class="verification-label">Scan/klik untuk verifikasi</div>
                                 @endif
                             </div>
                             <span class="official-name">{{ $dekan->nama ?: '-' }}</span>
