@@ -5,14 +5,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>SK Pembimbing</title>
     <style>
+        @page { size: A4 portrait; margin: 11mm 13mm 10mm; }
         * { box-sizing: border-box; }
         body {
+            background: #f2f2f2;
             color: #000;
             font-family: "Times New Roman", serif;
             font-size: 10.7pt;
             line-height: 1.16;
             margin: 0 auto;
-            width: 595px;
+            width: auto;
         }
         .button {
             background-color: #4CAF50;
@@ -27,14 +29,15 @@
             text-decoration: none;
         }
         .document {
+            background: #fff;
             margin: 0 auto;
             min-height: 842px;
             page-break-after: always;
-            padding-top: 4px;
-            width: 560px;
+            padding: 11mm 13mm 10mm;
+            width: 595px;
         }
         .document:last-child { page-break-after: auto; }
-        .letterhead { padding-top: 7px; }
+        .letterhead { padding-top: 0; }
         .letterhead table,
         .details,
         .signature {
@@ -44,8 +47,17 @@
         .letterhead td { vertical-align: middle; }
         .details td,
         .signature td { vertical-align: top; }
+        .letterhead .logo-table {
+            border-collapse: collapse;
+            width: auto;
+        }
+        .letterhead .logo-table td {
+            padding: 0;
+            vertical-align: middle;
+        }
+        .letterhead .logo-table td + td { padding-left: 10px; }
         .logo-umi { height: 50px; width: auto; }
-        .logo-fikom { height: 40px; margin-left: 10px; vertical-align: middle; width: auto; }
+        .logo-fikom { height: 40px; width: auto; }
         .letterhead-title {
             font-size: 11.7pt;
             font-weight: bold;
@@ -99,9 +111,14 @@
         .tembusan { font-size: 10.5pt; font-style: italic; line-height: 1.32; margin-top: 6px; }
 
         @media print {
-            body { width: auto; }
+            body { background: #fff; margin: 0; width: auto; }
             #btnPrint { display: none !important; }
-            .document { width: 100%; }
+            .document {
+                margin: 0;
+                min-height: auto;
+                padding: 0;
+                width: 100%;
+            }
         }
     </style>
     <script>
@@ -139,8 +156,12 @@
                     <table>
                         <tr>
                             <td width="43%">
-                                <img class="logo-umi" src="{{ asset('images/branding/umi-pdf.jpg') }}" alt="Logo UMI">
-                                <img class="logo-fikom" src="{{ asset('images/branding/fikom-pdf.jpg') }}" alt="Logo FIKOM">
+                                <table class="logo-table">
+                                    <tr>
+                                        <td><img class="logo-umi" src="{{ \App\Helper::publicImageDataUri('images/branding/umi-pdf.jpg') }}" alt="Logo UMI"></td>
+                                        <td><img class="logo-fikom" src="{{ \App\Helper::publicImageDataUri('images/branding/fikom-pdf.jpg') }}" alt="Logo FIKOM"></td>
+                                    </tr>
+                                </table>
                             </td>
                             <td class="letterhead-title" width="57%">
                                 YAYASAN WAKAF UMI<br>
