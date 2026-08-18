@@ -9,8 +9,8 @@
         body {
             color: #000;
             font-family: "Times New Roman", serif;
-            font-size: 10.5pt;
-            line-height: 1.18;
+            font-size: 10.7pt;
+            line-height: 1.16;
             margin: 0 auto;
             width: 595px;
         }
@@ -30,10 +30,11 @@
             margin: 0 auto;
             min-height: 842px;
             page-break-after: always;
-            width: 555px;
+            padding-top: 4px;
+            width: 560px;
         }
         .document:last-child { page-break-after: auto; }
-        .letterhead { padding-top: 10px; }
+        .letterhead { padding-top: 7px; }
         .letterhead table,
         .details,
         .signature {
@@ -44,9 +45,9 @@
         .details td,
         .signature td { vertical-align: top; }
         .logo-umi { height: 50px; width: auto; }
-        .logo-fikom { height: 40px; margin-left: 12px; vertical-align: middle; width: auto; }
+        .logo-fikom { height: 40px; margin-left: 10px; vertical-align: middle; width: auto; }
         .letterhead-title {
-            font-size: 11.5pt;
+            font-size: 11.7pt;
             font-weight: bold;
             line-height: 1.05;
             text-align: right;
@@ -56,16 +57,35 @@
             margin-top: 7px;
         }
         .address {
-            font-size: 7.3pt;
-            line-height: 1.12;
-            padding-top: 7px;
+            font-size: 7.6pt;
+            line-height: 1.18;
+            padding-top: 8px;
             text-align: center;
+        }
+        .letterhead .contact-table {
+            border-collapse: collapse;
+            margin: 2px auto 0;
+            width: 285px;
+        }
+        .contact-table td {
+            padding: 0;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .contact-table .icon-cell { padding-right: 6px; width: 18px; }
+        .contact-table .contact-text { padding-right: 18px; }
+        .contact-table .contact-text:last-child { padding-right: 0; }
+        .contact-icon {
+            height: 10px;
+            margin: 0 0 1px;
+            vertical-align: middle;
+            width: 10px;
         }
         .invocation {
             font-size: 12pt;
             font-style: italic;
             font-weight: bold;
-            margin: 18px 0 13px;
+            margin: 16px 0 11px;
             text-align: center;
         }
         .document-title {
@@ -78,17 +98,17 @@
         .document-number {
             font-size: 11pt;
             font-weight: bold;
-            margin-bottom: 28px;
+            margin-bottom: 22px;
             text-align: center;
         }
-        p { margin: 0 0 14px; text-align: justify; }
+        p { margin: 0 0 12px; text-align: justify; }
         .centered { text-align: center; }
-        .details { margin: 0 0 17px; }
+        .details { margin: 0 0 14px; }
         .details td { padding: 2px 0; }
         .details .label { width: 29%; }
         .details .separator { text-align: center; width: 3%; }
         .details .value { padding-left: 4px; width: 68%; }
-        .signature { margin-top: 44px; }
+        .signature { margin-top: 48px; }
         .signature-left { font-size: 10.5pt; padding-top: 104px; width: 50%; }
         .signature-right { text-align: center; width: 50%; }
         .signature-space { height: 94px; position: relative; }
@@ -128,6 +148,8 @@
         ] : [];
         $verificationUrl = $sk ? url('sk_pembimbing/' . str_replace('/', '', $sk->nomor_sk)) : '';
         $statusSk = $sk ? (int) helper::getStatusApproveWakilDekan($sk->sk_pembimbing_id) : 0;
+        $websiteIcon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxwYXRoIGQ9Ik0yIDEyaDIwIi8+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDAgMjAiLz48cGF0aCBkPSJNMTIgMmExNS4zIDE1LjMgMCAwIDAgMCAyMCIvPjwvc3ZnPg==';
+        $emailIcon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iMTYiIHg9IjIiIHk9IjQiIHJ4PSIyIi8+PHBhdGggZD0ibTIyIDctOC45NyA1LjdhMS45NCAxLjk0IDAgMCAxLTIuMDYgMEwyIDciLz48L3N2Zz4=';
     @endphp
 
     @foreach ($pembimbing as $penugasan)
@@ -136,11 +158,11 @@
                 <div class="letterhead">
                     <table>
                         <tr>
-                            <td width="51%">
+                            <td width="43%">
                                 <img class="logo-umi" src="{{ asset('images/branding/umi-pdf.jpg') }}" alt="Logo UMI">
                                 <img class="logo-fikom" src="{{ asset('images/branding/fikom-pdf.jpg') }}" alt="Logo FIKOM">
                             </td>
-                            <td class="letterhead-title" width="49%">
+                            <td class="letterhead-title" width="57%">
                                 YAYASAN WAKAF UMI<br>
                                 UNIVERSITAS MUSLIM INDONESIA<br>
                                 FAKULTAS ILMU KOMPUTER
@@ -148,7 +170,17 @@
                         </tr>
                     </table>
                     <div class="letterhead-divider"></div>
-                    <div class="address">Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818, Fax (0411) - 453009 Makassar 90231<br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id</div>
+                    <div class="address">
+                        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
+                        <table class="contact-table">
+                            <tr>
+                                <td class="icon-cell"><img class="contact-icon" src="{{ $websiteIcon }}" alt="Website"></td>
+                                <td class="contact-text">fikom.umi.ac.id</td>
+                                <td class="icon-cell"><img class="contact-icon" src="{{ $emailIcon }}" alt="Email"></td>
+                                <td class="contact-text">fikom@umi.ac.id</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="invocation">Bismillahir Rahmanir Rahiim</div>
