@@ -62,25 +62,7 @@
             padding-top: 8px;
             text-align: center;
         }
-        .letterhead .contact-table {
-            border-collapse: collapse;
-            margin: 2px auto 0;
-            width: 285px;
-        }
-        .contact-table td {
-            padding: 0;
-            vertical-align: middle;
-            white-space: nowrap;
-        }
-        .contact-table .icon-cell { padding-right: 6px; width: 18px; }
-        .contact-table .contact-text { padding-right: 18px; }
-        .contact-table .contact-text:last-child { padding-right: 0; }
-        .contact-icon {
-            height: 10px;
-            margin: 0 0 1px;
-            vertical-align: middle;
-            width: 10px;
-        }
+        .contact-line { padding-top: 2px; white-space: nowrap; }
         .invocation {
             font-size: 12pt;
             font-style: italic;
@@ -148,8 +130,6 @@
         ] : [];
         $verificationUrl = $sk ? url('sk_pembimbing/' . str_replace('/', '', $sk->nomor_sk)) : '';
         $statusSk = $sk ? (int) helper::getStatusApproveWakilDekan($sk->sk_pembimbing_id) : 0;
-        $websiteIcon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxwYXRoIGQ9Ik0yIDEyaDIwIi8+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDAgMjAiLz48cGF0aCBkPSJNMTIgMmExNS4zIDE1LjMgMCAwIDAgMCAyMCIvPjwvc3ZnPg==';
-        $emailIcon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iMTYiIHg9IjIiIHk9IjQiIHJ4PSIyIi8+PHBhdGggZD0ibTIyIDctOC45NyA1LjdhMS45NCAxLjk0IDAgMCAxLTIuMDYgMEwyIDciLz48L3N2Zz4=';
     @endphp
 
     @foreach ($pembimbing as $penugasan)
@@ -172,14 +152,7 @@
                     <div class="letterhead-divider"></div>
                     <div class="address">
                         Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
-                        <table class="contact-table">
-                            <tr>
-                                <td class="icon-cell"><img class="contact-icon" src="{{ $websiteIcon }}" alt="Website"></td>
-                                <td class="contact-text">fikom.umi.ac.id</td>
-                                <td class="icon-cell"><img class="contact-icon" src="{{ $emailIcon }}" alt="Email"></td>
-                                <td class="contact-text">fikom@umi.ac.id</td>
-                            </tr>
-                        </table>
+                        <div class="contact-line">Website: fikom.umi.ac.id, Email: fikom@umi.ac.id</div>
                     </div>
                 </div>
 
