@@ -311,15 +311,12 @@ class mhs extends Controller
             return redirect()->to($redirectPath)->with('mhs_contact_error', 'Data mahasiswa tidak ditemukan.');
         }
 
-        $fotoWajib = trim((string) $mahasiswa->D_FOTO_MAHASISWA) === '';
-
         $this->validate($request, [
             'no_wa' => 'required|max:20',
             'id_telegram' => 'nullable|max:100',
-            'foto' => ($fotoWajib ? 'required' : 'nullable') . '|file|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'foto' => 'nullable|file|image|mimes:jpeg,jpg,png,webp|max:5120',
         ], [
             'no_wa.required' => 'Nomor WhatsApp wajib diisi.',
-            'foto.required' => 'Foto wajib diunggah.',
             'foto.image' => 'Foto harus berupa gambar.',
             'foto.uploaded' => 'Upload foto gagal diproses server. Coba gunakan file yang lebih kecil lalu unggah kembali.',
             'foto.mimes' => 'Foto harus berformat JPEG, JPG, PNG, atau WebP.',

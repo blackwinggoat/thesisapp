@@ -858,10 +858,6 @@ class Helper
             $missing[] = 'Nomor WhatsApp';
         }
 
-        if (trim((string) ($kontak->D_FOTO_MAHASISWA ?? '')) === '') {
-            $missing[] = 'Foto';
-        }
-
         return $missing;
     }
 

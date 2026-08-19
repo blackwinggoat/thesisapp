@@ -30,6 +30,6 @@ class mhs
             return $next($request);
         }
 
-        return redirect('/home')->with('mhs_contact_error', 'Nomor WhatsApp dan foto wajib diisi terlebih dahulu sebelum menggunakan menu mahasiswa lainnya.');
+        return redirect('/home')->with('mhs_contact_error', 'Nomor WhatsApp wajib diisi terlebih dahulu sebelum menggunakan menu mahasiswa lainnya.');
     }
 }

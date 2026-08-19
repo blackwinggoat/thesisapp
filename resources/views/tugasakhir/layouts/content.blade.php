@@ -643,10 +643,10 @@
                                     <h4 class="modal-title" id="modalKelengkapanMahasiswaLabel">Lengkapi Data Mahasiswa</h4>
                                 </div>
                                 <div class="modal-body">
-                                    <p>Silakan lengkapi data Anda terlebih dahulu. Nomor WhatsApp dan foto wajib diisi sebelum Anda dapat menggunakan fitur lain di sisi mahasiswa.</p>
+                                    <p>Silakan lengkapi Nomor WhatsApp terlebih dahulu sebelum Anda dapat menggunakan fitur lain di sisi mahasiswa. Foto dapat diunggah sekarang atau nanti melalui Profil Saya.</p>
                                     @if ($errors->any())
                                         <div class="alert alert-danger" role="alert">
-                                            <strong>Periksa kembali data foto/kontak:</strong>
+                                            <strong>Periksa kembali data kontak:</strong>
                                             <ul style="margin: 8px 0 0 18px; padding: 0;">
                                                 @foreach ($errors->all() as $error)
                                                     <li>{{ $error }}</li>
@@ -674,9 +674,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Foto</label>
-                                        <input type="file" class="form-control" name="foto" accept="image/jpeg,image/png,image/webp"
-                                            @if (empty($kontakMahasiswa->D_FOTO_MAHASISWA)) required @endif>
-                                        <small class="text-muted">Wajib diisi. Format JPEG, PNG, atau WebP, ukuran maksimal 5 MB.</small>
+                                        <input type="file" class="form-control" name="foto" accept="image/jpeg,image/png,image/webp">
+                                        <small class="text-muted">Opsional. Format JPEG, PNG, atau WebP, ukuran maksimal 5 MB.</small>
                                     </div>
                                     <div class="form-group">
                                         <label>ID Telegram</label>
