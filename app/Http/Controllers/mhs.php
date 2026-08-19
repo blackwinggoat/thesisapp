@@ -1053,19 +1053,90 @@ class mhs extends Controller
 
     public function signup_ujianmeja()
     {
+        $nim = auth()->user()->name;
+        $ujianMejaTypes = [2, 3];
+
         $data = DB::table('mst_pendaftaran')
             ->select('*')
-            ->where('tipe_ujian', 2)
-            ->where('status_ujian', 0)
-            ->orWhere('tipe_ujian', 3)
+            ->where(function ($query) use ($ujianMejaTypes) {
+                $query->whereIn('tipe_ujian', $ujianMejaTypes);
+
+                if (Schema::hasColumn('mst_pendaftaran', 'status_ujian')) {
+                    $query->where('status_ujian', 0);
+                }
+            })
             ->get();
         $syarat = DB::table('mst_syarat_ujian')
             ->select('*')
             ->where('tipe_ujian', 2)
             ->get();
 
+        $registeredPeriodIds = mst_pendaftaran::whereIn('tipe_ujian', $ujianMejaTypes)->select('pendaftaran_id');
+        $registeredBimbinganIds = trt_bimbingan::where('C_NPM', $nim)->select('bimbingan_id');
+        $currentRegistration = trt_reg::where('C_NPM', $nim)
+            ->where('status', 2)
+            ->whereIn('bimbingan_id', $registeredBimbinganIds)
+            ->whereIn('pendaftaran_id', $registeredPeriodIds)
+            ->orderBy('reg_id', 'desc')
+            ->first();
 
-        return view('tugasakhir.mhs.signup_ujianmeja', compact('data', 'syarat'));
+        $currentRegistrationScheduled = false;
+        if (!empty($currentRegistration)) {
+            $currentRegistrationScheduled = TrtJadwalUjianPerMhs::join('trt_jadwal_ujian', 'trt_jadwal_ujian.id', '=', 'trt_jadwal_ujian_per_mhs.jadwal_ujian')
+                ->where('trt_jadwal_ujian_per_mhs.C_NPM', $nim)
+                ->where('trt_jadwal_ujian.pendaftaran_id', $currentRegistration->pendaftaran_id)
+                ->exists();
+        }
+
+        return view('tugasakhir.mhs.signup_ujianmeja', compact('data', 'syarat', 'currentRegistration', 'currentRegistrationScheduled'));
+    }
+
+    public function batalkan_registrasi_ujianmeja($pendaftaran_id)
+    {
+        try {
+            $nim = auth()->user()->name;
+            $pendaftaran = mst_pendaftaran::where('pendaftaran_id', $pendaftaran_id)
+                ->whereIn('tipe_ujian', [2, 3])
+                ->first();
+
+            if (empty($pendaftaran)) {
+                return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_not_found');
+            }
+
+            $scheduled = TrtJadwalUjianPerMhs::join('trt_jadwal_ujian', 'trt_jadwal_ujian.id', '=', 'trt_jadwal_ujian_per_mhs.jadwal_ujian')
+                ->where('trt_jadwal_ujian_per_mhs.C_NPM', $nim)
+                ->where('trt_jadwal_ujian.pendaftaran_id', $pendaftaran_id)
+                ->exists();
+
+            if ($scheduled) {
+                return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_scheduled');
+            }
+
+            $registration = trt_reg::where('C_NPM', $nim)
+                ->where('pendaftaran_id', $pendaftaran_id)
+                ->where('status', 2)
+                ->first();
+
+            if (empty($registration)) {
+                return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_not_found');
+            }
+
+            DB::transaction(function () use ($registration, $pendaftaran, $nim, $pendaftaran_id) {
+                $registration->delete();
+
+                mst_pendaftaran::where('pendaftaran_id', $pendaftaran_id)->update([
+                    'jml_peserta' => max(0, ((int) $pendaftaran->jml_peserta) - 1),
+                ]);
+
+                TrtPenguji::where('C_NPM', $nim)
+                    ->where('tipe_ujian', 2)
+                    ->delete();
+            });
+
+            return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_success');
+        } catch (Exception $e) {
+            return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_error');
+        }
     }
 
     public function registrasi(Request $request)
@@ -1074,7 +1145,8 @@ class mhs extends Controller
             $datapost = $request->all();
             $mstsyaratujian = \App\Model\mst_syarat_ujian::where(["tipe_ujian" => $request->tipe_ujian])->count();
             $trtsyaratujian = \App\TrtSyaratUjian::where(["C_NPM" => auth()->user()->name, "status" => 1])->whereIn("syarat_ujian_id", \App\Model\mst_syarat_ujian::where(["tipe_ujian" => $request->tipe_ujian])->select("syarat_ujian_id"))->count();
-            $trtreg = \App\Model\trt_reg::whereIn("bimbingan_id", \App\Model\trt_bimbingan::where("C_NPM", auth()->user()->name)->select("bimbingan_id"))->whereIn("pendaftaran_id", \App\Model\mst_pendaftaran::where("tipe_ujian", $request->tipe_ujian)->select("pendaftaran_id"))->count();
+            $registrationPeriodTypes = ((int) $request->tipe_ujian === 2) ? [2, 3] : [(int) $request->tipe_ujian];
+            $trtreg = \App\Model\trt_reg::whereIn("bimbingan_id", \App\Model\trt_bimbingan::where("C_NPM", auth()->user()->name)->select("bimbingan_id"))->whereIn("pendaftaran_id", \App\Model\mst_pendaftaran::whereIn("tipe_ujian", $registrationPeriodTypes)->select("pendaftaran_id"))->count();
 
 
             $data_jml = DB::table('mst_pendaftaran')

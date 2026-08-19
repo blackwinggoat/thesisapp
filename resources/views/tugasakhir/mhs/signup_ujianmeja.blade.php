@@ -17,6 +17,31 @@
 
         <!-- BEGIN DATA TABLE -->
         <h3 class="page-heading">Daftar Periode Pendaftaran</h3>
+        @if (session('registration_status') == 'cancel_success')
+        <div class="alert alert-success alert-block square fade in alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <p><strong>Status!</strong></p>
+            <p>Pendaftaran ujian meja berhasil dibatalkan.</p>
+        </div>
+        @elseif(session('registration_status') == 'cancel_scheduled')
+        <div class="alert alert-warning alert-block square fade in alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <p><strong>Status!</strong></p>
+            <p>Pendaftaran tidak dapat dibatalkan karena jadwal ujian sudah dibuat.</p>
+        </div>
+        @elseif(session('registration_status') == 'cancel_not_found')
+        <div class="alert alert-warning alert-block square fade in alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <p><strong>Status!</strong></p>
+            <p>Data pendaftaran ujian meja tidak ditemukan.</p>
+        </div>
+        @elseif(session('registration_status') == 'cancel_error')
+        <div class="alert alert-danger alert-block square fade in alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <p><strong>Status!</strong></p>
+            <p>Pendaftaran gagal dibatalkan. Silakan coba kembali.</p>
+        </div>
+        @endif
         <form method="post" action="{{url('mhs/registrasi')}}" enctype="multipart/form-data">
             {{ csrf_field() }}
             <input type="hidden" name="tipe_ujian" value="2">
@@ -40,17 +65,12 @@
                             $trtsyaratujian = \App\TrtSyaratUjian::where(["C_NPM" => auth()->user()->name, "status" =>
                             1])->whereIn("syarat_ujian_id", \App\Model\mst_syarat_ujian::where(["tipe_ujian" =>
                             2])->select("syarat_ujian_id"))->count();
-                            
-
-
-
-                            $trtreg =
-                            \App\Model\trt_reg::whereIn("bimbingan_id",\App\Model\trt_bimbingan::where("C_NPM",
-                            auth()->user()->name)->select("bimbingan_id"))->whereIn("pendaftaran_id",\App\Model\mst_pendaftaran::where("tipe_ujian",
-                            2)->select("pendaftaran_id"))->count();
-
+                            $registeredPeriodId = !empty($currentRegistration) ? $currentRegistration->pendaftaran_id : null;
                             @endphp
                             @foreach ($data as $key => $value)
+                            @php
+                            $isRegisteredPeriod = !empty($registeredPeriodId) && (string) $registeredPeriodId === (string) $value->pendaftaran_id;
+                            @endphp
                             <tr class="odd gradeX">
                                 <td width="1%" align="center">{{++$key}}</td>
                                 <td>{{$value->nama_periode}}</td>
@@ -59,14 +79,32 @@
                                 <td>{{$value->jml_peserta}}</td>
                                 <td>
                                     <div class="btn-group">
-                                        @if($mstsyaratujian == $trtsyaratujian && !empty($mstsyaratujian) &&
-                                        $value->jml_peserta < $value->kuota && empty($trtreg))
+                                        @if($isRegisteredPeriod)
+                                            <button class="btn btn-success btn-perspective" type="button" disabled>
+                                                <i class="fa fa-check"></i> Terdaftar
+                                            </button>
+                                            @if(!$currentRegistrationScheduled)
+                                            <button type="button" class="btn btn-danger btn-perspective"
+                                                onclick="showModal(this)" data-target="#modalCancelRegistration"
+                                                data-toggle="modal"
+                                                data-href="{{url('mhs/signup_ujianmeja/batalkan/'.$value->pendaftaran_id)}}">
+                                                Batalkan
+                                            </button>
+                                            @else
+                                            <button class="btn btn-default btn-perspective" type="button" disabled>
+                                                Sudah Dijadwalkan
+                                            </button>
+                                            @endif
+                                        @elseif(!empty($registeredPeriodId))
+                                            <span class="text-muted">-</span>
+                                        @elseif($mstsyaratujian == $trtsyaratujian && !empty($mstsyaratujian) &&
+                                        $value->jml_peserta < $value->kuota)
                                             <button class="btn btn-primary btn-perspective" type="submit"
                                                 name="pendaftaran_id" value="{{$value->pendaftaran_id}}">Daftar</button>
-                                            @else
+                                        @else
                                             <button class="btn btn-primary btn-perspective" type="button"
                                                 disabled>Daftar</button>
-                                            @endif
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -220,6 +258,23 @@
         </div><!-- /.modal-content .modal-no-shadow .modal-no-border .the-box .info .full -->
     </div><!-- /.modal-dialog -->
 </div><!-- /#InfoModalColor -->
+
+<div class="modal fade" id="modalCancelRegistration" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content modal-no-shadow modal-no-border bg-danger">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Batalkan Pendaftaran</h4>
+            </div>
+            <div class="modal-body">
+                Apakah Anda yakin ingin keluar dari periode ujian meja ini?
+            </div>
+            <div class="modal-footer">
+                <button onclick="goOn(this)" class="btn btn-default">Batalkan Pendaftaran</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection
 
