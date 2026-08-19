@@ -120,6 +120,12 @@
 {{-- <button id="btnBack" onclick="back()" class="button">Kembali</button> --}}
 <button id="btnPrint" onclick="prints()" class="button">Print</button>
 
+@php
+    $kodeProdi = substr($nim, 0, 3);
+    $programStudiKop = $kodeProdi === '131' ? 'SISTEM INFORMASI' : 'TEKNIK INFORMATIKA';
+    $emailKop = $kodeProdi === '131' ? 's1.sistem.informasi@umi.ac.id' : 's1.teknik.informatika@umi.ac.id';
+@endphp
+
 <body>
     <div class="header" style="position: relative; display: flex; align-items: center; justify-content: space-between;">
         <div style="display: flex; align-items: center; margin-right: 30px !important;">
@@ -131,19 +137,13 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI {{ $programStudiKop }}</h4><br>
         </div>
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
-    <span style="border: solid 1.5px; width: 100%; display: block; margin-top: 2px;"></span>
+    <span style="border: solid 1px; width: 100%; display: block; margin-top: 10px;"></span>
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
-        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
-        Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
+        <br>website: fikom.umi.ac.id, email: {{ $emailKop }}
     </div>
     <div class="title" style="text-align: center; margin-top: 20px;">
         <i>
@@ -417,23 +417,15 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI {{ $programStudiKop }}</h4><br>
         </div>
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
-    <span style="border: solid 1.5px; width: 100%; display: block; margin-top: 2px;"></span>
+    <span style="border: solid 1px; width: 100%; display: block; margin-top: 10px;"></span>
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
-        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
-        Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
+        <br>website: fikom.umi.ac.id, email: {{ $emailKop }}
     </div>
 
-    <span style="border: solid 0.5px; width: 100%; display: flex"></span>
-    <span style="border: solid 1.5px; width: 99.8%; display: flex; margin-top:2px"></span>
     <div class="title">
         <u>
             <h4><b>LEMBAR PENILAIAN UJIAN UJIAN TUTUP TUGAS AKHIR</b></h4>
@@ -605,22 +597,14 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI {{ $programStudiKop }}</h4><br>
         </div>
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
-    <span style="border: solid 1.5px; width: 100%; display: block; margin-top: 2px;"></span>
+    <span style="border: solid 1px; width: 100%; display: block; margin-top: 10px;"></span>
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
-        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
-        Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
+        <br>website: fikom.umi.ac.id, email: {{ $emailKop }}
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: flex"></span>
-    <span style="border: solid 1.5px; width: 99.8%; display: flex; margin-top:2px"></span>
     <div class="title">
         <u>
             <h4><b>LEMBAR PENILAIAN UJIAN UJIAN TUTUP TUGAS AKHIR</b></h4>
@@ -787,22 +771,14 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI {{ $programStudiKop }}</h4><br>
         </div>
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
-    <span style="border: solid 1.5px; width: 100%; display: block; margin-top: 2px;"></span>
+    <span style="border: solid 1px; width: 100%; display: block; margin-top: 10px;"></span>
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
-        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
-        Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
+        <br>website: fikom.umi.ac.id, email: {{ $emailKop }}
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: flex"></span>
-    <span style="border: solid 1.5px; width: 99.8%; display: flex; margin-top:2px"></span>
     <div class="title">
         <u>
             <h4><b>LEMBAR PENILAIAN UJIAN UJIAN TUTUP TUGAS AKHIR</b></h4>
@@ -969,22 +945,14 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI {{ $programStudiKop }}</h4><br>
         </div>
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
-    <span style="border: solid 1.5px; width: 100%; display: block; margin-top: 2px;"></span>
+    <span style="border: solid 1px; width: 100%; display: block; margin-top: 10px;"></span>
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
-        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
-        Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
+        <br>website: fikom.umi.ac.id, email: {{ $emailKop }}
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: flex"></span>
-    <span style="border: solid 1.5px; width: 99.8%; display: flex; margin-top:2px"></span>
     <div class="title">
         <u>
             <h4><b>LEMBAR PENILAIAN UJIAN UJIAN TUTUP TUGAS AKHIR</b></h4>
@@ -1156,22 +1124,14 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI {{ $programStudiKop }}</h4><br>
         </div>
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
-    <span style="border: solid 1.5px; width: 100%; display: block; margin-top: 2px;"></span>
+    <span style="border: solid 1px; width: 100%; display: block; margin-top: 10px;"></span>
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
-        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
-        Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
+        <br>website: fikom.umi.ac.id, email: {{ $emailKop }}
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: flex"></span>
-    <span style="border: solid 1.5px; width: 99.8%; display: flex; margin-top:2px"></span>
     <div class="title">
         <u>
             <h4><b>LEMBAR PENILAIAN UJIAN UJIAN TUTUP TUGAS AKHIR</b></h4>
@@ -1343,22 +1303,14 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI {{ $programStudiKop }}</h4><br>
         </div>
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
-    <span style="border: solid 1.5px; width: 100%; display: block; margin-top: 2px;"></span>
+    <span style="border: solid 1px; width: 100%; display: block; margin-top: 10px;"></span>
     <div class="headerAddress" style="text-align: center; margin-top: 5px; font-size: 9px;">
-        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI Tlp.(0411) 449775-453308-453818,
-        Fax (0411) - 453009 Makassar 90231
-        <br>website: fikom.umi.ac.id, email: S1.teknik.informatika@umi.ac.id
+        Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
+        <br>website: fikom.umi.ac.id, email: {{ $emailKop }}
     </div>
-    <span style="border: solid 0.5px; width: 100%; display: flex"></span>
-    <span style="border: solid 1.5px; width: 99.8%; display: flex; margin-top:2px"></span>
     <div class="title">
         <u>
             <h4><b>LEMBAR PENILAIAN UJIAN UJIAN TUTUP TUGAS AKHIR</b></h4>
