@@ -33,10 +33,11 @@
         }
 
         .headerAddress {
-            display: inline-block;
+            display: block;
+            width: 100%;
             margin-bottom: 0px;
             margin-top: 0px;
-            text-align: left;
+            text-align: center;
         }
 
         .headingTitle {
