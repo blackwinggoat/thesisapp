@@ -18,9 +18,9 @@
                     <br /><strong>{{ helper::getDeskripsi(auth()->user()->name) }}{{ helper::getNamaMhs(auth()->user()->name) }}</strong>
                 </h4>
                 <div class="dosen-sidebar-actions">
-                        @if (session('login_as_source_user_level') == 5 && !empty(session('login_as_source_user_id')))
+                        @if (in_array((int) session('login_as_source_user_level'), [1, 5], true) && !empty(session('login_as_source_user_id')))
                             <a href="{{ url('dsn/back_to_prodi') }}" class="btn btn-primary btn-xs">
-                                Back to Prodi
+                                {{ (int) session('login_as_source_user_level') === 1 ? 'Back to Admin' : 'Back to Prodi' }}
                             </a>
                         @endif
                         <a href="{{ url('dsn/profil') }}" class="btn btn-primary btn-xs" title="Edit profil dosen"><i

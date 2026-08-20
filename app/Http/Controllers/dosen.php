@@ -116,8 +116,8 @@ class dosen extends Controller
         $sourceUserId = $request->session()->get('login_as_source_user_id');
         $sourceUserLevel = (int) $request->session()->get('login_as_source_user_level', 0);
 
-        if (empty($sourceUserId) || $sourceUserLevel !== 5) {
-            return redirect('/')->with('danger', 'Session login as prodi tidak ditemukan.');
+        if (empty($sourceUserId) || !in_array($sourceUserLevel, [1, 5], true)) {
+            return redirect('/')->with('danger', 'Session login as tidak ditemukan.');
         }
 
         $sourceUser = DB::table('users')
@@ -125,13 +125,13 @@ class dosen extends Controller
             ->where('id', $sourceUserId)
             ->first();
 
-        if (!$sourceUser || (int) $sourceUser->level !== 5) {
+        if (!$sourceUser || !in_array((int) $sourceUser->level, [1, 5], true)) {
             $request->session()->forget([
                 'login_as_source_user_id',
                 'login_as_source_user_name',
                 'login_as_source_user_level',
             ]);
-            return redirect('/')->with('danger', 'Akun prodi asal tidak valid.');
+            return redirect('/')->with('danger', 'Akun asal tidak valid.');
         }
 
         Auth::loginUsingId($sourceUserId);
@@ -142,7 +142,7 @@ class dosen extends Controller
             'login_as_source_user_level',
         ]);
 
-        return redirect('/')->with('success', 'Berhasil kembali ke akun prodi.');
+        return redirect('/')->with('success', 'Berhasil kembali ke akun asal.');
     }
 
     public function detail_ujian($nim, $tipe_ujian)

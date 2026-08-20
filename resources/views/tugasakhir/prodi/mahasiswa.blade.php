@@ -52,6 +52,9 @@
 
                 <div style="margin-bottom: 10px;">
                     Menampilkan <strong>{{ $data->count() }}</strong> dari <strong>{{ $data->total() }}</strong> data mahasiswa
+                    @if (!empty($scopeMahasiswaLabel))
+                        <span class="label label-info" style="margin-left: 8px;">{{ $scopeMahasiswaLabel }}</span>
+                    @endif
                 </div>
 
                 <div class="table-responsive">

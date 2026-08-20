@@ -1507,7 +1507,11 @@ class Prodi extends Controller
             ->paginate($perPage)
             ->appends($request->query());
 
-        return view('tugasakhir.prodi.mahasiswa', compact('data', 'q', 'statusAkun', 'perPage'));
+        $scopeMahasiswaLabel = $nimPrefix === ''
+            ? 'Semua Program Studi'
+            : ($nimPrefix === '130' ? 'Teknik Informatika' : 'Sistem Informasi');
+
+        return view('tugasakhir.prodi.mahasiswa', compact('data', 'q', 'statusAkun', 'perPage', 'scopeMahasiswaLabel'));
     }
 
     public function detail_mahasiswa($id)
@@ -1653,8 +1657,8 @@ class Prodi extends Controller
     public function login_as_dosen(Request $request, $id)
     {
         $authUser = auth()->user();
-        if (!$authUser || (int) $authUser->level !== 5) {
-            return redirect('/')->with('danger', 'Akses login as hanya untuk akun prodi.');
+        if (!$this->canUseLoginAs($authUser)) {
+            return redirect('/')->with('danger', 'Akses login as hanya untuk akun admin atau prodi.');
         }
 
         $dosenUser = DB::table('users')
@@ -1680,19 +1684,23 @@ class Prodi extends Controller
     public function login_as_mahasiswa(Request $request, $nim)
     {
         $authUser = auth()->user();
-        if (!$authUser || (int) $authUser->level !== 5) {
-            return redirect('/')->with('danger', 'Akses login as hanya untuk akun prodi.');
+        if (!$this->canUseLoginAs($authUser)) {
+            return redirect('/')->with('danger', 'Akses login as hanya untuk akun admin atau prodi.');
         }
 
-        $nimPrefix = $authUser->name === 'prodisi' ? '131' : '130';
-        $mahasiswa = DB::table('t_mst_mahasiswa')
+        $mahasiswaQuery = DB::table('t_mst_mahasiswa')
             ->select('C_NPM')
-            ->where('C_NPM', $nim)
-            ->where('C_NPM', 'LIKE', $nimPrefix . '%')
-            ->first();
+            ->where('C_NPM', $nim);
+
+        if ((int) $authUser->level === 5) {
+            $nimPrefix = $authUser->name === 'prodisi' ? '131' : '130';
+            $mahasiswaQuery->where('C_NPM', 'LIKE', $nimPrefix . '%');
+        }
+
+        $mahasiswa = $mahasiswaQuery->first();
 
         if (!$mahasiswa) {
-            return redirect()->back()->with('danger', 'Mahasiswa tidak ditemukan pada program studi Anda.');
+            return redirect()->back()->with('danger', 'Mahasiswa tidak ditemukan pada cakupan akses Anda.');
         }
 
         $mahasiswaUser = DB::table('users')
@@ -1713,6 +1721,11 @@ class Prodi extends Controller
         $request->session()->regenerate();
 
         return redirect('/')->with('success', 'Berhasil login sebagai mahasiswa.');
+    }
+
+    protected function canUseLoginAs($authUser)
+    {
+        return $authUser && in_array((int) $authUser->level, [1, 5], true);
     }
 
 

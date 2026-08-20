@@ -15,7 +15,7 @@ class kaprodi
      */
     public function handle($request, Closure $next)
     {
-        if (auth()->check() && ($request->user()->level==5)) {
+        if (auth()->check() && in_array((int) $request->user()->level, [1, 5], true)) {
             return $next($request);
         }
         return redirect()->guest('/');
