@@ -1486,7 +1486,8 @@ class Prodi extends Controller
                 DB::raw('CASE WHEN users.id IS NULL THEN 0 ELSE 1 END AS has_user')
             );
 
-        if (Schema::hasTable('trt_mahasiswa_eksekutif')) {
+        $studentClassFeatureReady = Schema::hasTable('trt_mahasiswa_eksekutif');
+        if ($studentClassFeatureReady) {
             $query->leftJoin('trt_mahasiswa_eksekutif as eksekutif', 'eksekutif.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
                 ->addSelect(DB::raw('CASE WHEN eksekutif.C_NPM IS NULL THEN 0 ELSE 1 END AS is_eksekutif'));
         } else {
@@ -1519,7 +1520,7 @@ class Prodi extends Controller
             ? 'Semua Program Studi'
             : ($nimPrefix === '130' ? 'Teknik Informatika' : 'Sistem Informasi');
 
-        return view('tugasakhir.prodi.mahasiswa', compact('data', 'q', 'statusAkun', 'perPage', 'scopeMahasiswaLabel'));
+        return view('tugasakhir.prodi.mahasiswa', compact('data', 'q', 'statusAkun', 'perPage', 'scopeMahasiswaLabel', 'studentClassFeatureReady'));
     }
 
     public function update_jenis_kelas_mahasiswa(Request $request, $nim)

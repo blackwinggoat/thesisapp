@@ -104,18 +104,20 @@
                                     <a class="btn btn-info" href="{{ url('prodi/login_as_mahasiswa/'.$value->C_NPM) }}" title="Login sebagai mahasiswa">
                                         <i class="fa fa-user"></i>
                                     </a>
-                                    <form id="jenis-kelas-{{ $value->C_NPM }}" action="{{ route('prodi.mahasiswa.jenis_kelas', $value->C_NPM) }}" method="post" style="display: inline-block; margin-left: 4px;">
-                                        {{ csrf_field() }}
-                                        <input type="hidden" name="jenis_kelas" value="">
-                                        <label title="Ubah jenis kelas mahasiswa" style="margin: 0; vertical-align: middle; cursor: pointer;">
-                                            <input type="checkbox"
-                                                   class="student-class-toggle"
-                                                   data-form-id="jenis-kelas-{{ $value->C_NPM }}"
-                                                   data-student-name="{{ $value->NAMA_MAHASISWA }}"
-                                                   {{ (int) ($value->is_eksekutif ?? 0) === 1 ? 'checked' : '' }}>
-                                            <span style="font-size: 11px;">Eksekutif</span>
-                                        </label>
-                                    </form>
+                                    @if ($studentClassFeatureReady ?? false)
+                                        <form id="jenis-kelas-{{ $value->C_NPM }}" action="{{ route('prodi.mahasiswa.jenis_kelas', $value->C_NPM) }}" method="post" style="display: inline-block; margin-left: 4px;">
+                                            {{ csrf_field() }}
+                                            <input type="hidden" name="jenis_kelas" value="">
+                                            <label title="Ubah jenis kelas mahasiswa" style="margin: 0; vertical-align: middle; cursor: pointer;">
+                                                <input type="checkbox"
+                                                       class="student-class-toggle"
+                                                       data-form-id="jenis-kelas-{{ $value->C_NPM }}"
+                                                       data-student-name="{{ $value->NAMA_MAHASISWA }}"
+                                                       {{ (int) ($value->is_eksekutif ?? 0) === 1 ? 'checked' : '' }}>
+                                                <span style="font-size: 11px;">Eksekutif</span>
+                                            </label>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
