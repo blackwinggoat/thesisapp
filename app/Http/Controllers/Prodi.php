@@ -458,44 +458,27 @@ class Prodi extends Controller
             ])
             ->first();
 
-        if ($bimbingan && $penguji) {
-            DB::table('trt_honorium')
-                ->updateOrInsert(
-                    [
-                        'C_NPM' => $nim,
-                        'tipe_ujian' => '0'
-                    ],
-                    [
-                        'date' => now(),
-                        'KS' => $penguji->ketua_sidang_id,
-                        'PU' => $bimbingan->pembimbing_I_id,
-                        'PP' => $bimbingan->pembimbing_II_id,
-                        'P1' => $penguji->penguji_I_id,
-                        'P2' => $penguji->penguji_II_id,
-                        'P3' => $penguji->penguji_III_id,
-                        'KS_H' => 0,
-                        'PU_H' => 0,
-                        'PP_H' => 0,
-                        'P1_H' => 0,
-                        'P2_H' => 0,
-                        'P3_H' => 0,
-                        'KS_Stat' => 0,
-                        'PU_Stat' => 0,
-                        'PP_Stat' => 0,
-                        'P1_Stat' => 0,
-                        'P2_Stat' => 0,
-                        'P3_Stat' => 0
-                    ]
-                );
+        if (!$bimbingan || !$penguji) {
+            return redirect('prodi/detail_hasilujian_proposal/' . $pendaftaran_id)
+                ->with('error', 'Data tim ujian atau pembimbing tidak ditemukan. Honorarium belum dibuat.');
         }
 
-        DB::table('trt_bimbingan')
-            ->where([
-                "bimbingan_id" => $id,
-                "C_NPM" => $nim,
-                "status_bimbingan" => 0,
-            ])
-            ->update(['status_bimbingan' => 2]);
+        try {
+            DB::transaction(function () use ($id, $nim, $pendaftaran_id, $bimbingan, $penguji) {
+                $this->createHonorariumForConfirmedExam($id, $nim, $pendaftaran_id, 0, $bimbingan, $penguji);
+
+                DB::table('trt_bimbingan')
+                    ->where([
+                        "bimbingan_id" => $id,
+                        "C_NPM" => $nim,
+                        "status_bimbingan" => 0,
+                    ])
+                    ->update(['status_bimbingan' => 2]);
+            });
+        } catch (RuntimeException $exception) {
+            return redirect('prodi/detail_hasilujian_proposal/' . $pendaftaran_id)
+                ->with('error', $exception->getMessage());
+        }
 
         // Redirect setelah update
         return redirect('prodi/detail_hasilujian_proposal/' . $pendaftaran_id);
@@ -592,6 +575,50 @@ class Prodi extends Controller
             ->max('rg.reg_id');
 
         return $regId && Helper::isPenilaianLengkapByRegId($regId);
+    }
+
+    protected function createHonorariumForConfirmedExam($bimbinganId, $nim, $pendaftaranId, $tipeUjian, $bimbingan, $penguji)
+    {
+        $sourceKey = 'bimbingan:' . $bimbinganId . ':periode:' . $pendaftaranId . ':ujian:' . $tipeUjian;
+        if (DB::table('trt_honorium')->where('source_key', $sourceKey)->exists()) {
+            return;
+        }
+
+        $tanggalUjian = DB::table('trt_jadwal_ujian as jadwal')
+            ->join('trt_jadwal_ujian_per_mhs as peserta', 'peserta.jadwal_ujian', '=', 'jadwal.id')
+            ->where('jadwal.pendaftaran_id', $pendaftaranId)
+            ->where('peserta.C_NPM', $nim)
+            ->orderBy('jadwal.tgl_ujian', 'desc')
+            ->value('jadwal.tgl_ujian');
+
+        if (!$tanggalUjian) {
+            throw new RuntimeException('Jadwal ujian mahasiswa belum ditemukan. Honorarium tidak dibuat agar tanggal pembayaran tidak keliru.');
+        }
+
+        $roles = [
+            'KS' => $penguji->ketua_sidang_id,
+            'PU' => $bimbingan->pembimbing_I_id,
+            'PP' => $bimbingan->pembimbing_II_id,
+            'P1' => $penguji->penguji_I_id,
+            'P2' => $penguji->penguji_II_id,
+            'P3' => $penguji->penguji_III_id,
+        ];
+
+        $payload = [
+            'date' => Carbon::parse($tanggalUjian)->toDateString(),
+            'C_NPM' => $nim,
+            'source_key' => $sourceKey,
+            'tipe_ujian' => (string) $tipeUjian,
+        ];
+
+        foreach ($roles as $role => $kodeDosen) {
+            $hasDosen = trim((string) $kodeDosen) !== '';
+            $payload[$role] = $hasDosen ? $kodeDosen : null;
+            $payload[$role . '_H'] = 0;
+            $payload[$role . '_Stat'] = $hasDosen ? 0 : 3;
+        }
+
+        DB::table('trt_honorium')->insert($payload);
     }
 
     // Halaman Approve Hasil Ujian Proposal
@@ -903,44 +930,27 @@ class Prodi extends Controller
             ])
             ->first();
 
-        if ($bimbingan && $penguji) {
-            DB::table('trt_honorium')
-                ->updateOrInsert(
-                    [
-                        'C_NPM' => $nim,
-                        'tipe_ujian' => '2'
-                    ],
-                    [
-                        'Date' => now(),
-                        'KS' => $penguji->ketua_sidang_id,
-                        'PU' => $bimbingan->pembimbing_I_id,
-                        'PP' => $bimbingan->pembimbing_II_id,
-                        'P1' => $penguji->penguji_I_id,
-                        'P2' => $penguji->penguji_II_id,
-                        'P3' => $penguji->penguji_III_id,
-                        'KS_H' => 0,
-                        'PU_H' => 0,
-                        'PP_H' => 0,
-                        'P1_H' => 0,
-                        'P2_H' => 0,
-                        'P3_H' => 0,
-                        'KS_Stat' => 0,
-                        'PU_Stat' => 0,
-                        'PP_Stat' => 0,
-                        'P1_Stat' => 0,
-                        'P2_Stat' => 0,
-                        'P3_Stat' => 0
-                    ]
-                );
+        if (!$bimbingan || !$penguji) {
+            return redirect('prodi/detail_hasilujian_ta/' . $pendaftaran_id)
+                ->with('error', 'Data tim ujian atau pembimbing tidak ditemukan. Honorarium belum dibuat.');
         }
 
-        DB::table('trt_bimbingan')
-            ->where([
-                "bimbingan_id" => $id,
-                "C_NPM" => $nim,
-                "status_bimbingan" => 2,
-            ])
-            ->update(['status_bimbingan' => 3]);
+        try {
+            DB::transaction(function () use ($id, $nim, $pendaftaran_id, $bimbingan, $penguji) {
+                $this->createHonorariumForConfirmedExam($id, $nim, $pendaftaran_id, 2, $bimbingan, $penguji);
+
+                DB::table('trt_bimbingan')
+                    ->where([
+                        "bimbingan_id" => $id,
+                        "C_NPM" => $nim,
+                        "status_bimbingan" => 2,
+                    ])
+                    ->update(['status_bimbingan' => 3]);
+            });
+        } catch (RuntimeException $exception) {
+            return redirect('prodi/detail_hasilujian_ta/' . $pendaftaran_id)
+                ->with('error', $exception->getMessage());
+        }
 
         return redirect('prodi/detail_hasilujian_ta/' . $pendaftaran_id);
     }

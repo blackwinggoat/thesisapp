@@ -1818,51 +1818,56 @@ class dosen extends Controller
         }
     }
 
-    public function honorarium()
+    protected function getHonorariumAssignmentsForDosen($kodeDosen)
     {
-        $C_KODE_DOSEN = auth()->user()->name;
-        $data = DB::table('trt_honorium')
-            ->select('trt_honorium.*', DB::raw("
-        CASE
-            WHEN KS = '$C_KODE_DOSEN' THEN 'Ketua Sidang'
-            WHEN PU = '$C_KODE_DOSEN' THEN 'Pembimbing Utama'
-            WHEN PP = '$C_KODE_DOSEN' THEN 'Pembimbing Pendamping'
-            WHEN P1 = '$C_KODE_DOSEN' THEN 'Penguji I'
-            WHEN P2 = '$C_KODE_DOSEN' THEN 'Penguji II'
-            WHEN P3 = '$C_KODE_DOSEN' THEN 'Penguji III'
-            ELSE 'Unknown'
-        END as role,
-        CASE
-            WHEN KS = '$C_KODE_DOSEN' THEN KS_H
-            WHEN PU = '$C_KODE_DOSEN' THEN PU_H
-            WHEN PP = '$C_KODE_DOSEN' THEN PP_H
-            WHEN P1 = '$C_KODE_DOSEN' THEN P1_H
-            WHEN P2 = '$C_KODE_DOSEN' THEN P2_H
-            WHEN P3 = '$C_KODE_DOSEN' THEN P3_H
-            ELSE 0
-        END as amount,
-        CASE
-            WHEN KS = '$C_KODE_DOSEN' THEN KS_Stat
-            WHEN PU = '$C_KODE_DOSEN' THEN PU_Stat
-            WHEN PP = '$C_KODE_DOSEN' THEN PP_Stat
-            WHEN P1 = '$C_KODE_DOSEN' THEN P1_Stat
-            WHEN P2 = '$C_KODE_DOSEN' THEN P2_Stat
-            WHEN P3 = '$C_KODE_DOSEN' THEN P3_Stat
-            ELSE 0
-        END as status
-    "))
-            ->where(function ($query) use ($C_KODE_DOSEN) {
-                $query->where('trt_honorium.KS', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.PU', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.PP', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.P1', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.P2', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.P3', $C_KODE_DOSEN);
+        $roles = [
+            'KS' => ['label' => 'Ketua Sidang', 'amount' => 'KS_H', 'status' => 'KS_Stat'],
+            'PU' => ['label' => 'Pembimbing Utama', 'amount' => 'PU_H', 'status' => 'PU_Stat'],
+            'PP' => ['label' => 'Pembimbing Pendamping', 'amount' => 'PP_H', 'status' => 'PP_Stat'],
+            'P1' => ['label' => 'Penguji I', 'amount' => 'P1_H', 'status' => 'P1_Stat'],
+            'P2' => ['label' => 'Penguji II', 'amount' => 'P2_H', 'status' => 'P2_Stat'],
+            'P3' => ['label' => 'Penguji III', 'amount' => 'P3_H', 'status' => 'P3_Stat'],
+        ];
+
+        $records = DB::table('trt_honorium')
+            ->where(function ($query) use ($kodeDosen) {
+                $query->where('KS', $kodeDosen)
+                    ->orWhere('PU', $kodeDosen)
+                    ->orWhere('PP', $kodeDosen)
+                    ->orWhere('P1', $kodeDosen)
+                    ->orWhere('P2', $kodeDosen)
+                    ->orWhere('P3', $kodeDosen);
             })
-            ->having('status', '<>', 3) // Exclude records where status is 3
             ->orderBy('date', 'desc')
             ->orderBy('C_NPM')
             ->get();
+
+        $assignments = collect();
+        foreach ($records as $record) {
+            foreach ($roles as $role => $definition) {
+                if ((string) $record->{$role} !== (string) $kodeDosen) {
+                    continue;
+                }
+
+                $assignment = clone $record;
+                $assignment->role = $definition['label'];
+                $assignment->amount = $record->{$definition['amount']};
+                $assignment->status = $record->{$definition['status']};
+                $assignments->push($assignment);
+            }
+        }
+
+        return $assignments;
+    }
+
+    public function honorarium()
+    {
+        $C_KODE_DOSEN = auth()->user()->name;
+        $data = $this->getHonorariumAssignmentsForDosen($C_KODE_DOSEN)
+            ->filter(function ($assignment) {
+                return (int) $assignment->status !== 3;
+            })
+            ->values();
 
         $honorariumByDate = $data->groupBy('date')->map(function ($items, $date) {
             return (object) [
@@ -1881,100 +1886,64 @@ class dosen extends Controller
 
     public function honorarium_save_all_dosen(Request $request)
     {
-        foreach ($request->honorariums as $honorarium) {
-            if (isset($honorarium['status']) && $honorarium['status'] == "on") {
-                $C_NPM = $honorarium['C_NPM'];
-                $role = $honorarium['role'];
-                $honorariumId = $honorarium['id'];
+        $roleColumns = [
+            'Ketua Sidang' => ['dosen' => 'KS', 'status' => 'KS_Stat'],
+            'Pembimbing Utama' => ['dosen' => 'PU', 'status' => 'PU_Stat'],
+            'Pembimbing Pendamping' => ['dosen' => 'PP', 'status' => 'PP_Stat'],
+            'Penguji I' => ['dosen' => 'P1', 'status' => 'P1_Stat'],
+            'Penguji II' => ['dosen' => 'P2', 'status' => 'P2_Stat'],
+            'Penguji III' => ['dosen' => 'P3', 'status' => 'P3_Stat'],
+        ];
+        $kodeDosen = (string) auth()->user()->name;
 
-                // Update only the selected exam assignment, not every exam for the same student.
-                switch ($role) {
-                    case 'Ketua Sidang':
-                        DB::table('trt_honorium')
-                            ->where('id', $honorariumId)
-                            ->where('C_NPM', $C_NPM)
-                            ->update(['KS_Stat' => 3]);
-                        break;
-                    case 'Pembimbing Utama':
-                        DB::table('trt_honorium')
-                            ->where('id', $honorariumId)
-                            ->where('C_NPM', $C_NPM)
-                            ->update(['PU_Stat' => 3]);
-                        break;
-                    case 'Pembimbing Pendamping':
-                        DB::table('trt_honorium')
-                            ->where('id', $honorariumId)
-                            ->where('C_NPM', $C_NPM)
-                            ->update(['PP_Stat' => 3]);
-                        break;
-                    case 'Penguji I':
-                        DB::table('trt_honorium')
-                            ->where('id', $honorariumId)
-                            ->where('C_NPM', $C_NPM)
-                            ->update(['P1_Stat' => 3]);
-                        break;
-                    case 'Penguji II':
-                        DB::table('trt_honorium')
-                            ->where('id', $honorariumId)
-                            ->where('C_NPM', $C_NPM)
-                            ->update(['P2_Stat' => 3]);
-                        break;
-                    case 'Penguji III':
-                        DB::table('trt_honorium')
-                            ->where('id', $honorariumId)
-                            ->where('C_NPM', $C_NPM)
-                            ->update(['P3_Stat' => 3]);
-                        break;
+        try {
+            DB::transaction(function () use ($request, $roleColumns, $kodeDosen) {
+                foreach ((array) $request->honorariums as $honorarium) {
+                    if (!isset($honorarium['status']) || $honorarium['status'] !== 'on') {
+                        continue;
+                    }
+
+                    $role = isset($honorarium['role']) ? $honorarium['role'] : '';
+                    $definition = isset($roleColumns[$role]) ? $roleColumns[$role] : null;
+                    $honorariumId = isset($honorarium['id']) ? (int) $honorarium['id'] : 0;
+                    $nim = isset($honorarium['C_NPM']) ? $honorarium['C_NPM'] : '';
+                    if (!$definition || $honorariumId < 1 || $nim === '') {
+                        throw new \RuntimeException('Data konfirmasi honorarium tidak valid.');
+                    }
+
+                    $record = DB::table('trt_honorium')
+                        ->where('id', $honorariumId)
+                        ->where('C_NPM', $nim)
+                        ->lockForUpdate()
+                        ->first();
+                    if (!$record || (string) $record->{$definition['dosen']} !== $kodeDosen) {
+                        throw new \RuntimeException('Anda tidak memiliki akses untuk mengonfirmasi penugasan honorarium ini.');
+                    }
+                    if ((int) $record->{$definition['status']} !== 1) {
+                        throw new \RuntimeException('Honorarium belum tersedia atau sudah dikonfirmasi.');
+                    }
+
+                    DB::table('trt_honorium')
+                        ->where('id', $honorariumId)
+                        ->where('C_NPM', $nim)
+                        ->update([$definition['status'] => 3]);
                 }
-            }
+            });
+        } catch (\RuntimeException $exception) {
+            return redirect()->back()->with('status', 'danger')->with('message', $exception->getMessage());
         }
 
-        return redirect()->back()->with('status', 'success')->with('message', 'Honorarium updated successfully.');
+        return redirect()->back()->with('status', 'success')->with('message', 'Honorarium berhasil dikonfirmasi.');
     }
 
     public function history_honorarium()
     {
         $C_KODE_DOSEN = auth()->user()->name;
-        $data = DB::table('trt_honorium')
-            ->select('trt_honorium.*', DB::raw("
-        CASE
-            WHEN KS = '$C_KODE_DOSEN' THEN 'Ketua Sidang'
-            WHEN PU = '$C_KODE_DOSEN' THEN 'Pembimbing Utama'
-            WHEN PP = '$C_KODE_DOSEN' THEN 'Pembimbing Pendamping'
-            WHEN P1 = '$C_KODE_DOSEN' THEN 'Penguji I'
-            WHEN P2 = '$C_KODE_DOSEN' THEN 'Penguji II'
-            WHEN P3 = '$C_KODE_DOSEN' THEN 'Penguji III'
-            ELSE 'Unknown'
-        END as role,
-        CASE
-            WHEN KS = '$C_KODE_DOSEN' THEN KS_H
-            WHEN PU = '$C_KODE_DOSEN' THEN PU_H
-            WHEN PP = '$C_KODE_DOSEN' THEN PP_H
-            WHEN P1 = '$C_KODE_DOSEN' THEN P1_H
-            WHEN P2 = '$C_KODE_DOSEN' THEN P2_H
-            WHEN P3 = '$C_KODE_DOSEN' THEN P3_H
-            ELSE 0
-        END as amount,
-        CASE
-            WHEN KS = '$C_KODE_DOSEN' THEN KS_Stat
-            WHEN PU = '$C_KODE_DOSEN' THEN PU_Stat
-            WHEN PP = '$C_KODE_DOSEN' THEN PP_Stat
-            WHEN P1 = '$C_KODE_DOSEN' THEN P1_Stat
-            WHEN P2 = '$C_KODE_DOSEN' THEN P2_Stat
-            WHEN P3 = '$C_KODE_DOSEN' THEN P3_Stat
-            ELSE 0
-        END as status
-    "))
-            ->where(function ($query) use ($C_KODE_DOSEN) {
-                $query->where('trt_honorium.KS', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.PU', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.PP', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.P1', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.P2', $C_KODE_DOSEN)
-                    ->orWhere('trt_honorium.P3', $C_KODE_DOSEN);
+        $data = $this->getHonorariumAssignmentsForDosen($C_KODE_DOSEN)
+            ->filter(function ($assignment) {
+                return (int) $assignment->status === 3;
             })
-            ->having('status', '=', 3) // Exclude records where status is 3
-            ->get();
+            ->values();
 
         return view('tugasakhir.dosen.history_honorarium', compact('data'));
     }

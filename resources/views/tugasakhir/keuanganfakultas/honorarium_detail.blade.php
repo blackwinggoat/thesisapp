@@ -66,6 +66,21 @@
                             </thead>
                             <tbody>
                                 @foreach ($data as $honorarium)
+                                    @php
+                                        $tipeBelumDitetapkan = empty($honorarium->tipe_ujian) || in_array((string) $honorarium->tipe_ujian, ['0', '2'], true);
+                                        $sudahAdaPembayaran = ($honorarium->KS && $honorarium->KS_Stat == 3)
+                                            || ($honorarium->PU && $honorarium->PU_Stat == 3)
+                                            || ($honorarium->PP && $honorarium->PP_Stat == 3)
+                                            || ($honorarium->P1 && $honorarium->P1_Stat == 3)
+                                            || ($honorarium->P2 && $honorarium->P2_Stat == 3)
+                                            || ($honorarium->P3 && $honorarium->P3_Stat == 3);
+                                        $tersediaUntukSemuaPeran = (!$honorarium->KS || $honorarium->KS_Stat != 0)
+                                            && (!$honorarium->PU || $honorarium->PU_Stat != 0)
+                                            && (!$honorarium->PP || $honorarium->PP_Stat != 0)
+                                            && (!$honorarium->P1 || $honorarium->P1_Stat != 0)
+                                            && (!$honorarium->P2 || $honorarium->P2_Stat != 0)
+                                            && (!$honorarium->P3 || $honorarium->P3_Stat != 0);
+                                    @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $honorarium->date }}</td>
@@ -75,13 +90,13 @@
                                             <input type="checkbox" name="honorariums[{{ $loop->index }}][KS_Stat]"
                                                 data-toggle="toggle" data-on="Yes" data-off="No"
                                                 data-honorarium-id="{{ $honorarium->id }}"
-                                                {{ $honorarium->KS_Stat != 0 ? 'checked' : '' }}
-                                                {{ $honorarium->KS_Stat == 3 || $honorarium->PU_Stat == 3 || $honorarium->PP_Stat == 3 || $honorarium->P1_Stat == 3 || $honorarium->P2_Stat == 3 || $honorarium->P3_Stat == 3 ? 'disabled' : '' }}>
+                                                {{ $tersediaUntukSemuaPeran ? 'checked' : '' }}
+                                                {{ $tipeBelumDitetapkan || $sudahAdaPembayaran ? 'disabled' : '' }}>
                                         </td>
                                         <td>
                                             <select class="form-control"
                                                 name="honorariums[{{ $loop->index }}][tipe_ujian]"
-                                                {{ ($honorarium->KS_Stat == 3 || $honorarium->PU_Stat == 3 || $honorarium->PP_Stat == 3 || $honorarium->P1_Stat == 3 || $honorarium->P2_Stat == 3 || $honorarium->P3_Stat == 3) && $honorarium->KS_Stat != 0 ? 'disabled' : '' }}>
+                                                {{ $sudahAdaPembayaran ? 'disabled' : '' }}>
 
                                                 @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
                                                     <option value="unset">Unset</option>

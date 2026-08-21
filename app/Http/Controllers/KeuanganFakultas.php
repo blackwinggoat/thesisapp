@@ -106,11 +106,12 @@ class KeuanganFakultas extends Controller
 
     public function honorarium_home()
     {
+        $belumTersediaSql = $this->honorariumHasRoleStatusSql(0);
         $data = $this->honorariumBelumLunasQuery()
             ->select(
                 'date',
-                DB::raw('COUNT(*) as total_mahasiswa'),
-                DB::raw("SUM(CASE WHEN KS_Stat = 0 OR PU_Stat = 0 OR PP_Stat = 0 OR P1_Stat = 0 OR P2_Stat = 0 OR P3_Stat = 0 THEN 1 ELSE 0 END) as belum_tersedia"),
+                DB::raw('COUNT(DISTINCT C_NPM) as total_mahasiswa'),
+                DB::raw("SUM(CASE WHEN {$belumTersediaSql} THEN 1 ELSE 0 END) as belum_tersedia"),
                 DB::raw("SUM(CASE WHEN tipe_ujian IS NULL OR tipe_ujian = '' OR tipe_ujian IN ('0', '2') THEN 1 ELSE 0 END) as perlu_penetapan")
             )
             ->groupBy('date')
@@ -148,102 +149,196 @@ class KeuanganFakultas extends Controller
 
     protected function honorariumBelumLunasQuery()
     {
-        return DB::table('trt_honorium')->where(function ($query) {
-            $query->where('KS_Stat', '<>', 3)
-                ->orWhere('PU_Stat', '<>', 3)
-                ->orWhere('PP_Stat', '<>', 3)
-                ->orWhere('P1_Stat', '<>', 3)
-                ->orWhere('P2_Stat', '<>', 3)
-                ->orWhere('P3_Stat', '<>', 3);
-        });
+        return DB::table('trt_honorium')->whereRaw($this->honorariumOutstandingSql());
     }
 
+    protected function honorariumRoles()
+    {
+        return [
+            'KS' => ['amount' => 'KS_H', 'status' => 'KS_Stat', 'master' => 'ketua_sidang'],
+            'PU' => ['amount' => 'PU_H', 'status' => 'PU_Stat', 'master' => 'pembimbing_utama'],
+            'PP' => ['amount' => 'PP_H', 'status' => 'PP_Stat', 'master' => 'pembimbing_pendamping'],
+            'P1' => ['amount' => 'P1_H', 'status' => 'P1_Stat', 'master' => 'penguji_1'],
+            'P2' => ['amount' => 'P2_H', 'status' => 'P2_Stat', 'master' => 'penguji_2'],
+            'P3' => ['amount' => 'P3_H', 'status' => 'P3_Stat', 'master' => 'penguji_3'],
+        ];
+    }
+
+    protected function honorariumHasRoleSql($role)
+    {
+        return "NULLIF(TRIM(COALESCE({$role}, '')), '') IS NOT NULL";
+    }
+
+    protected function honorariumOutstandingSql()
+    {
+        $conditions = [];
+        foreach ($this->honorariumRoles() as $role => $definition) {
+            $conditions[] = '(' . $this->honorariumHasRoleSql($role) . ' AND COALESCE(' . $definition['status'] . ', 0) <> 3)';
+        }
+
+        return implode(' OR ', $conditions);
+    }
+
+    protected function honorariumHasRoleStatusSql($status)
+    {
+        $conditions = [];
+        foreach ($this->honorariumRoles() as $role => $definition) {
+            $conditions[] = '(' . $this->honorariumHasRoleSql($role) . ' AND COALESCE(' . $definition['status'] . ', 0) = ' . (int) $status . ')';
+        }
+
+        return implode(' OR ', $conditions);
+    }
+
+    protected function honorariumFullyPaidSql()
+    {
+        $conditions = [];
+        foreach ($this->honorariumRoles() as $role => $definition) {
+            $conditions[] = '(NOT (' . $this->honorariumHasRoleSql($role) . ') OR ' . $definition['status'] . ' = 3)';
+        }
+
+        return implode(' AND ', $conditions);
+    }
+
+    protected function honorariumNeedsTypeAssignment($honorarium)
+    {
+        return empty($honorarium->tipe_ujian) || in_array((string) $honorarium->tipe_ujian, ['0', '2'], true);
+    }
+
+    protected function honorariumHasPaidRole($honorarium)
+    {
+        foreach ($this->honorariumRoles() as $role => $definition) {
+            if (trim((string) $honorarium->{$role}) !== '' && (int) $honorarium->{$definition['status']} === 3) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function honorariumStatusPayload($honorarium, $status)
+    {
+        $payload = [];
+        foreach ($this->honorariumRoles() as $role => $definition) {
+            if (trim((string) $honorarium->{$role}) !== '') {
+                $payload[$definition['status']] = (int) $status;
+            }
+        }
+
+        return $payload;
+    }
+
+    protected function honorariumPaymentPayload($honorarium, $masterPayment)
+    {
+        $payload = ['tipe_ujian' => $masterPayment->name];
+        foreach ($this->honorariumRoles() as $role => $definition) {
+            $payload[$definition['amount']] = trim((string) $honorarium->{$role}) !== ''
+                ? $masterPayment->{$definition['master']}
+                : 0;
+        }
+
+        return $payload;
+    }
 
 
     public function honorarium_available_post_yes(Request $request)
     {
         try {
-            DB::table('trt_honorium')
-                ->where('id', $request->id_honorarium)
-                ->update([
-                    'KS_Stat' => 1,
-                    'PU_Stat' => 1,
-                    'PP_Stat' => 1,
-                    'P1_Stat' => 1,
-                    'P2_Stat' => 1,
-                    'P3_Stat' => 1,
-                ]);
+            $id = (int) $request->id_honorarium;
+            if ($id < 1) {
+                throw new \RuntimeException('Data honorarium tidak valid.');
+            }
+
+            DB::transaction(function () use ($id) {
+                $honorarium = DB::table('trt_honorium')->where('id', $id)->lockForUpdate()->first();
+                if (!$honorarium) {
+                    throw new \RuntimeException('Data honorarium tidak ditemukan.');
+                }
+                if ($this->honorariumNeedsTypeAssignment($honorarium)) {
+                    throw new \RuntimeException('Tipe honorarium harus ditetapkan dan disimpan sebelum dana tersedia.');
+                }
+                if ($this->honorariumHasPaidRole($honorarium)) {
+                    throw new \RuntimeException('Honorarium yang sudah memiliki pembayaran tidak dapat diubah menjadi tersedia.');
+                }
+
+                $payload = $this->honorariumStatusPayload($honorarium, 1);
+                if (empty($payload)) {
+                    throw new \RuntimeException('Tidak ada peran dosen yang dapat dibayarkan pada data ini.');
+                }
+
+                DB::table('trt_honorium')->where('id', $id)->update($payload);
+            });
 
             return response()->json(['message' => 'Honorarium berhasil di set menjadi Tersedia!'], 200);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Gagal mengubah status honorarium menjadi Available Post Yes.'], 500);
+            return response()->json(['message' => 'Gagal mengubah status honorarium menjadi tersedia.'], 500);
         }
     }
 
     public function honorarium_available_post_no(Request $request)
     {
         try {
-            DB::table('trt_honorium')
-                ->where('id', $request->id_honorarium)
-                ->update([
-                    'KS_Stat' => 0,
-                    'PU_Stat' => 0,
-                    'PP_Stat' => 0,
-                    'P1_Stat' => 0,
-                    'P2_Stat' => 0,
-                    'P3_Stat' => 0,
-                ]);
+            $id = (int) $request->id_honorarium;
+            if ($id < 1) {
+                throw new \RuntimeException('Data honorarium tidak valid.');
+            }
+
+            DB::transaction(function () use ($id) {
+                $honorarium = DB::table('trt_honorium')->where('id', $id)->lockForUpdate()->first();
+                if (!$honorarium) {
+                    throw new \RuntimeException('Data honorarium tidak ditemukan.');
+                }
+                if ($this->honorariumHasPaidRole($honorarium)) {
+                    throw new \RuntimeException('Honorarium yang sudah memiliki pembayaran tidak dapat dikembalikan ke tidak tersedia.');
+                }
+
+                $payload = $this->honorariumStatusPayload($honorarium, 0);
+                if (empty($payload)) {
+                    throw new \RuntimeException('Tidak ada peran dosen yang dapat diubah pada data ini.');
+                }
+
+                DB::table('trt_honorium')->where('id', $id)->update($payload);
+            });
 
             return response()->json(['message' => 'Honrarium berhasil di set menjadi Tidak Tersedia!'], 200);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Gagal mengubah status honorarium menjadi Available Post No.'], 500);
+            return response()->json(['message' => 'Gagal mengubah status honorarium menjadi tidak tersedia.'], 500);
         }
     }
 
     public function honorarium_save_all(Request $request)
     {
         try {
-            foreach ($request->honorariums as $honorariumData) {
-                if (!isset($honorariumData['tipe_ujian']) || $honorariumData['tipe_ujian'] == 'unset') {
-                    continue;
-                }
-
-                $masterPayment = DB::table('mst_pembayaran_honorarium')
-                    ->where('name', $honorariumData['tipe_ujian'])
-                    ->first();
-
-                if ($masterPayment) {
-                    $existingHonorarium = DB::table('trt_honorium')
-                        ->where('id', $honorariumData['id'])
-                        ->first();
-
-                    if ($existingHonorarium) {
-                        DB::table('trt_honorium')
-                            ->where('id', $honorariumData['id'])
-                            ->update([
-                                'tipe_ujian' => $honorariumData['tipe_ujian'],
-                                'KS_H' => $masterPayment->ketua_sidang,
-                                'PU_H' => $masterPayment->pembimbing_utama,
-                                'PP_H' => $masterPayment->pembimbing_pendamping,
-                                'P1_H' => $masterPayment->penguji_1,
-                                'P2_H' => $masterPayment->penguji_2,
-                                'P3_H' => $masterPayment->penguji_3,
-                            ]);
-                    } else {
-                        // Insert a new record
-                        DB::table('trt_honorium')->insert([
-                            'id' => $honorariumData['id'],
-                            'tipe_ujian' => $honorariumData['tipe_ujian'],
-                            'KS_H' => $masterPayment->ketua_sidang,
-                            'PU_H' => $masterPayment->pembimbing_utama,
-                            'PP_H' => $masterPayment->pembimbing_pendamping,
-                            'P1_H' => $masterPayment->penguji_1,
-                            'P2_H' => $masterPayment->penguji_2,
-                            'P3_H' => $masterPayment->penguji_3,
-                        ]);
+            DB::transaction(function () use ($request) {
+                foreach ((array) $request->honorariums as $honorariumData) {
+                    if (!isset($honorariumData['tipe_ujian']) || $honorariumData['tipe_ujian'] === 'unset') {
+                        continue;
                     }
+
+                    $id = isset($honorariumData['id']) ? (int) $honorariumData['id'] : 0;
+                    $existingHonorarium = DB::table('trt_honorium')->where('id', $id)->lockForUpdate()->first();
+                    if (!$existingHonorarium) {
+                        throw new \RuntimeException('Salah satu data honorarium tidak ditemukan. Tidak ada perubahan yang disimpan.');
+                    }
+                    if ($this->honorariumHasPaidRole($existingHonorarium)) {
+                        throw new \RuntimeException('Tipe atau nominal honorarium yang sudah Lunas tidak dapat diubah.');
+                    }
+
+                    $masterPayment = DB::table('mst_pembayaran_honorarium')
+                        ->where('name', $honorariumData['tipe_ujian'])
+                        ->first();
+                    if (!$masterPayment) {
+                        throw new \RuntimeException('Tipe honorarium yang dipilih tidak ditemukan pada master pembayaran.');
+                    }
+
+                    DB::table('trt_honorium')
+                        ->where('id', $id)
+                        ->update($this->honorariumPaymentPayload($existingHonorarium, $masterPayment));
                 }
-            }
+            });
 
             return redirect()->back()->with([
                 'status' => 'success',
@@ -260,12 +355,7 @@ class KeuanganFakultas extends Controller
     public function honorarium_history()
     {
         $data = DB::table('trt_honorium')
-            ->where('KS_Stat', '=', 3)
-            ->where('PU_Stat', '=', 3)
-            ->where('PP_Stat', '=', 3)
-            ->where('P1_Stat', '=', 3)
-            ->where('P2_Stat', '=', 3)
-            ->where('P3_Stat', '=', 3)
+            ->whereRaw($this->honorariumFullyPaidSql())
             ->get();
 
         $dataMasterHonorarium = DB::table('mst_pembayaran_honorarium')->get();
@@ -279,13 +369,15 @@ class KeuanganFakultas extends Controller
     public function report_periode_ujian_home()
     {
         try {
+            $belumTersediaSql = $this->honorariumHasRoleStatusSql(0);
+            $tersediaSql = $this->honorariumHasRoleStatusSql(1);
             $data = DB::table('trt_honorium')
                 ->select(
                     'date',
                     DB::raw("
                         CASE
-                            WHEN SUM(CASE WHEN KS_Stat = 0 OR PU_Stat = 0 OR PP_Stat = 0 OR P1_Stat = 0 OR P2_Stat = 0 OR P3_Stat = 0 THEN 1 ELSE 0 END) > 0 THEN 0
-                            WHEN SUM(CASE WHEN KS_Stat = 1 OR PU_Stat = 1 OR PP_Stat = 1 OR P1_Stat = 1 OR P2_Stat = 1 OR P3_Stat = 1 THEN 1 ELSE 0 END) > 0 THEN 1
+                            WHEN SUM(CASE WHEN {$belumTersediaSql} THEN 1 ELSE 0 END) > 0 THEN 0
+                            WHEN SUM(CASE WHEN {$tersediaSql} THEN 1 ELSE 0 END) > 0 THEN 1
                             ELSE 2
                         END AS status_complete
                     ")
