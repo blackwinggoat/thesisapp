@@ -391,6 +391,19 @@ class KeuanganFakultas extends Controller
 
     public function honorarium_tanda_terima_pdf(Request $request)
     {
+        return $this->honorarium_tanda_terima_pdf_dengan_status($request, false);
+    }
+
+    public function honorarium_history_tanda_terima_pdf(Request $request)
+    {
+        return $this->honorarium_tanda_terima_pdf_dengan_status($request, true);
+    }
+
+    protected function honorarium_tanda_terima_pdf_dengan_status(Request $request, $riwayat)
+    {
+        $redirectRoute = $riwayat ? 'honorarium_history' : 'honorarium_home';
+        $statusDibutuhkan = $riwayat ? 3 : 1;
+        $statusLabel = $riwayat ? 'Terbayar' : 'Available';
         $tanggalInput = collect((array) $request->input('tanggal'))
             ->map(function ($tanggal) {
                 return trim((string) $tanggal);
@@ -398,7 +411,7 @@ class KeuanganFakultas extends Controller
             ->filter()
             ->values();
         if ($tanggalInput->isEmpty()) {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'warning',
                 'message' => 'Pilih minimal satu tanggal ujian untuk membuat PDF tanda terima.',
             ]);
@@ -408,17 +421,18 @@ class KeuanganFakultas extends Controller
             return !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal);
         });
         if ($tanggalTidakValid !== null) {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'danger',
                 'message' => 'Pilihan tanggal ujian tidak valid.',
             ]);
         }
 
         $tanggalTerpilih = $tanggalInput->unique()->sort()->values();
-        $honorariums = $this->honorariumDenganJadwalQuery()
-            ->whereIn('jadwal.tgl_ujian', $tanggalTerpilih->all())
-            ->select('honorarium.*', 'jadwal.tgl_ujian as tanggal_ujian')
-            ->orderBy('jadwal.tgl_ujian')
+        $tanggalSql = $this->honorariumTanggalEfektifSql();
+        $honorariums = ($riwayat ? $this->honorariumLunasDenganJadwalQuery() : $this->honorariumDenganJadwalQuery())
+            ->whereIn(DB::raw($tanggalSql), $tanggalTerpilih->all())
+            ->select('honorarium.*', DB::raw("{$tanggalSql} as tanggal_ujian"))
+            ->orderBy(DB::raw($tanggalSql))
             ->orderBy('honorarium.C_NPM')
             ->get()
             ->unique(function ($honorarium) {
@@ -427,17 +441,17 @@ class KeuanganFakultas extends Controller
             ->values();
 
         if ($honorariums->isEmpty()) {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'info',
-                'message' => 'Tidak ada honorarium aktif pada tanggal yang dipilih.',
+                'message' => 'Tidak ada honorarium ' . strtolower($statusLabel) . ' pada tanggal yang dipilih.',
             ]);
         }
 
         $belumDitetapkan = $honorariums->filter(function ($honorarium) {
             return $this->honorariumNeedsTypeAssignment($honorarium);
         })->count();
-        if ($belumDitetapkan > 0) {
-            return redirect()->route('honorarium_home')->with([
+        if (!$riwayat && $belumDitetapkan > 0) {
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'warning',
                 'message' => 'PDF belum dapat dibuat. Tetapkan tipe honorarium untuk ' . $belumDitetapkan
                     . ' data pada tanggal yang dipilih terlebih dahulu.',
@@ -460,7 +474,7 @@ class KeuanganFakultas extends Controller
         foreach ($honorariums as $honorarium) {
             foreach ($peranHonorarium as $role => $definition) {
                 $kodeDosen = trim((string) $honorarium->{$role});
-                if ($kodeDosen === '' || (int) $honorarium->{$definition['status']} !== 1) {
+                if ($kodeDosen === '' || (int) $honorarium->{$definition['status']} !== $statusDibutuhkan) {
                     continue;
                 }
 
@@ -520,9 +534,10 @@ class KeuanganFakultas extends Controller
             ->values();
 
         if ($reports->isEmpty()) {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'warning',
-                'message' => 'Tidak ada honorarium berstatus Available yang dapat dibuatkan tanda terima pada tanggal yang dipilih.',
+                'message' => 'Tidak ada honorarium berstatus ' . $statusLabel
+                    . ' yang dapat dibuatkan tanda terima pada tanggal yang dipilih.',
             ]);
         }
 
@@ -621,6 +636,76 @@ class KeuanganFakultas extends Controller
             return redirect()->route('honorarium_home')->with([
                 'status' => 'danger',
                 'message' => 'Gagal menandai honorarium sebagai terbayar. Tidak ada data yang diubah.',
+            ]);
+        }
+    }
+
+    public function honorarium_kembalikan_belum_terbayar(Request $request)
+    {
+        $tanggalInput = collect((array) $request->input('tanggal'))
+            ->map(function ($tanggal) {
+                return trim((string) $tanggal);
+            })
+            ->filter()
+            ->values();
+
+        if ($tanggalInput->isEmpty()) {
+            return redirect()->route('honorarium_history')->with([
+                'status' => 'warning',
+                'message' => 'Pilih minimal satu tanggal ujian yang akan dikembalikan ke honorarium belum terbayar.',
+            ]);
+        }
+
+        if ($tanggalInput->contains(function ($tanggal) {
+            return !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal);
+        })) {
+            return redirect()->route('honorarium_history')->with([
+                'status' => 'danger',
+                'message' => 'Pilihan tanggal ujian tidak valid.',
+            ]);
+        }
+
+        $tanggalTerpilih = $tanggalInput->unique()->sort()->values();
+        $tanggalSql = $this->honorariumTanggalEfektifSql();
+
+        try {
+            $jumlahHonorarium = DB::transaction(function () use ($tanggalTerpilih, $tanggalSql) {
+                $honorariums = $this->honorariumLunasDenganJadwalQuery()
+                    ->whereIn(DB::raw($tanggalSql), $tanggalTerpilih->all())
+                    ->select('honorarium.*')
+                    ->orderBy('honorarium.id')
+                    ->lockForUpdate()
+                    ->get()
+                    ->unique('id')
+                    ->values();
+
+                if ($honorariums->isEmpty()) {
+                    throw new \RuntimeException('Tidak ada honorarium lunas pada tanggal yang dipilih.');
+                }
+
+                foreach ($honorariums as $honorarium) {
+                    DB::table('trt_honorium')
+                        ->where('id', $honorarium->id)
+                        ->update($this->honorariumStatusPayload($honorarium, 1));
+                }
+
+                return $honorariums->count();
+            });
+
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'success',
+                'message' => $jumlahHonorarium . ' data honorarium pada ' . $tanggalTerpilih->count()
+                    . ' tanggal dikembalikan menjadi Available untuk dikelola kembali.',
+            ]);
+        } catch (\RuntimeException $e) {
+            return redirect()->route('honorarium_history')->with([
+                'status' => 'warning',
+                'message' => $e->getMessage(),
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->route('honorarium_history')->with([
+                'status' => 'danger',
+                'message' => 'Gagal mengembalikan honorarium ke status belum terbayar. Tidak ada data yang diubah.',
             ]);
         }
     }

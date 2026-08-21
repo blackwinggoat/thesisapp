@@ -25,7 +25,7 @@ class HonorariumPaidDateWorkflowTest extends TestCase
         $this->assertStringContainsString('if (result.value)', $summary);
     }
 
-    public function testHistoryIsGroupedByExamDateAndReadOnly()
+    public function testHistoryIsGroupedByExamDateAndSupportsSelectedDateActions()
     {
         $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/KeuanganFakultas.php');
         $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
@@ -38,10 +38,20 @@ class HonorariumPaidDateWorkflowTest extends TestCase
         $this->assertStringContainsString("->groupBy('date')", $controller);
         $this->assertStringContainsString("'total_honor' => (float) \$honorariumTanggal->sum('total_honor')", $controller);
         $this->assertStringContainsString('honorarium_history_detail_tanggal', $controller);
+        $this->assertStringContainsString('honorarium_history_tanda_terima_pdf', $controller);
+        $this->assertStringContainsString('honorarium_kembalikan_belum_terbayar', $controller);
+        $this->assertStringContainsString('honorariumStatusPayload($honorarium, 1)', $controller);
+        $this->assertStringContainsString('->lockForUpdate()', $controller);
+        $this->assertStringContainsString("Route::post('/history/tanda-terima-pdf'", $routes);
+        $this->assertStringContainsString("Route::post('/history/kembalikan-belum-terbayar'", $routes);
         $this->assertStringContainsString("Route::get('/history/tanggal/{date}'", $routes);
         $this->assertStringContainsString('Riwayat Honorarium per Tanggal Ujian', $history);
         $this->assertStringContainsString('Total Honor Terbayar', $history);
         $this->assertStringContainsString('Lihat Detail', $history);
+        $this->assertStringContainsString('name="tanggal[]"', $history);
+        $this->assertStringContainsString('Download PDF Terpilih', $history);
+        $this->assertStringContainsString('Kembalikan ke Belum Terbayar', $history);
+        $this->assertStringContainsString('if (result.value)', $history);
         $this->assertStringContainsString('Riwayat Honorarium Tanggal {{ $date }}', $detail);
         $this->assertStringNotContainsString('<form', $detail);
     }

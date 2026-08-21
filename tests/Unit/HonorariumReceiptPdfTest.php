@@ -14,16 +14,22 @@ class HonorariumReceiptPdfTest extends TestCase
         $pdfView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/tanda_terima_honorarium_pdf.blade.php');
 
         $this->assertStringContainsString('honorarium_tanda_terima_pdf', $controller);
+        $this->assertStringContainsString('honorarium_tanda_terima_pdf_dengan_status', $controller);
+        $this->assertStringContainsString('honorarium_history_tanda_terima_pdf', $controller);
         $this->assertStringContainsString("request->input('tanggal')", $controller);
-        $this->assertStringContainsString("->whereIn('jadwal.tgl_ujian', \$tanggalTerpilih->all())", $controller);
+        $this->assertStringContainsString('honorariumTanggalEfektifSql()', $controller);
+        $this->assertStringContainsString('->whereIn(DB::raw($tanggalSql), $tanggalTerpilih->all())', $controller);
+        $this->assertStringContainsString('honorariumLunasDenganJadwalQuery()', $controller);
         $this->assertStringContainsString("'tanggal' => collect()", $controller);
         $this->assertStringContainsString("'subtotal_honor' => 0", $controller);
         $this->assertStringContainsString('PDF belum dapat dibuat. Tetapkan tipe honorarium', $controller);
+        $this->assertStringContainsString('if (!$riwayat && $belumDitetapkan > 0)', $controller);
         $this->assertStringContainsString("'KS' => ['label' => 'Ketua Sidang', 'amount' => 'KS_H', 'status' => 'KS_Stat']", $controller);
         $this->assertStringContainsString("'P3' => ['label' => 'Penguji III', 'amount' => 'P3_H', 'status' => 'P3_Stat']", $controller);
-        $this->assertStringContainsString("(int) \$honorarium->{\$definition['status']} !== 1", $controller);
-        $this->assertStringContainsString('Tidak ada honorarium berstatus Available', $controller);
+        $this->assertStringContainsString("(int) \$honorarium->{\$definition['status']} !== \$statusDibutuhkan", $controller);
+        $this->assertStringContainsString("'Tidak ada honorarium berstatus ' . \$statusLabel", $controller);
         $this->assertStringContainsString("Route::post('/tanda-terima-pdf'", $routes);
+        $this->assertStringContainsString("Route::post('/history/tanda-terima-pdf'", $routes);
         $this->assertStringContainsString('fa-file-pdf-o', $listView);
         $this->assertStringContainsString('Download PDF Terpilih', $listView);
         $this->assertStringContainsString('name="tanggal[]"', $listView);
