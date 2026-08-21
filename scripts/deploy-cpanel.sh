@@ -95,7 +95,9 @@ prune_deploy_backups() {
 }
 
 run_approved_migrations() {
-    [[ -f "$MIGRATION_APPROVAL_FILE" ]] || return
+    if [[ ! -f "$MIGRATION_APPROVAL_FILE" ]]; then
+        return 0
+    fi
 
     local approved_commit
     local migration
