@@ -106,21 +106,56 @@ class KeuanganFakultas extends Controller
 
     public function honorarium_home()
     {
-        $data = DB::table('trt_honorium')
-            ->where('KS_Stat', '<>', 3)
-            ->orWhere('PU_Stat', '<>', 3)
-            ->orWhere('PP_Stat', '<>', 3)
-            ->orWhere('P1_Stat', '<>', 3)
-            ->orWhere('P2_Stat', '<>', 3)
-            ->orWhere('P3_Stat', '<>', 3)
+        $data = $this->honorariumBelumLunasQuery()
+            ->select(
+                'date',
+                DB::raw('COUNT(*) as total_mahasiswa'),
+                DB::raw("SUM(CASE WHEN KS_Stat = 0 OR PU_Stat = 0 OR PP_Stat = 0 OR P1_Stat = 0 OR P2_Stat = 0 OR P3_Stat = 0 THEN 1 ELSE 0 END) as belum_tersedia"),
+                DB::raw("SUM(CASE WHEN tipe_ujian IS NULL OR tipe_ujian = '' OR tipe_ujian IN ('0', '2') THEN 1 ELSE 0 END) as perlu_penetapan")
+            )
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
             ->get();
-
-        $dataMasterHonorarium = DB::table('mst_pembayaran_honorarium')->get();
 
         return view('tugasakhir.keuanganfakultas.honorarium', [
             'data' => $data,
-            'dataMasterHonorarium' => $dataMasterHonorarium
         ]);
+    }
+
+    public function honorarium_detail_tanggal($date)
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
+            abort(404);
+        }
+
+        $data = $this->honorariumBelumLunasQuery()
+            ->where('date', $date)
+            ->orderBy('C_NPM')
+            ->get();
+
+        if ($data->isEmpty()) {
+            abort(404);
+        }
+
+        $dataMasterHonorarium = DB::table('mst_pembayaran_honorarium')->get();
+
+        return view('tugasakhir.keuanganfakultas.honorarium_detail', compact(
+            'data',
+            'dataMasterHonorarium',
+            'date'
+        ));
+    }
+
+    protected function honorariumBelumLunasQuery()
+    {
+        return DB::table('trt_honorium')->where(function ($query) {
+            $query->where('KS_Stat', '<>', 3)
+                ->orWhere('PU_Stat', '<>', 3)
+                ->orWhere('PP_Stat', '<>', 3)
+                ->orWhere('P1_Stat', '<>', 3)
+                ->orWhere('P2_Stat', '<>', 3)
+                ->orWhere('P3_Stat', '<>', 3);
+        });
     }
 
 

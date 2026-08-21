@@ -632,6 +632,7 @@ Route::group(['middleware' => 'keuangan_fakultas'], function () {
         Route::post('/available_post_no', 'KeuanganFakultas@honorarium_available_post_no')->name('honorarium_available_post_no');
         Route::post('/save_all', 'KeuanganFakultas@honorarium_save_all')->name('honorarium_save_all');
         Route::get('/history', 'KeuanganFakultas@honorarium_history')->name('honorarium_history');
+        Route::get('/tanggal/{date}', 'KeuanganFakultas@honorarium_detail_tanggal')->name('honorarium_detail_tanggal');
     });
     // Report
     Route::group(['prefix' => 'report'], function () {
