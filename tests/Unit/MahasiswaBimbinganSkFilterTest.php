@@ -35,7 +35,7 @@ class MahasiswaBimbinganSkFilterTest extends TestCase
         $method = $matches[0];
 
         $this->assertStringNotContainsString('C_KODE_STATUS_AKTIF_MHS', $method);
-        $this->assertStringContainsString("where('trt_bimbingan.status_bimbingan', '<>', 4)", $method);
+        $this->assertStringNotContainsString("where('trt_bimbingan.status_bimbingan', '<>', 4)", $method);
         $this->assertStringContainsString("whereNotNull('mst_sk_pembimbing.nomor_sk')", $method);
     }
 }

@@ -1221,8 +1221,7 @@ class dosen extends Controller
                 ->keyBy('C_NPM');
         }
 
-        $bimbinganAktif = DB::table('trt_bimbingan')
-            ->where('trt_bimbingan.status_bimbingan', '<>', 4);
+        $bimbinganAktif = DB::table('trt_bimbingan');
         $ppropI = (clone $bimbinganAktif)
             ->where('pembimbing_I_id', $id)
             ->where('status_bimbingan', 0)
@@ -2168,7 +2167,6 @@ class dosen extends Controller
                 'mst_sk_pembimbing.created_at as tanggal_sk'
             )
             ->where('trt_bimbingan.' . $kolomPembimbing, $kodeDosen)
-            ->where('trt_bimbingan.status_bimbingan', '<>', 4)
             ->whereNotNull('mst_sk_pembimbing.nomor_sk')
             ->whereRaw("TRIM(mst_sk_pembimbing.nomor_sk) <> ''")
             ->orderBy('t_mst_mahasiswa.NAMA_MAHASISWA', 'asc')
@@ -2199,7 +2197,7 @@ class dosen extends Controller
             case '3':
                 return 'Lulusan';
             case '4':
-                return 'Non Aktif';
+                return 'Tahapan Belum Ditentukan';
             default:
                 return '-';
         }

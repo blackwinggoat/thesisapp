@@ -45,14 +45,14 @@ class DeactivateLegacyMahasiswaTugasAkhirTest extends TestCase
         $this->assertSame(0, (int) DB::table('trt_bimbingan')->where('C_NPM', 'MHS-AKTIF-LAMA')->value('status_bimbingan'));
     }
 
-    public function testApplyDeactivatesOnlyLegacyStudentsWithoutGraduationRecord()
+    public function testApplyCannotDeactivateLegacyStudents()
     {
         $this->seedCandidates();
 
         $this->runCommand(true);
 
-        $this->assertSame('N', DB::table('t_mst_mahasiswa')->where('C_NPM', 'MHS-AKTIF-LAMA')->value('C_KODE_STATUS_AKTIF_MHS'));
-        $this->assertSame(4, (int) DB::table('trt_bimbingan')->where('C_NPM', 'MHS-AKTIF-LAMA')->value('status_bimbingan'));
+        $this->assertSame('A', DB::table('t_mst_mahasiswa')->where('C_NPM', 'MHS-AKTIF-LAMA')->value('C_KODE_STATUS_AKTIF_MHS'));
+        $this->assertSame(0, (int) DB::table('trt_bimbingan')->where('C_NPM', 'MHS-AKTIF-LAMA')->value('status_bimbingan'));
         $this->assertSame('A', DB::table('t_mst_mahasiswa')->where('C_NPM', 'MHS-LULUS')->value('C_KODE_STATUS_AKTIF_MHS'));
         $this->assertSame(3, (int) DB::table('trt_bimbingan')->where('C_NPM', 'MHS-LULUS')->value('status_bimbingan'));
         $this->assertSame('A', DB::table('t_mst_mahasiswa')->where('C_NPM', 'MHS-BARU')->value('C_KODE_STATUS_AKTIF_MHS'));

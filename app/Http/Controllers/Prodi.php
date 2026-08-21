@@ -1434,7 +1434,7 @@ class Prodi extends Controller
             case '3':
                 return 'Lulusan';
             case '4':
-                return 'Non Aktif';
+                return 'Tahapan Belum Ditentukan';
             default:
                 return '-';
         }
@@ -1532,7 +1532,7 @@ class Prodi extends Controller
             $request->validate([
                 'nim' => 'required',
                 'bimbingan_id' => 'required',
-                'status_bimbingan' => 'required|in:0,2,3,4',
+                'status_bimbingan' => 'required|in:0,2,3',
             ]);
 
             $updated = DB::table('trt_bimbingan')
@@ -3210,7 +3210,6 @@ class Prodi extends Controller
             ['label' => 'Persiapan Proposal', 'value' => (int) ($statusCounts[0] ?? 0)],
             ['label' => 'Persiapan Ujian Meja', 'value' => (int) ($statusCounts[2] ?? 0)],
             ['label' => 'Lulus', 'value' => (int) ($statusCounts[3] ?? 0)],
-            ['label' => 'Non Aktif', 'value' => (int) ($statusCounts[4] ?? 0)],
         ];
 
         $topikCounts = $this->safeReportSection(
@@ -3584,7 +3583,6 @@ class Prodi extends Controller
             ['label' => 'Persiapan Proposal', 'value' => (int) ($statusCounts[0] ?? 0), 'class' => 'success', 'icon' => 'fa-file-text-o'],
             ['label' => 'Persiapan Ujian Meja', 'value' => (int) ($statusCounts[2] ?? 0), 'class' => 'primary', 'icon' => 'fa-graduation-cap'],
             ['label' => 'Lulus', 'value' => (int) ($statusCounts[3] ?? 0), 'class' => 'danger', 'icon' => 'fa-trophy'],
-            ['label' => 'Non Aktif', 'value' => (int) ($statusCounts[4] ?? 0), 'class' => 'warning', 'icon' => 'fa-user-times'],
         ];
 
         $queueCards = [

@@ -152,8 +152,6 @@
                                     Persiapan Ujian Meja
                                     @elseif ($datax->pembimbing1->status_bimbingan == 3)
                                     Lulus
-                                    @elseif ($datax->pembimbing1->status_bimbingan == 4)
-                                    Non Aktif
                                     @endif
                                     @endif
                                 </td>
@@ -196,7 +194,6 @@
                                             <option value="0" {{ isset($datax->pembimbing1->status_bimbingan) && $datax->pembimbing1->status_bimbingan == 0 ? 'selected' : '' }}>Persiapan Proposal</option>
                                             <option value="2" {{ isset($datax->pembimbing1->status_bimbingan) && $datax->pembimbing1->status_bimbingan == 2 ? 'selected' : '' }}>Persiapan Ujian Meja</option>
                                             <option value="3" {{ isset($datax->pembimbing1->status_bimbingan) && $datax->pembimbing1->status_bimbingan == 3 ? 'selected' : '' }}>Lulus</option>
-                                            <option value="4" {{ isset($datax->pembimbing1->status_bimbingan) && $datax->pembimbing1->status_bimbingan == 4 ? 'selected' : '' }}>Non Aktif</option>
                                         </select>
                                         <button type="submit" class="btn btn-warning btn-small" style="margin-left: 8px;">Simpan</button>
                                     </form>
