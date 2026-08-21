@@ -1222,8 +1222,7 @@ class dosen extends Controller
         }
 
         $bimbinganAktif = DB::table('trt_bimbingan')
-            ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_bimbingan.C_NPM')
-            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A');
+            ->where('trt_bimbingan.status_bimbingan', '<>', 4);
         $ppropI = (clone $bimbinganAktif)
             ->where('pembimbing_I_id', $id)
             ->where('status_bimbingan', 0)
@@ -2169,7 +2168,6 @@ class dosen extends Controller
                 'mst_sk_pembimbing.created_at as tanggal_sk'
             )
             ->where('trt_bimbingan.' . $kolomPembimbing, $kodeDosen)
-            ->where('t_mst_mahasiswa.C_KODE_STATUS_AKTIF_MHS', 'A')
             ->where('trt_bimbingan.status_bimbingan', '<>', 4)
             ->whereNotNull('mst_sk_pembimbing.nomor_sk')
             ->whereRaw("TRIM(mst_sk_pembimbing.nomor_sk) <> ''")

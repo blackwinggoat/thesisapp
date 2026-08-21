@@ -21,4 +21,21 @@ class MahasiswaBimbinganSkFilterTest extends TestCase
             strpos($view, '<th>Jenis Tugas Akhir</th>')
         );
     }
+
+    public function testDosenBimbinganUsesWorkflowStatusInsteadOfMasterStudentStatus()
+    {
+        $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/dosen.php');
+        preg_match(
+            '/protected function getMahasiswaBimbinganByPeran.*?protected function getStatusBimbinganLabel/s',
+            $controller,
+            $matches
+        );
+
+        $this->assertNotEmpty($matches);
+        $method = $matches[0];
+
+        $this->assertStringNotContainsString('C_KODE_STATUS_AKTIF_MHS', $method);
+        $this->assertStringContainsString("where('trt_bimbingan.status_bimbingan', '<>', 4)", $method);
+        $this->assertStringContainsString("whereNotNull('mst_sk_pembimbing.nomor_sk')", $method);
+    }
 }
