@@ -38,6 +38,7 @@
                             <tr>
                                 <th>No</th>
                                 <th>Name</th>
+                                <th>Jenis Tugas Akhir</th>
                                 <th>KS</th>
                                 <th>PU</th>
                                 <th>PP</th>
@@ -52,6 +53,15 @@
                                 <tr>
                                     <td>{{ $key + 1 }}</td>
                                     <td>{{ $p->name }}</td>
+                                    <td>
+                                        @forelse ($p->jenis_tugas_akhir as $jenis)
+                                            <span class="label label-info" title="{{ $jenis->deskripsi }}">
+                                                {{ $jenis->kode_jenis_tugas_akhir }}
+                                            </span>
+                                        @empty
+                                            <span class="label label-warning">Belum diatur</span>
+                                        @endforelse
+                                    </td>
                                     <td>{{ helper::formatRupiah($p->ketua_sidang) }}</td>
                                     <td>{{ helper::formatRupiah($p->pembimbing_utama) }}</td>
                                     <td>{{ helper::formatRupiah($p->pembimbing_pendamping) }}</td>
@@ -64,7 +74,8 @@
                                             data-id="{{ $p->id_honorarium }}" data-name="{{ $p->name }}"
                                             data-ks="{{ $p->ketua_sidang }}" data-pu="{{ $p->pembimbing_utama }}"
                                             data-pp="{{ $p->pembimbing_pendamping }}" data-p1="{{ $p->penguji_1 }}"
-                                            data-p2="{{ $p->penguji_2 }}" data-p3="{{ $p->penguji_3 }}">
+                                            data-p2="{{ $p->penguji_2 }}" data-p3="{{ $p->penguji_3 }}"
+                                            data-jenis-ids="{{ implode(',', $p->jenis_tugas_akhir_ids) }}">
                                             <i class="fa fa-pencil"></i>
                                         </button>
                                         <a href="{{ route('master_pembayaran_delete', $p->id_honorarium) }}"
@@ -108,6 +119,22 @@
                         <div class="form-group">
                             <label for="edit_name">Nama Tipe Pembayaran</label>
                             <input type="text" class="form-control" id="edit_name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Jenis Tugas Akhir yang Berlaku</label>
+                            <p class="help-block">Pilih minimal satu jenis tugas akhir.</p>
+                            <div class="row">
+                                @foreach ($jenisTugasAkhir as $jenis)
+                                    <div class="col-sm-6">
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" class="edit-jenis-tugas-akhir"
+                                                name="jenis_tugas_akhir_ids[]"
+                                                value="{{ $jenis->jenis_tugas_akhir_id }}">
+                                            {{ $jenis->kode_jenis_tugas_akhir }} - {{ $jenis->deskripsi }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="edit_ks">Ketua Sidang</label>
@@ -158,6 +185,21 @@
                             <label for="name">Nama Tipe Pembayaran</label>
                             <input type="text" class="form-control" id="name" name="name"
                                 placeholder="Proposal" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Jenis Tugas Akhir yang Berlaku</label>
+                            <p class="help-block">Pilih minimal satu jenis tugas akhir.</p>
+                            <div class="row">
+                                @foreach ($jenisTugasAkhir as $jenis)
+                                    <div class="col-sm-6">
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" name="jenis_tugas_akhir_ids[]"
+                                                value="{{ $jenis->jenis_tugas_akhir_id }}">
+                                            {{ $jenis->kode_jenis_tugas_akhir }} - {{ $jenis->deskripsi }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="ketua_sidang">Ketua Sidang</label>
@@ -212,6 +254,7 @@
             var p1 = button.data('p1')
             var p2 = button.data('p2')
             var p3 = button.data('p3')
+            var jenisIds = String(button.data('jenis-ids') || '').split(',').filter(Boolean).map(String)
 
             var modal = $(this)
             modal.find('.modal-title').text('Edit Manajemen Honorarium: ' + name)
@@ -223,6 +266,16 @@
             modal.find('#edit_p1').val(p1)
             modal.find('#edit_p2').val(p2)
             modal.find('#edit_p3').val(p3)
+            modal.find('.edit-jenis-tugas-akhir').each(function() {
+                $(this).prop('checked', jenisIds.indexOf(String($(this).val())) !== -1)
+            })
+        })
+
+        $('form[action="{{ route('master_pembayaran_store') }}"], form[action="{{ route('master_pembayaran_update') }}"]').on('submit', function(event) {
+            if ($(this).find('input[name="jenis_tugas_akhir_ids[]"]:checked').length === 0) {
+                event.preventDefault()
+                alert('Pilih minimal satu jenis tugas akhir.')
+            }
         })
     </script>
 @endsection

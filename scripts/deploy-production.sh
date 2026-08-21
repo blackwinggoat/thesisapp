@@ -14,13 +14,14 @@ DEPLOY_TIMEOUT="${THESISAPPS_DEPLOY_TIMEOUT:-300}"
 POLL_INTERVAL="${THESISAPPS_DEPLOY_POLL_INTERVAL:-4}"
 DRY_RUN=0
 FORCE=0
+APPROVED_MIGRATIONS=()
 API_RESPONSE=
 API_ERROR=
 
 usage() {
     cat <<'EOF'
 Usage:
-  scripts/deploy-production.sh [--dry-run] [--force]
+  scripts/deploy-production.sh [--dry-run] [--force] [--migration MIGRATION_FILE]
 
 Deploys the exact local origin/main commit through the cPanel UAPI without
 opening cPanel in a browser. The cPanel API token is read from the macOS
@@ -30,6 +31,8 @@ variable THESISAPPS_CPANEL_API_TOKEN.
 Options:
   --dry-run  Verify Git state, cPanel authentication, and remote deployment state.
   --force    Redeploy even when the exact commit is already live.
+  --migration Run one explicitly approved migration filename after source sync.
+              Repeat this option for multiple migrations.
 EOF
 }
 
@@ -47,6 +50,15 @@ while [[ $# -gt 0 ]]; do
         --force)
             FORCE=1
             shift
+            ;;
+        --migration)
+            [[ $# -ge 2 ]] || fail '--migration requires a migration filename.'
+            [[ "$2" =~ ^[A-Za-z0-9_]+\.php$ ]] \
+                || fail 'Migration filename is unsafe.'
+            [[ -f "${PROJECT_ROOT}/database/migrations/$2" ]] \
+                || fail "Migration file does not exist: $2"
+            APPROVED_MIGRATIONS+=("$2")
+            shift 2
             ;;
         --help|-h)
             usage
@@ -186,7 +198,7 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
     exit 0
 fi
 
-if [[ "$FORCE" -eq 0 && "$LAST_DEPLOY_SHA" == "$TARGET_SHA" && -n "$LAST_DEPLOY_SUCCEEDED" ]]; then
+if [[ "$FORCE" -eq 0 && ${#APPROVED_MIGRATIONS[@]} -eq 0 && "$LAST_DEPLOY_SHA" == "$TARGET_SHA" && -n "$LAST_DEPLOY_SUCCEEDED" ]]; then
     printf 'DEPLOY NOT NEEDED: production already runs %s.\n' "$TARGET_SHA"
     exit 0
 fi
@@ -208,6 +220,22 @@ api_call Fileman/save_file_content \
     --data-urlencode 'from_charset=UTF-8' \
     --data-urlencode 'to_charset=UTF-8' \
     --data-urlencode 'fallback=0'
+
+if [[ ${#APPROVED_MIGRATIONS[@]} -gt 0 ]]; then
+    MIGRATION_CONTENT=$TARGET_SHA
+    for migration in "${APPROVED_MIGRATIONS[@]}"; do
+        MIGRATION_CONTENT+=$'\n'"$migration"
+    done
+
+    printf 'Approving %s migration(s) for this deployment.\n' "${#APPROVED_MIGRATIONS[@]}"
+    api_call Fileman/save_file_content \
+        --data-urlencode "dir=${REMOTE_SHARED}" \
+        --data-urlencode 'file=deploy-approved-migrations' \
+        --data-urlencode "content=${MIGRATION_CONTENT}" \
+        --data-urlencode 'from_charset=UTF-8' \
+        --data-urlencode 'to_charset=UTF-8' \
+        --data-urlencode 'fallback=0'
+fi
 
 printf 'Starting guarded production deployment.\n'
 api_call VersionControlDeployment/create \

@@ -8,6 +8,7 @@ DEPLOY_PATH="${DEPLOY_PATH:-/home/thesisapp/public_html}"
 SHARED_PATH="${SHARED_PATH:-/home/thesisapp/shared/thesisapps}"
 OFFICIAL_PATH="${OFFICIAL_PATH:-${SHARED_PATH}/official-assets}"
 APPROVAL_FILE="${APPROVAL_FILE:-${SHARED_PATH}/deploy-approved-commit}"
+MIGRATION_APPROVAL_FILE="${MIGRATION_APPROVAL_FILE:-${SHARED_PATH}/deploy-approved-migrations}"
 EXCLUDE_FILE="${EXCLUDE_FILE:-${APP_PATH}/scripts/deploy-excludes.txt}"
 SYNC_SCRIPT="${SYNC_SCRIPT:-${APP_PATH}/scripts/sync-release.php}"
 NORMALIZE_COMPOSER_SCRIPT="${NORMALIZE_COMPOSER_SCRIPT:-${APP_PATH}/scripts/normalize-composer-installed.php}"
@@ -93,6 +94,39 @@ prune_deploy_backups() {
     done
 }
 
+run_approved_migrations() {
+    [[ -f "$MIGRATION_APPROVAL_FILE" ]] || return
+
+    local approved_commit
+    local migration
+    local migration_count=0
+    local migration_stage
+
+    IFS= read -r approved_commit < "$MIGRATION_APPROVAL_FILE" || true
+    [[ "$approved_commit" == "$CURRENT_COMMIT" ]] \
+        || fail 'Approved migration commit does not match the deployment commit.'
+
+    migration_stage=$(mktemp -d "${SHARED_PATH}/migration-release.XXXXXX")
+    while IFS= read -r migration || [[ -n "$migration" ]]; do
+        [[ -n "$migration" ]] || continue
+        [[ "$migration" =~ ^[A-Za-z0-9_]+\.php$ ]] \
+            || fail 'Approved migration filename is unsafe.'
+        [[ -f "${DEPLOY_PATH}/database/migrations/${migration}" ]] \
+            || fail "Approved migration is missing: ${migration}"
+
+        cp "${DEPLOY_PATH}/database/migrations/${migration}" "${migration_stage}/${migration}"
+        migration_count=$((migration_count + 1))
+    done < <(tail -n +2 "$MIGRATION_APPROVAL_FILE")
+
+    [[ "$migration_count" -gt 0 ]] || fail 'No migration was approved for this deployment.'
+    printf 'Running %s explicitly approved migration(s).\n' "$migration_count"
+    (
+        cd "$DEPLOY_PATH"
+        "$PHP_BIN" artisan migrate --force --realpath --path="$migration_stage"
+    )
+    rm -rf -- "$migration_stage"
+}
+
 TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
 BACKUP_PATH="${BACKUP_ROOT}/${TIMESTAMP}-${CURRENT_COMMIT}"
 BACKUP_MANIFEST="${BACKUP_ROOT}/${TIMESTAMP}-${CURRENT_COMMIT}.json"
@@ -153,6 +187,7 @@ set +e
     "$PHP_BIN" artisan config:clear
     "$PHP_BIN" artisan route:clear
     "$PHP_BIN" artisan view:clear
+    run_approved_migrations
 
     if [[ "$WAS_DOWN" -eq 0 ]]; then
         "$PHP_BIN" artisan up --no-interaction < /dev/null
@@ -177,5 +212,5 @@ if [[ "$DEPLOY_STATUS" -ne 0 ]]; then
     exit "$DEPLOY_STATUS"
 fi
 
-rm -f "$APPROVAL_FILE"
+rm -f "$APPROVAL_FILE" "$MIGRATION_APPROVAL_FILE"
 printf 'DEPLOY SUCCESS: %s\n' "$CURRENT_COMMIT"

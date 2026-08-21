@@ -104,16 +104,24 @@
                                                 @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
                                                     <option value="unset">Unset</option>
                                                     @foreach ($dataMasterHonorarium as $masterHonorarium)
-                                                        <option value="{{ $masterHonorarium->name }}">
-                                                            {{ $masterHonorarium->name }}</option>
+                                                        @if (empty($masterHonorarium->jenis_tugas_akhir_ids)
+                                                            || empty($honorarium->jenis_tugas_akhir_id)
+                                                            || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
+                                                            <option value="{{ $masterHonorarium->name }}">
+                                                                {{ $masterHonorarium->name }}</option>
+                                                        @endif
                                                     @endforeach
                                                 @else
                                                     <option value="{{ $honorarium->tipe_ujian }}" selected>
                                                         {{ $honorarium->tipe_ujian }}</option>
                                                     <option disabled>-----</option>
                                                     @foreach ($dataMasterHonorarium as $masterHonorarium)
-                                                        <option value="{{ $masterHonorarium->name }}">
-                                                            {{ $masterHonorarium->name }}</option>
+                                                        @if (empty($masterHonorarium->jenis_tugas_akhir_ids)
+                                                            || empty($honorarium->jenis_tugas_akhir_id)
+                                                            || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
+                                                            <option value="{{ $masterHonorarium->name }}">
+                                                                {{ $masterHonorarium->name }}</option>
+                                                        @endif
                                                     @endforeach
                                                 @endif
                                             </select>

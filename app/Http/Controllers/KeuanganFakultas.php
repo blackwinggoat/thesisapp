@@ -6,6 +6,7 @@ use App\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class KeuanganFakultas extends Controller
 {
@@ -32,23 +33,37 @@ class KeuanganFakultas extends Controller
 
     public function master_pembayaran_home()
     {
-        $data = DB::table('mst_pembayaran_honorarium')->get();
-        return view('tugasakhir.keuanganfakultas.master_pembayaran', ['data' => $data]);
+        $data = $this->masterPembayaranDenganJenisTugasAkhir();
+        $jenisTugasAkhir = DB::table('mst_jenis_tugas_akhir')
+            ->orderBy('kode_jenis_tugas_akhir')
+            ->get();
+
+        return view('tugasakhir.keuanganfakultas.master_pembayaran', compact(
+            'data',
+            'jenisTugasAkhir'
+        ));
     }
+
     public function master_pembayaran_store(Request $request)
     {
         try {
-            DB::table('mst_pembayaran_honorarium')->insert([
-                'name' => $request->input('name'),
-                'ketua_sidang' => $request->input('ketua_sidang'),
-                'pembimbing_utama' => $request->input('pembimbing_utama'),
-                'pembimbing_pendamping' => $request->input('pembimbing_pendamping'),
-                'penguji_1' => $request->input('penguji_1'),
-                'penguji_2' => $request->input('penguji_2'),
-                'penguji_3' => $request->input('penguji_3'),
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+            $jenisTugasAkhirIds = $this->validasiJenisTugasAkhirPembayaran($request);
+
+            DB::transaction(function () use ($request, $jenisTugasAkhirIds) {
+                $idHonorarium = DB::table('mst_pembayaran_honorarium')->insertGetId([
+                    'name' => $request->input('name'),
+                    'ketua_sidang' => $request->input('ketua_sidang'),
+                    'pembimbing_utama' => $request->input('pembimbing_utama'),
+                    'pembimbing_pendamping' => $request->input('pembimbing_pendamping'),
+                    'penguji_1' => $request->input('penguji_1'),
+                    'penguji_2' => $request->input('penguji_2'),
+                    'penguji_3' => $request->input('penguji_3'),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+
+                $this->sinkronkanJenisTugasAkhirPembayaran($idHonorarium, $jenisTugasAkhirIds);
+            });
 
             return redirect()->back()->with([
                 'status' => 'success',
@@ -65,7 +80,18 @@ class KeuanganFakultas extends Controller
     public function master_pembayaran_delete($id)
     {
         try {
-            DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $id)->delete();
+            DB::transaction(function () use ($id) {
+                if ($this->tabelJenisTugasAkhirPembayaranTersedia()) {
+                    DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir')
+                        ->where('id_honorarium', $id)
+                        ->delete();
+                }
+
+                DB::table('mst_pembayaran_honorarium')
+                    ->where('id_honorarium', $id)
+                    ->delete();
+            });
+
             return redirect()->back()->with([
                 'status' => 'success',
                 'message' => 'Tipe pembayaran honorarium berhasil dihapus!'
@@ -81,16 +107,27 @@ class KeuanganFakultas extends Controller
     public function master_pembayaran_update(Request $request)
     {
         try {
-            DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $request->input('id_honorarium'))->update([
-                'name' => $request->input('name'),
-                'ketua_sidang' => $request->input('ketua_sidang'),
-                'pembimbing_utama' => $request->input('pembimbing_utama'),
-                'pembimbing_pendamping' => $request->input('pembimbing_pendamping'),
-                'penguji_1' => $request->input('penguji_1'),
-                'penguji_2' => $request->input('penguji_2'),
-                'penguji_3' => $request->input('penguji_3'),
-                'updated_at' => now()
-            ]);
+            $idHonorarium = (int) $request->input('id_honorarium');
+            if ($idHonorarium < 1 || !DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->exists()) {
+                throw new \RuntimeException('Tipe pembayaran honorarium tidak ditemukan.');
+            }
+
+            $jenisTugasAkhirIds = $this->validasiJenisTugasAkhirPembayaran($request);
+
+            DB::transaction(function () use ($request, $idHonorarium, $jenisTugasAkhirIds) {
+                DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->update([
+                    'name' => $request->input('name'),
+                    'ketua_sidang' => $request->input('ketua_sidang'),
+                    'pembimbing_utama' => $request->input('pembimbing_utama'),
+                    'pembimbing_pendamping' => $request->input('pembimbing_pendamping'),
+                    'penguji_1' => $request->input('penguji_1'),
+                    'penguji_2' => $request->input('penguji_2'),
+                    'penguji_3' => $request->input('penguji_3'),
+                    'updated_at' => now()
+                ]);
+
+                $this->sinkronkanJenisTugasAkhirPembayaran($idHonorarium, $jenisTugasAkhirIds);
+            });
 
             return redirect()->back()->with([
                 'status' => 'success',
@@ -102,6 +139,105 @@ class KeuanganFakultas extends Controller
                 'message' => 'Terjadi kesalahan saat mengubah tipe pembayaran honorarium: ',
             ]);
         }
+    }
+
+    protected function tabelJenisTugasAkhirPembayaranTersedia()
+    {
+        return Schema::hasTable('mst_pembayaran_honorarium_jenis_tugas_akhir');
+    }
+
+    protected function validasiJenisTugasAkhirPembayaran(Request $request)
+    {
+        if (!$this->tabelJenisTugasAkhirPembayaranTersedia()) {
+            throw new \RuntimeException('Pengaturan jenis tugas akhir belum tersedia. Jalankan pembaruan database terlebih dahulu.');
+        }
+
+        $this->validate($request, [
+            'jenis_tugas_akhir_ids' => 'required|array|min:1',
+            'jenis_tugas_akhir_ids.*' => 'integer|exists:mst_jenis_tugas_akhir,jenis_tugas_akhir_id',
+        ], [
+            'jenis_tugas_akhir_ids.required' => 'Pilih minimal satu jenis tugas akhir.',
+            'jenis_tugas_akhir_ids.min' => 'Pilih minimal satu jenis tugas akhir.',
+        ]);
+
+        return collect($request->input('jenis_tugas_akhir_ids'))
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function sinkronkanJenisTugasAkhirPembayaran($idHonorarium, array $jenisTugasAkhirIds)
+    {
+        DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir')
+            ->where('id_honorarium', $idHonorarium)
+            ->delete();
+
+        $now = now();
+        $rows = [];
+        foreach ($jenisTugasAkhirIds as $jenisTugasAkhirId) {
+            $rows[] = [
+                'id_honorarium' => $idHonorarium,
+                'jenis_tugas_akhir_id' => $jenisTugasAkhirId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir')->insert($rows);
+    }
+
+    protected function masterPembayaranDenganJenisTugasAkhir()
+    {
+        $data = DB::table('mst_pembayaran_honorarium')
+            ->orderBy('name')
+            ->get();
+
+        $jenisTugasAkhirByPembayaran = collect();
+        if ($this->tabelJenisTugasAkhirPembayaranTersedia() && $data->isNotEmpty()) {
+            $jenisTugasAkhirByPembayaran = DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir as relasi')
+                ->join('mst_jenis_tugas_akhir as jenis', 'jenis.jenis_tugas_akhir_id', '=', 'relasi.jenis_tugas_akhir_id')
+                ->whereIn('relasi.id_honorarium', $data->pluck('id_honorarium')->all())
+                ->orderBy('jenis.kode_jenis_tugas_akhir')
+                ->select('relasi.id_honorarium', 'jenis.jenis_tugas_akhir_id', 'jenis.kode_jenis_tugas_akhir', 'jenis.deskripsi')
+                ->get()
+                ->groupBy('id_honorarium');
+        }
+
+        return $data->map(function ($pembayaran) use ($jenisTugasAkhirByPembayaran) {
+            $pembayaran->jenis_tugas_akhir = $jenisTugasAkhirByPembayaran->get($pembayaran->id_honorarium, collect());
+            $pembayaran->jenis_tugas_akhir_ids = $pembayaran->jenis_tugas_akhir
+                ->pluck('jenis_tugas_akhir_id')
+                ->map(function ($id) {
+                    return (int) $id;
+                })
+                ->all();
+
+            return $pembayaran;
+        });
+    }
+
+    protected function jenisTugasAkhirHonorarium($nim)
+    {
+        return DB::table('trt_bimbingan')
+            ->where('C_NPM', $nim)
+            ->orderBy('bimbingan_id', 'desc')
+            ->value('jenis_tugas_akhir_id');
+    }
+
+    protected function pembayaranBerlakuUntukJenisTugasAkhir($idHonorarium, $jenisTugasAkhirId)
+    {
+        if (!$this->tabelJenisTugasAkhirPembayaranTersedia() || !$jenisTugasAkhirId) {
+            return true;
+        }
+
+        $relasi = DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir')
+            ->where('id_honorarium', $idHonorarium);
+
+        return !$relasi->exists()
+            || $relasi->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)->exists();
     }
 
     public function honorarium_home()
@@ -147,7 +283,10 @@ class KeuanganFakultas extends Controller
             ]);
         }
 
-        $dataMasterHonorarium = DB::table('mst_pembayaran_honorarium')->get();
+        $dataMasterHonorarium = $this->masterPembayaranDenganJenisTugasAkhir();
+        foreach ($data as $honorarium) {
+            $honorarium->jenis_tugas_akhir_id = $this->jenisTugasAkhirHonorarium($honorarium->C_NPM);
+        }
 
         return view('tugasakhir.keuanganfakultas.honorarium_detail', compact(
             'data',
@@ -386,6 +525,12 @@ class KeuanganFakultas extends Controller
                     if (!$masterPayment) {
                         throw new \RuntimeException('Tipe honorarium yang dipilih tidak ditemukan pada master pembayaran.');
                     }
+                    if (!$this->pembayaranBerlakuUntukJenisTugasAkhir(
+                        $masterPayment->id_honorarium,
+                        $this->jenisTugasAkhirHonorarium($existingHonorarium->C_NPM)
+                    )) {
+                        throw new \RuntimeException('Tipe honorarium yang dipilih tidak berlaku untuk jenis tugas akhir mahasiswa ini.');
+                    }
 
                     DB::table('trt_honorium')
                         ->where('id', $id)
@@ -411,7 +556,7 @@ class KeuanganFakultas extends Controller
             ->whereRaw($this->honorariumFullyPaidSql())
             ->get();
 
-        $dataMasterHonorarium = DB::table('mst_pembayaran_honorarium')->get();
+        $dataMasterHonorarium = $this->masterPembayaranDenganJenisTugasAkhir();
 
         return view('tugasakhir.keuanganfakultas.history_honorarium', [
             'data' => $data,
