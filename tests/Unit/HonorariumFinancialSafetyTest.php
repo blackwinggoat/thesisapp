@@ -25,6 +25,7 @@ class HonorariumFinancialSafetyTest extends TestCase
 
         $this->assertStringContainsString('honorariumNeedsTypeAssignment', $keuangan);
         $this->assertStringContainsString('honorariumHasPaidRole', $keuangan);
+        $this->assertStringContainsString('honorariumHasAnyRoleSql', $keuangan);
         $this->assertStringContainsString('lockForUpdate()', $keuangan);
         $this->assertStringContainsString('COUNT(DISTINCT C_NPM) as total_mahasiswa', $keuangan);
         $this->assertStringContainsString('getHonorariumAssignmentsForDosen', $dosen);

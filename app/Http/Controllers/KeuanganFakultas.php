@@ -169,6 +169,16 @@ class KeuanganFakultas extends Controller
         return "NULLIF(TRIM(COALESCE({$role}, '')), '') IS NOT NULL";
     }
 
+    protected function honorariumHasAnyRoleSql()
+    {
+        $roles = [];
+        foreach (array_keys($this->honorariumRoles()) as $role) {
+            $roles[] = $this->honorariumHasRoleSql($role);
+        }
+
+        return '(' . implode(' OR ', $roles) . ')';
+    }
+
     protected function honorariumOutstandingSql()
     {
         $conditions = [];
@@ -196,7 +206,7 @@ class KeuanganFakultas extends Controller
             $conditions[] = '(NOT (' . $this->honorariumHasRoleSql($role) . ') OR ' . $definition['status'] . ' = 3)';
         }
 
-        return implode(' AND ', $conditions);
+        return $this->honorariumHasAnyRoleSql() . ' AND ' . implode(' AND ', $conditions);
     }
 
     protected function honorariumNeedsTypeAssignment($honorarium)
