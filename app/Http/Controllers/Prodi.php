@@ -608,6 +608,7 @@ class Prodi extends Controller
             'date' => Carbon::parse($tanggalUjian)->toDateString(),
             'C_NPM' => $nim,
             'source_key' => $sourceKey,
+            'exam_type' => (int) $tipeUjian,
             'tipe_ujian' => (string) $tipeUjian,
         ];
 

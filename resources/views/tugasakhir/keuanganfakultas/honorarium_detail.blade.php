@@ -56,7 +56,7 @@
                             <thead class="the-box dark full">
                                 <tr>
                                     <th>No</th>
-                                    <th>Date</th>
+                                    <th>Tanggal Ujian</th>
                                     <th>Nim</th>
                                     <th>Student Name</th>
                                     <th>Available</th>
@@ -83,7 +83,7 @@
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $honorarium->date }}</td>
+                                        <td>{{ $honorarium->tanggal_ujian }}</td>
                                         <td>{{ $honorarium->C_NPM }}</td>
                                         <td>{{ helper::getNamaMhs($honorarium->C_NPM) }}</td>
                                         <td>

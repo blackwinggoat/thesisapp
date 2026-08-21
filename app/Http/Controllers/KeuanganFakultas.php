@@ -107,19 +107,24 @@ class KeuanganFakultas extends Controller
     public function honorarium_home()
     {
         $belumTersediaSql = $this->honorariumHasRoleStatusSql(0);
-        $data = $this->honorariumBelumLunasQuery()
+        $data = $this->honorariumDenganJadwalQuery()
+            ->whereNotNull('jadwal.tgl_ujian')
+            ->where('jadwal.tgl_ujian', '<>', '0000-00-00')
             ->select(
-                'date',
-                DB::raw('COUNT(DISTINCT C_NPM) as total_mahasiswa'),
+                'jadwal.tgl_ujian as date',
+                DB::raw('COUNT(DISTINCT honorarium.C_NPM) as total_mahasiswa'),
                 DB::raw("SUM(CASE WHEN {$belumTersediaSql} THEN 1 ELSE 0 END) as belum_tersedia"),
-                DB::raw("SUM(CASE WHEN tipe_ujian IS NULL OR tipe_ujian = '' OR tipe_ujian IN ('0', '2') THEN 1 ELSE 0 END) as perlu_penetapan")
+                DB::raw("SUM(CASE WHEN honorarium.tipe_ujian IS NULL OR honorarium.tipe_ujian = '' OR honorarium.tipe_ujian IN ('0', '2') THEN 1 ELSE 0 END) as perlu_penetapan")
             )
-            ->groupBy('date')
-            ->orderBy('date', 'desc')
+            ->groupBy('jadwal.tgl_ujian')
+            ->orderBy('jadwal.tgl_ujian', 'desc')
             ->get();
+
+        $belumTerhubungJadwal = $this->honorariumBelumTerhubungJadwalQuery()->count();
 
         return view('tugasakhir.keuanganfakultas.honorarium', [
             'data' => $data,
+            'belumTerhubungJadwal' => $belumTerhubungJadwal,
         ]);
     }
 
@@ -129,9 +134,10 @@ class KeuanganFakultas extends Controller
             abort(404);
         }
 
-        $data = $this->honorariumBelumLunasQuery()
-            ->where('date', $date)
-            ->orderBy('C_NPM')
+        $data = $this->honorariumDenganJadwalQuery()
+            ->whereDate('jadwal.tgl_ujian', $date)
+            ->select('honorarium.*', 'jadwal.tgl_ujian as tanggal_ujian')
+            ->orderBy('honorarium.C_NPM')
             ->get();
 
         if ($data->isEmpty()) {
@@ -150,6 +156,40 @@ class KeuanganFakultas extends Controller
     protected function honorariumBelumLunasQuery()
     {
         return DB::table('trt_honorium')->whereRaw($this->honorariumOutstandingSql());
+    }
+
+    protected function honorariumDenganJadwalQuery()
+    {
+        return DB::table('trt_honorium as honorarium')
+            ->whereRaw($this->honorariumOutstandingSql())
+            ->leftJoin('trt_reg as registrasi', function ($join) {
+                $join->on('registrasi.C_NPM', '=', 'honorarium.C_NPM')
+                    ->on('registrasi.status', '=', 'honorarium.exam_type');
+            })
+            ->leftJoin('trt_jadwal_ujian_per_mhs as peserta', 'peserta.C_NPM', '=', 'honorarium.C_NPM')
+            ->leftJoin('trt_jadwal_ujian as jadwal', function ($join) {
+                $join->on('jadwal.id', '=', 'peserta.jadwal_ujian')
+                    ->on('jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id');
+            });
+    }
+
+    protected function honorariumBelumTerhubungJadwalQuery()
+    {
+        return DB::table('trt_honorium as honorarium')
+            ->whereRaw($this->honorariumOutstandingSql())
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('trt_reg as registrasi')
+                    ->join('trt_jadwal_ujian_per_mhs as peserta', 'peserta.C_NPM', '=', 'registrasi.C_NPM')
+                    ->join('trt_jadwal_ujian as jadwal', function ($join) {
+                        $join->on('jadwal.id', '=', 'peserta.jadwal_ujian')
+                            ->on('jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id');
+                    })
+                    ->whereRaw('registrasi.C_NPM = honorarium.C_NPM')
+                    ->whereRaw('registrasi.status = honorarium.exam_type')
+                    ->whereNotNull('jadwal.tgl_ujian')
+                    ->where('jadwal.tgl_ujian', '<>', '0000-00-00');
+            });
     }
 
     protected function honorariumRoles()
@@ -186,7 +226,7 @@ class KeuanganFakultas extends Controller
             $conditions[] = '(' . $this->honorariumHasRoleSql($role) . ' AND COALESCE(' . $definition['status'] . ', 0) <> 3)';
         }
 
-        return implode(' OR ', $conditions);
+        return '(' . implode(' OR ', $conditions) . ')';
     }
 
     protected function honorariumHasRoleStatusSql($status)

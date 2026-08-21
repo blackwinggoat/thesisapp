@@ -24,6 +24,13 @@
                 </a>
             </div>
 
+            @if ($belumTerhubungJadwal > 0)
+                <div class="alert alert-warning square">
+                    <i class="fa fa-calendar-times-o"></i>
+                    {{ $belumTerhubungJadwal }} data honorarium belum terhubung ke jadwal ujian dan tidak ditampilkan pada tanggal yang keliru.
+                </div>
+            @endif
+
             <div class="the-box">
                 <div class="table-responsive">
                     <table class="table table-hover" id="datatable-example">
