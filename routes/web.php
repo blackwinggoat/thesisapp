@@ -129,6 +129,7 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::post('/prodi/laporan_mahasiswa/{id}/tindakan', 'Prodi@laporan_mahasiswa_tindakan_post');
     Route::get('/prodi/detail_pembimbing/{id}', 'Prodi@detail_pembimbing');
     Route::get('/prodi/mahasiswa', 'Prodi@mahasiswa');
+    Route::post('/prodi/mahasiswa/{nim}/jenis-kelas', 'Prodi@update_jenis_kelas_mahasiswa')->name('prodi.mahasiswa.jenis_kelas');
     Route::get('/prodi/detail_mahasiswa/{id}', 'Prodi@detail_mahasiswa');
     Route::get('/prodi/make_user/{id}', 'Prodi@make_user');
     Route::get('/prodi/reset_user/{id}', 'Prodi@reset_user');

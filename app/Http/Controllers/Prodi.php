@@ -1486,6 +1486,13 @@ class Prodi extends Controller
                 DB::raw('CASE WHEN users.id IS NULL THEN 0 ELSE 1 END AS has_user')
             );
 
+        if (Schema::hasTable('trt_mahasiswa_eksekutif')) {
+            $query->leftJoin('trt_mahasiswa_eksekutif as eksekutif', 'eksekutif.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+                ->addSelect(DB::raw('CASE WHEN eksekutif.C_NPM IS NULL THEN 0 ELSE 1 END AS is_eksekutif'));
+        } else {
+            $query->addSelect(DB::raw('0 AS is_eksekutif'));
+        }
+
         if ($nimPrefix !== '') {
             $query->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimPrefix . '%');
         }
@@ -1513,6 +1520,61 @@ class Prodi extends Controller
             : ($nimPrefix === '130' ? 'Teknik Informatika' : 'Sistem Informasi');
 
         return view('tugasakhir.prodi.mahasiswa', compact('data', 'q', 'statusAkun', 'perPage', 'scopeMahasiswaLabel'));
+    }
+
+    public function update_jenis_kelas_mahasiswa(Request $request, $nim)
+    {
+        $request->validate([
+            'jenis_kelas' => 'required|in:reguler,eksekutif',
+        ]);
+
+        if (!Schema::hasTable('trt_mahasiswa_eksekutif')) {
+            return redirect()->back()->with('error', 'Tabel jenis kelas mahasiswa belum tersedia. Jalankan migrasi terlebih dahulu.');
+        }
+
+        $nimPrefix = '';
+        if (auth()->user()->name == 'prodisi') {
+            $nimPrefix = '131';
+        } elseif (auth()->user()->name == 'proditi') {
+            $nimPrefix = '130';
+        }
+
+        $mahasiswa = DB::table('t_mst_mahasiswa')
+            ->where('C_NPM', $nim)
+            ->when($nimPrefix !== '', function ($query) use ($nimPrefix) {
+                $query->where('C_NPM', 'LIKE', $nimPrefix . '%');
+            })
+            ->first();
+
+        if (!$mahasiswa) {
+            return redirect()->back()->with('error', 'Data mahasiswa tidak ditemukan atau berada di luar program studi Anda.');
+        }
+
+        $kelasEksekutif = DB::table('trt_mahasiswa_eksekutif')->where('C_NPM', $nim);
+        if ($request->jenis_kelas === 'eksekutif') {
+            $existing = $kelasEksekutif->first();
+            if ($existing) {
+                DB::table('trt_mahasiswa_eksekutif')
+                    ->where('C_NPM', $nim)
+                    ->update([
+                        'ditetapkan_oleh_user_id' => auth()->id(),
+                        'updated_at' => Carbon::now(),
+                    ]);
+            } else {
+                DB::table('trt_mahasiswa_eksekutif')->insert([
+                    'C_NPM' => $nim,
+                    'ditetapkan_oleh_user_id' => auth()->id(),
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+            }
+
+            return redirect()->back()->with('success', $mahasiswa->NAMA_MAHASISWA . ' ditetapkan sebagai mahasiswa Eksekutif.');
+        }
+
+        $kelasEksekutif->delete();
+
+        return redirect()->back()->with('success', $mahasiswa->NAMA_MAHASISWA . ' ditetapkan sebagai mahasiswa Reguler.');
     }
 
     public function detail_mahasiswa($id)

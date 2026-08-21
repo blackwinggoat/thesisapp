@@ -64,6 +64,7 @@
                             <th>No</th>
                             <th>NIM</th>
                             <th>Nama</th>
+                            <th>Jenis Kelas</th>
                             <th>Status Akun</th>
                             <th>Detail</th>
                             <th>Action</th>
@@ -72,7 +73,7 @@
                         <tbody>
                         @if ($data->count() === 0)
                             <tr>
-                                <td colspan="6" class="text-center">Data mahasiswa tidak ditemukan.</td>
+                                <td colspan="7" class="text-center">Data mahasiswa tidak ditemukan.</td>
                             </tr>
                         @endif
                         @foreach ($data as $key => $value)
@@ -80,6 +81,13 @@
                                 <td width="1%" align="center">{{ $data->firstItem() + $key }}</td>
                                 <td>{{$value->C_NPM}}</td>
                                 <td>{{$value->NAMA_MAHASISWA}}</td>
+                                <td>
+                                    @if ((int) ($value->is_eksekutif ?? 0) === 1)
+                                        <span class="label label-warning">Eksekutif</span>
+                                    @else
+                                        <span class="label label-info">Reguler</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if ((int) ($value->has_user ?? 0) === 1)
                                         <i class="fa fa-check-circle text-success"></i>
@@ -96,6 +104,18 @@
                                     <a class="btn btn-info" href="{{ url('prodi/login_as_mahasiswa/'.$value->C_NPM) }}" title="Login sebagai mahasiswa">
                                         <i class="fa fa-user"></i>
                                     </a>
+                                    <form id="jenis-kelas-{{ $value->C_NPM }}" action="{{ route('prodi.mahasiswa.jenis_kelas', $value->C_NPM) }}" method="post" style="display: inline-block; margin-left: 4px;">
+                                        {{ csrf_field() }}
+                                        <input type="hidden" name="jenis_kelas" value="">
+                                        <label title="Ubah jenis kelas mahasiswa" style="margin: 0; vertical-align: middle; cursor: pointer;">
+                                            <input type="checkbox"
+                                                   class="student-class-toggle"
+                                                   data-form-id="jenis-kelas-{{ $value->C_NPM }}"
+                                                   data-student-name="{{ $value->NAMA_MAHASISWA }}"
+                                                   {{ (int) ($value->is_eksekutif ?? 0) === 1 ? 'checked' : '' }}>
+                                            <span style="font-size: 11px;">Eksekutif</span>
+                                        </label>
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach
@@ -147,5 +167,22 @@
         const goOn = e => {
             window.location.href = link;
         }
+
+        document.querySelectorAll('.student-class-toggle').forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                const jenisKelas = this.checked ? 'eksekutif' : 'reguler';
+                const labelKelas = jenisKelas === 'eksekutif' ? 'Eksekutif' : 'Reguler';
+                const namaMahasiswa = this.getAttribute('data-student-name');
+
+                if (!window.confirm('Ubah jenis kelas ' + namaMahasiswa + ' menjadi ' + labelKelas + '?')) {
+                    this.checked = !this.checked;
+                    return;
+                }
+
+                const form = document.getElementById(this.getAttribute('data-form-id'));
+                form.querySelector('input[name="jenis_kelas"]').value = jenisKelas;
+                form.submit();
+            });
+        });
     </script>
 @endsection
