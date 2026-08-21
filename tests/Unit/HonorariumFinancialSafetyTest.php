@@ -48,6 +48,10 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('SI: {{ $honorarium->total_sistem_informasi }}', $listView);
         $this->assertStringContainsString('Total Honor Belum Dibayar', $listView);
         $this->assertStringContainsString('Total Honor', $detailView);
+        $this->assertStringContainsString('Total Honor Seluruh Mahasiswa', $detailView);
+        $this->assertStringContainsString('total-honorarium-tanggal', $detailView);
+        $this->assertStringContainsString('data-total-honor', $detailView);
+        $this->assertStringContainsString('updateTotalHonorariumTanggal', $detailView);
         $this->assertStringContainsString('modal-ks-h', $detailView);
         $this->assertStringContainsString('Setup Tipe Ujian Otomatis', $detailView);
         $this->assertStringContainsString('getHonorariumAssignmentsForDosen', $dosen);

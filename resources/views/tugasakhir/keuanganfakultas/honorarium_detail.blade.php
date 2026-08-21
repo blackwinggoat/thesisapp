@@ -56,6 +56,16 @@
                     </a>
                 </div>
 
+                @php
+                    $totalHonorariumTanggal = $data->sum(function ($honorarium) {
+                        return (float) $honorarium->total_honor;
+                    });
+                @endphp
+                <div class="alert alert-info square" style="margin-bottom: 20px;">
+                    <strong>Total Honor Seluruh Mahasiswa:</strong>
+                    <span id="total-honorarium-tanggal">{{ helper::formatRupiah($totalHonorariumTanggal) }}</span>
+                </div>
+
                 <form action="{{ route('honorarium_save_all') }}" method="POST">
                     @csrf
                     <div class="table-responsive">
@@ -88,6 +98,24 @@
                                             && (!$honorarium->P1 || $honorarium->P1_Stat != 0)
                                             && (!$honorarium->P2 || $honorarium->P2_Stat != 0)
                                             && (!$honorarium->P3 || $honorarium->P3_Stat != 0);
+                                        $hitungTotalMaster = function ($masterHonorarium) use ($honorarium) {
+                                            $total = 0;
+                                            $peranMaster = [
+                                                'KS' => 'ketua_sidang',
+                                                'PU' => 'pembimbing_utama',
+                                                'PP' => 'pembimbing_pendamping',
+                                                'P1' => 'penguji_1',
+                                                'P2' => 'penguji_2',
+                                                'P3' => 'penguji_3',
+                                            ];
+                                            foreach ($peranMaster as $peran => $kolomMaster) {
+                                                if (trim((string) $honorarium->{$peran}) !== '') {
+                                                    $total += (float) $masterHonorarium->{$kolomMaster};
+                                                }
+                                            }
+
+                                            return $total;
+                                        };
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
@@ -113,13 +141,13 @@
                                                 {{ $sudahAdaPembayaran ? 'disabled' : '' }}>
 
                                                 @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
-                                                    <option value="unset">Unset</option>
+                                                    <option value="unset" data-total-honor="0">Unset</option>
                                                     @foreach ($dataMasterHonorarium as $masterHonorarium)
                                                         @if (empty($masterHonorarium->jenis_tugas_akhir_ids)
                                                             || empty($honorarium->jenis_tugas_akhir_id)
                                                             || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
                                                             @if ((int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0))
-                                                            <option value="{{ $masterHonorarium->id_honorarium }}">
+                                                            <option value="{{ $masterHonorarium->id_honorarium }}" data-total-honor="{{ $hitungTotalMaster($masterHonorarium) }}">
                                                                 {{ $masterHonorarium->name }}</option>
                                                             @endif
                                                         @endif
@@ -134,7 +162,7 @@
                                                                 && (int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0);
                                                         });
                                                     @endphp
-                                                    <option value="{{ $masterPembayaranTersimpan ? $masterPembayaranTersimpan->id_honorarium : 'unset' }}" selected>
+                                                    <option value="{{ $masterPembayaranTersimpan ? $masterPembayaranTersimpan->id_honorarium : 'unset' }}" data-total-honor="{{ $honorarium->total_honor }}" selected>
                                                         {{ $honorarium->tipe_ujian }}{{ $masterPembayaranTersimpan ? '' : ' (tersimpan)' }}</option>
                                                     <option disabled>-----</option>
                                                     @foreach ($dataMasterHonorarium as $masterHonorarium)
@@ -142,7 +170,7 @@
                                                             || empty($honorarium->jenis_tugas_akhir_id)
                                                             || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
                                                             @if ((int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0))
-                                                            <option value="{{ $masterHonorarium->id_honorarium }}">
+                                                            <option value="{{ $masterHonorarium->id_honorarium }}" data-total-honor="{{ $hitungTotalMaster($masterHonorarium) }}">
                                                                 {{ $masterHonorarium->name }}</option>
                                                             @endif
                                                         @endif
@@ -150,7 +178,7 @@
                                                 @endif
                                             </select>
                                         </td>
-                                        <td class="text-right"><strong>{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
+                                        <td class="text-right"><strong class="honorarium-row-total" data-total-honor="{{ $honorarium->total_honor }}">{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
                                         <td>
                                             <button type="button" class="btn btn-primary btn-sm view-honorarium-btn"
                                                 data-toggle="modal" data-target="#statusModal"
@@ -284,6 +312,27 @@
                 info: false,
                 lengthChange: false
             });
+
+            function formatRupiah(value) {
+                return 'Rp ' + Math.round(value || 0).toLocaleString('id-ID');
+            }
+
+            function updateTotalHonorariumTanggal() {
+                var total = 0;
+                $('.honorarium-row-total').each(function() {
+                    total += parseFloat($(this).attr('data-total-honor')) || 0;
+                });
+                $('#total-honorarium-tanggal').text(formatRupiah(total));
+            }
+
+            $(document).off('change.honorariumTotal', tableSelector + ' select[name$="[id_pembayaran]"]')
+                .on('change.honorariumTotal', tableSelector + ' select[name$="[id_pembayaran]"]', function() {
+                    var totalBaru = parseFloat($(this).find('option:selected').attr('data-total-honor')) || 0;
+                    var totalBaris = $(this).closest('tr').find('.honorarium-row-total');
+
+                    totalBaris.attr('data-total-honor', totalBaru).text(formatRupiah(totalBaru));
+                    updateTotalHonorariumTanggal();
+                });
 
             function bindToggleEvents() {
                 $('input[data-toggle="toggle"]').bootstrapToggle();
