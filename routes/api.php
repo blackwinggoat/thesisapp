@@ -12,9 +12,25 @@
 |
 */
 
-//Route::middleware('auth:api')->get('/user', function (Request $request) {
-//    return $request->user();
-//});
+Route::prefix('v1')->group(function () {
+    Route::get('/health', function () {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'service' => 'thesisapps-api',
+                'version' => 'v1',
+                'status' => 'ok',
+            ],
+        ]);
+    });
+
+    Route::post('/auth/login', 'Api\\AuthController@login')->middleware('throttle:10,1');
+
+    Route::middleware(['api.token', 'throttle:60,1'])->group(function () {
+        Route::get('/auth/me', 'Api\\AuthController@me');
+        Route::post('/auth/logout', 'Api\\AuthController@logout');
+    });
+});
 
 
 Route::get("/status_bimbingan_all/", "Prodi@statusBimbinganAll");
