@@ -88,7 +88,10 @@
             }
 
             $(tableSelector).DataTable({
-                order: [[1, 'desc']]
+                order: [[1, 'desc']],
+                paging: false,
+                info: false,
+                lengthChange: false
             });
         });
     </script>
