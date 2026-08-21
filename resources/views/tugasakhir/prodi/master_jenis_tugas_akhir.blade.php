@@ -104,6 +104,19 @@
                                         @endif
                                     </td>
                                     <td>
+                                        <button
+                                            class="btn btn-warning"
+                                            type="button"
+                                            title="Ubah jenis tugas akhir"
+                                            data-toggle="modal"
+                                            data-target="#modalEditJenisTugasAkhir"
+                                            data-id="{{ $value->jenis_tugas_akhir_id }}"
+                                            data-kode="{{ $value->kode_jenis_tugas_akhir }}"
+                                            data-deskripsi="{{ $value->deskripsi }}"
+                                            data-tersedia="{{ $value->tersedia_untuk_mahasiswa ?? 1 }}"
+                                            onclick="showEditJenisTugasAkhir(this)">
+                                            <i class="fa fa-pencil"></i>
+                                        </button>
                                         @if ($hasMahasiswaAvailability)
                                             <form method="post" action="{{ url('prodi/master/jenis_tugas_akhir/' . $value->jenis_tugas_akhir_id . '/availability') }}" style="display: inline-block; margin-right: 6px;">
                                                 {{ csrf_field() }}
@@ -127,6 +140,46 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div class="modal fade" id="modalEditJenisTugasAkhir" tabindex="-1" role="dialog" aria-labelledby="modalEditJenisTugasAkhirLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form id="formEditJenisTugasAkhir" method="post">
+                            {{ csrf_field() }}
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title" id="modalEditJenisTugasAkhirLabel">Edit Jenis Tugas Akhir</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="edit_kode_jenis_tugas_akhir">Kode Jenis Tugas Akhir</label>
+                                    <input type="text" id="edit_kode_jenis_tugas_akhir" name="kode_jenis_tugas_akhir" class="form-control" maxlength="50" required>
+                                    <p class="help-block">Kode akan diperbarui pada label jenis tugas akhir yang telah memakai data master ini.</p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_deskripsi">Deskripsi</label>
+                                    <input type="text" id="edit_deskripsi" name="deskripsi" class="form-control" maxlength="255" required>
+                                </div>
+                                @if ($hasMahasiswaAvailability)
+                                    <div class="form-group">
+                                        <label for="edit_tersedia_untuk_mahasiswa">Tersedia bagi Mahasiswa</label>
+                                        <select id="edit_tersedia_untuk_mahasiswa" name="tersedia_untuk_mahasiswa" class="form-control">
+                                            <option value="1">Tersedia</option>
+                                            <option value="0">Tidak Tersedia</option>
+                                        </select>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -177,6 +230,20 @@
         const submit = () => {
             form = document.querySelector(`form[action="${formaction}"]`);
             form.submit();
-        }
+        };
+
+        const showEditJenisTugasAkhir = button => {
+            const id = button.getAttribute('data-id');
+            const formEdit = document.getElementById('formEditJenisTugasAkhir');
+
+            formEdit.setAttribute('action', `{{ url('prodi/master/jenis_tugas_akhir') }}/${id}/update`);
+            document.getElementById('edit_kode_jenis_tugas_akhir').value = button.getAttribute('data-kode') || '';
+            document.getElementById('edit_deskripsi').value = button.getAttribute('data-deskripsi') || '';
+
+            const availability = document.getElementById('edit_tersedia_untuk_mahasiswa');
+            if (availability) {
+                availability.value = button.getAttribute('data-tersedia') || '1';
+            }
+        };
     </script>
 @endsection

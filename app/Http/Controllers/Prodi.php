@@ -2878,6 +2878,51 @@ class Prodi extends Controller
         }
     }
 
+    public function master_jenis_tugas_akhir_update(Request $request, $id)
+    {
+        $jenis = DB::table('mst_jenis_tugas_akhir')
+            ->where('jenis_tugas_akhir_id', $id)
+            ->first();
+
+        if (!$jenis) {
+            return redirect::to('prodi/master/jenis_tugas_akhir')->with('danger', 'Jenis tugas akhir tidak ditemukan.');
+        }
+
+        $this->validate($request, [
+            'kode_jenis_tugas_akhir' => 'required|max:50|unique:mst_jenis_tugas_akhir,kode_jenis_tugas_akhir,' . $id . ',jenis_tugas_akhir_id',
+            'deskripsi' => 'required|max:255',
+            'tersedia_untuk_mahasiswa' => 'nullable|in:0,1',
+        ], [
+            'kode_jenis_tugas_akhir.required' => 'Kode jenis tugas akhir wajib diisi.',
+            'kode_jenis_tugas_akhir.unique' => 'Kode jenis tugas akhir sudah digunakan.',
+            'deskripsi.required' => 'Deskripsi wajib diisi.',
+        ]);
+
+        $payload = [
+            'kode_jenis_tugas_akhir' => trim((string) $request->kode_jenis_tugas_akhir),
+            'deskripsi' => trim((string) $request->deskripsi),
+        ];
+
+        if (Schema::hasColumn('mst_jenis_tugas_akhir', 'tersedia_untuk_mahasiswa')) {
+            $payload['tersedia_untuk_mahasiswa'] = (int) $request->input('tersedia_untuk_mahasiswa', 1);
+        }
+
+        try {
+            DB::table('mst_jenis_tugas_akhir')
+                ->where('jenis_tugas_akhir_id', $id)
+                ->update($payload);
+
+            return redirect::to('prodi/master/jenis_tugas_akhir')->with('success', 'Jenis tugas akhir berhasil diperbarui.');
+        } catch (Exception $e) {
+            Log::error('master_jenis_tugas_akhir_update error', [
+                'jenis_tugas_akhir_id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect::to('prodi/master/jenis_tugas_akhir')->withInput()->with('danger', 'Jenis tugas akhir gagal diperbarui.');
+        }
+    }
+
     public function master_dosen_store(Request $request)
     {
         $this->validateMasterDosenRequest($request);

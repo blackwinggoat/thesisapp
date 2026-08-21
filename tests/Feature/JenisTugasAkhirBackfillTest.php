@@ -13,6 +13,7 @@ use App\Console\Commands\LinkBimbinganTopik;
 use App\Http\Controllers\Prodi;
 use App\Http\Controllers\mhs;
 use App\Helper;
+use Illuminate\Http\Request;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Tests\TestCase;
@@ -229,6 +230,33 @@ class JenisTugasAkhirBackfillTest extends TestCase
 
         $this->assertNotContains('NS-PK', $available);
         $this->assertContains('NS-PK', $includingHistorical);
+    }
+
+    public function testMasterJenisTugasAkhirCanBeEditedWithoutChangingStudentRelations()
+    {
+        $jenisTugasAkhirId = DB::table('mst_jenis_tugas_akhir')
+            ->where('kode_jenis_tugas_akhir', 'TA-SM')
+            ->value('jenis_tugas_akhir_id');
+
+        DB::table('trt_bimbingan')->insert([
+            'C_NPM' => '13020229999',
+            'judul' => 'Judul yang sudah tersimpan',
+            'jenis_tugas_akhir_id' => $jenisTugasAkhirId,
+        ]);
+
+        $request = Request::create('/prodi/master/jenis_tugas_akhir/' . $jenisTugasAkhirId . '/update', 'POST', [
+            'kode_jenis_tugas_akhir' => 'TA-SM-REV',
+            'deskripsi' => 'Tugas Akhir Skripsi Mandiri Revisi',
+            'tersedia_untuk_mahasiswa' => 0,
+        ]);
+
+        $response = (new Prodi)->master_jenis_tugas_akhir_update($request, $jenisTugasAkhirId);
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('TA-SM-REV', DB::table('mst_jenis_tugas_akhir')->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)->value('kode_jenis_tugas_akhir'));
+        $this->assertSame('Tugas Akhir Skripsi Mandiri Revisi', DB::table('mst_jenis_tugas_akhir')->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)->value('deskripsi'));
+        $this->assertSame(0, (int) DB::table('mst_jenis_tugas_akhir')->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)->value('tersedia_untuk_mahasiswa'));
+        $this->assertSame($jenisTugasAkhirId, DB::table('trt_bimbingan')->where('C_NPM', '13020229999')->value('jenis_tugas_akhir_id'));
     }
 
     public function testLinkingGuidanceToTopicsSkipsAmbiguousHistory()

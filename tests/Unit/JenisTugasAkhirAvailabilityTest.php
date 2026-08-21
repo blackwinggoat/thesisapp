@@ -21,7 +21,10 @@ class JenisTugasAkhirAvailabilityTest extends TestCase
         $this->assertStringContainsString("where('tersedia_untuk_mahasiswa', 1)", $studentController);
         $this->assertStringContainsString('jenisTugasAkhirMahasiswaDapatDipilih', $studentController);
         $this->assertStringContainsString('master_jenis_tugas_akhir_availability', $prodiController);
+        $this->assertStringContainsString('master_jenis_tugas_akhir_update', $prodiController);
         $this->assertStringContainsString('Tersedia bagi Mahasiswa', $masterView);
         $this->assertStringContainsString('type="checkbox"', $masterView);
+        $this->assertStringContainsString('Edit Jenis Tugas Akhir', $masterView);
+        $this->assertStringContainsString('showEditJenisTugasAkhir', $masterView);
     }
 }
