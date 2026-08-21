@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helper;
+use Barryvdh\DomPDF\Facade as PDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -386,6 +387,108 @@ class KeuanganFakultas extends Controller
             'dataMasterHonorarium',
             'date'
         ));
+    }
+
+    public function honorarium_tanda_terima_pdf($date)
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
+            abort(404);
+        }
+
+        $honorariums = $this->honorariumDenganJadwalQuery()
+            ->whereDate('jadwal.tgl_ujian', $date)
+            ->select('honorarium.*')
+            ->orderBy('honorarium.C_NPM')
+            ->get()
+            ->unique('id')
+            ->values();
+
+        if ($honorariums->isEmpty()) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'info',
+                'message' => 'Tidak ada honorarium aktif pada tanggal ' . $date . '.',
+            ]);
+        }
+
+        $belumDitetapkan = $honorariums->filter(function ($honorarium) {
+            return $this->honorariumNeedsTypeAssignment($honorarium);
+        })->count();
+        if ($belumDitetapkan > 0) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'warning',
+                'message' => 'PDF belum dapat dibuat. Tetapkan tipe honorarium untuk ' . $belumDitetapkan
+                    . ' data pada tanggal ' . $date . ' terlebih dahulu.',
+            ]);
+        }
+
+        $namaMahasiswa = DB::table('t_mst_mahasiswa')
+            ->whereIn('C_NPM', $honorariums->pluck('C_NPM')->unique()->all())
+            ->pluck('NAMA_MAHASISWA', 'C_NPM');
+        $peranHonorarium = [
+            'KS' => ['label' => 'Ketua Sidang', 'amount' => 'KS_H', 'status' => 'KS_Stat'],
+            'PU' => ['label' => 'Pembimbing Utama', 'amount' => 'PU_H', 'status' => 'PU_Stat'],
+            'PP' => ['label' => 'Pembimbing Pendamping', 'amount' => 'PP_H', 'status' => 'PP_Stat'],
+            'P1' => ['label' => 'Penguji I', 'amount' => 'P1_H', 'status' => 'P1_Stat'],
+            'P2' => ['label' => 'Penguji II', 'amount' => 'P2_H', 'status' => 'P2_Stat'],
+            'P3' => ['label' => 'Penguji III', 'amount' => 'P3_H', 'status' => 'P3_Stat'],
+        ];
+        $reports = collect();
+
+        foreach ($honorariums as $honorarium) {
+            foreach ($peranHonorarium as $role => $definition) {
+                $kodeDosen = trim((string) $honorarium->{$role});
+                if ($kodeDosen === '' || (int) $honorarium->{$definition['status']} !== 1) {
+                    continue;
+                }
+
+                if (!$reports->has($kodeDosen)) {
+                    $reports->put($kodeDosen, (object) [
+                        'kode_dosen' => $kodeDosen,
+                        'nama_dosen' => Helper::getNamaDosenByKode($kodeDosen),
+                        'items' => collect(),
+                        'total_honor' => 0,
+                    ]);
+                }
+
+                $report = $reports->get($kodeDosen);
+                $honor = (float) $honorarium->{$definition['amount']};
+                $report->items->push((object) [
+                    'nim' => $honorarium->C_NPM,
+                    'nama_mahasiswa' => $namaMahasiswa->get($honorarium->C_NPM, '-'),
+                    'tipe_ujian' => $honorarium->tipe_ujian ?: '-',
+                    'peran' => $definition['label'],
+                    'honor' => $honor,
+                ]);
+                $report->total_honor += $honor;
+            }
+        }
+
+        $reports = $reports
+            ->map(function ($report) {
+                $report->items = $report->items
+                    ->sortBy(function ($item) {
+                        return strtolower($item->nama_mahasiswa . '|' . $item->nim . '|' . $item->peran);
+                    })
+                    ->values();
+
+                return $report;
+            })
+            ->sortBy(function ($report) {
+                return strtolower($report->nama_dosen . '|' . $report->kode_dosen);
+            })
+            ->values();
+
+        if ($reports->isEmpty()) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'warning',
+                'message' => 'Tidak ada honorarium berstatus Available yang dapat dibuatkan tanda terima pada tanggal '
+                    . $date . '.',
+            ]);
+        }
+
+        return PDF::loadView('tugasakhir.keuanganfakultas.tanda_terima_honorarium_pdf', compact('reports', 'date'))
+            ->setPaper('a4', 'portrait')
+            ->download('Tanda-Terima-Honorarium-' . $date . '.pdf');
     }
 
     public function honorarium_setup_type_ujian_otomatis(Request $request, $date)

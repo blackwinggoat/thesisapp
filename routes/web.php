@@ -637,6 +637,7 @@ Route::group(['middleware' => 'keuangan_fakultas'], function () {
         Route::post('/tanggal/{date}/reset-type', 'KeuanganFakultas@honorarium_reset_type')->name('honorarium_reset_type');
         Route::post('/tanggal/{date}/available-all', 'KeuanganFakultas@honorarium_available_all')->name('honorarium_available_all');
         Route::post('/tanggal/{date}/unavailable-all', 'KeuanganFakultas@honorarium_unavailable_all')->name('honorarium_unavailable_all');
+        Route::get('/tanggal/{date}/tanda-terima-pdf', 'KeuanganFakultas@honorarium_tanda_terima_pdf')->name('honorarium_tanda_terima_pdf');
         Route::get('/history', 'KeuanganFakultas@honorarium_history')->name('honorarium_history');
         Route::get('/tanggal/{date}', 'KeuanganFakultas@honorarium_detail_tanggal')->name('honorarium_detail_tanggal');
     });

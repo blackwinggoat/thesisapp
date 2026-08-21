@@ -71,6 +71,10 @@
                                         <a href="{{ route('honorarium_detail_tanggal', $honorarium->date) }}" class="btn btn-primary btn-sm">
                                             <i class="fa fa-users"></i> Kelola Mahasiswa
                                         </a>
+                                        <a href="{{ route('honorarium_tanda_terima_pdf', $honorarium->date) }}" class="btn btn-danger btn-sm"
+                                            title="Download tanda terima honorarium PDF" aria-label="Download tanda terima honorarium PDF">
+                                            <i class="fa fa-file-pdf-o"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             @empty
