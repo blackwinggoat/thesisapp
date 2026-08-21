@@ -11,6 +11,12 @@
             text-align: center;
             padding: 0.3em;
         }
+
+        .honorarium-total-summary {
+            background: #166534;
+            border-color: #14532d;
+            color: #fff;
+        }
     </style>
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
@@ -51,6 +57,27 @@
                             <i class="fa fa-magic"></i> Setup Tipe Ujian Otomatis
                         </button>
                     </form>
+                    <form action="{{ route('honorarium_reset_type', $date) }}" method="POST" style="display: inline;"
+                        onsubmit="return confirm('Reset semua tipe dan nominal honorarium pada tanggal ini? Data yang sudah lunas tidak akan diubah.');">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa fa-undo"></i> Reset Type
+                        </button>
+                    </form>
+                    <form action="{{ route('honorarium_available_all', $date) }}" method="POST" style="display: inline;"
+                        onsubmit="return confirm('Set semua honorarium pada tanggal ini menjadi Available? Data tanpa tipe atau yang sudah lunas akan dilewati.');">
+                        @csrf
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa fa-check-circle"></i> Available Semua
+                        </button>
+                    </form>
+                    <form action="{{ route('honorarium_unavailable_all', $date) }}" method="POST" style="display: inline;"
+                        onsubmit="return confirm('Set semua honorarium pada tanggal ini menjadi Unavailable? Data yang sudah lunas tidak akan diubah.');">
+                        @csrf
+                        <button type="submit" class="btn btn-default">
+                            <i class="fa fa-ban"></i> Unavailable Semua
+                        </button>
+                    </form>
                     <a href="{{ route('honorarium_history') }}" type="button" class="btn btn-primary">
                         <i class="fa fa-history"></i> History
                     </a>
@@ -61,7 +88,7 @@
                         return (float) $honorarium->total_honor;
                     });
                 @endphp
-                <div class="alert alert-info square" style="margin-bottom: 20px; font-size: 18px;">
+                <div class="alert alert-success square honorarium-total-summary" style="margin-bottom: 20px; font-size: 18px;">
                     <strong>Total Honor Seluruh Mahasiswa:</strong>
                     <strong id="total-honorarium-tanggal" style="font-size: 24px; margin-left: 8px;">{{ helper::formatRupiah($totalHonorariumTanggal) }}</strong>
                 </div>

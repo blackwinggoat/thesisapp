@@ -19,8 +19,17 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString("(int) \$examType === 0", $controller);
         $this->assertStringContainsString("(int) \$examType === 2", $controller);
         $this->assertStringContainsString('honorariumHasPaidRole($honorarium)', $controller);
+        $this->assertStringContainsString('honorarium_reset_type', $controller);
+        $this->assertStringContainsString('honorarium_available_all', $controller);
+        $this->assertStringContainsString('honorarium_unavailable_all', $controller);
         $this->assertStringContainsString("Route::post('/tanggal/{date}/setup-type-ujian'", $routes);
+        $this->assertStringContainsString("Route::post('/tanggal/{date}/reset-type'", $routes);
+        $this->assertStringContainsString("Route::post('/tanggal/{date}/available-all'", $routes);
+        $this->assertStringContainsString("Route::post('/tanggal/{date}/unavailable-all'", $routes);
         $this->assertStringContainsString('Setup Tipe Ujian Otomatis', $view);
+        $this->assertStringContainsString('Reset Type', $view);
+        $this->assertStringContainsString('Available Semua', $view);
+        $this->assertStringContainsString('Unavailable Semua', $view);
         $this->assertStringContainsString('kode_jenis_tugas_akhir', $view);
         $this->assertStringContainsString('Proposal Eksekutif', $migration);
         $this->assertStringContainsString('Ujian Meja Eksekutif', $migration);

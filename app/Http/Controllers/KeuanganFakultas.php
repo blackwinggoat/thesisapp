@@ -472,6 +472,113 @@ class KeuanganFakultas extends Controller
         }
     }
 
+    public function honorarium_reset_type($date)
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
+            abort(404);
+        }
+
+        try {
+            $hasil = DB::transaction(function () use ($date) {
+                $data = $this->honorariumDenganJadwalQuery()
+                    ->whereDate('jadwal.tgl_ujian', $date)
+                    ->select('honorarium.*')
+                    ->lockForUpdate()
+                    ->get();
+                $diterapkan = 0;
+                $dilewati = 0;
+
+                foreach ($data as $honorarium) {
+                    if ($this->honorariumHasPaidRole($honorarium)) {
+                        $dilewati++;
+                        continue;
+                    }
+
+                    $payload = ['tipe_ujian' => '0'];
+                    foreach ($this->honorariumRoles() as $role => $definition) {
+                        if (trim((string) $honorarium->{$role}) !== '') {
+                            $payload[$definition['amount']] = 0;
+                            $payload[$definition['status']] = 0;
+                        }
+                    }
+
+                    DB::table('trt_honorium')->where('id', $honorarium->id)->update($payload);
+                    $diterapkan++;
+                }
+
+                return compact('diterapkan', 'dilewati');
+            });
+
+            return redirect()->back()->with([
+                'status' => 'success',
+                'message' => 'Reset tipe selesai: ' . $hasil['diterapkan'] . ' data direset, '
+                    . $hasil['dilewati'] . ' data lunas dilewati.',
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with([
+                'status' => 'danger',
+                'message' => 'Reset tipe gagal. Tidak ada perubahan yang disimpan.',
+            ]);
+        }
+    }
+
+    public function honorarium_available_all($date)
+    {
+        return $this->ubahKetersediaanHonorariumTanggal($date, 1);
+    }
+
+    public function honorarium_unavailable_all($date)
+    {
+        return $this->ubahKetersediaanHonorariumTanggal($date, 0);
+    }
+
+    protected function ubahKetersediaanHonorariumTanggal($date, $status)
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
+            abort(404);
+        }
+
+        try {
+            $hasil = DB::transaction(function () use ($date, $status) {
+                $data = $this->honorariumDenganJadwalQuery()
+                    ->whereDate('jadwal.tgl_ujian', $date)
+                    ->select('honorarium.*')
+                    ->lockForUpdate()
+                    ->get();
+                $diterapkan = 0;
+                $dilewati = 0;
+
+                foreach ($data as $honorarium) {
+                    if ($this->honorariumHasPaidRole($honorarium)
+                        || ($status === 1 && $this->honorariumNeedsTypeAssignment($honorarium))) {
+                        $dilewati++;
+                        continue;
+                    }
+
+                    $payload = $this->honorariumStatusPayload($honorarium, $status);
+                    if (!empty($payload)) {
+                        DB::table('trt_honorium')->where('id', $honorarium->id)->update($payload);
+                        $diterapkan++;
+                    }
+                }
+
+                return compact('diterapkan', 'dilewati');
+            });
+            $label = $status === 1 ? 'Available' : 'Unavailable';
+
+            return redirect()->back()->with([
+                'status' => 'success',
+                'message' => 'Semua status berhasil diubah menjadi ' . $label . ': '
+                    . $hasil['diterapkan'] . ' data diubah, ' . $hasil['dilewati'] . ' data dilewati.',
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with([
+                'status' => 'danger',
+                'message' => 'Perubahan status massal gagal. Tidak ada perubahan yang disimpan.',
+            ]);
+        }
+    }
+
     protected function namaPembayaranOtomatis($examType, $kodeJenisTugasAkhir, $mahasiswaEksekutif)
     {
         if (strpos((string) $kodeJenisTugasAkhir, 'NS-') === 0) {
