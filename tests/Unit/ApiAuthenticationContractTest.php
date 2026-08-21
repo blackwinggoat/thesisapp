@@ -13,6 +13,7 @@ class ApiAuthenticationContractTest extends TestCase
         $middleware = file_get_contents(__DIR__ . '/../../app/Http/Middleware/ApiTokenAuth.php');
         $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/Api/AuthController.php');
         $documentation = file_get_contents(__DIR__ . '/../../docs/API_AUTHENTICATION.md');
+        $curriculumDocumentation = file_get_contents(__DIR__ . '/../../docs/CURRICULUM_OBE_API_HANDOFF.md');
 
         $this->assertStringContainsString("Route::prefix('v1')", $routes);
         $this->assertStringContainsString("'/auth/login'", $routes);
@@ -27,5 +28,8 @@ class ApiAuthenticationContractTest extends TestCase
         $this->assertStringContainsString("'client_name' => 'required|string|max:100'", $controller);
         $this->assertStringContainsString('https://thesis.fikom.app/api/v1', $documentation);
         $this->assertStringContainsString('Authorization: Bearer ACCESS_TOKEN', $documentation);
+        $this->assertStringContainsString('curriculum-app-obe-fikom', $curriculumDocumentation);
+        $this->assertStringContainsString('level = 7', $curriculumDocumentation);
+        $this->assertStringContainsString('https://thesis.fikom.app/api/v1', $curriculumDocumentation);
     }
 }
