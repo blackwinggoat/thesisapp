@@ -26,6 +26,7 @@ class HonorariumFinancialSafetyTest extends TestCase
     {
         $keuangan = file_get_contents(__DIR__ . '/../../app/Http/Controllers/KeuanganFakultas.php');
         $dosen = file_get_contents(__DIR__ . '/../../app/Http/Controllers/dosen.php');
+        $detailView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium_detail.blade.php');
 
         $this->assertStringContainsString('honorariumNeedsTypeAssignment', $keuangan);
         $this->assertStringContainsString('honorariumHasPaidRole', $keuangan);
@@ -37,6 +38,8 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('honorariumBelumTerhubungJadwalQuery', $keuangan);
         $this->assertStringContainsString("Tidak ada honorarium aktif dengan jadwal ujian pada tanggal", $keuangan);
         $this->assertStringContainsString("return '(' . implode(' OR ', \$conditions) . ')';", $keuangan);
+        $this->assertStringContainsString('paging: false', $detailView);
+        $this->assertStringContainsString('Setup Tipe Ujian Otomatis', $detailView);
         $this->assertStringContainsString('getHonorariumAssignmentsForDosen', $dosen);
         $this->assertStringContainsString('clone $record', $dosen);
         $this->assertStringContainsString('Anda tidak memiliki akses untuk mengonfirmasi penugasan honorarium ini.', $dosen);

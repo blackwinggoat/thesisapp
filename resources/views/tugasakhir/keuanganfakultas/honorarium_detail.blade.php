@@ -44,6 +44,9 @@
             </div>
             <div class="the-box">
                 <div style="margin-bottom: 20px; text-align: right;">
+                    <button type="button" class="btn btn-warning" disabled title="Aturan penetapan tipe ujian otomatis belum ditetapkan.">
+                        <i class="fa fa-magic"></i> Setup Tipe Ujian Otomatis
+                    </button>
                     <a href="{{ route('honorarium_history') }}" type="button" class="btn btn-primary">
                         <i class="fa fa-history"></i> History
                     </a>
@@ -225,7 +228,11 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            var datatable = $('#datatable-example').DataTable();
+            var datatable = $('#datatable-example').DataTable({
+                paging: false,
+                info: false,
+                lengthChange: false
+            });
 
             function bindToggleEvents() {
                 $('input[data-toggle="toggle"]').bootstrapToggle();
