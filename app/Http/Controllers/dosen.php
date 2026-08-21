@@ -1881,9 +1881,22 @@ class dosen extends Controller
                     ->orWhere('trt_honorium.P3', $C_KODE_DOSEN);
             })
             ->having('status', '<>', 3) // Exclude records where status is 3
+            ->orderBy('date', 'desc')
+            ->orderBy('C_NPM')
             ->get();
 
-        return view('tugasakhir.dosen.honorarium', compact('data'));
+        $honorariumByDate = $data->groupBy('date')->map(function ($items, $date) {
+            return (object) [
+                'date' => $date,
+                'items' => $items,
+                'student_count' => $items->pluck('C_NPM')->unique()->count(),
+                'assignment_count' => $items->count(),
+                'available_total' => $items->where('status', 1)->sum('amount'),
+                'available_count' => $items->where('status', 1)->count(),
+            ];
+        });
+
+        return view('tugasakhir.dosen.honorarium', compact('honorariumByDate'));
     }
 
 
@@ -1893,36 +1906,43 @@ class dosen extends Controller
             if (isset($honorarium['status']) && $honorarium['status'] == "on") {
                 $C_NPM = $honorarium['C_NPM'];
                 $role = $honorarium['role'];
+                $honorariumId = $honorarium['id'];
 
-                // Determine which status field to update based on the role
+                // Update only the selected exam assignment, not every exam for the same student.
                 switch ($role) {
                     case 'Ketua Sidang':
                         DB::table('trt_honorium')
+                            ->where('id', $honorariumId)
                             ->where('C_NPM', $C_NPM)
                             ->update(['KS_Stat' => 3]);
                         break;
                     case 'Pembimbing Utama':
                         DB::table('trt_honorium')
+                            ->where('id', $honorariumId)
                             ->where('C_NPM', $C_NPM)
                             ->update(['PU_Stat' => 3]);
                         break;
                     case 'Pembimbing Pendamping':
                         DB::table('trt_honorium')
+                            ->where('id', $honorariumId)
                             ->where('C_NPM', $C_NPM)
                             ->update(['PP_Stat' => 3]);
                         break;
                     case 'Penguji I':
                         DB::table('trt_honorium')
+                            ->where('id', $honorariumId)
                             ->where('C_NPM', $C_NPM)
                             ->update(['P1_Stat' => 3]);
                         break;
                     case 'Penguji II':
                         DB::table('trt_honorium')
+                            ->where('id', $honorariumId)
                             ->where('C_NPM', $C_NPM)
                             ->update(['P2_Stat' => 3]);
                         break;
                     case 'Penguji III':
                         DB::table('trt_honorium')
+                            ->where('id', $honorariumId)
                             ->where('C_NPM', $C_NPM)
                             ->update(['P3_Stat' => 3]);
                         break;

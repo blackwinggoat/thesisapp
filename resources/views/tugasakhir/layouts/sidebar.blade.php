@@ -103,39 +103,6 @@
 
 
 
-        <li class="static">MENU AKADEMIK-PRODI</li>
-        <li>
-            <a href="{{ url('prodi/dosen_pembimbing')}}">
-                <i class="fa  fa-institution icon-sidebar"></i>
-                Dosen Pembimbing
-            </a>
-        </li>
-        <li>
-            <a href="{{ url('prodi/mahasiswa')}}">
-                <i class="fa fa-user icon-sidebar"></i>
-                Mahasiswa
-            </a>
-        </li>
-        <li>
-            <a href="{{ url('prodi/jadwal')}}">
-                <i class="fa fa-calendar icon-sidebar"></i>
-                Jadwal Ujian
-            </a>
-        </li>
-        <li>
-            <a href="#fakelink">
-                <i class="fa fa-users icon-sidebar"></i>
-                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
-                Peserta
-            </a>
-            <ul class="submenu">
-                <li><a href="{{ url('prodi/peserta_proposal')}}">Proposal</a></li>
-                <li><a href="{{ url('prodi/peserta_ujianmeja')}}">Ujian Meja</a></li>
-            </ul>
-        </li>
-
-
-
         <li class="static">MENU AKADEMIK-FAKULTAS</li>
         <li>
             <a href="{{url('fakultas/sk_pembimbing')}}" >
@@ -182,91 +149,6 @@
         </li>
 
 
-        <li class="static">MENU DOSEN</li>
-        <li>
-            <a href="#fakelink">
-                <i class="fa fa-table icon-sidebar"></i>
-                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
-                Jadwal Ujian
-            </a>
-            <ul class="submenu">
-                <li><a href="{{url('dosen/jadwal_proposal')}}">Proposal</a></li>
-                <li><a href="{{url('dosen/jadwal_ujianmeja')}}">Ujian Meja</a></li>
-            </ul>
-        </li>
-        <li>
-            <a href="#fakelink">
-                <i class="fa fa-envelope icon-sidebar"></i>
-                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
-                Bimbingan
-            </a>
-            <ul class="submenu">
-                <li><a href="{{url('mhs/mail_new')}}">Pesan baru</a></li>
-                <li><a href="{{url('mhs/mail_inbox')}}">Pesan Masuk <span class="badge badge-success span-sidebar">6</span></a></li>
-                <li><a href="{{url('mhs/mail_sent')}}">Pesan Keluar</a></li>
-            </ul>
-        </li>
-
-
-        <li class="static">MENU MAHASISWA</li>
-        <li>
-            <a href="{{url('mhs/Download')}}">
-                <i class="fa fa-paperclip icon-sidebar"></i>
-                Download
-            </a>
-        </li>
-        <li>
-            <a href="{{url('xxx/pengajuan_topik')}}">
-                <i class="fa fa-files-o icon-sidebar"></i>
-                Topik Penelitian
-            </a>
-        </li>
-        <li>
-            <a href="{{url('mhs/riwayat_ujian')}}">
-                <i class="fa fa-history icon-sidebar"></i>
-                Riwayat Ujian
-            </a>
-        </li>
-        <li>
-            <a href="#fakelink">
-                <i class="fa fa-envelope icon-sidebar"></i>
-                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
-                Bimbingan
-            </a>
-            <ul class="submenu">
-                <li><a href="{{url('mhs/mail_new')}}">Pesan baru</a></li>
-                <li><a href="{{url('mhs/mail_inbox')}}">Pesan Masuk <span class="badge badge-success span-sidebar">6</span></a></li>
-                <li><a href="{{url('mhs/mail_sent')}}">Pesan Keluar</a></li>
-            </ul>
-        </li>
-        <li>
-            <a href="#fakelink">
-                <i class="fa fa-clipboard icon-sidebar"></i>
-                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
-                Proposal
-            </a>
-            <ul class="submenu">
-                <li><a href="{{url('mhs/signup_proposal')}}">Daftar Ujian</a></li>
-                <li><a href="{{url('mhs/beritaacara_proposal')}}">Berita Acara</a></li>
-            </ul>
-        </li>
-        <li>
-            <ul class="submenu">
-                <li><a href="{{url('mhs/signup_seminarhasil')}}">Daftar Ujian</a></li>
-                <li><a href="{{url('mhs/beritaacara_seminarhasil')}}">Berita Acara</a></li>
-            </ul>
-        </li>
-        <li>
-            <a href="#fakelink">
-                <i class="fa  fa-clipboard icon-sidebar"></i>
-                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
-                Ujian Meja
-            </a>
-            <ul class="submenu">
-                <li><a href="{{url('mhs/signup_ujianmeja')}}">Daftar Ujian</a></li>
-                <li><a href="{{url('mhs/beritaacara_ujianmeja')}}">Berita Acara</a></li>
-            </ul>
-        </li>
         <li class="static">MASTER DATA</li>
         <li>
             <a href="{{url('/data-master/periode-jabatan')}}">

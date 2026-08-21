@@ -23,11 +23,12 @@
             @endif
 
             <!-- BEGIN DATA TABLE -->
-            <h3 class="page-heading">Honorarium List</h3>
+            <h3 class="page-heading">Honorarium Ujian</h3>
             <div class="the-box">
-                <div style="margin-bottom: 20px; text-align: right;">
+                <div class="honorarium-toolbar">
+                    <p class="text-muted">Pilih tanggal ujian untuk melihat rincian mahasiswa dan honorarium.</p>
                     <a href="{{route('history_honorarium')}}" type="button" class="btn btn-primary">
-                        <i class="fa fa-history"></i> History
+                        <i class="fa fa-history"></i> Riwayat Pembayaran
                     </a>
                 </div>
 
@@ -38,72 +39,42 @@
                             <thead class="the-box dark full">
                                 <tr>
                                     <th>No</th>
-                                    <th>Date</th>
-                                    <th>Nim</th>
-                                    <th>Student Name</th>
-                                    <th>Act As</th>
-                                    <th>Exam Type</th>
-                                    <th>Availability of Honorarium</th>
-                                    <th>Honorarium</th>
+                                    <th>Tanggal Ujian</th>
+                                    <th>Mahasiswa</th>
+                                    <th>Penugasan Dosen</th>
+                                    <th>Total Honorarium Siap Diterima</th>
+                                    <th class="text-center">Detail</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @php
-                                    $totalReceived = 0;
-                                    $totalUnpaid = 0;
+                                    $totalAvailable = $honorariumByDate->sum('available_total');
+                                    $waitingAssignments = $honorariumByDate->sum(function ($group) {
+                                        return $group->assignment_count - $group->available_count;
+                                    });
                                 @endphp
-                                @foreach ($data as $honorarium)
-                                    @php
-                                        if ($honorarium->status == 3) {
-                                            $totalReceived += $honorarium->amount;
-                                        } elseif ($honorarium->status == 1 || $honorarium->status == 0) {
-                                            $totalUnpaid += $honorarium->amount;
-                                        }
-                                    @endphp
+                                @foreach ($honorariumByDate as $dateKey => $group)
+                                    @php $modalId = 'honorarium-date-' . str_replace('-', '', $dateKey); @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $honorarium->date }}</td>
-                                        <td>{{ $honorarium->C_NPM }}</td>
-                                        <td>{{ helper::getNamaMhs($honorarium->C_NPM) }}</td>
-                                        <td>{{ $honorarium->role }}</td>
-                                        <td>{{ $honorarium->tipe_ujian }}</td>
                                         <td>
-                                            @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
-                                                <span class="badge badge-danger">Unset</span>
-                                            @else
-                                                <input type="hidden" name="honorariums[{{ $loop->index }}][id]"
-                                                    value="{{ $honorarium->id }}">
-                                                <input type="hidden" name="honorariums[{{ $loop->index }}][C_NPM]"
-                                                    value="{{ $honorarium->C_NPM }}">
-                                                <input type="hidden" name="honorariums[{{ $loop->index }}][role]"
-                                                    value="{{ $honorarium->role }}">
-                                                <input type="checkbox" name="honorariums[{{ $loop->index }}][status]"
-                                                    data-toggle="toggle" data-on="Yes" data-off="No"
-                                                    data-honorarium-id="{{ $honorarium->id }}"
-                                                    data-amount="{{ $honorarium->amount }}"
-                                                    {{ $honorarium->status == 3 ? 'disabled checked' : '' }}
-                                                    {{ $honorarium->status == 0 ? 'disabled' : '' }}
-                                                    {{ $honorarium->status == 1 ? '' : '' }}>
-                                            @endif
+                                            <strong>{{ \Carbon\Carbon::parse($group->date)->format('d/m/Y') }}</strong>
                                         </td>
                                         <td>
-                                            @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
-                                                <span class="badge badge-danger">Unset</span>
-                                            @elseif ($honorarium->status == 1)
-                                                <span class="badge badge-success amount-display">Rp
-                                                    {{ number_format($honorarium->amount, 0, ',', '.') }}
-                                                </span>
-                                            @elseif ($honorarium->status == 0)
-                                                <span class="badge badge-warning amount-display">Rp
-                                                    {{ number_format($honorarium->amount, 0, ',', '.') }}
-                                                </span>
-                                            @elseif ($honorarium->status == 3)
-                                                <span class="badge badge-primary amount-display">Rp
-                                                    {{ number_format($honorarium->amount, 0, ',', '.') }}
-                                                </span>
+                                            <span class="badge badge-default">{{ $group->student_count }} mahasiswa</span>
+                                        </td>
+                                        <td>{{ $group->assignment_count }} penugasan</td>
+                                        <td>
+                                            @if ($group->available_count > 0)
+                                                <span class="badge badge-success amount-display">Rp {{ number_format($group->available_total, 0, ',', '.') }}</span>
                                             @else
-                                                <span class="badge badge-danger">Tidak Diketahui</span>
+                                                <span class="text-muted">Belum tersedia</span>
                                             @endif
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#{{ $modalId }}">
+                                                <i class="fa fa-list"></i> Detail <span class="badge">{{ $group->assignment_count }}</span>
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -113,48 +84,84 @@
                     <div style="margin-top: 20px; text-align: right;">
                         <table style="display: inline-table; border-collapse: separate;border: 1px solid gray;">
                             <tr>
-                                <td style="border: 1px solid gray; padding: 10px"><strong>Honorarium to be
-                                        received:</strong></td>
+                                <td style="border: 1px solid gray; padding: 10px"><strong>Honorarium Siap Diterima:</strong></td>
                                 <td style="border: 1px solid gray; padding: 10px">Rp <span
-                                        id="totalReceived">{{ number_format($totalReceived, 0, ',', '.') }}</span>,-</td>
+                                        id="totalAvailable">{{ number_format($totalAvailable, 0, ',', '.') }}</span>,-</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid gray; padding: 10px"><strong>Unpaid Honorarium:</strong></td>
-                                <td style="border: 1px solid gray; padding: 10px">Rp <span
-                                        id="totalUnpaid">{{ number_format($totalUnpaid, 0, ',', '.') }}</span>,-</td>
+                                <td style="border: 1px solid gray; padding: 10px"><strong>Penugasan Menunggu Ketersediaan:</strong></td>
+                                <td style="border: 1px solid gray; padding: 10px">{{ $waitingAssignments }} penugasan</td>
                             </tr>
                         </table>
                     </div>
-                    <div style="text-align: right; margin-top: 20px;">
-                        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save</button>
+                    <div class="honorarium-save">
+                        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Simpan Konfirmasi Pembayaran</button>
                     </div>
+
+                @foreach ($honorariumByDate as $dateKey => $group)
+                    @php $modalId = 'honorarium-date-' . str_replace('-', '', $dateKey); @endphp
+                    <div class="modal fade" id="{{ $modalId }}" tabindex="-1" role="dialog" aria-labelledby="{{ $modalId }}-title">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title" id="{{ $modalId }}-title">Honorarium Ujian - {{ \Carbon\Carbon::parse($group->date)->format('d/m/Y') }}</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped honorarium-detail-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Mahasiswa</th>
+                                                    <th>Peran Dosen</th>
+                                                    <th>Jenis Ujian</th>
+                                                    <th>Honorarium</th>
+                                                    <th class="text-center">Konfirmasi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($group->items as $honorarium)
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ helper::getNamaMhs($honorarium->C_NPM) }}</strong>
+                                                            <small class="text-muted display-block">{{ $honorarium->C_NPM }}</small>
+                                                        </td>
+                                                        <td>{{ $honorarium->role }}</td>
+                                                        <td>{{ $honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2' ? 'Belum ditetapkan' : $honorarium->tipe_ujian }}</td>
+                                                        <td>
+                                                            @if ($honorarium->status == 1)
+                                                                <span class="badge badge-success">Rp {{ number_format($honorarium->amount, 0, ',', '.') }}</span>
+                                                            @else
+                                                                <span class="text-muted">Belum tersedia</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <input type="hidden" name="honorariums[{{ $honorarium->id }}][id]" value="{{ $honorarium->id }}">
+                                                            <input type="hidden" name="honorariums[{{ $honorarium->id }}][C_NPM]" value="{{ $honorarium->C_NPM }}">
+                                                            <input type="hidden" name="honorariums[{{ $honorarium->id }}][role]" value="{{ $honorarium->role }}">
+                                                            @if ($honorarium->status == 1)
+                                                                <label class="checkbox-inline honorarium-confirmation">
+                                                                    <input type="checkbox" name="honorariums[{{ $honorarium->id }}][status]" value="on" data-amount="{{ $honorarium->amount }}">
+                                                                    Sudah diterima
+                                                                </label>
+                                                            @else
+                                                                <span class="text-muted">Menunggu</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
                 </form>
-
-
-                <div class="row">
-                    <div class="col-md-3">
-                        <div style="border: 2px dashed #007bff; background-color: #e7f1ff; padding: 10px;">
-                            <small>
-                                <p>KS: Ketua Sidang</p>
-                                <p>PU: Pembimbing Utama</p>
-                                <p>PP: Pembimbing Pendamping</p>
-                                <p>P1: Penguji I</p>
-                                <p>P2: Penguji II</p>
-                                <p>P3: Penguji III</p>
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-md-9" style="text-align: left;">
-                        <div>
-                            <div
-                                style="display: inline-block; border: 2px solid #8cc152; background-color: #e1f7f4; padding: 5px 15px; margin-bottom: 10px;">
-                                Available</div><br>
-                            <div
-                                style="display: inline-block; border: 2px solid #f6bb42; background-color: #fff5e1; padding: 5px 15px;">
-                                Unavailable</div>
-                        </div>
-                    </div>
-                </div>
 
             </div><!-- /.the-box .default -->
             <!-- END DATA TABLE -->
@@ -163,31 +170,57 @@
 @endsection
 
 @section('script')
+    <style>
+        .honorarium-toolbar {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .honorarium-toolbar p {
+            margin: 0;
+        }
+
+        .honorarium-save {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .display-block {
+            display: block;
+            margin-top: 3px;
+        }
+
+        .honorarium-detail-table th {
+            white-space: nowrap;
+        }
+
+        .honorarium-confirmation {
+            color: #3c763d;
+            font-weight: 600;
+        }
+
+        @media (max-width: 767px) {
+            .honorarium-toolbar {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .honorarium-save {
+                text-align: left;
+            }
+        }
+    </style>
     <script>
         $(function() {
-            $('input[data-toggle="toggle"]').bootstrapToggle();
-
-            let totalReceived = parseFloat('{{ $totalReceived }}');
-            let totalUnpaid = parseFloat('{{ $totalUnpaid }}');
-
-            $('input[data-toggle="toggle"]').change(function() {
-                let isChecked = $(this).prop('checked');
-                let amount = parseFloat($(this).data('amount'));
-                let index = $(this).closest('tr').index();
-
-                $('#status-' + index).val(isChecked ? 3 : 1);
-
-                if (isChecked) {
-                    totalReceived += amount;
-                    totalUnpaid -= amount;
-                } else {
-                    totalReceived -= amount;
-                    totalUnpaid += amount;
-                }
-
-                // Update displayed totals
-                $('#totalReceived').text(totalReceived.toLocaleString('id-ID'));
-                $('#totalUnpaid').text(totalUnpaid.toLocaleString('id-ID'));
+            $('input[name$="[status]"]').change(function() {
+                var totalAvailable = parseFloat('{{ $totalAvailable }}');
+                $('input[name$="[status]"]:checked').each(function() {
+                    totalAvailable -= parseFloat($(this).data('amount'));
+                });
+                $('#totalAvailable').text(Math.max(totalAvailable, 0).toLocaleString('id-ID'));
             });
         });
     </script>
