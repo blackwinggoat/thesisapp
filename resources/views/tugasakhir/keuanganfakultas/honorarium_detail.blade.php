@@ -59,11 +59,11 @@
                             <thead class="the-box dark full">
                                 <tr>
                                     <th>No</th>
-                                    <th>Tanggal Ujian</th>
                                     <th>Nim</th>
                                     <th>Student Name</th>
                                     <th>Available</th>
                                     <th>Type</th>
+                                    <th>Total Honor</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -86,7 +86,6 @@
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $honorarium->tanggal_ujian }}</td>
                                         <td>{{ $honorarium->C_NPM }}</td>
                                         <td>{{ helper::getNamaMhs($honorarium->C_NPM) }}</td>
                                         <td>
@@ -139,6 +138,7 @@
                                                 @endif
                                             </select>
                                         </td>
+                                        <td class="text-right"><strong>{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
                                         <td>
                                             <button type="button" class="btn btn-primary btn-sm view-honorarium-btn"
                                                 data-toggle="modal" data-target="#statusModal"
@@ -149,6 +149,12 @@
                                                 data-p1="{{ helper::getDeskripsi($honorarium->P1) }}"
                                                 data-p2="{{ helper::getDeskripsi($honorarium->P2) }}"
                                                 data-p3="{{ helper::getDeskripsi($honorarium->P3) }}"
+                                                data-ks-h="{{ helper::formatRupiah($honorarium->KS_H) }}"
+                                                data-pu-h="{{ helper::formatRupiah($honorarium->PU_H) }}"
+                                                data-pp-h="{{ helper::formatRupiah($honorarium->PP_H) }}"
+                                                data-p1-h="{{ helper::formatRupiah($honorarium->P1_H) }}"
+                                                data-p2-h="{{ helper::formatRupiah($honorarium->P2_H) }}"
+                                                data-p3-h="{{ helper::formatRupiah($honorarium->P3_H) }}"
                                                 data-ks-stat="{{ $honorarium->KS_Stat }}"
                                                 data-pu-stat="{{ $honorarium->PU_Stat }}"
                                                 data-pp-stat="{{ $honorarium->PP_Stat }}"
@@ -201,6 +207,7 @@
                             <tr>
                                 <th>Role</th>
                                 <th>Name</th>
+                                <th>Honor</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -208,31 +215,37 @@
                             <tr>
                                 <td>KS</td>
                                 <td id="modal-ks"></td>
+                                <td id="modal-ks-h"></td>
                                 <td id="modal-ks-status"></td>
                             </tr>
                             <tr>
                                 <td>PU</td>
                                 <td id="modal-pu"></td>
+                                <td id="modal-pu-h"></td>
                                 <td id="modal-pu-status"></td>
                             </tr>
                             <tr>
                                 <td>PP</td>
                                 <td id="modal-pp"></td>
+                                <td id="modal-pp-h"></td>
                                 <td id="modal-pp-status"></td>
                             </tr>
                             <tr>
                                 <td>P1</td>
                                 <td id="modal-p1"></td>
+                                <td id="modal-p1-h"></td>
                                 <td id="modal-p1-status"></td>
                             </tr>
                             <tr>
                                 <td>P2</td>
                                 <td id="modal-p2"></td>
+                                <td id="modal-p2-h"></td>
                                 <td id="modal-p2-status"></td>
                             </tr>
                             <tr>
                                 <td>P3</td>
                                 <td id="modal-p3"></td>
+                                <td id="modal-p3-h"></td>
                                 <td id="modal-p3-status"></td>
                             </tr>
                         </tbody>
@@ -301,6 +314,12 @@
                     var p1 = $(this).data('p1');
                     var p2 = $(this).data('p2');
                     var p3 = $(this).data('p3');
+                    var ksHonor = $(this).data('ks-h');
+                    var puHonor = $(this).data('pu-h');
+                    var ppHonor = $(this).data('pp-h');
+                    var p1Honor = $(this).data('p1-h');
+                    var p2Honor = $(this).data('p2-h');
+                    var p3Honor = $(this).data('p3-h');
 
                     $('#modal-ks').text(ks);
                     $('#modal-pu').text(pu);
@@ -308,6 +327,12 @@
                     $('#modal-p1').text(p1);
                     $('#modal-p2').text(p2);
                     $('#modal-p3').text(p3);
+                    $('#modal-ks-h').text(ksHonor);
+                    $('#modal-pu-h').text(puHonor);
+                    $('#modal-pp-h').text(ppHonor);
+                    $('#modal-p1-h').text(p1Honor);
+                    $('#modal-p2-h').text(p2Honor);
+                    $('#modal-p3-h').text(p3Honor);
 
                     var ksStat = $(this).data('ks-stat');
                     var puStat = $(this).data('pu-stat');

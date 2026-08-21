@@ -39,6 +39,7 @@
                                 <th>No</th>
                                 <th>Tanggal Ujian</th>
                                 <th class="text-center">Jumlah Mahasiswa</th>
+                                <th class="text-center">Total Honor Belum Dibayar</th>
                                 <th class="text-center">Belum Tersedia</th>
                                 <th class="text-center">Perlu Penetapan Tipe</th>
                                 <th class="text-center">Aksi</th>
@@ -55,6 +56,7 @@
                                             TI: {{ $honorarium->total_teknik_informatika }} &nbsp; SI: {{ $honorarium->total_sistem_informasi }}
                                         </div>
                                     </td>
+                                    <td class="text-right"><strong>{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
                                     <td class="text-center">
                                         <span class="label {{ $honorarium->belum_tersedia > 0 ? 'label-warning' : 'label-success' }}">
                                             {{ $honorarium->belum_tersedia }} data
@@ -73,7 +75,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">Tidak ada honorarium yang masih perlu dikelola.</td>
+                                    <td colspan="7" class="text-center">Tidak ada honorarium yang masih perlu dikelola.</td>
                                 </tr>
                             @endforelse
                         </tbody>

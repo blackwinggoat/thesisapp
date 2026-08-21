@@ -32,6 +32,8 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('honorariumNeedsTypeAssignment', $keuangan);
         $this->assertStringContainsString('honorariumHasPaidRole', $keuangan);
         $this->assertStringContainsString('honorariumHasAnyRoleSql', $keuangan);
+        $this->assertStringContainsString('honorariumTotalSql', $keuangan);
+        $this->assertStringContainsString("MAX(' . \$this->honorariumTotalSql('honorarium', true)", $keuangan);
         $this->assertStringContainsString('lockForUpdate()', $keuangan);
         $this->assertStringContainsString('COUNT(DISTINCT honorarium.C_NPM) as total_mahasiswa', $keuangan);
         $this->assertStringContainsString("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '130%'", $keuangan);
@@ -44,6 +46,9 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('paging: false', $detailView);
         $this->assertStringContainsString('TI: {{ $honorarium->total_teknik_informatika }}', $listView);
         $this->assertStringContainsString('SI: {{ $honorarium->total_sistem_informasi }}', $listView);
+        $this->assertStringContainsString('Total Honor Belum Dibayar', $listView);
+        $this->assertStringContainsString('Total Honor', $detailView);
+        $this->assertStringContainsString('modal-ks-h', $detailView);
         $this->assertStringContainsString('Setup Tipe Ujian Otomatis', $detailView);
         $this->assertStringContainsString('getHonorariumAssignmentsForDosen', $dosen);
         $this->assertStringContainsString('clone $record', $dosen);

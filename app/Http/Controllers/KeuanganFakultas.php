@@ -287,9 +287,24 @@ class KeuanganFakultas extends Controller
     public function honorarium_home()
     {
         $belumTersediaSql = $this->honorariumHasRoleStatusSql(0);
+        $totalHonorByTanggal = $this->honorariumDenganJadwalQuery()
+            ->whereNotNull('jadwal.tgl_ujian')
+            ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
+            ->select(
+                'jadwal.tgl_ujian as date',
+                'honorarium.id',
+                DB::raw('MAX(' . $this->honorariumTotalSql('honorarium', true) . ') as total_honor')
+            )
+            ->groupBy('jadwal.tgl_ujian', 'honorarium.id')
+            ->get()
+            ->groupBy('date')
+            ->map(function ($honorariums) {
+                return (float) $honorariums->sum('total_honor');
+            });
+
         $data = $this->honorariumDenganJadwalQuery()
             ->whereNotNull('jadwal.tgl_ujian')
-            ->where('jadwal.tgl_ujian', '<>', '0000-00-00')
+            ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
             ->select(
                 'jadwal.tgl_ujian as date',
                 DB::raw('COUNT(DISTINCT honorarium.C_NPM) as total_mahasiswa'),
@@ -301,6 +316,9 @@ class KeuanganFakultas extends Controller
             ->groupBy('jadwal.tgl_ujian')
             ->orderBy('jadwal.tgl_ujian', 'desc')
             ->get();
+        foreach ($data as $honorarium) {
+            $honorarium->total_honor = $totalHonorByTanggal->get($honorarium->date, 0);
+        }
 
         $belumTerhubungJadwal = $this->honorariumBelumTerhubungJadwalQuery()->count();
 
@@ -318,7 +336,10 @@ class KeuanganFakultas extends Controller
 
         $data = $this->honorariumDenganJadwalQuery()
             ->whereDate('jadwal.tgl_ujian', $date)
-            ->select('honorarium.*', 'jadwal.tgl_ujian as tanggal_ujian')
+            ->select(
+                'honorarium.*',
+                DB::raw($this->honorariumTotalSql('honorarium') . ' as total_honor')
+            )
             ->orderBy('honorarium.C_NPM')
             ->get();
 
@@ -378,7 +399,7 @@ class KeuanganFakultas extends Controller
                     ->whereRaw('registrasi.C_NPM = honorarium.C_NPM')
                     ->whereRaw('registrasi.status = honorarium.exam_type')
                     ->whereNotNull('jadwal.tgl_ujian')
-                    ->where('jadwal.tgl_ujian', '<>', '0000-00-00');
+                    ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'");
             });
     }
 
@@ -392,6 +413,23 @@ class KeuanganFakultas extends Controller
             'P2' => ['amount' => 'P2_H', 'status' => 'P2_Stat', 'master' => 'penguji_2'],
             'P3' => ['amount' => 'P3_H', 'status' => 'P3_Stat', 'master' => 'penguji_3'],
         ];
+    }
+
+    protected function honorariumTotalSql($tableAlias = 'honorarium', $hanyaBelumLunas = false)
+    {
+        $nominalPerPeran = [];
+        foreach ($this->honorariumRoles() as $role => $definition) {
+            $nominal = 'COALESCE(' . $tableAlias . '.' . $definition['amount'] . ', 0)';
+            if ($hanyaBelumLunas) {
+                $nominal = 'CASE WHEN '
+                    . $this->honorariumHasRoleSql($tableAlias . '.' . $role)
+                    . ' AND COALESCE(' . $tableAlias . '.' . $definition['status'] . ', 0) <> 3'
+                    . ' THEN ' . $nominal . ' ELSE 0 END';
+            }
+            $nominalPerPeran[] = $nominal;
+        }
+
+        return '(' . implode(' + ', $nominalPerPeran) . ')';
     }
 
     protected function honorariumHasRoleSql($role)
