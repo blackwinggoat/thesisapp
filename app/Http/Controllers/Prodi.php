@@ -287,6 +287,8 @@ class Prodi extends Controller
     // Menampilkan Status Bimbingan Mahasiswa
     public function detail_status_bimbingan_mahasiswa($status)
     {
+        abort_unless(in_array((int) $status, [0, 1, 2, 3], true), 404);
+
         $query = DB::table('trt_bimbingan')
             ->select("*")
             ->where('trt_bimbingan.status_bimbingan', $status);
@@ -1088,14 +1090,13 @@ class Prodi extends Controller
 
         foreach (['pembimbing_I_id', 'pembimbing_II_id'] as $kolomPembimbing) {
             $query = DB::table('trt_bimbingan as tb')
-                ->leftJoin('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'tb.C_NPM')
                 ->whereNotNull('tb.' . $kolomPembimbing)
                 ->where('tb.' . $kolomPembimbing, '<>', '')
                 ->whereIn('tb.status_bimbingan', [0, 2, 3])
                 ->select(
                     'tb.' . $kolomPembimbing . ' as kode_dosen',
-                    DB::raw("SUM(CASE WHEN tb.status_bimbingan = 0 AND mhs.C_KODE_STATUS_AKTIF_MHS = 'A' THEN 1 ELSE 0 END) as pp"),
-                    DB::raw("SUM(CASE WHEN tb.status_bimbingan = 2 AND mhs.C_KODE_STATUS_AKTIF_MHS = 'A' THEN 1 ELSE 0 END) as pum"),
+                    DB::raw('SUM(CASE WHEN tb.status_bimbingan = 0 THEN 1 ELSE 0 END) as pp'),
+                    DB::raw('SUM(CASE WHEN tb.status_bimbingan = 2 THEN 1 ELSE 0 END) as pum'),
                     DB::raw('SUM(CASE WHEN tb.status_bimbingan = 3 THEN 1 ELSE 0 END) as l')
                 )
                 ->groupBy('tb.' . $kolomPembimbing);
@@ -3554,7 +3555,6 @@ class Prodi extends Controller
                     LEFT JOIN t_mst_dosen dosen_pendamping ON dosen_pendamping.C_KODE_DOSEN = tb.pembimbing_II_id
                     LEFT JOIN mig_t_mst_dosen dosen_pendamping_lama ON dosen_pendamping_lama.C_KODE_DOSEN = tb.pembimbing_II_id
                     WHERE tb.C_NPM LIKE ?
-                      AND m.C_KODE_STATUS_AKTIF_MHS = 'A'
                       AND tb.status_bimbingan IN (0, 1, 2)
                       AND sk.tanggal_sk < ?
                     ORDER BY sk.tanggal_sk ASC, m.NAMA_MAHASISWA ASC

@@ -55,7 +55,7 @@
                         Mahasiswa Aktif Lebih dari Dua Tahun sejak SK Pembimbing
                         <span class="label label-danger">{{ $mahasiswaMelewatiDuaTahunSk->count() }}</span>
                     </h4>
-                    <p class="text-muted">SK pertama sebelum {{ \Carbon\Carbon::parse($batasDuaTahunSk)->format('d-m-Y') }}. Data ini belum termasuk mahasiswa lulusan atau nonaktif.</p>
+                    <p class="text-muted">SK pertama sebelum {{ \Carbon\Carbon::parse($batasDuaTahunSk)->format('d-m-Y') }}. Data ini belum termasuk mahasiswa lulusan.</p>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead class="the-box dark full">

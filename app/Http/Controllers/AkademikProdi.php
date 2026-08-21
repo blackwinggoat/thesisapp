@@ -363,14 +363,13 @@ class AkademikProdi extends Controller
 
         foreach (['pembimbing_I_id', 'pembimbing_II_id'] as $kolomPembimbing) {
             $query = DB::table('trt_bimbingan as tb')
-                ->leftJoin('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'tb.C_NPM')
                 ->whereNotNull('tb.' . $kolomPembimbing)
                 ->where('tb.' . $kolomPembimbing, '<>', '')
                 ->whereIn('tb.status_bimbingan', [0, 2, 3])
                 ->select(
                     'tb.' . $kolomPembimbing . ' as kode_dosen',
-                    DB::raw("SUM(CASE WHEN tb.status_bimbingan = 0 AND mhs.C_KODE_STATUS_AKTIF_MHS = 'A' THEN 1 ELSE 0 END) as pp"),
-                    DB::raw("SUM(CASE WHEN tb.status_bimbingan = 2 AND mhs.C_KODE_STATUS_AKTIF_MHS = 'A' THEN 1 ELSE 0 END) as pum"),
+                    DB::raw('SUM(CASE WHEN tb.status_bimbingan = 0 THEN 1 ELSE 0 END) as pp'),
+                    DB::raw('SUM(CASE WHEN tb.status_bimbingan = 2 THEN 1 ELSE 0 END) as pum'),
                     DB::raw('SUM(CASE WHEN tb.status_bimbingan = 3 THEN 1 ELSE 0 END) as l')
                 )
                 ->groupBy('tb.' . $kolomPembimbing);

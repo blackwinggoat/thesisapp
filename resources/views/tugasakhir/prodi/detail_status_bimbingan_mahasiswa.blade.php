@@ -4,8 +4,6 @@
 @section('tambahan', "- Mahasiswa Persiapan Ujian TA")
 @elseif($status == 3)
 @section('tambahan', "- Lulusan Mahasiswa")
-@elseif($status == 4)
-@section('tambahan', "- Mahasiswa Non Aktif")
 @endif
 
 @extends('tugasakhir.index')
@@ -33,7 +31,7 @@
         @elseif($status == 3)
         <h3 class="page-heading">Daftar Lulusan</h3>
         @else
-        <h3 class="page-heading">Daftar Mahasiswa Non Aktif</h3>
+        <h3 class="page-heading">Daftar Mahasiswa</h3>
         @endif
         <div class="the-box">
             <div class="text-left">

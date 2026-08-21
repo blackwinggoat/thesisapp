@@ -28,4 +28,20 @@ class LegacyMahasiswaTugasAkhirFilterTest extends TestCase
         $this->assertStringNotContainsString("update(['C_KODE_STATUS_AKTIF_MHS' => 'N'])", $command);
         $this->assertStringNotContainsString("update(['status_bimbingan' => 4])", $command);
     }
+
+    public function testApplicationDoesNotUseLegacyStudentActivityStatusToFilterThesisWorkflows()
+    {
+        $files = [
+            __DIR__ . '/../../app/Helper.php',
+            __DIR__ . '/../../app/Http/Controllers/dosen.php',
+            __DIR__ . '/../../app/Http/Controllers/Prodi.php',
+            __DIR__ . '/../../app/Http/Controllers/AkademikProdi.php',
+        ];
+
+        foreach ($files as $file) {
+            $contents = file_get_contents($file);
+            $this->assertStringNotContainsString("C_KODE_STATUS_AKTIF_MHS', 'A'", $contents, $file);
+            $this->assertStringNotContainsString("C_KODE_STATUS_AKTIF_MHS = 'A'", $contents, $file);
+        }
+    }
 }
