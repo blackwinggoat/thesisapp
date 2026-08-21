@@ -102,12 +102,13 @@ run_approved_migrations() {
     local migration_count=0
     local migration_stage
 
-    IFS= read -r approved_commit < "$MIGRATION_APPROVAL_FILE" || true
+    exec 3< "$MIGRATION_APPROVAL_FILE"
+    IFS= read -r approved_commit <&3 || true
     [[ "$approved_commit" == "$CURRENT_COMMIT" ]] \
         || fail 'Approved migration commit does not match the deployment commit.'
 
     migration_stage=$(mktemp -d "${SHARED_PATH}/migration-release.XXXXXX")
-    while IFS= read -r migration || [[ -n "$migration" ]]; do
+    while IFS= read -r migration <&3 || [[ -n "$migration" ]]; do
         [[ -n "$migration" ]] || continue
         [[ "$migration" =~ ^[A-Za-z0-9_]+\.php$ ]] \
             || fail 'Approved migration filename is unsafe.'
@@ -116,7 +117,8 @@ run_approved_migrations() {
 
         cp "${DEPLOY_PATH}/database/migrations/${migration}" "${migration_stage}/${migration}"
         migration_count=$((migration_count + 1))
-    done < <(tail -n +2 "$MIGRATION_APPROVAL_FILE")
+    done
+    exec 3<&-
 
     [[ "$migration_count" -gt 0 ]] || fail 'No migration was approved for this deployment.'
     printf 'Running %s explicitly approved migration(s).\n' "$migration_count"
