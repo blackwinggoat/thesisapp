@@ -141,7 +141,10 @@ class KeuanganFakultas extends Controller
             ->get();
 
         if ($data->isEmpty()) {
-            abort(404);
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'info',
+                'message' => 'Tidak ada honorarium aktif dengan jadwal ujian pada tanggal ' . $date . '.',
+            ]);
         }
 
         $dataMasterHonorarium = DB::table('mst_pembayaran_honorarium')->get();

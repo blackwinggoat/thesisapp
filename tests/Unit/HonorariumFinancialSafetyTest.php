@@ -35,6 +35,7 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('honorariumDenganJadwalQuery', $keuangan);
         $this->assertStringContainsString('jadwal.tgl_ujian as date', $keuangan);
         $this->assertStringContainsString('honorariumBelumTerhubungJadwalQuery', $keuangan);
+        $this->assertStringContainsString("Tidak ada honorarium aktif dengan jadwal ujian pada tanggal", $keuangan);
         $this->assertStringContainsString("return '(' . implode(' OR ', \$conditions) . ')';", $keuangan);
         $this->assertStringContainsString('getHonorariumAssignmentsForDosen', $dosen);
         $this->assertStringContainsString('clone $record', $dosen);
