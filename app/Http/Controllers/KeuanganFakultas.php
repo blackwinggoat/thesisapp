@@ -1149,39 +1149,41 @@ class KeuanganFakultas extends Controller
     public function honorarium_history()
     {
         $tanggalSql = $this->honorariumTanggalEfektifSql();
-        $totalHonorByTanggal = $this->honorariumLunasDenganJadwalQuery()
+        $honorariums = $this->honorariumLunasDenganJadwalQuery()
             ->whereRaw("{$tanggalSql} IS NOT NULL")
             ->whereRaw("CAST({$tanggalSql} AS CHAR) <> '0000-00-00'")
             ->select(
                 DB::raw("{$tanggalSql} as date"),
                 'honorarium.id',
-                DB::raw('MAX(' . $this->honorariumTotalSql('honorarium') . ') as total_honor')
+                'honorarium.C_NPM',
+                DB::raw($this->honorariumTotalSql('honorarium') . ' as total_honor')
             )
-            ->groupBy(DB::raw($tanggalSql), 'honorarium.id')
-            ->get();
-
-        $totalHonorByTanggal = $totalHonorByTanggal
-            ->groupBy('date')
-            ->map(function ($honorariums) {
-                return (float) $honorariums->sum('total_honor');
-            });
-
-        $data = $this->honorariumLunasDenganJadwalQuery()
-            ->whereRaw("{$tanggalSql} IS NOT NULL")
-            ->whereRaw("CAST({$tanggalSql} AS CHAR) <> '0000-00-00'")
-            ->select(
-                DB::raw("{$tanggalSql} as date"),
-                DB::raw('COUNT(DISTINCT honorarium.C_NPM) as total_mahasiswa'),
-                DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '130%' THEN honorarium.C_NPM END) as total_teknik_informatika"),
-                DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '131%' THEN honorarium.C_NPM END) as total_sistem_informasi")
-            )
-            ->groupBy(DB::raw($tanggalSql))
             ->orderBy(DB::raw($tanggalSql), 'desc')
-            ->get();
+            ->get()
+            ->unique(function ($honorarium) {
+                return $honorarium->date . '|' . $honorarium->id;
+            })
+            ->values();
 
-        foreach ($data as $honorarium) {
-            $honorarium->total_honor = $totalHonorByTanggal->get($honorarium->date, 0);
-        }
+        $data = $honorariums
+            ->groupBy('date')
+            ->map(function ($honorariumTanggal, $date) {
+                $nim = $honorariumTanggal->pluck('C_NPM')->filter()->unique();
+
+                return (object) [
+                    'date' => $date,
+                    'total_mahasiswa' => $nim->count(),
+                    'total_teknik_informatika' => $nim->filter(function ($npm) {
+                        return strpos((string) $npm, '130') === 0;
+                    })->count(),
+                    'total_sistem_informasi' => $nim->filter(function ($npm) {
+                        return strpos((string) $npm, '131') === 0;
+                    })->count(),
+                    'total_honor' => (float) $honorariumTanggal->sum('total_honor'),
+                ];
+            })
+            ->sortByDesc('date')
+            ->values();
 
         return view('tugasakhir.keuanganfakultas.history_honorarium', [
             'data' => $data,

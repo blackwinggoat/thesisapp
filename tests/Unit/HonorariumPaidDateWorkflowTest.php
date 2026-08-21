@@ -34,7 +34,9 @@ class HonorariumPaidDateWorkflowTest extends TestCase
 
         $this->assertStringContainsString('honorariumLunasDenganJadwalQuery', $controller);
         $this->assertStringContainsString('honorariumTanggalEfektifSql', $controller);
-        $this->assertStringContainsString('COUNT(DISTINCT honorarium.C_NPM) as total_mahasiswa', $controller);
+        $this->assertStringContainsString("return \$honorarium->date . '|' . \$honorarium->id", $controller);
+        $this->assertStringContainsString("->groupBy('date')", $controller);
+        $this->assertStringContainsString("'total_honor' => (float) \$honorariumTanggal->sum('total_honor')", $controller);
         $this->assertStringContainsString('honorarium_history_detail_tanggal', $controller);
         $this->assertStringContainsString("Route::get('/history/tanggal/{date}'", $routes);
         $this->assertStringContainsString('Riwayat Honorarium per Tanggal Ujian', $history);
