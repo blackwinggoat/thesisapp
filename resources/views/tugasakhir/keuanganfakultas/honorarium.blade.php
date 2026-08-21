@@ -166,7 +166,7 @@
                     confirmButtonText: 'Ya, tandai terbayar',
                     cancelButtonText: 'Batal'
                 }).then(function(result) {
-                    if (result.isConfirmed) {
+                    if (result.value) {
                         document.getElementById('honorarium-date-form').submit();
                     }
                 });

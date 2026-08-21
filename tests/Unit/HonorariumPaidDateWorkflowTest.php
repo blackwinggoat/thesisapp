@@ -22,6 +22,7 @@ class HonorariumPaidDateWorkflowTest extends TestCase
         $this->assertStringContainsString('Tandai Terbayar', $summary);
         $this->assertStringContainsString("route('honorarium_tandai_terbayar')", $summary);
         $this->assertStringContainsString('Tandai seluruhnya terbayar?', $summary);
+        $this->assertStringContainsString('if (result.value)', $summary);
     }
 
     public function testHistoryIsGroupedByExamDateAndReadOnly()
