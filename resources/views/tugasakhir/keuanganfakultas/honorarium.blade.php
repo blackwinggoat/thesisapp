@@ -32,10 +32,15 @@
             @endif
 
             <div class="the-box">
-                <form action="{{ route('honorarium_tanda_terima_pdf') }}" method="POST" target="_blank" id="honorarium-pdf-form">
+                <form action="{{ route('honorarium_tandai_terbayar') }}" method="POST" id="honorarium-date-form">
                     @csrf
                     <div class="clearfix" style="margin-bottom: 15px;">
-                        <button type="submit" class="btn btn-danger pull-left" id="download-honorarium-pdf" disabled>
+                        <button type="submit" class="btn btn-success pull-left" id="mark-honorarium-paid" disabled>
+                            <i class="fa fa-check-circle"></i> Tandai Terbayar
+                        </button>
+                        <button type="submit" class="btn btn-danger pull-left" id="download-honorarium-pdf"
+                            formaction="{{ route('honorarium_tanda_terima_pdf') }}" formtarget="_blank"
+                            style="margin-left: 8px;" disabled>
                             <i class="fa fa-file-pdf-o"></i> Download PDF Terpilih
                         </button>
                         <span class="text-muted pull-left" id="honorarium-selected-count" style="margin: 8px 0 0 10px;">0 tanggal dipilih</span>
@@ -125,6 +130,7 @@
 
                 $('#honorarium-selected-count').text(selected + ' tanggal dipilih');
                 $('#download-honorarium-pdf').prop('disabled', selected === 0);
+                $('#mark-honorarium-paid').prop('disabled', selected === 0);
                 $('#select-all-honorarium-dates')
                     .prop('checked', total > 0 && selected === total)
                     .prop('indeterminate', selected > 0 && selected < total);
@@ -135,15 +141,35 @@
                 $('.honorarium-date-checkbox').prop('checked', $(this).prop('checked'));
                 updateSelectedDates();
             });
-            $('#honorarium-pdf-form').on('submit', function(event) {
+            $('#honorarium-date-form').on('submit', function(event) {
                 if ($('.honorarium-date-checkbox:checked').length === 0) {
                     event.preventDefault();
                     Swal.fire({
                         icon: 'warning',
                         title: 'Pilih tanggal',
-                        text: 'Pilih minimal satu tanggal ujian untuk membuat PDF.'
+                        text: 'Pilih minimal satu tanggal ujian.'
                     });
                 }
+            });
+            $('#mark-honorarium-paid').on('click', function(event) {
+                if ($('.honorarium-date-checkbox:checked').length === 0) {
+                    return;
+                }
+
+                event.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tandai seluruhnya terbayar?',
+                    text: 'Semua honorarium Available pada tanggal yang dipilih akan menjadi Terbayar dan dipindahkan ke Riwayat Pembayaran.',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    confirmButtonText: 'Ya, tandai terbayar',
+                    cancelButtonText: 'Batal'
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        document.getElementById('honorarium-date-form').submit();
+                    }
+                });
             });
             datatable.on('draw', updateSelectedDates);
             updateSelectedDates();
