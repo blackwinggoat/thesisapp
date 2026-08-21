@@ -98,7 +98,7 @@
                                         </td>
                                         <td>
                                             <select class="form-control"
-                                                name="honorariums[{{ $loop->index }}][tipe_ujian]"
+                                                name="honorariums[{{ $loop->index }}][id_pembayaran]"
                                                 {{ $sudahAdaPembayaran ? 'disabled' : '' }}>
 
                                                 @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
@@ -107,20 +107,33 @@
                                                         @if (empty($masterHonorarium->jenis_tugas_akhir_ids)
                                                             || empty($honorarium->jenis_tugas_akhir_id)
                                                             || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
-                                                            <option value="{{ $masterHonorarium->name }}">
+                                                            @if ((int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0))
+                                                            <option value="{{ $masterHonorarium->id_honorarium }}">
                                                                 {{ $masterHonorarium->name }}</option>
+                                                            @endif
                                                         @endif
                                                     @endforeach
                                                 @else
-                                                    <option value="{{ $honorarium->tipe_ujian }}" selected>
-                                                        {{ $honorarium->tipe_ujian }}</option>
+                                                    @php
+                                                        $masterPembayaranTersimpan = $dataMasterHonorarium->first(function ($masterHonorarium) use ($honorarium) {
+                                                            return $masterHonorarium->name === $honorarium->tipe_ujian
+                                                                && (empty($masterHonorarium->jenis_tugas_akhir_ids)
+                                                                    || empty($honorarium->jenis_tugas_akhir_id)
+                                                                    || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
+                                                                && (int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0);
+                                                        });
+                                                    @endphp
+                                                    <option value="{{ $masterPembayaranTersimpan ? $masterPembayaranTersimpan->id_honorarium : 'unset' }}" selected>
+                                                        {{ $honorarium->tipe_ujian }}{{ $masterPembayaranTersimpan ? '' : ' (tersimpan)' }}</option>
                                                     <option disabled>-----</option>
                                                     @foreach ($dataMasterHonorarium as $masterHonorarium)
                                                         @if (empty($masterHonorarium->jenis_tugas_akhir_ids)
                                                             || empty($honorarium->jenis_tugas_akhir_id)
                                                             || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
-                                                            <option value="{{ $masterHonorarium->name }}">
+                                                            @if ((int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0))
+                                                            <option value="{{ $masterHonorarium->id_honorarium }}">
                                                                 {{ $masterHonorarium->name }}</option>
+                                                            @endif
                                                         @endif
                                                     @endforeach
                                                 @endif

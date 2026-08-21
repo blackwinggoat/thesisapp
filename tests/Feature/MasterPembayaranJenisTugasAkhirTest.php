@@ -31,6 +31,7 @@ class MasterPembayaranJenisTugasAkhirTest extends TestCase
         Schema::create('mst_pembayaran_honorarium', function (Blueprint $table) {
             $table->increments('id_honorarium');
             $table->string('name');
+            $table->boolean('untuk_mahasiswa_eksekutif')->default(0);
             $table->decimal('ketua_sidang', 12, 2);
             $table->decimal('pembimbing_utama', 12, 2);
             $table->decimal('pembimbing_pendamping', 12, 2);
@@ -93,6 +94,7 @@ class MasterPembayaranJenisTugasAkhirTest extends TestCase
                 })
                 ->all()
         );
+        $this->assertSame(0, (int) DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->value('untuk_mahasiswa_eksekutif'));
     }
 
     public function testEditingPaymentTypeReplacesOnlyItsFinalProjectTypeMappings()
@@ -128,11 +130,13 @@ class MasterPembayaranJenisTugasAkhirTest extends TestCase
             [
                 'id_honorarium' => $idHonorarium,
                 'jenis_tugas_akhir_ids' => [$jenisIds[2]],
+                'untuk_mahasiswa_eksekutif' => 1,
             ]
         )));
 
         $this->assertSame(302, $response->getStatusCode());
         $this->assertSame('Ujian Meja Revisi', DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->value('name'));
+        $this->assertSame(1, (int) DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->value('untuk_mahasiswa_eksekutif'));
         $this->assertSame(
             [$jenisIds[2]],
             DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir')

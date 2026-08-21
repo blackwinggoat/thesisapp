@@ -38,6 +38,7 @@
                             <tr>
                                 <th>No</th>
                                 <th>Name</th>
+                                <th>Kelas</th>
                                 <th>Jenis Tugas Akhir</th>
                                 <th>KS</th>
                                 <th>PU</th>
@@ -53,6 +54,13 @@
                                 <tr>
                                     <td>{{ $key + 1 }}</td>
                                     <td>{{ $p->name }}</td>
+                                    <td>
+                                        @if ($p->untuk_mahasiswa_eksekutif)
+                                            <span class="label label-primary">Eksekutif</span>
+                                        @else
+                                            <span class="label label-default">Reguler</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         @forelse ($p->jenis_tugas_akhir as $jenis)
                                             <span class="label label-info" title="{{ $jenis->deskripsi }}">
@@ -75,6 +83,7 @@
                                             data-ks="{{ $p->ketua_sidang }}" data-pu="{{ $p->pembimbing_utama }}"
                                             data-pp="{{ $p->pembimbing_pendamping }}" data-p1="{{ $p->penguji_1 }}"
                                             data-p2="{{ $p->penguji_2 }}" data-p3="{{ $p->penguji_3 }}"
+                                            data-eksekutif="{{ $p->untuk_mahasiswa_eksekutif ? 1 : 0 }}"
                                             data-jenis-ids="{{ implode(',', $p->jenis_tugas_akhir_ids) }}">
                                             <i class="fa fa-pencil"></i>
                                         </button>
@@ -119,6 +128,14 @@
                         <div class="form-group">
                             <label for="edit_name">Nama Tipe Pembayaran</label>
                             <input type="text" class="form-control" id="edit_name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" class="edit-untuk-mahasiswa-eksekutif"
+                                    name="untuk_mahasiswa_eksekutif" value="1">
+                                Untuk mahasiswa kelas Eksekutif
+                            </label>
+                            <p class="help-block">Tidak dicentang berarti pembayaran untuk mahasiswa kelas Reguler.</p>
                         </div>
                         <div class="form-group">
                             <label>Jenis Tugas Akhir yang Berlaku</label>
@@ -185,6 +202,13 @@
                             <label for="name">Nama Tipe Pembayaran</label>
                             <input type="text" class="form-control" id="name" name="name"
                                 placeholder="Proposal" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="untuk_mahasiswa_eksekutif" value="1">
+                                Untuk mahasiswa kelas Eksekutif
+                            </label>
+                            <p class="help-block">Tidak dicentang berarti pembayaran untuk mahasiswa kelas Reguler.</p>
                         </div>
                         <div class="form-group">
                             <label>Jenis Tugas Akhir yang Berlaku</label>
@@ -254,6 +278,7 @@
             var p1 = button.data('p1')
             var p2 = button.data('p2')
             var p3 = button.data('p3')
+            var eksekutif = Number(button.data('eksekutif')) === 1
             var jenisIds = String(button.data('jenis-ids') || '').split(',').filter(Boolean).map(String)
 
             var modal = $(this)
@@ -266,6 +291,7 @@
             modal.find('#edit_p1').val(p1)
             modal.find('#edit_p2').val(p2)
             modal.find('#edit_p3').val(p3)
+            modal.find('.edit-untuk-mahasiswa-eksekutif').prop('checked', eksekutif)
             modal.find('.edit-jenis-tugas-akhir').each(function() {
                 $(this).prop('checked', jenisIds.indexOf(String($(this).val())) !== -1)
             })
