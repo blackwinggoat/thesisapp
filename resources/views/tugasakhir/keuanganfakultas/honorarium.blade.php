@@ -33,7 +33,7 @@
 
             <div class="the-box">
                 <div class="table-responsive">
-                    <table class="table table-hover" id="datatable-example">
+                    <table class="table table-hover" id="honorarium-date-table">
                         <thead class="the-box dark full">
                             <tr>
                                 <th>No</th>
@@ -82,7 +82,12 @@
 @section('script')
     <script>
         $(function() {
-            $('#datatable-example').DataTable({
+            var tableSelector = '#honorarium-date-table';
+            if ($.fn.dataTable.isDataTable(tableSelector)) {
+                $(tableSelector).DataTable().destroy();
+            }
+
+            $(tableSelector).DataTable({
                 order: [[1, 'desc']]
             });
         });

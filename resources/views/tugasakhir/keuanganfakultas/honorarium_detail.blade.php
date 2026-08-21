@@ -55,7 +55,7 @@
                 <form action="{{ route('honorarium_save_all') }}" method="POST">
                     @csrf
                     <div class="table-responsive">
-                        <table class="table" id="datatable-example">
+                        <table class="table" id="honorarium-detail-table">
                             <thead class="the-box dark full">
                                 <tr>
                                     <th>No</th>
@@ -249,7 +249,12 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            var datatable = $('#datatable-example').DataTable({
+            var tableSelector = '#honorarium-detail-table';
+            if ($.fn.dataTable.isDataTable(tableSelector)) {
+                $(tableSelector).DataTable().destroy();
+            }
+
+            var datatable = $(tableSelector).DataTable({
                 paging: false,
                 info: false,
                 lengthChange: false
