@@ -44,9 +44,13 @@
             </div>
             <div class="the-box">
                 <div style="margin-bottom: 20px; text-align: right;">
-                    <button type="button" class="btn btn-warning" disabled title="Aturan penetapan tipe ujian otomatis belum ditetapkan.">
-                        <i class="fa fa-magic"></i> Setup Tipe Ujian Otomatis
-                    </button>
+                    <form action="{{ route('honorarium_setup_type_ujian_otomatis', $date) }}" method="POST" style="display: inline;"
+                        onsubmit="return confirm('Terapkan tipe dan nominal honorarium otomatis untuk data yang belum diatur pada tanggal ini? Data yang sudah diatur atau sudah lunas tidak akan diubah.');">
+                        @csrf
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fa fa-magic"></i> Setup Tipe Ujian Otomatis
+                        </button>
+                    </form>
                     <a href="{{ route('honorarium_history') }}" type="button" class="btn btn-primary">
                         <i class="fa fa-history"></i> History
                     </a>
@@ -61,6 +65,7 @@
                                     <th>No</th>
                                     <th>Nim</th>
                                     <th>Student Name</th>
+                                    <th>Jenis TA</th>
                                     <th>Available</th>
                                     <th>Type</th>
                                     <th>Total Honor</th>
@@ -88,6 +93,13 @@
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $honorarium->C_NPM }}</td>
                                         <td>{{ helper::getNamaMhs($honorarium->C_NPM) }}</td>
+                                        <td>
+                                            @if ($honorarium->kode_jenis_tugas_akhir)
+                                                <span class="label label-info">{{ $honorarium->kode_jenis_tugas_akhir }}</span>
+                                            @else
+                                                <span class="label label-warning">Belum ditetapkan</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             <input type="checkbox" name="honorariums[{{ $loop->index }}][KS_Stat]"
                                                 data-toggle="toggle" data-on="Yes" data-off="No"

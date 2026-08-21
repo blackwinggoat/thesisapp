@@ -1,0 +1,40 @@
+<?php
+
+namespace Tests\Unit;
+
+use PHPUnit\Framework\TestCase;
+
+class HonorariumAutomaticTypeSetupTest extends TestCase
+{
+    public function testAutomaticTypeSetupUsesExamClassAndFinalProjectTypeWithoutAi()
+    {
+        $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/KeuanganFakultas.php');
+        $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
+        $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium_detail.blade.php');
+        $migration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_21_130000_mark_named_executive_honorarium_payments.php');
+
+        $this->assertStringContainsString('honorarium_setup_type_ujian_otomatis', $controller);
+        $this->assertStringContainsString('namaPembayaranOtomatis', $controller);
+        $this->assertStringContainsString("strpos((string) \$kodeJenisTugasAkhir, 'NS-') === 0", $controller);
+        $this->assertStringContainsString("(int) \$examType === 0", $controller);
+        $this->assertStringContainsString("(int) \$examType === 2", $controller);
+        $this->assertStringContainsString('honorariumHasPaidRole($honorarium)', $controller);
+        $this->assertStringContainsString("Route::post('/tanggal/{date}/setup-type-ujian'", $routes);
+        $this->assertStringContainsString('Setup Tipe Ujian Otomatis', $view);
+        $this->assertStringContainsString('kode_jenis_tugas_akhir', $view);
+        $this->assertStringContainsString('Proposal Eksekutif', $migration);
+        $this->assertStringContainsString('Ujian Meja Eksekutif', $migration);
+    }
+
+    public function testAutomaticPaymentNameFollowsExamFinalProjectAndClassRules()
+    {
+        $controller = new \App\Http\Controllers\KeuanganFakultas;
+        $method = new \ReflectionMethod($controller, 'namaPembayaranOtomatis');
+        $method->setAccessible(true);
+
+        $this->assertSame('Proposal', $method->invoke($controller, 0, 'TA-SM', false));
+        $this->assertSame('Ujian Meja', $method->invoke($controller, 2, 'TA-SK', false));
+        $this->assertSame('Non Skripsi [proposal + Ujian Meja]', $method->invoke($controller, 0, 'NS-KT', false));
+        $this->assertSame('Non Skripsi [proposal + Ujian Meja] Eksekutif', $method->invoke($controller, 2, 'NS-AI', true));
+    }
+}
