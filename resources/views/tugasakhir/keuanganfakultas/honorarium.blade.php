@@ -49,7 +49,12 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $honorarium->date }}</td>
-                                    <td class="text-center"><span class="label label-info">{{ $honorarium->total_mahasiswa }} mahasiswa</span></td>
+                                    <td class="text-center">
+                                        <span class="label label-info">{{ $honorarium->total_mahasiswa }} mahasiswa</span>
+                                        <div class="text-muted" style="margin-top: 5px; white-space: nowrap;">
+                                            TI: {{ $honorarium->total_teknik_informatika }} &nbsp; SI: {{ $honorarium->total_sistem_informasi }}
+                                        </div>
+                                    </td>
                                     <td class="text-center">
                                         <span class="label {{ $honorarium->belum_tersedia > 0 ? 'label-warning' : 'label-success' }}">
                                             {{ $honorarium->belum_tersedia }} data

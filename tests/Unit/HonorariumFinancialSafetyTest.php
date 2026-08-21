@@ -27,18 +27,23 @@ class HonorariumFinancialSafetyTest extends TestCase
         $keuangan = file_get_contents(__DIR__ . '/../../app/Http/Controllers/KeuanganFakultas.php');
         $dosen = file_get_contents(__DIR__ . '/../../app/Http/Controllers/dosen.php');
         $detailView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium_detail.blade.php');
+        $listView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium.blade.php');
 
         $this->assertStringContainsString('honorariumNeedsTypeAssignment', $keuangan);
         $this->assertStringContainsString('honorariumHasPaidRole', $keuangan);
         $this->assertStringContainsString('honorariumHasAnyRoleSql', $keuangan);
         $this->assertStringContainsString('lockForUpdate()', $keuangan);
         $this->assertStringContainsString('COUNT(DISTINCT honorarium.C_NPM) as total_mahasiswa', $keuangan);
+        $this->assertStringContainsString("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '130%'", $keuangan);
+        $this->assertStringContainsString("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '131%'", $keuangan);
         $this->assertStringContainsString('honorariumDenganJadwalQuery', $keuangan);
         $this->assertStringContainsString('jadwal.tgl_ujian as date', $keuangan);
         $this->assertStringContainsString('honorariumBelumTerhubungJadwalQuery', $keuangan);
         $this->assertStringContainsString("Tidak ada honorarium aktif dengan jadwal ujian pada tanggal", $keuangan);
         $this->assertStringContainsString("return '(' . implode(' OR ', \$conditions) . ')';", $keuangan);
         $this->assertStringContainsString('paging: false', $detailView);
+        $this->assertStringContainsString('TI: {{ $honorarium->total_teknik_informatika }}', $listView);
+        $this->assertStringContainsString('SI: {{ $honorarium->total_sistem_informasi }}', $listView);
         $this->assertStringContainsString('Setup Tipe Ujian Otomatis', $detailView);
         $this->assertStringContainsString('getHonorariumAssignmentsForDosen', $dosen);
         $this->assertStringContainsString('clone $record', $dosen);

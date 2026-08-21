@@ -293,6 +293,8 @@ class KeuanganFakultas extends Controller
             ->select(
                 'jadwal.tgl_ujian as date',
                 DB::raw('COUNT(DISTINCT honorarium.C_NPM) as total_mahasiswa'),
+                DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '130%' THEN honorarium.C_NPM END) as total_teknik_informatika"),
+                DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '131%' THEN honorarium.C_NPM END) as total_sistem_informasi"),
                 DB::raw("SUM(CASE WHEN {$belumTersediaSql} THEN 1 ELSE 0 END) as belum_tersedia"),
                 DB::raw("SUM(CASE WHEN honorarium.tipe_ujian IS NULL OR honorarium.tipe_ujian = '' OR honorarium.tipe_ujian IN ('0', '2') THEN 1 ELSE 0 END) as perlu_penetapan")
             )
