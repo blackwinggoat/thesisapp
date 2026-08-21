@@ -61,9 +61,9 @@
                         return (float) $honorarium->total_honor;
                     });
                 @endphp
-                <div class="alert alert-info square" style="margin-bottom: 20px;">
+                <div class="alert alert-info square" style="margin-bottom: 20px; font-size: 18px;">
                     <strong>Total Honor Seluruh Mahasiswa:</strong>
-                    <span id="total-honorarium-tanggal">{{ helper::formatRupiah($totalHonorariumTanggal) }}</span>
+                    <strong id="total-honorarium-tanggal" style="font-size: 24px; margin-left: 8px;">{{ helper::formatRupiah($totalHonorariumTanggal) }}</strong>
                 </div>
 
                 <form action="{{ route('honorarium_save_all') }}" method="POST">
