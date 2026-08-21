@@ -389,24 +389,47 @@ class KeuanganFakultas extends Controller
         ));
     }
 
-    public function honorarium_tanda_terima_pdf($date)
+    public function honorarium_tanda_terima_pdf(Request $request)
     {
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
-            abort(404);
+        $tanggalInput = collect((array) $request->input('tanggal'))
+            ->map(function ($tanggal) {
+                return trim((string) $tanggal);
+            })
+            ->filter()
+            ->values();
+        if ($tanggalInput->isEmpty()) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'warning',
+                'message' => 'Pilih minimal satu tanggal ujian untuk membuat PDF tanda terima.',
+            ]);
         }
 
+        $tanggalTidakValid = $tanggalInput->first(function ($tanggal) {
+            return !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal);
+        });
+        if ($tanggalTidakValid !== null) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'danger',
+                'message' => 'Pilihan tanggal ujian tidak valid.',
+            ]);
+        }
+
+        $tanggalTerpilih = $tanggalInput->unique()->sort()->values();
         $honorariums = $this->honorariumDenganJadwalQuery()
-            ->whereDate('jadwal.tgl_ujian', $date)
-            ->select('honorarium.*')
+            ->whereIn('jadwal.tgl_ujian', $tanggalTerpilih->all())
+            ->select('honorarium.*', 'jadwal.tgl_ujian as tanggal_ujian')
+            ->orderBy('jadwal.tgl_ujian')
             ->orderBy('honorarium.C_NPM')
             ->get()
-            ->unique('id')
+            ->unique(function ($honorarium) {
+                return $honorarium->id . '|' . $honorarium->tanggal_ujian;
+            })
             ->values();
 
         if ($honorariums->isEmpty()) {
             return redirect()->route('honorarium_home')->with([
                 'status' => 'info',
-                'message' => 'Tidak ada honorarium aktif pada tanggal ' . $date . '.',
+                'message' => 'Tidak ada honorarium aktif pada tanggal yang dipilih.',
             ]);
         }
 
@@ -417,7 +440,7 @@ class KeuanganFakultas extends Controller
             return redirect()->route('honorarium_home')->with([
                 'status' => 'warning',
                 'message' => 'PDF belum dapat dibuat. Tetapkan tipe honorarium untuk ' . $belumDitetapkan
-                    . ' data pada tanggal ' . $date . ' terlebih dahulu.',
+                    . ' data pada tanggal yang dipilih terlebih dahulu.',
             ]);
         }
 
@@ -445,30 +468,48 @@ class KeuanganFakultas extends Controller
                     $reports->put($kodeDosen, (object) [
                         'kode_dosen' => $kodeDosen,
                         'nama_dosen' => Helper::getNamaDosenByKode($kodeDosen),
-                        'items' => collect(),
+                        'tanggal' => collect(),
                         'total_honor' => 0,
                     ]);
                 }
 
                 $report = $reports->get($kodeDosen);
+                $tanggalUjian = substr((string) $honorarium->tanggal_ujian, 0, 10);
+                if (!$report->tanggal->has($tanggalUjian)) {
+                    $report->tanggal->put($tanggalUjian, (object) [
+                        'tanggal' => $tanggalUjian,
+                        'items' => collect(),
+                        'subtotal_honor' => 0,
+                    ]);
+                }
+
+                $laporanTanggal = $report->tanggal->get($tanggalUjian);
                 $honor = (float) $honorarium->{$definition['amount']};
-                $report->items->push((object) [
+                $laporanTanggal->items->push((object) [
                     'nim' => $honorarium->C_NPM,
                     'nama_mahasiswa' => $namaMahasiswa->get($honorarium->C_NPM, '-'),
                     'tipe_ujian' => $honorarium->tipe_ujian ?: '-',
                     'peran' => $definition['label'],
                     'honor' => $honor,
                 ]);
+                $laporanTanggal->subtotal_honor += $honor;
                 $report->total_honor += $honor;
             }
         }
 
         $reports = $reports
             ->map(function ($report) {
-                $report->items = $report->items
-                    ->sortBy(function ($item) {
-                        return strtolower($item->nama_mahasiswa . '|' . $item->nim . '|' . $item->peran);
+                $report->tanggal = $report->tanggal
+                    ->map(function ($laporanTanggal) {
+                        $laporanTanggal->items = $laporanTanggal->items
+                            ->sortBy(function ($item) {
+                                return strtolower($item->nama_mahasiswa . '|' . $item->nim . '|' . $item->peran);
+                            })
+                            ->values();
+
+                        return $laporanTanggal;
                     })
+                    ->sortBy('tanggal')
                     ->values();
 
                 return $report;
@@ -481,14 +522,17 @@ class KeuanganFakultas extends Controller
         if ($reports->isEmpty()) {
             return redirect()->route('honorarium_home')->with([
                 'status' => 'warning',
-                'message' => 'Tidak ada honorarium berstatus Available yang dapat dibuatkan tanda terima pada tanggal '
-                    . $date . '.',
+                'message' => 'Tidak ada honorarium berstatus Available yang dapat dibuatkan tanda terima pada tanggal yang dipilih.',
             ]);
         }
 
-        return PDF::loadView('tugasakhir.keuanganfakultas.tanda_terima_honorarium_pdf', compact('reports', 'date'))
+        $namaFile = $tanggalTerpilih->count() === 1
+            ? 'Tanda-Terima-Honorarium-' . $tanggalTerpilih->first() . '.pdf'
+            : 'Tanda-Terima-Honorarium-' . $tanggalTerpilih->first() . '-sd-' . $tanggalTerpilih->last() . '.pdf';
+
+        return PDF::loadView('tugasakhir.keuanganfakultas.tanda_terima_honorarium_pdf', compact('reports', 'tanggalTerpilih'))
             ->setPaper('a4', 'portrait')
-            ->download('Tanda-Terima-Honorarium-' . $date . '.pdf');
+            ->download($namaFile);
     }
 
     public function honorarium_setup_type_ujian_otomatis(Request $request, $date)

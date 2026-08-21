@@ -14,16 +14,25 @@ class HonorariumReceiptPdfTest extends TestCase
         $pdfView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/tanda_terima_honorarium_pdf.blade.php');
 
         $this->assertStringContainsString('honorarium_tanda_terima_pdf', $controller);
-        $this->assertStringContainsString("->unique('id')", $controller);
+        $this->assertStringContainsString("request->input('tanggal')", $controller);
+        $this->assertStringContainsString("->whereIn('jadwal.tgl_ujian', \$tanggalTerpilih->all())", $controller);
+        $this->assertStringContainsString("'tanggal' => collect()", $controller);
+        $this->assertStringContainsString("'subtotal_honor' => 0", $controller);
         $this->assertStringContainsString('PDF belum dapat dibuat. Tetapkan tipe honorarium', $controller);
         $this->assertStringContainsString("'KS' => ['label' => 'Ketua Sidang', 'amount' => 'KS_H', 'status' => 'KS_Stat']", $controller);
         $this->assertStringContainsString("'P3' => ['label' => 'Penguji III', 'amount' => 'P3_H', 'status' => 'P3_Stat']", $controller);
         $this->assertStringContainsString("(int) \$honorarium->{\$definition['status']} !== 1", $controller);
         $this->assertStringContainsString('Tidak ada honorarium berstatus Available', $controller);
-        $this->assertStringContainsString("Route::get('/tanggal/{date}/tanda-terima-pdf'", $routes);
+        $this->assertStringContainsString("Route::post('/tanda-terima-pdf'", $routes);
         $this->assertStringContainsString('fa-file-pdf-o', $listView);
+        $this->assertStringContainsString('Download PDF Terpilih', $listView);
+        $this->assertStringContainsString('name="tanggal[]"', $listView);
+        $this->assertStringContainsString('select-all-honorarium-dates', $listView);
         $this->assertStringContainsString('TANDA TERIMA HONORARIUM', $pdfView);
-        $this->assertStringContainsString('TOTAL HONORARIUM', $pdfView);
+        $this->assertStringContainsString('@foreach ($report->tanggal as $laporanTanggal)', $pdfView);
+        $this->assertStringContainsString("\$report->tanggal->pluck('tanggal')", $pdfView);
+        $this->assertStringContainsString('SUBTOTAL', $pdfView);
+        $this->assertStringContainsString('TOTAL HONORARIUM SELURUH TANGGAL', $pdfView);
         $this->assertStringContainsString('Penerima,', $pdfView);
         $this->assertStringContainsString('page-break-after: always', $pdfView);
         $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $pdfView);

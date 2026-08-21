@@ -32,10 +32,21 @@
             @endif
 
             <div class="the-box">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="honorarium-date-table">
+                <form action="{{ route('honorarium_tanda_terima_pdf') }}" method="POST" target="_blank" id="honorarium-pdf-form">
+                    @csrf
+                    <div class="clearfix" style="margin-bottom: 15px;">
+                        <button type="submit" class="btn btn-danger pull-left" id="download-honorarium-pdf" disabled>
+                            <i class="fa fa-file-pdf-o"></i> Download PDF Terpilih
+                        </button>
+                        <span class="text-muted pull-left" id="honorarium-selected-count" style="margin: 8px 0 0 10px;">0 tanggal dipilih</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="honorarium-date-table">
                         <thead class="the-box dark full">
                             <tr>
+                                <th class="text-center" style="width: 45px;">
+                                    <input type="checkbox" id="select-all-honorarium-dates" title="Pilih semua tanggal">
+                                </th>
                                 <th>No</th>
                                 <th>Tanggal Ujian</th>
                                 <th class="text-center">Jumlah Mahasiswa</th>
@@ -48,6 +59,9 @@
                         <tbody>
                             @forelse ($data as $honorarium)
                                 <tr>
+                                    <td class="text-center">
+                                        <input type="checkbox" class="honorarium-date-checkbox" name="tanggal[]" value="{{ $honorarium->date }}" aria-label="Pilih tanggal {{ $honorarium->date }}">
+                                    </td>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $honorarium->date }}</td>
                                     <td class="text-center">
@@ -71,20 +85,17 @@
                                         <a href="{{ route('honorarium_detail_tanggal', $honorarium->date) }}" class="btn btn-primary btn-sm">
                                             <i class="fa fa-users"></i> Kelola Mahasiswa
                                         </a>
-                                        <a href="{{ route('honorarium_tanda_terima_pdf', $honorarium->date) }}" class="btn btn-danger btn-sm"
-                                            title="Download tanda terima honorarium PDF" aria-label="Download tanda terima honorarium PDF">
-                                            <i class="fa fa-file-pdf-o"></i>
-                                        </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">Tidak ada honorarium yang masih perlu dikelola.</td>
+                                    <td colspan="8" class="text-center">Tidak ada honorarium yang masih perlu dikelola.</td>
                                 </tr>
                             @endforelse
                         </tbody>
-                    </table>
-                </div>
+                        </table>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -98,12 +109,44 @@
                 $(tableSelector).DataTable().destroy();
             }
 
-            $(tableSelector).DataTable({
-                order: [[1, 'desc']],
+            var datatable = $(tableSelector).DataTable({
+                order: [[2, 'desc']],
                 paging: false,
                 info: false,
-                lengthChange: false
+                lengthChange: false,
+                columnDefs: [
+                    { orderable: false, targets: [0, 7] }
+                ]
             });
+
+            function updateSelectedDates() {
+                var selected = $('.honorarium-date-checkbox:checked').length;
+                var total = $('.honorarium-date-checkbox').length;
+
+                $('#honorarium-selected-count').text(selected + ' tanggal dipilih');
+                $('#download-honorarium-pdf').prop('disabled', selected === 0);
+                $('#select-all-honorarium-dates')
+                    .prop('checked', total > 0 && selected === total)
+                    .prop('indeterminate', selected > 0 && selected < total);
+            }
+
+            $(document).on('change', '.honorarium-date-checkbox', updateSelectedDates);
+            $('#select-all-honorarium-dates').on('change', function() {
+                $('.honorarium-date-checkbox').prop('checked', $(this).prop('checked'));
+                updateSelectedDates();
+            });
+            $('#honorarium-pdf-form').on('submit', function(event) {
+                if ($('.honorarium-date-checkbox:checked').length === 0) {
+                    event.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pilih tanggal',
+                        text: 'Pilih minimal satu tanggal ujian untuk membuat PDF.'
+                    });
+                }
+            });
+            datatable.on('draw', updateSelectedDates);
+            updateSelectedDates();
         });
     </script>
 @endsection
