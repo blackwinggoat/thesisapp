@@ -22,6 +22,8 @@ class ProdiMahasiswaJenisKelasTest extends TestCase
         $this->assertStringContainsString("DB::table('trt_mahasiswa_eksekutif')->insert", $controller);
         $this->assertStringContainsString("Route::post('/prodi/mahasiswa/{nim}/jenis-kelas', 'Prodi@update_jenis_kelas_mahasiswa')", $routes);
         $this->assertStringContainsString('student-class-toggle', $view);
+        $this->assertStringContainsString('student-class-switch', $view);
+        $this->assertStringContainsString('student-class-slider', $view);
         $this->assertStringContainsString('studentClassFeatureReady', $view);
         $this->assertStringContainsString("window.confirm('Ubah jenis kelas '", $view);
         $this->assertStringContainsString('Eksekutif', $view);

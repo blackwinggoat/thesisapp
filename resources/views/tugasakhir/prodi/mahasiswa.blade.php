@@ -82,7 +82,28 @@
                                 <td>{{$value->C_NPM}}</td>
                                 <td>{{$value->NAMA_MAHASISWA}}</td>
                                 <td>
-                                    @if ((int) ($value->is_eksekutif ?? 0) === 1)
+                                    @if ($studentClassFeatureReady ?? false)
+                                        <form id="jenis-kelas-{{ $value->C_NPM }}" action="{{ route('prodi.mahasiswa.jenis_kelas', $value->C_NPM) }}" method="post" class="student-class-form">
+                                            {{ csrf_field() }}
+                                            <input type="hidden" name="jenis_kelas" value="">
+                                            <span class="student-class-control">
+                                                <label class="student-class-switch" title="Ubah jenis kelas mahasiswa">
+                                                    <input type="checkbox"
+                                                           class="student-class-toggle"
+                                                           aria-label="Ubah jenis kelas {{ $value->NAMA_MAHASISWA }}"
+                                                           data-form-id="jenis-kelas-{{ $value->C_NPM }}"
+                                                           data-student-name="{{ $value->NAMA_MAHASISWA }}"
+                                                           {{ (int) ($value->is_eksekutif ?? 0) === 1 ? 'checked' : '' }}>
+                                                    <span class="student-class-slider" aria-hidden="true"></span>
+                                                </label>
+                                                @if ((int) ($value->is_eksekutif ?? 0) === 1)
+                                                    <span class="label label-warning">Eksekutif</span>
+                                                @else
+                                                    <span class="label label-info">Reguler</span>
+                                                @endif
+                                            </span>
+                                        </form>
+                                    @elseif ((int) ($value->is_eksekutif ?? 0) === 1)
                                         <span class="label label-warning">Eksekutif</span>
                                     @else
                                         <span class="label label-info">Reguler</span>
@@ -104,20 +125,6 @@
                                     <a class="btn btn-info" href="{{ url('prodi/login_as_mahasiswa/'.$value->C_NPM) }}" title="Login sebagai mahasiswa">
                                         <i class="fa fa-user"></i>
                                     </a>
-                                    @if ($studentClassFeatureReady ?? false)
-                                        <form id="jenis-kelas-{{ $value->C_NPM }}" action="{{ route('prodi.mahasiswa.jenis_kelas', $value->C_NPM) }}" method="post" style="display: inline-block; margin-left: 4px;">
-                                            {{ csrf_field() }}
-                                            <input type="hidden" name="jenis_kelas" value="">
-                                            <label title="Ubah jenis kelas mahasiswa" style="margin: 0; vertical-align: middle; cursor: pointer;">
-                                                <input type="checkbox"
-                                                       class="student-class-toggle"
-                                                       data-form-id="jenis-kelas-{{ $value->C_NPM }}"
-                                                       data-student-name="{{ $value->NAMA_MAHASISWA }}"
-                                                       {{ (int) ($value->is_eksekutif ?? 0) === 1 ? 'checked' : '' }}>
-                                                <span style="font-size: 11px;">Eksekutif</span>
-                                            </label>
-                                        </form>
-                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -156,6 +163,70 @@
 @endsection
 
 @section("script")
+    <style>
+        .student-class-form {
+            display: inline-block;
+            margin: 0;
+        }
+
+        .student-class-control {
+            align-items: center;
+            display: inline-flex;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .student-class-switch {
+            cursor: pointer;
+            display: inline-block;
+            flex: 0 0 42px;
+            height: 22px;
+            margin: 0;
+            position: relative;
+            width: 42px;
+        }
+
+        .student-class-switch input {
+            height: 0;
+            opacity: 0;
+            width: 0;
+        }
+
+        .student-class-slider {
+            background-color: #5bc0de;
+            border-radius: 11px;
+            bottom: 0;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: background-color .2s ease;
+        }
+
+        .student-class-slider:before {
+            background-color: #ffffff;
+            border-radius: 50%;
+            bottom: 3px;
+            content: '';
+            height: 16px;
+            left: 3px;
+            position: absolute;
+            transition: transform .2s ease;
+            width: 16px;
+        }
+
+        .student-class-switch input:checked + .student-class-slider {
+            background-color: #f0ad4e;
+        }
+
+        .student-class-switch input:checked + .student-class-slider:before {
+            transform: translateX(20px);
+        }
+
+        .student-class-switch input:focus + .student-class-slider {
+            box-shadow: 0 0 0 2px rgba(91, 192, 222, .28);
+        }
+    </style>
     <script>
         let modal, modalId, modalFooter, link;
 
