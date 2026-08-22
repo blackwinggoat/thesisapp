@@ -25,13 +25,14 @@
         }
 
         .honorarium-sk-list {
-            min-width: 190px;
+            max-width: 160px;
             line-height: 1.55;
+            white-space: normal;
+            word-break: break-word;
         }
 
         .honorarium-sk-label {
             display: inline-block;
-            min-width: 82px;
             font-weight: 600;
         }
 
@@ -41,7 +42,8 @@
         }
 
         .honorarium-advisor-attendance {
-            min-width: 230px;
+            max-width: 190px;
+            white-space: normal;
         }
 
         .honorarium-advisor-attendance label {
@@ -64,14 +66,17 @@
         }
 
         .honorarium-type-column {
-            min-width: 360px;
-            width: 360px;
-            white-space: nowrap;
+            max-width: 250px;
+            width: 250px;
+            white-space: normal;
         }
 
         .honorarium-type-column select.form-control {
-            min-width: 340px;
+            max-width: 250px;
             width: 100%;
+            font-size: 12px;
+            padding-left: 6px;
+            padding-right: 6px;
         }
     </style>
     <!-- BEGIN PAGE CONTENT -->

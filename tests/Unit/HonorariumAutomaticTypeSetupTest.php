@@ -76,7 +76,7 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('change.pembimbingAttendance', $detail);
         $this->assertStringContainsString('honorarium_penetapan_pembimbing_attendance', $detail);
         $this->assertStringContainsString('honorarium-type-column', $detail);
-        $this->assertStringContainsString('min-width: 360px', $detail);
+        $this->assertStringContainsString('max-width: 250px', $detail);
         $this->assertStringContainsString('@if (!$isAkademikHonorarium)', $detail);
         $this->assertStringContainsString('nomorSkUjianHonorariumByNim', $controller);
         $this->assertStringContainsString('nomor_sk_proposal', $controller);
