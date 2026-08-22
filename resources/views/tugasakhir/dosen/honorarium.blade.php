@@ -44,6 +44,13 @@
                     </a>
                 </div>
 
+                @if ($orphanAssignments->isNotEmpty())
+                    <div class="alert alert-warning alert-block square">
+                        <strong>{{ $orphanAssignments->count() }} penugasan belum terhubung ke jadwal ujian.</strong>
+                        Data ini tidak dimasukkan ke kelompok tanggal agar tidak tercatat pada tanggal ujian yang keliru. Silakan koordinasikan dengan Prodi.
+                    </div>
+                @endif
+
                 <form action="{{ route('honorarium_save_all_dosen') }}" method="POST">
                     @csrf
                     <div class="table-responsive">

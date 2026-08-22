@@ -1829,18 +1829,41 @@ class dosen extends Controller
             'P3' => ['label' => 'Penguji III', 'amount' => 'P3_H', 'status' => 'P3_Stat'],
         ];
 
-        $records = DB::table('trt_honorium')
+        $scheduleDateSql = '(SELECT ju.tgl_ujian'
+            . ' FROM trt_reg AS rg'
+            . ' INNER JOIN trt_jadwal_ujian_per_mhs AS jpm ON jpm.C_NPM = rg.C_NPM'
+            . ' INNER JOIN trt_jadwal_ujian AS ju ON ju.id = jpm.jadwal_ujian'
+            . ' AND ju.pendaftaran_id = rg.pendaftaran_id'
+            . ' WHERE rg.C_NPM = honorarium.C_NPM'
+            . ' AND rg.status = honorarium.exam_type'
+            . ' AND ju.tgl_ujian IS NOT NULL'
+            . " AND CAST(ju.tgl_ujian AS CHAR) <> '0000-00-00'"
+            . ' ORDER BY ju.tgl_ujian DESC, ju.id DESC LIMIT 1)';
+
+        $records = DB::table('trt_honorium as honorarium')
             ->where(function ($query) use ($kodeDosen) {
-                $query->where('KS', $kodeDosen)
-                    ->orWhere('PU', $kodeDosen)
-                    ->orWhere('PP', $kodeDosen)
-                    ->orWhere('P1', $kodeDosen)
-                    ->orWhere('P2', $kodeDosen)
-                    ->orWhere('P3', $kodeDosen);
+                $query->where('honorarium.KS', $kodeDosen)
+                    ->orWhere('honorarium.PU', $kodeDosen)
+                    ->orWhere('honorarium.PP', $kodeDosen)
+                    ->orWhere('honorarium.P1', $kodeDosen)
+                    ->orWhere('honorarium.P2', $kodeDosen)
+                    ->orWhere('honorarium.P3', $kodeDosen);
             })
-            ->orderBy('date', 'desc')
-            ->orderBy('C_NPM')
+            ->select('honorarium.*', DB::raw($scheduleDateSql . ' as schedule_date'))
+            ->orderByRaw('COALESCE((' . $scheduleDateSql . '), honorarium.date) desc')
+            ->orderBy('honorarium.C_NPM')
             ->get();
+
+        $records->transform(function ($record) {
+            $record->honorarium_date = $record->date;
+            $record->schedule_date = $record->schedule_date
+                ? substr((string) $record->schedule_date, 0, 10)
+                : null;
+            $record->has_schedule = $record->schedule_date !== null;
+            $record->date = $record->schedule_date ?: $record->honorarium_date;
+
+            return $record;
+        });
 
         $jumlahSanksiByTanggal = $records->pluck('date')
             ->filter(function ($tanggal) {
@@ -1973,7 +1996,13 @@ class dosen extends Controller
             })
             ->values();
 
-        $honorariumByDate = $data->groupBy('date')->map(function ($items, $date) {
+        $orphanAssignments = $data->filter(function ($assignment) {
+            return !$assignment->has_schedule;
+        })->values();
+        $scheduledData = $data->filter(function ($assignment) {
+            return $assignment->has_schedule;
+        });
+        $honorariumByDate = $scheduledData->groupBy('date')->map(function ($items, $date) {
             return (object) [
                 'date' => $date,
                 'items' => $items,
@@ -1984,7 +2013,7 @@ class dosen extends Controller
             ];
         });
 
-        return view('tugasakhir.dosen.honorarium', compact('honorariumByDate'));
+        return view('tugasakhir.dosen.honorarium', compact('honorariumByDate', 'orphanAssignments'));
     }
 
 
