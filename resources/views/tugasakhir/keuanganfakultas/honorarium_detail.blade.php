@@ -64,6 +64,20 @@
             margin-right: 6px;
         }
 
+        .honorarium-advisor-presence {
+            min-width: 90px;
+            line-height: 1.7;
+            white-space: nowrap;
+        }
+
+        .honorarium-advisor-presence .fa-check {
+            color: #16a34a;
+        }
+
+        .honorarium-advisor-presence .fa-times {
+            color: #dc2626;
+        }
+
         .honorarium-attendance-status {
             display: block;
             min-height: 18px;
@@ -180,6 +194,9 @@
                                         <th>Kehadiran Pembimbing</th>
                                     @endif
                                     @if (!$isAkademikHonorarium)
+                                        <th>Kehadiran Pembimbing</th>
+                                    @endif
+                                    @if (!$isAkademikHonorarium)
                                         <th>Available</th>
                                     @endif
                                     <th class="honorarium-type-column">Type</th>
@@ -272,6 +289,18 @@
                                                     {{ $adaPembimbingPendamping ? helper::getDeskripsi($honorarium->PP) : '---' }}
                                                 </label>
                                                 <span class="honorarium-attendance-status"></span>
+                                            </td>
+                                        @endif
+                                        @if (!$isAkademikHonorarium)
+                                            <td class="honorarium-advisor-presence">
+                                                <div>
+                                                    <strong>P1 :</strong>
+                                                    <i class="fa {{ $honorarium->pembimbing_utama_hadir ? 'fa-check' : 'fa-times' }}"></i>
+                                                </div>
+                                                <div>
+                                                    <strong>P2 :</strong>
+                                                    <i class="fa {{ $honorarium->pembimbing_pendamping_hadir ? 'fa-check' : 'fa-times' }}"></i>
+                                                </div>
                                             </td>
                                         @endif
                                         @if (!$isAkademikHonorarium)
