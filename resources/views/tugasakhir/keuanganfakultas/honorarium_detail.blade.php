@@ -41,6 +41,13 @@
             margin-top: 5px;
         }
 
+        .honorarium-nim-column {
+            width: 105px;
+            max-width: 105px;
+            white-space: normal;
+            word-break: break-word;
+        }
+
         .honorarium-advisor-attendance {
             max-width: 190px;
             white-space: normal;
@@ -166,7 +173,7 @@
                             <thead class="the-box dark full">
                                 <tr>
                                     <th>No</th>
-                                    <th>Nim</th>
+                                    <th class="honorarium-nim-column">Nim</th>
                                     <th>Student Name</th>
                                     <th>Jenis TA</th>
                                     @if ($isAkademikHonorarium)
@@ -223,7 +230,7 @@
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td class="honorarium-type-column">
+                                        <td class="honorarium-nim-column">
                                             <strong>{{ $honorarium->C_NPM }}</strong>
                                             <span class="honorarium-student-class label {{ $honorarium->mahasiswa_eksekutif ? 'label-primary' : 'label-default' }}">
                                                 {{ $honorarium->mahasiswa_eksekutif ? 'Eksekutif' : 'Reguler' }}
@@ -351,19 +358,7 @@
                                                 data-pp="{{ helper::getDeskripsi($honorarium->PP) }}"
                                                 data-p1="{{ helper::getDeskripsi($honorarium->P1) }}"
                                                 data-p2="{{ helper::getDeskripsi($honorarium->P2) }}"
-                                                data-p3="{{ helper::getDeskripsi($honorarium->P3) }}"
-                                                data-ks-h="{{ helper::formatRupiah($honorarium->KS_H) }}"
-                                                data-pu-h="{{ helper::formatRupiah($honorarium->PU_H) }}"
-                                                data-pp-h="{{ helper::formatRupiah($honorarium->PP_H) }}"
-                                                data-p1-h="{{ helper::formatRupiah($honorarium->P1_H) }}"
-                                                data-p2-h="{{ helper::formatRupiah($honorarium->P2_H) }}"
-                                                data-p3-h="{{ helper::formatRupiah($honorarium->P3_H) }}"
-                                                data-ks-stat="{{ $honorarium->KS_Stat }}"
-                                                data-pu-stat="{{ $honorarium->PU_Stat }}"
-                                                data-pp-stat="{{ $honorarium->PP_Stat }}"
-                                                data-p1-stat="{{ $honorarium->P1_Stat }}"
-                                                data-p2-stat="{{ $honorarium->P2_Stat }}"
-                                                data-p3-stat="{{ $honorarium->P3_Stat }}">
+                                                data-p3="{{ helper::getDeskripsi($honorarium->P3) }}">
                                                 <i class="fa fa-info-circle"></i> View
                                             </button>
                                         </td>
@@ -412,46 +407,32 @@
                             <tr>
                                 <th>Role</th>
                                 <th>Name</th>
-                                <th>Honor</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>KS</td>
                                 <td id="modal-ks"></td>
-                                <td id="modal-ks-h"></td>
-                                <td id="modal-ks-status"></td>
                             </tr>
                             <tr>
                                 <td>PU</td>
                                 <td id="modal-pu"></td>
-                                <td id="modal-pu-h"></td>
-                                <td id="modal-pu-status"></td>
                             </tr>
                             <tr>
                                 <td>PP</td>
                                 <td id="modal-pp"></td>
-                                <td id="modal-pp-h"></td>
-                                <td id="modal-pp-status"></td>
                             </tr>
                             <tr>
                                 <td>P1</td>
                                 <td id="modal-p1"></td>
-                                <td id="modal-p1-h"></td>
-                                <td id="modal-p1-status"></td>
                             </tr>
                             <tr>
                                 <td>P2</td>
                                 <td id="modal-p2"></td>
-                                <td id="modal-p2-h"></td>
-                                <td id="modal-p2-status"></td>
                             </tr>
                             <tr>
                                 <td>P3</td>
                                 <td id="modal-p3"></td>
-                                <td id="modal-p3-h"></td>
-                                <td id="modal-p3-status"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -575,12 +556,6 @@
                     var p1 = $(this).data('p1');
                     var p2 = $(this).data('p2');
                     var p3 = $(this).data('p3');
-                    var ksHonor = $(this).data('ks-h');
-                    var puHonor = $(this).data('pu-h');
-                    var ppHonor = $(this).data('pp-h');
-                    var p1Honor = $(this).data('p1-h');
-                    var p2Honor = $(this).data('p2-h');
-                    var p3Honor = $(this).data('p3-h');
 
                     $('#modal-ks').text(ks);
                     $('#modal-pu').text(pu);
@@ -588,38 +563,6 @@
                     $('#modal-p1').text(p1);
                     $('#modal-p2').text(p2);
                     $('#modal-p3').text(p3);
-                    $('#modal-ks-h').text(ksHonor);
-                    $('#modal-pu-h').text(puHonor);
-                    $('#modal-pp-h').text(ppHonor);
-                    $('#modal-p1-h').text(p1Honor);
-                    $('#modal-p2-h').text(p2Honor);
-                    $('#modal-p3-h').text(p3Honor);
-
-                    var ksStat = $(this).data('ks-stat');
-                    var puStat = $(this).data('pu-stat');
-                    var ppStat = $(this).data('pp-stat');
-                    var p1Stat = $(this).data('p1-stat');
-                    var p2Stat = $(this).data('p2-stat');
-                    var p3Stat = $(this).data('p3-stat');
-
-                    $('#modal-ks-status').html('<span class="' + (ksStat === 3 ? 'label label-success' :
-                            'label label-danger') + '">' + (ksStat === 3 ? 'Paid' : 'Unpaid') +
-                        '</span>');
-                    $('#modal-pu-status').html('<span class="' + (puStat === 3 ? 'label label-success' :
-                            'label label-danger') + '">' + (puStat === 3 ? 'Paid' : 'Unpaid') +
-                        '</span>');
-                    $('#modal-pp-status').html('<span class="' + (ppStat === 3 ? 'label label-success' :
-                            'label label-danger') + '">' + (ppStat === 3 ? 'Paid' : 'Unpaid') +
-                        '</span>');
-                    $('#modal-p1-status').html('<span class="' + (p1Stat === 3 ? 'label label-success' :
-                            'label label-danger') + '">' + (p1Stat === 3 ? 'Paid' : 'Unpaid') +
-                        '</span>');
-                    $('#modal-p2-status').html('<span class="' + (p2Stat === 3 ? 'label label-success' :
-                            'label label-danger') + '">' + (p2Stat === 3 ? 'Paid' : 'Unpaid') +
-                        '</span>');
-                    $('#modal-p3-status').html('<span class="' + (p3Stat === 3 ? 'label label-success' :
-                            'label label-danger') + '">' + (p3Stat === 3 ? 'Paid' : 'Unpaid') +
-                        '</span>');
                 });
             }
 
