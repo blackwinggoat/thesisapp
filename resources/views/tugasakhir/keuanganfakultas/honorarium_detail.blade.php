@@ -171,7 +171,9 @@
                 @if (!$isAkademikHonorarium)
                     @php
                         $totalHonorariumTanggal = $data->sum(function ($honorarium) {
-                            return (float) $honorarium->total_honor;
+                            return isset($honorarium->total_honor_tersesuaikan)
+                                ? (float) $honorarium->total_honor_tersesuaikan
+                                : (float) $honorarium->total_honor;
                         });
                     @endphp
                     <div class="alert alert-success square honorarium-total-summary" style="margin-bottom: 20px; font-size: 18px;">
@@ -376,12 +378,34 @@
                                                 </div>
                                             </td>
                                         @else
-                                            <td class="text-right"><strong class="honorarium-row-total" data-total-honor="{{ $honorarium->total_honor }}">{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
+                                            @php
+                                                $totalHonorBaris = isset($honorarium->total_honor_tersesuaikan)
+                                                    ? $honorarium->total_honor_tersesuaikan
+                                                    : $honorarium->total_honor;
+                                            @endphp
+                                            <td class="text-right"><strong class="honorarium-row-total" data-total-honor="{{ $totalHonorBaris }}">{{ helper::formatRupiah($totalHonorBaris) }}</strong></td>
                                         @endif
                                         <td>
                                             @php
                                                 $honorTersesuaikan = isset($honorarium->honor_tersesuaikan) ? $honorarium->honor_tersesuaikan : [];
-                                                $catatanHonorTersesuaikan = isset($honorarium->catatan_honor_tersesuaikan) ? $honorarium->catatan_honor_tersesuaikan : [];
+                                                $honorAwal = [
+                                                    'KS' => (float) $honorarium->KS_H,
+                                                    'PU' => (float) $honorarium->PU_H,
+                                                    'PP' => (float) $honorarium->PP_H,
+                                                    'P1' => (float) $honorarium->P1_H,
+                                                    'P2' => (float) $honorarium->P2_H,
+                                                    'P3' => (float) $honorarium->P3_H,
+                                                ];
+                                                $formatPenyesuaianHonor = function ($nilai) {
+                                                    $nilai = (float) $nilai;
+                                                    if ($nilai > 0) {
+                                                        return '+' . helper::formatRupiah($nilai);
+                                                    }
+                                                    if ($nilai < 0) {
+                                                        return '-' . helper::formatRupiah(abs($nilai));
+                                                    }
+                                                    return helper::formatRupiah(0);
+                                                };
                                             @endphp
                                             <button type="button" class="btn btn-primary btn-sm view-honorarium-btn"
                                                 data-toggle="modal" data-target="#statusModal"
@@ -392,18 +416,24 @@
                                                 data-p1="{{ helper::getDeskripsi($honorarium->P1) }}"
                                                 data-p2="{{ helper::getDeskripsi($honorarium->P2) }}"
                                                 data-p3="{{ helper::getDeskripsi($honorarium->P3) }}"
+                                                data-ks-base="{{ helper::formatRupiah($honorAwal['KS']) }}"
+                                                data-pu-base="{{ helper::formatRupiah($honorAwal['PU']) }}"
+                                                data-pp-base="{{ helper::formatRupiah($honorAwal['PP']) }}"
+                                                data-p1-base="{{ helper::formatRupiah($honorAwal['P1']) }}"
+                                                data-p2-base="{{ helper::formatRupiah($honorAwal['P2']) }}"
+                                                data-p3-base="{{ helper::formatRupiah($honorAwal['P3']) }}"
+                                                data-ks-adj="{{ $formatPenyesuaianHonor((isset($honorTersesuaikan['KS']) ? $honorTersesuaikan['KS'] : $honorAwal['KS']) - $honorAwal['KS']) }}"
+                                                data-pu-adj="{{ $formatPenyesuaianHonor((isset($honorTersesuaikan['PU']) ? $honorTersesuaikan['PU'] : $honorAwal['PU']) - $honorAwal['PU']) }}"
+                                                data-pp-adj="{{ $formatPenyesuaianHonor((isset($honorTersesuaikan['PP']) ? $honorTersesuaikan['PP'] : $honorAwal['PP']) - $honorAwal['PP']) }}"
+                                                data-p1-adj="{{ $formatPenyesuaianHonor((isset($honorTersesuaikan['P1']) ? $honorTersesuaikan['P1'] : $honorAwal['P1']) - $honorAwal['P1']) }}"
+                                                data-p2-adj="{{ $formatPenyesuaianHonor((isset($honorTersesuaikan['P2']) ? $honorTersesuaikan['P2'] : $honorAwal['P2']) - $honorAwal['P2']) }}"
+                                                data-p3-adj="{{ $formatPenyesuaianHonor((isset($honorTersesuaikan['P3']) ? $honorTersesuaikan['P3'] : $honorAwal['P3']) - $honorAwal['P3']) }}"
                                                 data-ks-h="{{ helper::formatRupiah(isset($honorTersesuaikan['KS']) ? $honorTersesuaikan['KS'] : $honorarium->KS_H) }}"
                                                 data-pu-h="{{ helper::formatRupiah(isset($honorTersesuaikan['PU']) ? $honorTersesuaikan['PU'] : $honorarium->PU_H) }}"
                                                 data-pp-h="{{ helper::formatRupiah(isset($honorTersesuaikan['PP']) ? $honorTersesuaikan['PP'] : $honorarium->PP_H) }}"
                                                 data-p1-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P1']) ? $honorTersesuaikan['P1'] : $honorarium->P1_H) }}"
                                                 data-p2-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P2']) ? $honorTersesuaikan['P2'] : $honorarium->P2_H) }}"
-                                                data-p3-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P3']) ? $honorTersesuaikan['P3'] : $honorarium->P3_H) }}"
-                                                data-ks-note="{{ !empty($catatanHonorTersesuaikan['KS']) ? $catatanHonorTersesuaikan['KS'] : '-' }}"
-                                                data-pu-note="{{ !empty($catatanHonorTersesuaikan['PU']) ? $catatanHonorTersesuaikan['PU'] : '-' }}"
-                                                data-pp-note="{{ !empty($catatanHonorTersesuaikan['PP']) ? $catatanHonorTersesuaikan['PP'] : '-' }}"
-                                                data-p1-note="{{ !empty($catatanHonorTersesuaikan['P1']) ? $catatanHonorTersesuaikan['P1'] : '-' }}"
-                                                data-p2-note="{{ !empty($catatanHonorTersesuaikan['P2']) ? $catatanHonorTersesuaikan['P2'] : '-' }}"
-                                                data-p3-note="{{ !empty($catatanHonorTersesuaikan['P3']) ? $catatanHonorTersesuaikan['P3'] : '-' }}">
+                                                data-p3-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P3']) ? $honorTersesuaikan['P3'] : $honorarium->P3_H) }}">
                                                 <i class="fa fa-info-circle"></i> View
                                             </button>
                                         </td>
@@ -453,49 +483,60 @@
                                 <tr>
                                     <th>Role</th>
                                     <th>Name</th>
-                                    <th>Honor</th>
-                                    <th>Keterangan</th>
+                                    <th>Honor Awal</th>
+                                    <th>Perubahan</th>
+                                    <th>Honor Akhir</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td>KS</td>
                                     <td id="modal-ks"></td>
+                                    <td id="modal-ks-base"></td>
+                                    <td id="modal-ks-adj"></td>
                                     <td id="modal-ks-h"></td>
-                                    <td id="modal-ks-note"></td>
                                 </tr>
                                 <tr>
                                     <td>PU</td>
                                     <td id="modal-pu"></td>
+                                    <td id="modal-pu-base"></td>
+                                    <td id="modal-pu-adj"></td>
                                     <td id="modal-pu-h"></td>
-                                    <td id="modal-pu-note"></td>
                                 </tr>
                                 <tr>
                                     <td>PP</td>
                                     <td id="modal-pp"></td>
+                                    <td id="modal-pp-base"></td>
+                                    <td id="modal-pp-adj"></td>
                                     <td id="modal-pp-h"></td>
-                                    <td id="modal-pp-note"></td>
                                 </tr>
                                 <tr>
                                     <td>P1</td>
                                     <td id="modal-p1"></td>
+                                    <td id="modal-p1-base"></td>
+                                    <td id="modal-p1-adj"></td>
                                     <td id="modal-p1-h"></td>
-                                    <td id="modal-p1-note"></td>
                                 </tr>
                                 <tr>
                                     <td>P2</td>
                                     <td id="modal-p2"></td>
+                                    <td id="modal-p2-base"></td>
+                                    <td id="modal-p2-adj"></td>
                                     <td id="modal-p2-h"></td>
-                                    <td id="modal-p2-note"></td>
                                 </tr>
                                 <tr>
                                     <td>P3</td>
                                     <td id="modal-p3"></td>
+                                    <td id="modal-p3-base"></td>
+                                    <td id="modal-p3-adj"></td>
                                     <td id="modal-p3-h"></td>
-                                    <td id="modal-p3-note"></td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="alert alert-info square" style="margin-bottom: 0;">
+                        <strong>Perubahan honor</strong> dihitung dari sanksi kehadiran pembimbing yang berlaku pada tanggal ujian.
+                        Nilai minus berarti pengurangan, nilai plus berarti tambahan.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -623,12 +664,18 @@
                     var p1Honor = $(this).data('p1-h');
                     var p2Honor = $(this).data('p2-h');
                     var p3Honor = $(this).data('p3-h');
-                    var ksNote = $(this).data('ks-note');
-                    var puNote = $(this).data('pu-note');
-                    var ppNote = $(this).data('pp-note');
-                    var p1Note = $(this).data('p1-note');
-                    var p2Note = $(this).data('p2-note');
-                    var p3Note = $(this).data('p3-note');
+                    var ksBase = $(this).data('ks-base');
+                    var puBase = $(this).data('pu-base');
+                    var ppBase = $(this).data('pp-base');
+                    var p1Base = $(this).data('p1-base');
+                    var p2Base = $(this).data('p2-base');
+                    var p3Base = $(this).data('p3-base');
+                    var ksAdj = $(this).data('ks-adj');
+                    var puAdj = $(this).data('pu-adj');
+                    var ppAdj = $(this).data('pp-adj');
+                    var p1Adj = $(this).data('p1-adj');
+                    var p2Adj = $(this).data('p2-adj');
+                    var p3Adj = $(this).data('p3-adj');
 
                     $('#modal-ks').text(ks);
                     $('#modal-pu').text(pu);
@@ -636,18 +683,24 @@
                     $('#modal-p1').text(p1);
                     $('#modal-p2').text(p2);
                     $('#modal-p3').text(p3);
+                    $('#modal-ks-base').text(ksBase);
+                    $('#modal-pu-base').text(puBase);
+                    $('#modal-pp-base').text(ppBase);
+                    $('#modal-p1-base').text(p1Base);
+                    $('#modal-p2-base').text(p2Base);
+                    $('#modal-p3-base').text(p3Base);
+                    $('#modal-ks-adj').text(ksAdj);
+                    $('#modal-pu-adj').text(puAdj);
+                    $('#modal-pp-adj').text(ppAdj);
+                    $('#modal-p1-adj').text(p1Adj);
+                    $('#modal-p2-adj').text(p2Adj);
+                    $('#modal-p3-adj').text(p3Adj);
                     $('#modal-ks-h').text(ksHonor);
                     $('#modal-pu-h').text(puHonor);
                     $('#modal-pp-h').text(ppHonor);
                     $('#modal-p1-h').text(p1Honor);
                     $('#modal-p2-h').text(p2Honor);
                     $('#modal-p3-h').text(p3Honor);
-                    $('#modal-ks-note').text(ksNote || '-');
-                    $('#modal-pu-note').text(puNote || '-');
-                    $('#modal-pp-note').text(ppNote || '-');
-                    $('#modal-p1-note').text(p1Note || '-');
-                    $('#modal-p2-note').text(p2Note || '-');
-                    $('#modal-p3-note').text(p3Note || '-');
                 });
             }
 

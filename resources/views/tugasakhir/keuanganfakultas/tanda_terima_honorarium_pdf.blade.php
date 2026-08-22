@@ -27,19 +27,30 @@
         .identity .value { font-weight: bold; width: 76%; }
         .date-section { margin-top: 13px; }
         .date-heading { background: #374151; color: #fff; font-size: 9.5pt; font-weight: bold; padding: 5px 7px; }
-        .receipt-table { font-size: 8.3pt; margin-top: 0; table-layout: fixed; }
+        .receipt-table { font-size: 8pt; margin-top: 0; table-layout: fixed; }
         .receipt-table thead { display: table-header-group; }
         .receipt-table tr { page-break-inside: avoid; }
         .receipt-table th, .receipt-table td { border: 1px solid #000; padding: 5px 4px; vertical-align: middle; }
         .receipt-table th { background: #e5e7eb; font-weight: bold; text-align: center; }
         .receipt-table .number { text-align: center; width: 5%; }
-        .receipt-table .student { width: 29%; }
-        .receipt-table .exam { width: 16%; }
-        .receipt-table .role { width: 17%; }
-        .receipt-table .note { width: 18%; }
+        .receipt-table .student { width: 27%; }
+        .receipt-table .exam { width: 14%; }
+        .receipt-table .role { width: 15%; }
+        .receipt-table .base { text-align: right; width: 13%; }
+        .receipt-table .adjustment { text-align: right; width: 11%; }
         .receipt-table .amount { text-align: right; width: 15%; }
         .receipt-table .total-label { font-weight: bold; text-align: right; }
         .receipt-table .total-amount { font-weight: bold; text-align: right; }
+        .adjustment-title { font-size: 8.8pt; font-weight: bold; margin: 7px 0 3px; }
+        .adjustment-table { border-collapse: collapse; font-size: 7.8pt; table-layout: fixed; width: 100%; }
+        .adjustment-table th, .adjustment-table td { border: 1px solid #000; padding: 4px; vertical-align: top; }
+        .adjustment-table th { background: #f3f4f6; text-align: center; }
+        .adjustment-table .number { text-align: center; width: 5%; }
+        .adjustment-table .student { width: 27%; }
+        .adjustment-table .role { width: 17%; }
+        .adjustment-table .kind { text-align: center; width: 14%; }
+        .adjustment-table .amount { text-align: right; width: 13%; }
+        .adjustment-table .basis { width: 24%; }
         .grand-total { border: 2px solid #000; font-size: 10.5pt; font-weight: bold; margin-top: 15px; padding: 7px 8px; text-align: right; }
         .statement { margin: 15px 0 0; text-align: justify; }
         .signature { margin-top: 18px; }
@@ -52,6 +63,18 @@
     </style>
 </head>
 <body>
+    @php
+        $formatPenyesuaianHonor = function ($nilai) {
+            $nilai = (float) $nilai;
+            if ($nilai > 0) {
+                return '+' . helper::formatRupiah($nilai);
+            }
+            if ($nilai < 0) {
+                return '-' . helper::formatRupiah(abs($nilai));
+            }
+            return helper::formatRupiah(0);
+        };
+    @endphp
     @foreach ($reports as $report)
         <div class="document">
             <div class="letterhead">
@@ -87,8 +110,9 @@
                                 <th class="student">Mahasiswa / NIM</th>
                                 <th class="exam">Jenis Ujian</th>
                                 <th class="role">Peran</th>
-                                <th class="note">Keterangan</th>
-                                <th class="amount">Honor</th>
+                                <th class="base">Honor Dasar</th>
+                                <th class="adjustment">Perubahan</th>
+                                <th class="amount">Honor Diterima</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -98,26 +122,54 @@
                                 <td class="student"><strong>{{ $item->nama_mahasiswa }}</strong><br>{{ $item->nim }}</td>
                                 <td class="exam">{{ $item->tipe_ujian }}</td>
                                 <td class="role">{{ $item->peran }}</td>
-                                <td class="note">{{ $item->keterangan ?: '-' }}</td>
+                                <td class="base">{{ helper::formatRupiah($item->honor_awal) }}</td>
+                                <td class="adjustment">{{ $formatPenyesuaianHonor($item->penyesuaian) }}</td>
                                 <td class="amount">{{ helper::formatRupiah($item->honor) }}</td>
                             </tr>
                         @endforeach
                         <tr>
-                            <td colspan="5" class="total-label">SUBTOTAL {{ helper::tgl_indo_lengkap($laporanTanggal->tanggal) }}</td>
+                            <td colspan="6" class="total-label">SUBTOTAL {{ helper::tgl_indo_lengkap($laporanTanggal->tanggal) }}</td>
                             <td class="total-amount">{{ helper::formatRupiah($laporanTanggal->subtotal_honor) }}</td>
                         </tr>
                         </tbody>
                     </table>
+                    @if ($laporanTanggal->adjustments->isNotEmpty())
+                        <div class="adjustment-title">Rincian Penyesuaian Sanksi Kehadiran Pembimbing</div>
+                        <table class="adjustment-table">
+                            <thead>
+                                <tr>
+                                    <th class="number">No.</th>
+                                    <th class="student">Mahasiswa / NIM</th>
+                                    <th class="role">Peran</th>
+                                    <th class="kind">Jenis</th>
+                                    <th class="amount">Nilai</th>
+                                    <th class="basis">Dasar Perubahan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($laporanTanggal->adjustments as $adjustment)
+                                    <tr>
+                                        <td class="number">{{ $loop->iteration }}</td>
+                                        <td class="student"><strong>{{ $adjustment->nama_mahasiswa }}</strong><br>{{ $adjustment->nim }}</td>
+                                        <td class="role">{{ $adjustment->peran }}</td>
+                                        <td class="kind">{{ $adjustment->jenis }}</td>
+                                        <td class="amount">{{ helper::formatRupiah($adjustment->nilai) }}</td>
+                                        <td class="basis">{{ $adjustment->dasar }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
                 </div>
             @endforeach
 
-            <div class="grand-total">TOTAL HONORARIUM SELURUH TANGGAL: {{ helper::formatRupiah($report->total_honor) }}</div>
+            <div class="grand-total">TOTAL HONORARIUM SELURUH JADWAL: {{ helper::formatRupiah($report->total_honor) }}</div>
 
-            <p class="statement">Dengan ini saya menyatakan telah menerima honorarium pelaksanaan ujian untuk seluruh tanggal yang dirinci di atas dengan jumlah sebesar <strong>{{ helper::formatRupiah($report->total_honor) }}</strong>.</p>
+            <p class="statement">Dengan ini saya menyatakan telah menerima honorarium pelaksanaan ujian untuk seluruh jadwal yang dirinci di atas dengan jumlah sebesar <strong>{{ helper::formatRupiah($report->total_honor) }}</strong>.</p>
 
             <table class="signature">
                 <tr>
-                    <td class="signature-note">Dokumen ini menjadi bukti penerimaan honorarium dosen untuk seluruh tanggal ujian yang tercantum di atas.</td>
+                    <td class="signature-note">Dokumen ini menjadi bukti penerimaan honorarium dosen untuk seluruh jadwal ujian yang tercantum di atas.</td>
                     <td class="signature-receiver">Makassar, {{ helper::tgl_indo_lengkap(date('Y-m-d')) }}<br>Penerima,
                         <div class="signature-space"></div>
                         <span class="receiver-name">{{ $report->nama_dosen }}</span><br>

@@ -577,6 +577,8 @@ class KeuanganFakultas extends Controller
             $penyesuaianHonor = $this->penyesuaianHonorPembimbing($honorarium, $jumlahSanksiPembimbing);
             $honorarium->honor_tersesuaikan = $penyesuaianHonor['amounts'];
             $honorarium->catatan_honor_tersesuaikan = $penyesuaianHonor['notes'];
+            $honorarium->total_honor_tersesuaikan = array_sum($penyesuaianHonor['amounts']);
+            $honorarium->total_penyesuaian_honor = $honorarium->total_honor_tersesuaikan - (float) $honorarium->total_honor;
             $honorarium->jumlah_sanksi_pembimbing = $jumlahSanksiPembimbing;
         }
 
@@ -699,24 +701,43 @@ class KeuanganFakultas extends Controller
                     $report->tanggal->put($tanggalUjian, (object) [
                         'tanggal' => $tanggalUjian,
                         'items' => collect(),
+                        'adjustments' => collect(),
                         'subtotal_honor' => 0,
                     ]);
                 }
 
                 $laporanTanggal = $report->tanggal->get($tanggalUjian);
+                $honorAwal = isset($penyesuaianHonor['base_amounts'][$role])
+                    ? (float) $penyesuaianHonor['base_amounts'][$role]
+                    : (float) $honorarium->{$definition['amount']};
                 $honor = isset($penyesuaianHonor['amounts'][$role])
                     ? (float) $penyesuaianHonor['amounts'][$role]
                     : (float) $honorarium->{$definition['amount']};
+                $penyesuaian = $honor - $honorAwal;
                 $laporanTanggal->items->push((object) [
                     'nim' => $honorarium->C_NPM,
                     'nama_mahasiswa' => $namaMahasiswa->get($honorarium->C_NPM, '-'),
                     'tipe_ujian' => $honorarium->tipe_ujian ?: '-',
                     'peran' => $definition['label'],
+                    'honor_awal' => $honorAwal,
+                    'penyesuaian' => $penyesuaian,
                     'honor' => $honor,
-                    'keterangan' => isset($penyesuaianHonor['notes'][$role])
-                        ? $penyesuaianHonor['notes'][$role]
-                        : '',
                 ]);
+                if (abs($penyesuaian) > 0) {
+                    $laporanTanggal->adjustments->push((object) [
+                        'nim' => $honorarium->C_NPM,
+                        'nama_mahasiswa' => $namaMahasiswa->get($honorarium->C_NPM, '-'),
+                        'tipe_ujian' => $honorarium->tipe_ujian ?: '-',
+                        'peran' => $definition['label'],
+                        'jenis' => $penyesuaian < 0 ? 'Pengurangan' : 'Penambahan',
+                        'nilai' => abs($penyesuaian),
+                        'honor_awal' => $honorAwal,
+                        'honor_akhir' => $honor,
+                        'dasar' => isset($penyesuaianHonor['notes'][$role])
+                            ? $penyesuaianHonor['notes'][$role]
+                            : '',
+                    ]);
+                }
                 $laporanTanggal->subtotal_honor += $honor;
                 $report->total_honor += $honor;
             }
@@ -727,6 +748,11 @@ class KeuanganFakultas extends Controller
                 $report->tanggal = $report->tanggal
                     ->map(function ($laporanTanggal) {
                         $laporanTanggal->items = $laporanTanggal->items
+                            ->sortBy(function ($item) {
+                                return strtolower($item->nama_mahasiswa . '|' . $item->nim . '|' . $item->peran);
+                            })
+                            ->values();
+                        $laporanTanggal->adjustments = $laporanTanggal->adjustments
                             ->sortBy(function ($item) {
                                 return strtolower($item->nama_mahasiswa . '|' . $item->nim . '|' . $item->peran);
                             })
@@ -1218,15 +1244,21 @@ class KeuanganFakultas extends Controller
     protected function penyesuaianHonorPembimbing($honorarium, $jumlahSanksi)
     {
         $amounts = [];
+        $baseAmounts = [];
         $notes = [];
         foreach ($this->honorariumRoles() as $role => $definition) {
             $amounts[$role] = (float) $honorarium->{$definition['amount']};
+            $baseAmounts[$role] = $amounts[$role];
             $notes[$role] = '';
         }
 
         $jumlahSanksi = max(0, (float) $jumlahSanksi);
         if ($jumlahSanksi <= 0) {
-            return compact('amounts', 'notes');
+            return [
+                'amounts' => $amounts,
+                'base_amounts' => $baseAmounts,
+                'notes' => $notes,
+            ];
         }
 
         $adaPembimbingUtama = trim((string) $honorarium->PU) !== '';
@@ -1258,7 +1290,11 @@ class KeuanganFakultas extends Controller
             }
         }
 
-        return compact('amounts', 'notes');
+        return [
+            'amounts' => $amounts,
+            'base_amounts' => $baseAmounts,
+            'notes' => $notes,
+        ];
     }
 
     protected function honorariumTotalSql($tableAlias = 'honorarium', $hanyaBelumLunas = false)

@@ -57,6 +57,10 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringNotContainsString('modal-ks-status', $detailView);
         $this->assertStringContainsString('Setup Tipe Ujian Otomatis', $detailView);
         $this->assertStringContainsString('getHonorariumAssignmentsForDosen', $dosen);
+        $this->assertStringContainsString('penyesuaianHonorPembimbingDosen', $dosen);
+        $this->assertStringContainsString('jumlahSanksiPembayaranHonorariumDosenPadaTanggal', $dosen);
+        $this->assertStringContainsString('$assignment->base_amount = $honorAwal', $dosen);
+        $this->assertStringContainsString('$assignment->adjustment_amount = $honorAkhir - $honorAwal', $dosen);
         $this->assertStringContainsString('clone $record', $dosen);
         $this->assertStringContainsString('Anda tidak memiliki akses untuk mengonfirmasi penugasan honorarium ini.', $dosen);
     }

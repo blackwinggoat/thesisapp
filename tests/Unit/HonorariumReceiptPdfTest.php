@@ -22,7 +22,9 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString('honorariumLunasDenganJadwalQuery()', $controller);
         $this->assertStringContainsString('jumlahSanksiPembayaranPadaTanggal', $controller);
         $this->assertStringContainsString('penyesuaianHonorPembimbing', $controller);
-        $this->assertStringContainsString("'keterangan' => isset(\$penyesuaianHonor['notes'][\$role])", $controller);
+        $this->assertStringContainsString("'honor_awal' => \$honorAwal", $controller);
+        $this->assertStringContainsString("'penyesuaian' => \$penyesuaian", $controller);
+        $this->assertStringContainsString("'adjustments' => collect()", $controller);
         $this->assertStringContainsString("'tanggal' => collect()", $controller);
         $this->assertStringContainsString("'subtotal_honor' => 0", $controller);
         $this->assertStringContainsString('PDF belum dapat dibuat. Tetapkan tipe honorarium', $controller);
@@ -40,10 +42,14 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString('TANDA TERIMA HONORARIUM', $pdfView);
         $this->assertStringContainsString('@foreach ($report->tanggal as $laporanTanggal)', $pdfView);
         $this->assertStringContainsString("\$report->tanggal->pluck('tanggal')", $pdfView);
-        $this->assertStringContainsString('<th class="note">Keterangan</th>', $pdfView);
-        $this->assertStringContainsString('$item->keterangan', $pdfView);
+        $this->assertStringContainsString('Honor Dasar', $pdfView);
+        $this->assertStringContainsString('Perubahan', $pdfView);
+        $this->assertStringContainsString('Honor Diterima', $pdfView);
+        $this->assertStringContainsString('Rincian Penyesuaian Sanksi Kehadiran Pembimbing', $pdfView);
+        $this->assertStringNotContainsString('<th class="note">Keterangan</th>', $pdfView);
+        $this->assertStringNotContainsString('$item->keterangan', $pdfView);
         $this->assertStringContainsString('SUBTOTAL', $pdfView);
-        $this->assertStringContainsString('TOTAL HONORARIUM SELURUH TANGGAL', $pdfView);
+        $this->assertStringContainsString('TOTAL HONORARIUM SELURUH JADWAL', $pdfView);
         $this->assertStringContainsString('Penerima,', $pdfView);
         $this->assertStringContainsString('page-break-after: always', $pdfView);
         $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $pdfView);
@@ -73,6 +79,8 @@ class HonorariumReceiptPdfTest extends TestCase
 
         $this->assertSame(75000.0, $result['amounts']['PU']);
         $this->assertSame(125000.0, $result['amounts']['PP']);
+        $this->assertSame(100000.0, $result['base_amounts']['PU']);
+        $this->assertSame(100000.0, $result['base_amounts']['PP']);
         $this->assertStringContainsString('Dikurangi', $result['notes']['PU']);
         $this->assertStringContainsString('Ditambah', $result['notes']['PP']);
     }

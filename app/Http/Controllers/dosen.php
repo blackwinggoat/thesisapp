@@ -1842,22 +1842,126 @@ class dosen extends Controller
             ->orderBy('C_NPM')
             ->get();
 
+        $jumlahSanksiByTanggal = $records->pluck('date')
+            ->filter(function ($tanggal) {
+                return preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggal);
+            })
+            ->unique()
+            ->mapWithKeys(function ($tanggal) {
+                return [$tanggal => $this->jumlahSanksiPembayaranHonorariumDosenPadaTanggal($tanggal)];
+            });
+
         $assignments = collect();
         foreach ($records as $record) {
+            $penyesuaianHonor = $this->penyesuaianHonorPembimbingDosen(
+                $record,
+                (float) $jumlahSanksiByTanggal->get((string) $record->date, 0)
+            );
             foreach ($roles as $role => $definition) {
                 if ((string) $record->{$role} !== (string) $kodeDosen) {
                     continue;
                 }
 
+                $honorAwal = isset($penyesuaianHonor['base_amounts'][$role])
+                    ? (float) $penyesuaianHonor['base_amounts'][$role]
+                    : (float) $record->{$definition['amount']};
+                $honorAkhir = isset($penyesuaianHonor['amounts'][$role])
+                    ? (float) $penyesuaianHonor['amounts'][$role]
+                    : (float) $record->{$definition['amount']};
                 $assignment = clone $record;
                 $assignment->role = $definition['label'];
-                $assignment->amount = $record->{$definition['amount']};
+                $assignment->base_amount = $honorAwal;
+                $assignment->adjustment_amount = $honorAkhir - $honorAwal;
+                $assignment->amount = $honorAkhir;
+                $assignment->adjustment_note = isset($penyesuaianHonor['notes'][$role])
+                    ? $penyesuaianHonor['notes'][$role]
+                    : '';
                 $assignment->status = $record->{$definition['status']};
                 $assignments->push($assignment);
             }
         }
 
         return $assignments;
+    }
+
+    protected function jumlahSanksiPembayaranHonorariumDosenPadaTanggal($tanggal)
+    {
+        if (!Schema::hasTable('mst_sanksi_pembayaran') || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggal)) {
+            return 0;
+        }
+
+        $sanksi = DB::table('mst_sanksi_pembayaran')
+            ->where('tanggal_mulai', '<=', $tanggal)
+            ->where('tanggal_selesai', '>=', $tanggal)
+            ->orderBy('tanggal_mulai', 'desc')
+            ->orderBy('id_sanksi_pembayaran', 'desc')
+            ->first();
+
+        return $sanksi ? (float) $sanksi->jumlah_sanksi : 0;
+    }
+
+    protected function penyesuaianHonorPembimbingDosen($honorarium, $jumlahSanksi)
+    {
+        $roles = [
+            'KS' => ['amount' => 'KS_H'],
+            'PU' => ['amount' => 'PU_H'],
+            'PP' => ['amount' => 'PP_H'],
+            'P1' => ['amount' => 'P1_H'],
+            'P2' => ['amount' => 'P2_H'],
+            'P3' => ['amount' => 'P3_H'],
+        ];
+        $amounts = [];
+        $baseAmounts = [];
+        $notes = [];
+        foreach ($roles as $role => $definition) {
+            $amounts[$role] = (float) $honorarium->{$definition['amount']};
+            $baseAmounts[$role] = $amounts[$role];
+            $notes[$role] = '';
+        }
+
+        $jumlahSanksi = max(0, (float) $jumlahSanksi);
+        if ($jumlahSanksi <= 0) {
+            return [
+                'amounts' => $amounts,
+                'base_amounts' => $baseAmounts,
+                'notes' => $notes,
+            ];
+        }
+
+        $adaPembimbingUtama = trim((string) $honorarium->PU) !== '';
+        $adaPembimbingPendamping = trim((string) $honorarium->PP) !== '';
+        $pembimbingUtamaHadir = !isset($honorarium->pembimbing_utama_hadir)
+            || (int) $honorarium->pembimbing_utama_hadir === 1;
+        $pembimbingPendampingHadir = !isset($honorarium->pembimbing_pendamping_hadir)
+            || (int) $honorarium->pembimbing_pendamping_hadir === 1;
+
+        if ($adaPembimbingUtama && !$pembimbingUtamaHadir) {
+            $potongan = min($jumlahSanksi, $amounts['PU']);
+            $amounts['PU'] -= $potongan;
+            $notes['PU'] = 'Dikurangi ' . Helper::formatRupiah($potongan) . ' karena Pembimbing Utama tidak hadir.';
+
+            if ($adaPembimbingPendamping && $pembimbingPendampingHadir) {
+                $amounts['PP'] += $potongan;
+                $notes['PP'] = trim($notes['PP'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' dari sanksi Pembimbing Utama.');
+            }
+        }
+
+        if ($adaPembimbingPendamping && !$pembimbingPendampingHadir) {
+            $potongan = min($jumlahSanksi, $amounts['PP']);
+            $amounts['PP'] -= $potongan;
+            $notes['PP'] = trim($notes['PP'] . ' Dikurangi ' . Helper::formatRupiah($potongan) . ' karena Pembimbing Pendamping tidak hadir.');
+
+            if ($adaPembimbingUtama && $pembimbingUtamaHadir) {
+                $amounts['PU'] += $potongan;
+                $notes['PU'] = trim($notes['PU'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' dari sanksi Pembimbing Pendamping.');
+            }
+        }
+
+        return [
+            'amounts' => $amounts,
+            'base_amounts' => $baseAmounts,
+            'notes' => $notes,
+        ];
     }
 
     public function honorarium()

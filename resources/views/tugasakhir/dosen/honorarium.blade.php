@@ -25,6 +25,18 @@
             <!-- BEGIN DATA TABLE -->
             <h3 class="page-heading">Honorarium Ujian</h3>
             <div class="the-box">
+                @php
+                    $formatPenyesuaianHonor = function ($nilai) {
+                        $nilai = (float) $nilai;
+                        if ($nilai > 0) {
+                            return '+' . helper::formatRupiah($nilai);
+                        }
+                        if ($nilai < 0) {
+                            return '-' . helper::formatRupiah(abs($nilai));
+                        }
+                        return helper::formatRupiah(0);
+                    };
+                @endphp
                 <div class="honorarium-toolbar">
                     <p class="text-muted">Pilih tanggal ujian untuk melihat rincian mahasiswa dan honorarium.</p>
                     <a href="{{route('history_honorarium')}}" type="button" class="btn btn-primary">
@@ -115,7 +127,9 @@
                                                     <th>Mahasiswa</th>
                                                     <th>Peran Dosen</th>
                                                     <th>Jenis Ujian</th>
-                                                    <th>Honorarium</th>
+                                                    <th>Honor Dasar</th>
+                                                    <th>Perubahan</th>
+                                                    <th>Honor Diterima</th>
                                                     <th class="text-center">Konfirmasi</th>
                                                 </tr>
                                             </thead>
@@ -128,6 +142,29 @@
                                                         </td>
                                                         <td>{{ $honorarium->role }}</td>
                                                         <td>{{ $honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2' ? 'Belum ditetapkan' : $honorarium->tipe_ujian }}</td>
+                                                        <td>
+                                                            @if ($honorarium->status == 1)
+                                                                {{ helper::formatRupiah($honorarium->base_amount) }}
+                                                            @else
+                                                                <span class="text-muted">Belum tersedia</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if ($honorarium->status == 1)
+                                                                @if ($honorarium->adjustment_amount > 0)
+                                                                    <span class="badge badge-info">{{ $formatPenyesuaianHonor($honorarium->adjustment_amount) }}</span>
+                                                                @elseif ($honorarium->adjustment_amount < 0)
+                                                                    <span class="badge badge-danger">{{ $formatPenyesuaianHonor($honorarium->adjustment_amount) }}</span>
+                                                                @else
+                                                                    <span class="text-muted">{{ helper::formatRupiah(0) }}</span>
+                                                                @endif
+                                                                @if (!empty($honorarium->adjustment_note))
+                                                                    <small class="text-muted display-block">{{ $honorarium->adjustment_note }}</small>
+                                                                @endif
+                                                            @else
+                                                                <span class="text-muted">Belum tersedia</span>
+                                                            @endif
+                                                        </td>
                                                         <td>
                                                             @if ($honorarium->status == 1)
                                                                 <span class="badge badge-success">Rp {{ number_format($honorarium->amount, 0, ',', '.') }}</span>
@@ -199,6 +236,14 @@
         .honorarium-confirmation {
             color: #3c763d;
             font-weight: 600;
+        }
+
+        .badge-info {
+            background: #31708f;
+        }
+
+        .badge-danger {
+            background: #a94442;
         }
 
         @media (max-width: 767px) {
