@@ -28,6 +28,8 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString("->name('honorarium_penetapan_setup_type_ujian_otomatis')", $routes);
         $this->assertStringContainsString("Route::post('/tanggal/{date}/reset-type'", $routes);
         $this->assertStringContainsString("->name('honorarium_penetapan_reset_type')", $routes);
+        $this->assertStringContainsString("Route::post('/pembimbing-attendance'", $routes);
+        $this->assertStringContainsString("->name('honorarium_penetapan_pembimbing_attendance')", $routes);
         $this->assertStringContainsString("Route::post('/tanggal/{date}/available-all'", $routes);
         $this->assertStringContainsString("Route::post('/tanggal/{date}/unavailable-all'", $routes);
         $this->assertStringContainsString('Setup Tipe Ujian Otomatis', $view);
@@ -70,6 +72,10 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('pembimbing_pendamping_hadir', $controller);
         $this->assertStringContainsString('Kehadiran Pembimbing', $detail);
         $this->assertStringContainsString('honorarium-advisor-attendance', $detail);
+        $this->assertStringContainsString('pembimbing-attendance-checkbox', $detail);
+        $this->assertStringContainsString('change.pembimbingAttendance', $detail);
+        $this->assertStringContainsString('honorarium_penetapan_pembimbing_attendance', $detail);
+        $this->assertStringContainsString('@if (!$isAkademikHonorarium)', $detail);
         $this->assertStringContainsString('nomorSkUjianHonorariumByNim', $controller);
         $this->assertStringContainsString('nomor_sk_proposal', $controller);
         $this->assertStringContainsString('nomor_sk_ujian_akhir', $controller);

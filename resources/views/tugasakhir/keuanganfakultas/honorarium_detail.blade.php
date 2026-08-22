@@ -54,6 +54,14 @@
         .honorarium-advisor-attendance input[type="checkbox"] {
             margin-right: 6px;
         }
+
+        .honorarium-attendance-status {
+            display: block;
+            min-height: 18px;
+            color: #64748b;
+            font-size: 11px;
+            margin-top: 3px;
+        }
     </style>
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
@@ -123,15 +131,17 @@
                     @endif
                 </div>
 
-                @php
-                    $totalHonorariumTanggal = $data->sum(function ($honorarium) {
-                        return (float) $honorarium->total_honor;
-                    });
-                @endphp
-                <div class="alert alert-success square honorarium-total-summary" style="margin-bottom: 20px; font-size: 18px;">
-                    <strong>Total Honor Seluruh Mahasiswa:</strong>
-                    <strong id="total-honorarium-tanggal" style="font-size: 24px; margin-left: 8px;">{{ helper::formatRupiah($totalHonorariumTanggal) }}</strong>
-                </div>
+                @if (!$isAkademikHonorarium)
+                    @php
+                        $totalHonorariumTanggal = $data->sum(function ($honorarium) {
+                            return (float) $honorarium->total_honor;
+                        });
+                    @endphp
+                    <div class="alert alert-success square honorarium-total-summary" style="margin-bottom: 20px; font-size: 18px;">
+                        <strong>Total Honor Seluruh Mahasiswa:</strong>
+                        <strong id="total-honorarium-tanggal" style="font-size: 24px; margin-left: 8px;">{{ helper::formatRupiah($totalHonorariumTanggal) }}</strong>
+                    </div>
+                @endif
 
                 <form action="{{ $isAkademikHonorarium ? route($saveRoute) : route($homeRoute) }}" method="{{ $isAkademikHonorarium ? 'POST' : 'GET' }}">
                     @csrf
@@ -216,8 +226,11 @@
                                                 <input type="hidden" name="honorariums[{{ $loop->index }}][pembimbing_utama_hadir]" value="{{ $sudahAdaPembayaran || !$adaPembimbingUtama ? ($honorarium->pembimbing_utama_hadir ? 1 : 0) : 0 }}">
                                                 <label>
                                                     <input type="checkbox"
+                                                        class="pembimbing-attendance-checkbox"
                                                         name="honorariums[{{ $loop->index }}][pembimbing_utama_hadir]"
                                                         value="1"
+                                                        data-honorarium-id="{{ $honorarium->id }}"
+                                                        data-role="pembimbing_utama_hadir"
                                                         {{ $honorarium->pembimbing_utama_hadir ? 'checked' : '' }}
                                                         {{ !$adaPembimbingUtama || $sudahAdaPembayaran ? 'disabled' : '' }}>
                                                     {{ $adaPembimbingUtama ? helper::getDeskripsi($honorarium->PU) : '---' }}
@@ -226,12 +239,16 @@
                                                 <input type="hidden" name="honorariums[{{ $loop->index }}][pembimbing_pendamping_hadir]" value="{{ $sudahAdaPembayaran || !$adaPembimbingPendamping ? ($honorarium->pembimbing_pendamping_hadir ? 1 : 0) : 0 }}">
                                                 <label>
                                                     <input type="checkbox"
+                                                        class="pembimbing-attendance-checkbox"
                                                         name="honorariums[{{ $loop->index }}][pembimbing_pendamping_hadir]"
                                                         value="1"
+                                                        data-honorarium-id="{{ $honorarium->id }}"
+                                                        data-role="pembimbing_pendamping_hadir"
                                                         {{ $honorarium->pembimbing_pendamping_hadir ? 'checked' : '' }}
                                                         {{ !$adaPembimbingPendamping || $sudahAdaPembayaran ? 'disabled' : '' }}>
                                                     {{ $adaPembimbingPendamping ? helper::getDeskripsi($honorarium->PP) : '---' }}
                                                 </label>
+                                                <span class="honorarium-attendance-status"></span>
                                             </td>
                                         @endif
                                         @if (!$isAkademikHonorarium)
@@ -464,6 +481,41 @@
 
                     totalBaris.attr('data-total-honor', totalBaru).text(formatRupiah(totalBaru));
                     updateTotalHonorariumTanggal();
+                });
+
+            $(document).off('change.pembimbingAttendance', '.pembimbing-attendance-checkbox')
+                .on('change.pembimbingAttendance', '.pembimbing-attendance-checkbox', function() {
+                    var checkbox = $(this);
+                    var status = checkbox.closest('.honorarium-advisor-attendance').find('.honorarium-attendance-status');
+                    var nilaiSebelumnya = !checkbox.prop('checked');
+
+                    checkbox.prop('disabled', true);
+                    status.removeClass('text-success text-danger').text('Menyimpan...');
+
+                    $.ajax({
+                        url: "{{ route('honorarium_penetapan_pembimbing_attendance') }}",
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            id: checkbox.data('honorarium-id'),
+                            role: checkbox.data('role'),
+                            hadir: checkbox.prop('checked') ? 1 : 0
+                        },
+                        success: function(response) {
+                            status.addClass('text-success').text('Tersimpan');
+                            setTimeout(function() {
+                                status.text('').removeClass('text-success');
+                            }, 1800);
+                        },
+                        error: function(xhr) {
+                            var response = xhr.responseJSON || {};
+                            checkbox.prop('checked', nilaiSebelumnya);
+                            status.addClass('text-danger').text(response.message || 'Gagal disimpan');
+                        },
+                        complete: function() {
+                            checkbox.prop('disabled', false);
+                        }
+                    });
                 });
 
             function bindToggleEvents() {

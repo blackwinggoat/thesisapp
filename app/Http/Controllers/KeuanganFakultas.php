@@ -1352,6 +1352,56 @@ class KeuanganFakultas extends Controller
         }
     }
 
+    public function honorarium_update_pembimbing_attendance(Request $request)
+    {
+        if (!$this->kolomKehadiranPembimbingTersedia()) {
+            return response()->json([
+                'message' => 'Kolom kehadiran pembimbing belum tersedia.',
+            ], 422);
+        }
+
+        $id = (int) $request->input('id');
+        $role = $request->input('role');
+        $hadir = $request->input('hadir') ? 1 : 0;
+        $kolomYangDiizinkan = [
+            'pembimbing_utama_hadir',
+            'pembimbing_pendamping_hadir',
+        ];
+
+        if ($id < 1 || !in_array($role, $kolomYangDiizinkan, true)) {
+            return response()->json([
+                'message' => 'Data kehadiran pembimbing tidak valid.',
+            ], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($id, $role, $hadir) {
+                $honorarium = DB::table('trt_honorium')->where('id', $id)->lockForUpdate()->first();
+                if (!$honorarium) {
+                    throw new \RuntimeException('Data honorarium tidak ditemukan.');
+                }
+
+                if ($this->honorariumHasPaidRole($honorarium)) {
+                    throw new \RuntimeException('Kehadiran pembimbing pada honorarium yang sudah Lunas tidak dapat diubah.');
+                }
+
+                DB::table('trt_honorium')->where('id', $id)->update([$role => $hadir]);
+            });
+
+            return response()->json([
+                'message' => 'Kehadiran pembimbing berhasil disimpan.',
+            ], 200);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Kehadiran pembimbing gagal disimpan.',
+            ], 500);
+        }
+    }
+
     public function honorarium_history()
     {
         $tanggalSql = $this->honorariumTanggalEfektifSql();
