@@ -34,6 +34,11 @@
             min-width: 82px;
             font-weight: 600;
         }
+
+        .honorarium-student-class {
+            display: block;
+            margin-top: 5px;
+        }
     </style>
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
@@ -172,7 +177,12 @@
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $honorarium->C_NPM }}</td>
+                                        <td>
+                                            <strong>{{ $honorarium->C_NPM }}</strong>
+                                            <span class="honorarium-student-class label {{ $honorarium->mahasiswa_eksekutif ? 'label-primary' : 'label-default' }}">
+                                                {{ $honorarium->mahasiswa_eksekutif ? 'Eksekutif' : 'Reguler' }}
+                                            </span>
+                                        </td>
                                         <td>{{ helper::getNamaMhs($honorarium->C_NPM) }}</td>
                                         <td>
                                             @if ($honorarium->kode_jenis_tugas_akhir)

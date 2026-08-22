@@ -69,6 +69,7 @@
                                 <th>No</th>
                                 <th>Tanggal Ujian</th>
                                 <th class="text-center">Jumlah Mahasiswa</th>
+                                <th class="text-center">Type Mahasiswa</th>
                                 @if (!$isAkademikHonorarium)
                                     <th class="text-center">Total Honor Belum Dibayar</th>
                                     <th class="text-center">Belum Tersedia</th>
@@ -93,6 +94,12 @@
                                             TI: {{ $honorarium->total_teknik_informatika }} &nbsp; SI: {{ $honorarium->total_sistem_informasi }}
                                         </div>
                                     </td>
+                                    <td class="text-center">
+                                        <span class="label label-default">Reguler: {{ $honorarium->total_reguler }}</span>
+                                        <div style="margin-top: 5px;">
+                                            <span class="label label-primary">Eksekutif: {{ $honorarium->total_eksekutif }}</span>
+                                        </div>
+                                    </td>
                                     @if (!$isAkademikHonorarium)
                                         <td class="text-right"><strong>{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
                                         <td class="text-center">
@@ -114,7 +121,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $isAkademikHonorarium ? 5 : 8 }}" class="text-center">Tidak ada honorarium yang masih perlu dikelola.</td>
+                                    <td colspan="{{ $isAkademikHonorarium ? 6 : 9 }}" class="text-center">Tidak ada honorarium yang masih perlu dikelola.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -140,7 +147,7 @@
                 info: false,
                 lengthChange: false,
                 columnDefs: [
-                    { orderable: false, targets: {!! $isAkademikHonorarium ? '[4]' : '[0, 7]' !!} }
+                    { orderable: false, targets: {!! $isAkademikHonorarium ? '[5]' : '[0, 8]' !!} }
                 ]
             });
 

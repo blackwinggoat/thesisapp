@@ -55,7 +55,10 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('$isAkademikHonorarium', $summary);
         $this->assertStringContainsString("{{ \$isAkademikHonorarium ? 'Penetapan Tipe Honorarium per Tanggal Ujian' : 'Manajemen Honorarium per Tanggal Ujian' }}", $summary);
         $this->assertStringContainsString("@if (!\$isAkademikHonorarium)", $summary);
-        $this->assertStringContainsString("{{ \$isAkademikHonorarium ? 5 : 8 }}", $summary);
+        $this->assertStringContainsString('Type Mahasiswa', $summary);
+        $this->assertStringContainsString('total_reguler', $summary);
+        $this->assertStringContainsString('total_eksekutif', $summary);
+        $this->assertStringContainsString("{{ \$isAkademikHonorarium ? 6 : 9 }}", $summary);
         $this->assertStringContainsString('honorarium_penetapan_save_all', $detail);
         $this->assertStringContainsString('honorarium_penetapan_setup_type_ujian_otomatis', $detail);
         $this->assertStringContainsString('honorarium_penetapan_reset_type', $detail);
@@ -65,6 +68,8 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('Nomor SK Ujian', $detail);
         $this->assertStringContainsString('Proposal :', $detail);
         $this->assertStringContainsString('Ujian Akhir :', $detail);
+        $this->assertStringContainsString('honorarium-student-class', $detail);
+        $this->assertStringContainsString("{{ \$honorarium->mahasiswa_eksekutif ? 'Eksekutif' : 'Reguler' }}", $detail);
         $this->assertStringContainsString('@else', $detail);
         $this->assertStringContainsString('<strong>{{ $honorarium->tipe_ujian }}</strong>', $detail);
         $this->assertStringContainsString('Penetapan tipe honorarium dilakukan oleh Akademik Fakultas.', $controller);

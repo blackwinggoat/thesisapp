@@ -374,17 +374,30 @@ class KeuanganFakultas extends Controller
                 return (float) $honorariums->sum('total_honor');
             });
 
-        $data = $this->honorariumDenganJadwalQuery()
+        $dataQuery = $this->honorariumDenganJadwalQuery()
             ->whereNotNull('jadwal.tgl_ujian')
-            ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
-            ->select(
-                'jadwal.tgl_ujian as date',
-                DB::raw('COUNT(DISTINCT honorarium.C_NPM) as total_mahasiswa'),
-                DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '130%' THEN honorarium.C_NPM END) as total_teknik_informatika"),
-                DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '131%' THEN honorarium.C_NPM END) as total_sistem_informasi"),
-                DB::raw("SUM(CASE WHEN {$belumTersediaSql} THEN 1 ELSE 0 END) as belum_tersedia"),
-                DB::raw("SUM(CASE WHEN honorarium.tipe_ujian IS NULL OR honorarium.tipe_ujian = '' OR honorarium.tipe_ujian IN ('0', '2') THEN 1 ELSE 0 END) as perlu_penetapan")
-            )
+            ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'");
+
+        $selects = [
+            'jadwal.tgl_ujian as date',
+            DB::raw('COUNT(DISTINCT honorarium.C_NPM) as total_mahasiswa'),
+            DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '130%' THEN honorarium.C_NPM END) as total_teknik_informatika"),
+            DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '131%' THEN honorarium.C_NPM END) as total_sistem_informasi"),
+            DB::raw("SUM(CASE WHEN {$belumTersediaSql} THEN 1 ELSE 0 END) as belum_tersedia"),
+            DB::raw("SUM(CASE WHEN honorarium.tipe_ujian IS NULL OR honorarium.tipe_ujian = '' OR honorarium.tipe_ujian IN ('0', '2') THEN 1 ELSE 0 END) as perlu_penetapan"),
+        ];
+
+        if ($this->tabelMahasiswaEksekutifTersedia()) {
+            $dataQuery->leftJoin('trt_mahasiswa_eksekutif as kelas_eksekutif', 'kelas_eksekutif.C_NPM', '=', 'honorarium.C_NPM');
+            $selects[] = DB::raw("COUNT(DISTINCT CASE WHEN kelas_eksekutif.C_NPM IS NULL THEN honorarium.C_NPM END) as total_reguler");
+            $selects[] = DB::raw("COUNT(DISTINCT CASE WHEN kelas_eksekutif.C_NPM IS NOT NULL THEN honorarium.C_NPM END) as total_eksekutif");
+        } else {
+            $selects[] = DB::raw('COUNT(DISTINCT honorarium.C_NPM) as total_reguler');
+            $selects[] = DB::raw('0 as total_eksekutif');
+        }
+
+        $data = $dataQuery
+            ->select($selects)
             ->groupBy('jadwal.tgl_ujian')
             ->orderBy('jadwal.tgl_ujian', 'desc')
             ->get();
