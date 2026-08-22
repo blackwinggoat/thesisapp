@@ -799,9 +799,30 @@ class KeuanganFakultas extends Controller
             ? 'Tanda-Terima-Honorarium-' . $tanggalTerpilih->first() . '.pdf'
             : 'Tanda-Terima-Honorarium-' . $tanggalTerpilih->first() . '-sd-' . $tanggalTerpilih->last() . '.pdf';
 
-        return PDF::loadView('tugasakhir.keuanganfakultas.tanda_terima_honorarium_pdf', compact('reports', 'tanggalTerpilih'))
-            ->setPaper('a4', 'portrait')
-            ->download($namaFile);
+        $pdf = PDF::loadView('tugasakhir.keuanganfakultas.tanda_terima_honorarium_pdf', compact('reports', 'tanggalTerpilih'))
+            ->setPaper('a4', 'portrait');
+
+        return $this->tambahParafDosenKePdf($pdf)->download($namaFile);
+    }
+
+    protected function tambahParafDosenKePdf($pdf)
+    {
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->getOptions()->setIsPhpEnabled(true);
+        $dompdf->getCanvas()->page_script('
+            $boxWidth = 82;
+            $boxHeight = 24;
+            $x = $pdf->get_width() - $boxWidth - 28;
+            $y = $pdf->get_height() - $boxHeight - 22;
+            $font = $fontMetrics->getFont("Helvetica", "normal");
+            $label = "Paraf Dosen";
+            $labelWidth = $fontMetrics->getTextWidth($label, $font, 6.8);
+
+            $pdf->rectangle($x, $y, $boxWidth, $boxHeight, array(0, 0, 0), 0.75);
+            $pdf->text($x + (($boxWidth - $labelWidth) / 2), $y + 10, $label, $font, 6.8, array(0, 0, 0));
+        ');
+
+        return $pdf;
     }
 
     public function honorarium_tandai_terbayar(Request $request)

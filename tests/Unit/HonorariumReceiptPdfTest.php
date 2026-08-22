@@ -42,6 +42,11 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString("'Tidak ada honorarium berstatus ' . \$statusLabel", $controller);
         $this->assertStringContainsString("Route::post('/tanda-terima-pdf'", $routes);
         $this->assertStringContainsString("Route::post('/history/tanda-terima-pdf'", $routes);
+        $this->assertStringContainsString('tambahParafDosenKePdf($pdf)', $controller);
+        $this->assertStringContainsString('setIsPhpEnabled(true)', $controller);
+        $this->assertStringContainsString("page_script('", $controller);
+        $this->assertStringContainsString('$label = "Paraf Dosen"', $controller);
+        $this->assertStringContainsString('$pdf->rectangle(', $controller);
         $this->assertStringContainsString('fa-file-pdf-o', $listView);
         $this->assertStringContainsString('Download PDF Terpilih', $listView);
         $this->assertStringContainsString('name="tanggal[]"', $listView);
@@ -58,6 +63,12 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString('SUBTOTAL PENERIMAAN', $pdfView);
         $this->assertStringNotContainsString('SUBTOTAL PENYESUAIAN', $pdfView);
         $this->assertStringNotContainsString('TOTAL DITERIMA:', $pdfView);
+        $this->assertStringNotContainsString('class="page-paraf">Paraf Dosen</div>', $pdfView);
+        $this->assertStringNotContainsString('position: fixed', $pdfView);
+        $this->assertStringContainsString('page-break-after: avoid', $pdfView);
+        $this->assertStringContainsString('.date-section { margin-top: 6px; page-break-inside: avoid; }', $pdfView);
+        $this->assertStringContainsString('class="adjustment-section"', $pdfView);
+        $this->assertStringContainsString('page-break-inside: avoid', $pdfView);
         $this->assertStringContainsString('TOTAL SUBTOTAL PENERIMAAN', $pdfView);
         $this->assertStringContainsString('TOTAL PENYESUAIAN HONORARIUM', $pdfView);
         $this->assertStringNotContainsString('Rincian Penyesuaian Sanksi Kehadiran Pembimbing', $pdfView);
