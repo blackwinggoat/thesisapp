@@ -1279,22 +1279,22 @@ class KeuanganFakultas extends Controller
         if ($adaPembimbingUtama && !$pembimbingUtamaHadir) {
             $potongan = min($jumlahSanksi, $amounts['PU']);
             $amounts['PU'] -= $potongan;
-            $notes['PU'] = 'Dikurangi ' . Helper::formatRupiah($potongan) . ' karena Pembimbing Utama tidak hadir.';
+            $notes['PU'] = 'Pengurangan ' . Helper::formatRupiah($potongan) . ' berdasarkan status kehadiran Pembimbing Utama.';
 
             if ($adaPembimbingPendamping && $pembimbingPendampingHadir) {
                 $amounts['PP'] += $potongan;
-                $notes['PP'] = trim($notes['PP'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' sebagai penyesuaian kehadiran Pembimbing Utama.');
+                $notes['PP'] = trim($notes['PP'] . ' Penambahan ' . Helper::formatRupiah($potongan) . ' berdasarkan status kehadiran Pembimbing Utama.');
             }
         }
 
         if ($adaPembimbingPendamping && !$pembimbingPendampingHadir) {
             $potongan = min($jumlahSanksi, $amounts['PP']);
             $amounts['PP'] -= $potongan;
-            $notes['PP'] = trim($notes['PP'] . ' Dikurangi ' . Helper::formatRupiah($potongan) . ' karena Pembimbing Pendamping tidak hadir.');
+            $notes['PP'] = trim($notes['PP'] . ' Pengurangan ' . Helper::formatRupiah($potongan) . ' berdasarkan status kehadiran Pembimbing Pendamping.');
 
             if ($adaPembimbingUtama && $pembimbingUtamaHadir) {
                 $amounts['PU'] += $potongan;
-                $notes['PU'] = trim($notes['PU'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' sebagai penyesuaian kehadiran Pembimbing Pendamping.');
+                $notes['PU'] = trim($notes['PU'] . ' Penambahan ' . Helper::formatRupiah($potongan) . ' berdasarkan status kehadiran Pembimbing Pendamping.');
             }
         }
 

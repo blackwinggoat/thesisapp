@@ -91,7 +91,7 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertSame(125000.0, $result['amounts']['PP']);
         $this->assertSame(100000.0, $result['base_amounts']['PU']);
         $this->assertSame(100000.0, $result['base_amounts']['PP']);
-        $this->assertStringContainsString('Dikurangi', $result['notes']['PU']);
-        $this->assertStringContainsString('Ditambah', $result['notes']['PP']);
+        $this->assertSame('Pengurangan Rp 25.000 berdasarkan status kehadiran Pembimbing Utama.', $result['notes']['PU']);
+        $this->assertSame('Penambahan Rp 25.000 berdasarkan status kehadiran Pembimbing Utama.', $result['notes']['PP']);
     }
 }
