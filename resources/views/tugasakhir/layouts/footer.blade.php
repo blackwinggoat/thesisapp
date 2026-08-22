@@ -1,7 +1,10 @@
 <!-- BEGIN FOOTER -->
-<footer>
-    &copy; 2024 <a href="#fakelink">Universitas Muslim Indonesia</a><br />
-    Design by <a href="http://isohdesign.com" target="_blank">Fakultas Ilmu Komputer</a>.
+<footer class="thesis-app-footer">
+    <div class="footer-brand">Thesis Apps FIKOM UMI</div>
+    <div class="footer-meta">
+        &copy; 2024{{ date('Y') > 2024 ? ' - ' . date('Y') : '' }} Fakultas Ilmu Komputer,
+        Universitas Muslim Indonesia. Sistem Informasi Tugas Akhir.
+    </div>
 </footer>
 <!-- END FOOTER -->
 

@@ -1820,6 +1820,28 @@ footer {
 	line-height: 170%;
 }
 
+.thesis-app-footer {
+	background: #F8FAFC;
+	color: #64748B;
+	padding: 18px 20px;
+	border-top: 1px solid #DDE4EE;
+	box-shadow: inset 0 3px 0 #1F6F8B;
+}
+
+.thesis-app-footer .footer-brand {
+	color: #1F2937;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.35;
+}
+
+.thesis-app-footer .footer-meta {
+	max-width: 760px;
+	margin: 4px auto 0;
+	font-size: 12px;
+	line-height: 1.55;
+}
+
 
 
 
