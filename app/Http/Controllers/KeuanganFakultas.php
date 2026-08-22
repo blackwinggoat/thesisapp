@@ -346,6 +346,12 @@ class KeuanganFakultas extends Controller
         return (int) $masterPayment->untuk_mahasiswa_eksekutif === ($mahasiswaEksekutif ? 1 : 0);
     }
 
+    protected function kolomKehadiranPembimbingTersedia()
+    {
+        return Schema::hasColumn('trt_honorium', 'pembimbing_utama_hadir')
+            && Schema::hasColumn('trt_honorium', 'pembimbing_pendamping_hadir');
+    }
+
     public function honorarium_home()
     {
         return $this->renderHonorariumHome('keuangan');
@@ -450,6 +456,7 @@ class KeuanganFakultas extends Controller
         $jenisTugasAkhirByNim = $this->jenisTugasAkhirHonorariumByNim($data->pluck('C_NPM')->all());
         $mahasiswaEksekutif = $this->mahasiswaEksekutifByNim($data->pluck('C_NPM')->all());
         $nomorSkUjianByNim = $this->nomorSkUjianHonorariumByNim($data->pluck('C_NPM')->all());
+        $kolomKehadiranPembimbingTersedia = $this->kolomKehadiranPembimbingTersedia();
         foreach ($data as $honorarium) {
             $jenisTugasAkhir = $jenisTugasAkhirByNim->get($honorarium->C_NPM);
             $nomorSkUjian = $nomorSkUjianByNim->get($honorarium->C_NPM);
@@ -458,6 +465,12 @@ class KeuanganFakultas extends Controller
             $honorarium->mahasiswa_eksekutif = $mahasiswaEksekutif->has($honorarium->C_NPM);
             $honorarium->nomor_sk_proposal = $nomorSkUjian ? $nomorSkUjian->nomor_sk_proposal : null;
             $honorarium->nomor_sk_ujian_akhir = $nomorSkUjian ? $nomorSkUjian->nomor_sk_ujian_akhir : null;
+            $honorarium->pembimbing_utama_hadir = $kolomKehadiranPembimbingTersedia
+                ? (int) $honorarium->pembimbing_utama_hadir === 1
+                : true;
+            $honorarium->pembimbing_pendamping_hadir = $kolomKehadiranPembimbingTersedia
+                ? (int) $honorarium->pembimbing_pendamping_hadir === 1
+                : true;
         }
 
         return view('tugasakhir.keuanganfakultas.honorarium_detail', compact(
@@ -1250,6 +1263,7 @@ class KeuanganFakultas extends Controller
 
         try {
             DB::transaction(function () use ($request) {
+                $kolomKehadiranPembimbingTersedia = $this->kolomKehadiranPembimbingTersedia();
                 $honorariumIds = collect((array) $request->honorariums)
                     ->pluck('id')
                     ->map(function ($id) {
@@ -1262,17 +1276,35 @@ class KeuanganFakultas extends Controller
                 );
 
                 foreach ((array) $request->honorariums as $honorariumData) {
-                    if (!isset($honorariumData['id_pembayaran']) || $honorariumData['id_pembayaran'] === 'unset') {
-                        continue;
-                    }
-
                     $id = isset($honorariumData['id']) ? (int) $honorariumData['id'] : 0;
                     $existingHonorarium = DB::table('trt_honorium')->where('id', $id)->lockForUpdate()->first();
                     if (!$existingHonorarium) {
                         throw new \RuntimeException('Salah satu data honorarium tidak ditemukan. Tidak ada perubahan yang disimpan.');
                     }
-                    if ($this->honorariumHasPaidRole($existingHonorarium)) {
-                        throw new \RuntimeException('Tipe atau nominal honorarium yang sudah Lunas tidak dapat diubah.');
+
+                    $payloadKehadiran = [];
+                    if ($kolomKehadiranPembimbingTersedia) {
+                        $payloadKehadiran = [
+                            'pembimbing_utama_hadir' => !empty($honorariumData['pembimbing_utama_hadir']) ? 1 : 0,
+                            'pembimbing_pendamping_hadir' => !empty($honorariumData['pembimbing_pendamping_hadir']) ? 1 : 0,
+                        ];
+                    }
+
+                    $mengubahKehadiranPembimbing = !empty($payloadKehadiran)
+                        && ((int) $existingHonorarium->pembimbing_utama_hadir !== (int) $payloadKehadiran['pembimbing_utama_hadir']
+                            || (int) $existingHonorarium->pembimbing_pendamping_hadir !== (int) $payloadKehadiran['pembimbing_pendamping_hadir']);
+                    $mengubahTipePembayaran = isset($honorariumData['id_pembayaran'])
+                        && $honorariumData['id_pembayaran'] !== 'unset';
+
+                    if ($this->honorariumHasPaidRole($existingHonorarium) && ($mengubahTipePembayaran || $mengubahKehadiranPembimbing)) {
+                        throw new \RuntimeException('Tipe, nominal, atau kehadiran pembimbing yang sudah Lunas tidak dapat diubah.');
+                    }
+
+                    if (!$mengubahTipePembayaran) {
+                        if ($mengubahKehadiranPembimbing) {
+                            DB::table('trt_honorium')->where('id', $id)->update($payloadKehadiran);
+                        }
+                        continue;
                     }
 
                     $idPembayaran = (int) $honorariumData['id_pembayaran'];
@@ -1301,7 +1333,10 @@ class KeuanganFakultas extends Controller
 
                     DB::table('trt_honorium')
                         ->where('id', $id)
-                        ->update($this->honorariumPaymentPayload($existingHonorarium, $masterPayment));
+                        ->update(array_merge(
+                            $this->honorariumPaymentPayload($existingHonorarium, $masterPayment),
+                            $payloadKehadiran
+                        ));
                 }
             });
 

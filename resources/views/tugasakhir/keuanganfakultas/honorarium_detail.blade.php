@@ -39,6 +39,21 @@
             display: block;
             margin-top: 5px;
         }
+
+        .honorarium-advisor-attendance {
+            min-width: 230px;
+        }
+
+        .honorarium-advisor-attendance label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 400;
+            line-height: 1.35;
+        }
+
+        .honorarium-advisor-attendance input[type="checkbox"] {
+            margin-right: 6px;
+        }
     </style>
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
@@ -128,6 +143,9 @@
                                     <th>Nim</th>
                                     <th>Student Name</th>
                                     <th>Jenis TA</th>
+                                    @if ($isAkademikHonorarium)
+                                        <th>Kehadiran Pembimbing</th>
+                                    @endif
                                     @if (!$isAkademikHonorarium)
                                         <th>Available</th>
                                     @endif
@@ -174,6 +192,8 @@
 
                                             return $total;
                                         };
+                                        $adaPembimbingUtama = trim((string) $honorarium->PU) !== '';
+                                        $adaPembimbingPendamping = trim((string) $honorarium->PP) !== '';
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
@@ -191,6 +211,29 @@
                                                 <span class="label label-warning">Belum ditetapkan</span>
                                             @endif
                                         </td>
+                                        @if ($isAkademikHonorarium)
+                                            <td class="honorarium-advisor-attendance">
+                                                <input type="hidden" name="honorariums[{{ $loop->index }}][pembimbing_utama_hadir]" value="{{ $sudahAdaPembayaran || !$adaPembimbingUtama ? ($honorarium->pembimbing_utama_hadir ? 1 : 0) : 0 }}">
+                                                <label>
+                                                    <input type="checkbox"
+                                                        name="honorariums[{{ $loop->index }}][pembimbing_utama_hadir]"
+                                                        value="1"
+                                                        {{ $honorarium->pembimbing_utama_hadir ? 'checked' : '' }}
+                                                        {{ !$adaPembimbingUtama || $sudahAdaPembayaran ? 'disabled' : '' }}>
+                                                    {{ $adaPembimbingUtama ? helper::getDeskripsi($honorarium->PU) : '---' }}
+                                                </label>
+
+                                                <input type="hidden" name="honorariums[{{ $loop->index }}][pembimbing_pendamping_hadir]" value="{{ $sudahAdaPembayaran || !$adaPembimbingPendamping ? ($honorarium->pembimbing_pendamping_hadir ? 1 : 0) : 0 }}">
+                                                <label>
+                                                    <input type="checkbox"
+                                                        name="honorariums[{{ $loop->index }}][pembimbing_pendamping_hadir]"
+                                                        value="1"
+                                                        {{ $honorarium->pembimbing_pendamping_hadir ? 'checked' : '' }}
+                                                        {{ !$adaPembimbingPendamping || $sudahAdaPembayaran ? 'disabled' : '' }}>
+                                                    {{ $adaPembimbingPendamping ? helper::getDeskripsi($honorarium->PP) : '---' }}
+                                                </label>
+                                            </td>
+                                        @endif
                                         @if (!$isAkademikHonorarium)
                                             <td>
                                                 <input type="checkbox" name="honorariums[{{ $loop->index }}][KS_Stat]"

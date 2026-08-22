@@ -12,6 +12,7 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
         $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium_detail.blade.php');
         $migration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_21_130000_mark_named_executive_honorarium_payments.php');
+        $attendanceMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_22_020000_add_pembimbing_attendance_to_trt_honorium_table.php');
 
         $this->assertStringContainsString('honorarium_setup_type_ujian_otomatis', $controller);
         $this->assertStringContainsString('namaPembayaranOtomatis', $controller);
@@ -36,6 +37,8 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('kode_jenis_tugas_akhir', $view);
         $this->assertStringContainsString('Proposal Eksekutif', $migration);
         $this->assertStringContainsString('Ujian Meja Eksekutif', $migration);
+        $this->assertStringContainsString('pembimbing_utama_hadir', $attendanceMigration);
+        $this->assertStringContainsString('pembimbing_pendamping_hadir', $attendanceMigration);
     }
 
     public function testAcademicFacultyOwnsTypeSetupAndFinanceGetsReadOnlyType()
@@ -62,6 +65,11 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('honorarium_penetapan_save_all', $detail);
         $this->assertStringContainsString('honorarium_penetapan_setup_type_ujian_otomatis', $detail);
         $this->assertStringContainsString('honorarium_penetapan_reset_type', $detail);
+        $this->assertStringContainsString('kolomKehadiranPembimbingTersedia', $controller);
+        $this->assertStringContainsString('pembimbing_utama_hadir', $controller);
+        $this->assertStringContainsString('pembimbing_pendamping_hadir', $controller);
+        $this->assertStringContainsString('Kehadiran Pembimbing', $detail);
+        $this->assertStringContainsString('honorarium-advisor-attendance', $detail);
         $this->assertStringContainsString('nomorSkUjianHonorariumByNim', $controller);
         $this->assertStringContainsString('nomor_sk_proposal', $controller);
         $this->assertStringContainsString('nomor_sk_ujian_akhir', $controller);
