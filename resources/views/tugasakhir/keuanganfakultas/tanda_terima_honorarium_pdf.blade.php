@@ -49,8 +49,6 @@
         .adjustment-table .kind { text-align: center; width: 14%; }
         .adjustment-table .amount { text-align: right; width: 13%; }
         .adjustment-table .basis { width: 24%; }
-        .date-summary { font-size: 8.2pt; margin: 5px 0 0 auto; text-align: right; width: 50%; }
-        .date-summary-line { display: block; font-weight: bold; padding: 2px 4px; }
         .overall-summary { border-collapse: collapse; display: table; font-size: 8.8pt; margin: 13px 0 0; width: 100%; }
         .overall-summary td { border: 1px solid #000; padding: 4px 6px; }
         .overall-summary .label { font-weight: bold; text-align: right; width: 78%; }
@@ -133,9 +131,6 @@
                         </tr>
                         </tbody>
                     </table>
-                    <div class="date-summary">
-                        <div class="date-summary-line">TOTAL DITERIMA: {{ helper::formatRupiah($laporanTanggal->subtotal_honor) }}</div>
-                    </div>
                 </div>
             @endforeach
 

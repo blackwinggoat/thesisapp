@@ -57,7 +57,7 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString("helper::tgl_indo_lengkap(\$adjustment->tanggal)", $pdfView);
         $this->assertStringContainsString('SUBTOTAL PENERIMAAN', $pdfView);
         $this->assertStringNotContainsString('SUBTOTAL PENYESUAIAN', $pdfView);
-        $this->assertStringContainsString('TOTAL DITERIMA', $pdfView);
+        $this->assertStringNotContainsString('TOTAL DITERIMA:', $pdfView);
         $this->assertStringContainsString('TOTAL SUBTOTAL PENERIMAAN', $pdfView);
         $this->assertStringContainsString('TOTAL PENYESUAIAN HONORARIUM', $pdfView);
         $this->assertStringNotContainsString('Rincian Penyesuaian Sanksi Kehadiran Pembimbing', $pdfView);
