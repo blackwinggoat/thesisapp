@@ -43,6 +43,12 @@
             </a>
         </li>
         <li>
+            <a href="{{ route('sanksi_pembayaran_home') }}">
+                <i class="fa fa-exclamation-circle icon-sidebar"></i>
+                Sanksi Pembayaran
+            </a>
+        </li>
+        <li>
             <a href="{{ route('honorarium_home') }}">
                 <i class="fa fa-google-wallet icon-sidebar"></i>
                 Honorarium

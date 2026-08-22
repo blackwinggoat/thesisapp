@@ -14,6 +14,8 @@ class KeuanganNavigationTest extends TestCase
 
         $this->assertStringContainsString("url('keuanganfakultas/ubah_password')", $sidebar);
         $this->assertStringContainsString('MENU KEUANGAN FAKULTAS', $sidebar);
+        $this->assertStringContainsString('Sanksi Pembayaran', $sidebar);
+        $this->assertStringContainsString("route('sanksi_pembayaran_home')", $sidebar);
         $this->assertStringNotContainsString("url('dsn/ubah_password')", $sidebar);
     }
 

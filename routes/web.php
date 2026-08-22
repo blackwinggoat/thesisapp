@@ -636,6 +636,14 @@ Route::group(['middleware' => 'keuangan_fakultas'], function () {
         Route::post('/update', 'KeuanganFakultas@master_pembayaran_update')->name('master_pembayaran_update');
         Route::get('/delete/{id}', 'KeuanganFakultas@master_pembayaran_delete')->name('master_pembayaran_delete');
     });
+
+    Route::group(['prefix' => 'sanksi_pembayaran'], function () {
+        Route::get('/', 'KeuanganFakultas@sanksi_pembayaran_home')->name('sanksi_pembayaran_home');
+        Route::post('/add', 'KeuanganFakultas@sanksi_pembayaran_store')->name('sanksi_pembayaran_store');
+        Route::post('/update', 'KeuanganFakultas@sanksi_pembayaran_update')->name('sanksi_pembayaran_update');
+        Route::get('/delete/{id}', 'KeuanganFakultas@sanksi_pembayaran_delete')->name('sanksi_pembayaran_delete');
+    });
+
     // Honorarium
     Route::group(['prefix' => 'honorarium'], function () {
         Route::get('/', 'KeuanganFakultas@honorarium_home')->name('honorarium_home');

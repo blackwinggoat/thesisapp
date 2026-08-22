@@ -152,6 +152,108 @@ class KeuanganFakultas extends Controller
         }
     }
 
+    public function sanksi_pembayaran_home()
+    {
+        $data = DB::table('mst_sanksi_pembayaran')
+            ->orderBy('tanggal_mulai', 'desc')
+            ->orderBy('id_sanksi_pembayaran', 'desc')
+            ->get();
+
+        return view('tugasakhir.keuanganfakultas.sanksi_pembayaran', compact('data'));
+    }
+
+    public function sanksi_pembayaran_store(Request $request)
+    {
+        try {
+            $payload = $this->validasiSanksiPembayaran($request);
+            $payload['created_at'] = now();
+            $payload['updated_at'] = now();
+
+            DB::table('mst_sanksi_pembayaran')->insert($payload);
+
+            return redirect()->back()->with([
+                'status' => 'success',
+                'message' => 'Sanksi pembayaran berhasil ditambahkan.',
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with([
+                'status' => 'danger',
+                'message' => 'Sanksi pembayaran gagal ditambahkan: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function sanksi_pembayaran_update(Request $request)
+    {
+        try {
+            $idSanksiPembayaran = (int) $request->input('id_sanksi_pembayaran');
+            if ($idSanksiPembayaran < 1 || !DB::table('mst_sanksi_pembayaran')->where('id_sanksi_pembayaran', $idSanksiPembayaran)->exists()) {
+                throw new \RuntimeException('Data sanksi pembayaran tidak ditemukan.');
+            }
+
+            $payload = $this->validasiSanksiPembayaran($request);
+            $payload['updated_at'] = now();
+
+            DB::table('mst_sanksi_pembayaran')
+                ->where('id_sanksi_pembayaran', $idSanksiPembayaran)
+                ->update($payload);
+
+            return redirect()->back()->with([
+                'status' => 'success',
+                'message' => 'Sanksi pembayaran berhasil diubah.',
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with([
+                'status' => 'danger',
+                'message' => 'Sanksi pembayaran gagal diubah: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function sanksi_pembayaran_delete($id)
+    {
+        try {
+            DB::table('mst_sanksi_pembayaran')
+                ->where('id_sanksi_pembayaran', (int) $id)
+                ->delete();
+
+            return redirect()->back()->with([
+                'status' => 'success',
+                'message' => 'Sanksi pembayaran berhasil dihapus.',
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with([
+                'status' => 'danger',
+                'message' => 'Sanksi pembayaran gagal dihapus.',
+            ]);
+        }
+    }
+
+    protected function validasiSanksiPembayaran(Request $request)
+    {
+        $jumlahSanksi = str_replace(['.', ','], ['', '.'], trim((string) $request->input('jumlah_sanksi')));
+        $tanggalMulai = trim((string) $request->input('tanggal_mulai'));
+        $tanggalSelesai = trim((string) $request->input('tanggal_selesai'));
+
+        if (!is_numeric($jumlahSanksi) || (float) $jumlahSanksi < 0) {
+            throw new \RuntimeException('Jumlah sanksi harus berupa angka dan tidak boleh minus.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggalMulai) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggalSelesai)) {
+            throw new \RuntimeException('Tanggal berlaku tidak valid.');
+        }
+
+        if ($tanggalMulai > $tanggalSelesai) {
+            throw new \RuntimeException('Tanggal mulai tidak boleh lebih besar dari tanggal selesai.');
+        }
+
+        return [
+            'jumlah_sanksi' => (float) $jumlahSanksi,
+            'tanggal_mulai' => $tanggalMulai,
+            'tanggal_selesai' => $tanggalSelesai,
+        ];
+    }
+
     protected function tabelJenisTugasAkhirPembayaranTersedia()
     {
         return Schema::hasTable('mst_pembayaran_honorarium_jenis_tugas_akhir');
