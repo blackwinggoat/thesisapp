@@ -692,6 +692,8 @@ class KeuanganFakultas extends Controller
                         'kode_dosen' => $kodeDosen,
                         'nama_dosen' => Helper::getNamaDosenByKode($kodeDosen),
                         'tanggal' => collect(),
+                        'total_penerimaan' => 0,
+                        'total_penyesuaian' => 0,
                         'total_honor' => 0,
                     ]);
                 }
@@ -702,6 +704,8 @@ class KeuanganFakultas extends Controller
                         'tanggal' => $tanggalUjian,
                         'items' => collect(),
                         'adjustments' => collect(),
+                        'subtotal_penerimaan' => 0,
+                        'subtotal_penyesuaian' => 0,
                         'subtotal_honor' => 0,
                     ]);
                 }
@@ -738,7 +742,11 @@ class KeuanganFakultas extends Controller
                             : '',
                     ]);
                 }
+                $laporanTanggal->subtotal_penerimaan += $honorAwal;
+                $laporanTanggal->subtotal_penyesuaian += $penyesuaian;
                 $laporanTanggal->subtotal_honor += $honor;
+                $report->total_penerimaan += $honorAwal;
+                $report->total_penyesuaian += $penyesuaian;
                 $report->total_honor += $honor;
             }
         }
@@ -1275,7 +1283,7 @@ class KeuanganFakultas extends Controller
 
             if ($adaPembimbingPendamping && $pembimbingPendampingHadir) {
                 $amounts['PP'] += $potongan;
-                $notes['PP'] = trim($notes['PP'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' dari sanksi Pembimbing Utama.');
+                $notes['PP'] = trim($notes['PP'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' sebagai penyesuaian kehadiran Pembimbing Utama.');
             }
         }
 
@@ -1286,7 +1294,7 @@ class KeuanganFakultas extends Controller
 
             if ($adaPembimbingUtama && $pembimbingUtamaHadir) {
                 $amounts['PU'] += $potongan;
-                $notes['PU'] = trim($notes['PU'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' dari sanksi Pembimbing Pendamping.');
+                $notes['PU'] = trim($notes['PU'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' sebagai penyesuaian kehadiran Pembimbing Pendamping.');
             }
         }
 

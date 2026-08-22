@@ -1942,7 +1942,7 @@ class dosen extends Controller
 
             if ($adaPembimbingPendamping && $pembimbingPendampingHadir) {
                 $amounts['PP'] += $potongan;
-                $notes['PP'] = trim($notes['PP'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' dari sanksi Pembimbing Utama.');
+                $notes['PP'] = trim($notes['PP'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' sebagai penyesuaian dari ketidakhadiran Pembimbing Utama.');
             }
         }
 
@@ -1953,7 +1953,7 @@ class dosen extends Controller
 
             if ($adaPembimbingUtama && $pembimbingUtamaHadir) {
                 $amounts['PU'] += $potongan;
-                $notes['PU'] = trim($notes['PU'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' dari sanksi Pembimbing Pendamping.');
+                $notes['PU'] = trim($notes['PU'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' sebagai penyesuaian dari ketidakhadiran Pembimbing Pendamping.');
             }
         }
 
