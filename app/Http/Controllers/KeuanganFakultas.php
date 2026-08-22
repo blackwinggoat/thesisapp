@@ -308,6 +308,16 @@ class KeuanganFakultas extends Controller
 
     public function honorarium_home()
     {
+        return $this->renderHonorariumHome('keuangan');
+    }
+
+    public function honorarium_penetapan_home()
+    {
+        return $this->renderHonorariumHome('akademik');
+    }
+
+    protected function renderHonorariumHome($honorariumMode)
+    {
         $belumTersediaSql = $this->honorariumHasRoleStatusSql(0);
         $totalHonorByTanggal = $this->honorariumDenganJadwalQuery()
             ->whereNotNull('jadwal.tgl_ujian')
@@ -347,10 +357,21 @@ class KeuanganFakultas extends Controller
         return view('tugasakhir.keuanganfakultas.honorarium', [
             'data' => $data,
             'belumTerhubungJadwal' => $belumTerhubungJadwal,
+            'honorariumMode' => $honorariumMode,
         ]);
     }
 
     public function honorarium_detail_tanggal($date)
+    {
+        return $this->renderHonorariumDetailTanggal($date, 'keuangan');
+    }
+
+    public function honorarium_penetapan_detail_tanggal($date)
+    {
+        return $this->renderHonorariumDetailTanggal($date, 'akademik');
+    }
+
+    protected function renderHonorariumDetailTanggal($date, $honorariumMode)
     {
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
             abort(404);
@@ -366,7 +387,7 @@ class KeuanganFakultas extends Controller
             ->get();
 
         if ($data->isEmpty()) {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($honorariumMode === 'akademik' ? 'honorarium_penetapan_home' : 'honorarium_home')->with([
                 'status' => 'info',
                 'message' => 'Tidak ada honorarium aktif dengan jadwal ujian pada tanggal ' . $date . '.',
             ]);
@@ -385,7 +406,8 @@ class KeuanganFakultas extends Controller
         return view('tugasakhir.keuanganfakultas.honorarium_detail', compact(
             'data',
             'dataMasterHonorarium',
-            'date'
+            'date',
+            'honorariumMode'
         ));
     }
 
@@ -1162,6 +1184,13 @@ class KeuanganFakultas extends Controller
 
     public function honorarium_save_all(Request $request)
     {
+        if (auth()->check() && (int) auth()->user()->level === 9) {
+            return redirect()->back()->with([
+                'status' => 'danger',
+                'message' => 'Penetapan tipe honorarium dilakukan oleh Akademik Fakultas.',
+            ]);
+        }
+
         try {
             DB::transaction(function () use ($request) {
                 $honorariumIds = collect((array) $request->honorariums)

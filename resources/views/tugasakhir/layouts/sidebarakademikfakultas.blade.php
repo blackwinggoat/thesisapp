@@ -47,6 +47,12 @@
                 Surat Penugasan Ujian TA
             </a>
         </li>
+        <li>
+            <a href="{{ route('honorarium_penetapan_home') }}">
+                <i class="fa fa-tags icon-sidebar"></i>
+                Penetapan Honorarium
+            </a>
+        </li>
                 <li>
             <a href="#fakelink">
                 <i class="fa fa-table icon-sidebar"></i>

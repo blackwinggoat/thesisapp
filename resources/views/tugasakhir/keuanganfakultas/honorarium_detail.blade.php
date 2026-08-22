@@ -1,5 +1,11 @@
 @extends('tugasakhir.index')
 @section('isi')
+    @php
+        $honorariumMode = $honorariumMode ?? 'keuangan';
+        $isAkademikHonorarium = $honorariumMode === 'akademik';
+        $homeRoute = $isAkademikHonorarium ? 'honorarium_penetapan_home' : 'honorarium_home';
+        $saveRoute = $isAkademikHonorarium ? 'honorarium_penetapan_save_all' : null;
+    @endphp
     <style>
         .modal-table td {
             vertical-align: middle;
@@ -29,7 +35,7 @@
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
                 <li><a href="{{ url('/') }}">Home</a></li>
-                <li><a href="{{ route('honorarium_home') }}">Honorarium</a></li>
+                <li><a href="{{ route($homeRoute) }}">{{ $isAkademikHonorarium ? 'Penetapan Honorarium' : 'Honorarium' }}</a></li>
                 <li class="active">{{ $date }}</li>
             </ol>
             <!-- End breadcrumb -->
@@ -43,44 +49,47 @@
 
             <!-- BEGIN DATA TABLE -->
             <div class="clearfix">
-                <h3 class="page-heading pull-left">Honorarium Tanggal {{ $date }}</h3>
-                <a href="{{ route('honorarium_home') }}" class="btn btn-default pull-right" style="margin-top: 20px;">
+                <h3 class="page-heading pull-left">{{ $isAkademikHonorarium ? 'Penetapan Honorarium' : 'Honorarium' }} Tanggal {{ $date }}</h3>
+                <a href="{{ route($homeRoute) }}" class="btn btn-default pull-right" style="margin-top: 20px;">
                     <i class="fa fa-arrow-left"></i> Kembali ke Daftar Tanggal
                 </a>
             </div>
             <div class="the-box">
                 <div style="margin-bottom: 20px; text-align: right;">
-                    <form action="{{ route('honorarium_setup_type_ujian_otomatis', $date) }}" method="POST" style="display: inline;"
-                        onsubmit="return confirm('Terapkan tipe dan nominal honorarium otomatis untuk data yang belum diatur pada tanggal ini? Data yang sudah diatur atau sudah lunas tidak akan diubah.');">
-                        @csrf
-                        <button type="submit" class="btn btn-warning">
-                            <i class="fa fa-magic"></i> Setup Tipe Ujian Otomatis
-                        </button>
-                    </form>
-                    <form action="{{ route('honorarium_reset_type', $date) }}" method="POST" style="display: inline;"
-                        onsubmit="return confirm('Reset semua tipe dan nominal honorarium pada tanggal ini? Data yang sudah lunas tidak akan diubah.');">
-                        @csrf
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fa fa-undo"></i> Reset Type
-                        </button>
-                    </form>
-                    <form action="{{ route('honorarium_available_all', $date) }}" method="POST" style="display: inline;"
-                        onsubmit="return confirm('Set semua honorarium pada tanggal ini menjadi Available? Data tanpa tipe atau yang sudah lunas akan dilewati.');">
-                        @csrf
-                        <button type="submit" class="btn btn-success">
-                            <i class="fa fa-check-circle"></i> Available Semua
-                        </button>
-                    </form>
-                    <form action="{{ route('honorarium_unavailable_all', $date) }}" method="POST" style="display: inline;"
-                        onsubmit="return confirm('Set semua honorarium pada tanggal ini menjadi Unavailable? Data yang sudah lunas tidak akan diubah.');">
-                        @csrf
-                        <button type="submit" class="btn btn-default">
-                            <i class="fa fa-ban"></i> Unavailable Semua
-                        </button>
-                    </form>
-                    <a href="{{ route('honorarium_history') }}" type="button" class="btn btn-primary">
-                        <i class="fa fa-history"></i> History
-                    </a>
+                    @if ($isAkademikHonorarium)
+                        <form action="{{ route('honorarium_penetapan_setup_type_ujian_otomatis', $date) }}" method="POST" style="display: inline;"
+                            onsubmit="return confirm('Terapkan tipe dan nominal honorarium otomatis untuk data yang belum diatur pada tanggal ini? Data yang sudah diatur atau sudah lunas tidak akan diubah.');">
+                            @csrf
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fa fa-magic"></i> Setup Tipe Ujian Otomatis
+                            </button>
+                        </form>
+                        <form action="{{ route('honorarium_penetapan_reset_type', $date) }}" method="POST" style="display: inline;"
+                            onsubmit="return confirm('Reset semua tipe dan nominal honorarium pada tanggal ini? Data yang sudah lunas tidak akan diubah.');">
+                            @csrf
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fa fa-undo"></i> Reset Type
+                            </button>
+                        </form>
+                    @else
+                        <form action="{{ route('honorarium_available_all', $date) }}" method="POST" style="display: inline;"
+                            onsubmit="return confirm('Set semua honorarium pada tanggal ini menjadi Available? Data tanpa tipe atau yang sudah lunas akan dilewati.');">
+                            @csrf
+                            <button type="submit" class="btn btn-success">
+                                <i class="fa fa-check-circle"></i> Available Semua
+                            </button>
+                        </form>
+                        <form action="{{ route('honorarium_unavailable_all', $date) }}" method="POST" style="display: inline;"
+                            onsubmit="return confirm('Set semua honorarium pada tanggal ini menjadi Unavailable? Data yang sudah lunas tidak akan diubah.');">
+                            @csrf
+                            <button type="submit" class="btn btn-default">
+                                <i class="fa fa-ban"></i> Unavailable Semua
+                            </button>
+                        </form>
+                        <a href="{{ route('honorarium_history') }}" type="button" class="btn btn-primary">
+                            <i class="fa fa-history"></i> History
+                        </a>
+                    @endif
                 </div>
 
                 @php
@@ -93,7 +102,7 @@
                     <strong id="total-honorarium-tanggal" style="font-size: 24px; margin-left: 8px;">{{ helper::formatRupiah($totalHonorariumTanggal) }}</strong>
                 </div>
 
-                <form action="{{ route('honorarium_save_all') }}" method="POST">
+                <form action="{{ $isAkademikHonorarium ? route($saveRoute) : route($homeRoute) }}" method="{{ $isAkademikHonorarium ? 'POST' : 'GET' }}">
                     @csrf
                     <div class="table-responsive">
                         <table class="table" id="honorarium-detail-table">
@@ -103,7 +112,9 @@
                                     <th>Nim</th>
                                     <th>Student Name</th>
                                     <th>Jenis TA</th>
-                                    <th>Available</th>
+                                    @if (!$isAkademikHonorarium)
+                                        <th>Available</th>
+                                    @endif
                                     <th>Type</th>
                                     <th>Total Honor</th>
                                     <th>Status</th>
@@ -155,55 +166,65 @@
                                                 <span class="label label-warning">Belum ditetapkan</span>
                                             @endif
                                         </td>
+                                        @if (!$isAkademikHonorarium)
+                                            <td>
+                                                <input type="checkbox" name="honorariums[{{ $loop->index }}][KS_Stat]"
+                                                    data-toggle="toggle" data-on="Yes" data-off="No"
+                                                    data-honorarium-id="{{ $honorarium->id }}"
+                                                    {{ $tersediaUntukSemuaPeran ? 'checked' : '' }}
+                                                    {{ $tipeBelumDitetapkan || $sudahAdaPembayaran ? 'disabled' : '' }}>
+                                            </td>
+                                        @endif
                                         <td>
-                                            <input type="checkbox" name="honorariums[{{ $loop->index }}][KS_Stat]"
-                                                data-toggle="toggle" data-on="Yes" data-off="No"
-                                                data-honorarium-id="{{ $honorarium->id }}"
-                                                {{ $tersediaUntukSemuaPeran ? 'checked' : '' }}
-                                                {{ $tipeBelumDitetapkan || $sudahAdaPembayaran ? 'disabled' : '' }}>
-                                        </td>
-                                        <td>
-                                            <select class="form-control"
-                                                name="honorariums[{{ $loop->index }}][id_pembayaran]"
-                                                {{ $sudahAdaPembayaran ? 'disabled' : '' }}>
+                                            @if ($isAkademikHonorarium)
+                                                <select class="form-control"
+                                                    name="honorariums[{{ $loop->index }}][id_pembayaran]"
+                                                    {{ $sudahAdaPembayaran ? 'disabled' : '' }}>
 
-                                                @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
-                                                    <option value="unset" data-total-honor="0">Unset</option>
-                                                    @foreach ($dataMasterHonorarium as $masterHonorarium)
-                                                        @if (empty($masterHonorarium->jenis_tugas_akhir_ids)
-                                                            || empty($honorarium->jenis_tugas_akhir_id)
-                                                            || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
-                                                            @if ((int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0))
-                                                            <option value="{{ $masterHonorarium->id_honorarium }}" data-total-honor="{{ $hitungTotalMaster($masterHonorarium) }}">
-                                                                {{ $masterHonorarium->name }}</option>
+                                                    @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
+                                                        <option value="unset" data-total-honor="0">Unset</option>
+                                                        @foreach ($dataMasterHonorarium as $masterHonorarium)
+                                                            @if (empty($masterHonorarium->jenis_tugas_akhir_ids)
+                                                                || empty($honorarium->jenis_tugas_akhir_id)
+                                                                || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
+                                                                @if ((int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0))
+                                                                <option value="{{ $masterHonorarium->id_honorarium }}" data-total-honor="{{ $hitungTotalMaster($masterHonorarium) }}">
+                                                                    {{ $masterHonorarium->name }}</option>
+                                                                @endif
                                                             @endif
-                                                        @endif
-                                                    @endforeach
+                                                        @endforeach
+                                                    @else
+                                                        @php
+                                                            $masterPembayaranTersimpan = $dataMasterHonorarium->first(function ($masterHonorarium) use ($honorarium) {
+                                                                return $masterHonorarium->name === $honorarium->tipe_ujian
+                                                                    && (empty($masterHonorarium->jenis_tugas_akhir_ids)
+                                                                        || empty($honorarium->jenis_tugas_akhir_id)
+                                                                        || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
+                                                                    && (int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0);
+                                                            });
+                                                        @endphp
+                                                        <option value="{{ $masterPembayaranTersimpan ? $masterPembayaranTersimpan->id_honorarium : 'unset' }}" data-total-honor="{{ $honorarium->total_honor }}" selected>
+                                                            {{ $honorarium->tipe_ujian }}{{ $masterPembayaranTersimpan ? '' : ' (tersimpan)' }}</option>
+                                                        <option disabled>-----</option>
+                                                        @foreach ($dataMasterHonorarium as $masterHonorarium)
+                                                            @if (empty($masterHonorarium->jenis_tugas_akhir_ids)
+                                                                || empty($honorarium->jenis_tugas_akhir_id)
+                                                                || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
+                                                                @if ((int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0))
+                                                                <option value="{{ $masterHonorarium->id_honorarium }}" data-total-honor="{{ $hitungTotalMaster($masterHonorarium) }}">
+                                                                    {{ $masterHonorarium->name }}</option>
+                                                                @endif
+                                                            @endif
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                            @else
+                                                @if ($tipeBelumDitetapkan)
+                                                    <span class="label label-warning">Belum ditetapkan</span>
                                                 @else
-                                                    @php
-                                                        $masterPembayaranTersimpan = $dataMasterHonorarium->first(function ($masterHonorarium) use ($honorarium) {
-                                                            return $masterHonorarium->name === $honorarium->tipe_ujian
-                                                                && (empty($masterHonorarium->jenis_tugas_akhir_ids)
-                                                                    || empty($honorarium->jenis_tugas_akhir_id)
-                                                                    || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
-                                                                && (int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0);
-                                                        });
-                                                    @endphp
-                                                    <option value="{{ $masterPembayaranTersimpan ? $masterPembayaranTersimpan->id_honorarium : 'unset' }}" data-total-honor="{{ $honorarium->total_honor }}" selected>
-                                                        {{ $honorarium->tipe_ujian }}{{ $masterPembayaranTersimpan ? '' : ' (tersimpan)' }}</option>
-                                                    <option disabled>-----</option>
-                                                    @foreach ($dataMasterHonorarium as $masterHonorarium)
-                                                        @if (empty($masterHonorarium->jenis_tugas_akhir_ids)
-                                                            || empty($honorarium->jenis_tugas_akhir_id)
-                                                            || in_array((int) $honorarium->jenis_tugas_akhir_id, $masterHonorarium->jenis_tugas_akhir_ids))
-                                                            @if ((int) $masterHonorarium->untuk_mahasiswa_eksekutif === ($honorarium->mahasiswa_eksekutif ? 1 : 0))
-                                                            <option value="{{ $masterHonorarium->id_honorarium }}" data-total-honor="{{ $hitungTotalMaster($masterHonorarium) }}">
-                                                                {{ $masterHonorarium->name }}</option>
-                                                            @endif
-                                                        @endif
-                                                    @endforeach
+                                                    <strong>{{ $honorarium->tipe_ujian }}</strong>
                                                 @endif
-                                            </select>
+                                            @endif
                                         </td>
                                         <td class="text-right"><strong class="honorarium-row-total" data-total-honor="{{ $honorarium->total_honor }}">{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
                                         <td>
@@ -238,9 +259,11 @@
                             </tbody>
                         </table>
                     </div><!-- /.table-responsive -->
-                    <div style="text-align: right; margin-top: 20px;">
-                        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save</button>
-                    </div>
+                    @if ($isAkademikHonorarium)
+                        <div style="text-align: right; margin-top: 20px;">
+                            <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save</button>
+                        </div>
+                    @endif
                 </form>
                 <div>
                     <small>

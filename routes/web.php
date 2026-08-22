@@ -444,6 +444,14 @@ Route::group(['middleware' => 'akademik_fakultas'], function () {
     Route::get('/fakultas/detail_skujian/{id}', 'Prodi@detail_skujian');
     Route::get('/fakultas/cetakskpenguji/{pendaftaran_id}/{nim}', 'Prodi@cetakskpenguji');
     Route::get('/fakultas/cetak_berita_acara/{pendaftaran_id}/{nim}', 'Prodi@cetakBeritaAcara');
+
+    Route::group(['prefix' => 'fakultas/honorarium'], function () {
+        Route::get('/', 'KeuanganFakultas@honorarium_penetapan_home')->name('honorarium_penetapan_home');
+        Route::get('/tanggal/{date}', 'KeuanganFakultas@honorarium_penetapan_detail_tanggal')->name('honorarium_penetapan_detail_tanggal');
+        Route::post('/save_all', 'KeuanganFakultas@honorarium_save_all')->name('honorarium_penetapan_save_all');
+        Route::post('/tanggal/{date}/setup-type-ujian', 'KeuanganFakultas@honorarium_setup_type_ujian_otomatis')->name('honorarium_penetapan_setup_type_ujian_otomatis');
+        Route::post('/tanggal/{date}/reset-type', 'KeuanganFakultas@honorarium_reset_type')->name('honorarium_penetapan_reset_type');
+    });
 });
 
 Route::group(['middleware' => 'dosen'], function () {
@@ -632,9 +640,6 @@ Route::group(['middleware' => 'keuangan_fakultas'], function () {
         Route::get('/', 'KeuanganFakultas@honorarium_home')->name('honorarium_home');
         Route::post('/available_post_yes', 'KeuanganFakultas@honorarium_available_post_yes')->name('honorarium_available_post_yes');
         Route::post('/available_post_no', 'KeuanganFakultas@honorarium_available_post_no')->name('honorarium_available_post_no');
-        Route::post('/save_all', 'KeuanganFakultas@honorarium_save_all')->name('honorarium_save_all');
-        Route::post('/tanggal/{date}/setup-type-ujian', 'KeuanganFakultas@honorarium_setup_type_ujian_otomatis')->name('honorarium_setup_type_ujian_otomatis');
-        Route::post('/tanggal/{date}/reset-type', 'KeuanganFakultas@honorarium_reset_type')->name('honorarium_reset_type');
         Route::post('/tanggal/{date}/available-all', 'KeuanganFakultas@honorarium_available_all')->name('honorarium_available_all');
         Route::post('/tanggal/{date}/unavailable-all', 'KeuanganFakultas@honorarium_unavailable_all')->name('honorarium_unavailable_all');
         Route::post('/tanda-terima-pdf', 'KeuanganFakultas@honorarium_tanda_terima_pdf')->name('honorarium_tanda_terima_pdf');
