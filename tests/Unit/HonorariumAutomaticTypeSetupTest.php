@@ -59,6 +59,12 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('honorarium_penetapan_save_all', $detail);
         $this->assertStringContainsString('honorarium_penetapan_setup_type_ujian_otomatis', $detail);
         $this->assertStringContainsString('honorarium_penetapan_reset_type', $detail);
+        $this->assertStringContainsString('nomorSkUjianHonorariumByNim', $controller);
+        $this->assertStringContainsString('nomor_sk_proposal', $controller);
+        $this->assertStringContainsString('nomor_sk_ujian_akhir', $controller);
+        $this->assertStringContainsString('Nomor SK Ujian', $detail);
+        $this->assertStringContainsString('Proposal :', $detail);
+        $this->assertStringContainsString('Ujian Akhir :', $detail);
         $this->assertStringContainsString('@else', $detail);
         $this->assertStringContainsString('<strong>{{ $honorarium->tipe_ujian }}</strong>', $detail);
         $this->assertStringContainsString('Penetapan tipe honorarium dilakukan oleh Akademik Fakultas.', $controller);

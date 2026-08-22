@@ -297,6 +297,46 @@ class KeuanganFakultas extends Controller
             ->flip();
     }
 
+    protected function nomorSkUjianHonorariumByNim(array $nims)
+    {
+        $nims = array_unique(array_filter($nims));
+        if (empty($nims)) {
+            return collect();
+        }
+
+        $nomorSkProposal = DB::table('trt_penguji')
+            ->whereIn('C_NPM', $nims)
+            ->where('tipe_ujian', 0)
+            ->whereNotNull('nomor_sk')
+            ->whereRaw("TRIM(nomor_sk) <> ''")
+            ->orderBy('id', 'desc')
+            ->select('C_NPM', 'nomor_sk')
+            ->get()
+            ->unique('C_NPM')
+            ->keyBy('C_NPM');
+
+        $nomorSkUjianAkhir = DB::table('mst_sk_penugasan as sk')
+            ->join('trt_bimbingan as bimbingan', 'bimbingan.bimbingan_id', '=', 'sk.bimbingan_id')
+            ->whereIn('bimbingan.C_NPM', $nims)
+            ->whereNotNull('sk.nomor_sk')
+            ->whereRaw("TRIM(sk.nomor_sk) <> ''")
+            ->orderBy('sk.sk_penugasan_id', 'desc')
+            ->select('bimbingan.C_NPM', 'sk.nomor_sk')
+            ->get()
+            ->unique('C_NPM')
+            ->keyBy('C_NPM');
+
+        return collect($nims)->mapWithKeys(function ($nim) use ($nomorSkProposal, $nomorSkUjianAkhir) {
+            $proposal = $nomorSkProposal->get($nim);
+            $ujianAkhir = $nomorSkUjianAkhir->get($nim);
+
+            return [$nim => (object) [
+                'nomor_sk_proposal' => $proposal ? $proposal->nomor_sk : null,
+                'nomor_sk_ujian_akhir' => $ujianAkhir ? $ujianAkhir->nomor_sk : null,
+            ]];
+        });
+    }
+
     protected function pembayaranBerlakuUntukKelasMahasiswa($masterPayment, $mahasiswaEksekutif)
     {
         if (!$this->kolomKelasPembayaranTersedia()) {
@@ -396,11 +436,15 @@ class KeuanganFakultas extends Controller
         $dataMasterHonorarium = $this->masterPembayaranDenganJenisTugasAkhir();
         $jenisTugasAkhirByNim = $this->jenisTugasAkhirHonorariumByNim($data->pluck('C_NPM')->all());
         $mahasiswaEksekutif = $this->mahasiswaEksekutifByNim($data->pluck('C_NPM')->all());
+        $nomorSkUjianByNim = $this->nomorSkUjianHonorariumByNim($data->pluck('C_NPM')->all());
         foreach ($data as $honorarium) {
             $jenisTugasAkhir = $jenisTugasAkhirByNim->get($honorarium->C_NPM);
+            $nomorSkUjian = $nomorSkUjianByNim->get($honorarium->C_NPM);
             $honorarium->jenis_tugas_akhir_id = $jenisTugasAkhir ? $jenisTugasAkhir->jenis_tugas_akhir_id : null;
             $honorarium->kode_jenis_tugas_akhir = $jenisTugasAkhir ? $jenisTugasAkhir->kode_jenis_tugas_akhir : null;
             $honorarium->mahasiswa_eksekutif = $mahasiswaEksekutif->has($honorarium->C_NPM);
+            $honorarium->nomor_sk_proposal = $nomorSkUjian ? $nomorSkUjian->nomor_sk_proposal : null;
+            $honorarium->nomor_sk_ujian_akhir = $nomorSkUjian ? $nomorSkUjian->nomor_sk_ujian_akhir : null;
         }
 
         return view('tugasakhir.keuanganfakultas.honorarium_detail', compact(

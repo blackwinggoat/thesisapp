@@ -23,6 +23,17 @@
             border-color: #14532d;
             color: #fff;
         }
+
+        .honorarium-sk-list {
+            min-width: 190px;
+            line-height: 1.55;
+        }
+
+        .honorarium-sk-label {
+            display: inline-block;
+            min-width: 82px;
+            font-weight: 600;
+        }
     </style>
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
@@ -116,7 +127,11 @@
                                         <th>Available</th>
                                     @endif
                                     <th>Type</th>
-                                    <th>Total Honor</th>
+                                    @if ($isAkademikHonorarium)
+                                        <th>Nomor SK Ujian</th>
+                                    @else
+                                        <th>Total Honor</th>
+                                    @endif
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -226,7 +241,21 @@
                                                 @endif
                                             @endif
                                         </td>
-                                        <td class="text-right"><strong class="honorarium-row-total" data-total-honor="{{ $honorarium->total_honor }}">{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
+                                        @if ($isAkademikHonorarium)
+                                            <td class="honorarium-sk-list">
+                                                <span class="honorarium-row-total hidden" data-total-honor="{{ $honorarium->total_honor }}"></span>
+                                                <div>
+                                                    <span class="honorarium-sk-label">Proposal :</span>
+                                                    <span>{{ $honorarium->nomor_sk_proposal ?: '---' }}</span>
+                                                </div>
+                                                <div>
+                                                    <span class="honorarium-sk-label">Ujian Akhir :</span>
+                                                    <span>{{ $honorarium->nomor_sk_ujian_akhir ?: '---' }}</span>
+                                                </div>
+                                            </td>
+                                        @else
+                                            <td class="text-right"><strong class="honorarium-row-total" data-total-honor="{{ $honorarium->total_honor }}">{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
+                                        @endif
                                         <td>
                                             <button type="button" class="btn btn-primary btn-sm view-honorarium-btn"
                                                 data-toggle="modal" data-target="#statusModal"
