@@ -27,16 +27,17 @@
         .identity .value { font-weight: bold; width: 76%; }
         .date-section { margin-top: 13px; }
         .date-heading { background: #374151; color: #fff; font-size: 9.5pt; font-weight: bold; padding: 5px 7px; }
-        .receipt-table { font-size: 8.8pt; margin-top: 0; table-layout: fixed; }
+        .receipt-table { font-size: 8.3pt; margin-top: 0; table-layout: fixed; }
         .receipt-table thead { display: table-header-group; }
         .receipt-table tr { page-break-inside: avoid; }
         .receipt-table th, .receipt-table td { border: 1px solid #000; padding: 5px 4px; vertical-align: middle; }
         .receipt-table th { background: #e5e7eb; font-weight: bold; text-align: center; }
-        .receipt-table .number { text-align: center; width: 6%; }
-        .receipt-table .student { width: 35%; }
-        .receipt-table .exam { width: 20%; }
-        .receipt-table .role { width: 21%; }
-        .receipt-table .amount { text-align: right; width: 18%; }
+        .receipt-table .number { text-align: center; width: 5%; }
+        .receipt-table .student { width: 29%; }
+        .receipt-table .exam { width: 16%; }
+        .receipt-table .role { width: 17%; }
+        .receipt-table .note { width: 18%; }
+        .receipt-table .amount { text-align: right; width: 15%; }
         .receipt-table .total-label { font-weight: bold; text-align: right; }
         .receipt-table .total-amount { font-weight: bold; text-align: right; }
         .grand-total { border: 2px solid #000; font-size: 10.5pt; font-weight: bold; margin-top: 15px; padding: 7px 8px; text-align: right; }
@@ -86,6 +87,7 @@
                                 <th class="student">Mahasiswa / NIM</th>
                                 <th class="exam">Jenis Ujian</th>
                                 <th class="role">Peran</th>
+                                <th class="note">Keterangan</th>
                                 <th class="amount">Honor</th>
                             </tr>
                         </thead>
@@ -96,11 +98,12 @@
                                 <td class="student"><strong>{{ $item->nama_mahasiswa }}</strong><br>{{ $item->nim }}</td>
                                 <td class="exam">{{ $item->tipe_ujian }}</td>
                                 <td class="role">{{ $item->peran }}</td>
+                                <td class="note">{{ $item->keterangan ?: '-' }}</td>
                                 <td class="amount">{{ helper::formatRupiah($item->honor) }}</td>
                             </tr>
                         @endforeach
                         <tr>
-                            <td colspan="4" class="total-label">SUBTOTAL {{ helper::tgl_indo_lengkap($laporanTanggal->tanggal) }}</td>
+                            <td colspan="5" class="total-label">SUBTOTAL {{ helper::tgl_indo_lengkap($laporanTanggal->tanggal) }}</td>
                             <td class="total-amount">{{ helper::formatRupiah($laporanTanggal->subtotal_honor) }}</td>
                         </tr>
                         </tbody>

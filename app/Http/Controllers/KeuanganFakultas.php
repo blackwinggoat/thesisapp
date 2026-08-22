@@ -559,6 +559,7 @@ class KeuanganFakultas extends Controller
         $mahasiswaEksekutif = $this->mahasiswaEksekutifByNim($data->pluck('C_NPM')->all());
         $nomorSkUjianByNim = $this->nomorSkUjianHonorariumByNim($data->pluck('C_NPM')->all());
         $kolomKehadiranPembimbingTersedia = $this->kolomKehadiranPembimbingTersedia();
+        $jumlahSanksiPembimbing = $this->jumlahSanksiPembayaranPadaTanggal($date);
         foreach ($data as $honorarium) {
             $jenisTugasAkhir = $jenisTugasAkhirByNim->get($honorarium->C_NPM);
             $nomorSkUjian = $nomorSkUjianByNim->get($honorarium->C_NPM);
@@ -573,6 +574,10 @@ class KeuanganFakultas extends Controller
             $honorarium->pembimbing_pendamping_hadir = $kolomKehadiranPembimbingTersedia
                 ? (int) $honorarium->pembimbing_pendamping_hadir === 1
                 : true;
+            $penyesuaianHonor = $this->penyesuaianHonorPembimbing($honorarium, $jumlahSanksiPembimbing);
+            $honorarium->honor_tersesuaikan = $penyesuaianHonor['amounts'];
+            $honorarium->catatan_honor_tersesuaikan = $penyesuaianHonor['notes'];
+            $honorarium->jumlah_sanksi_pembimbing = $jumlahSanksiPembimbing;
         }
 
         return view('tugasakhir.keuanganfakultas.honorarium_detail', compact(
@@ -663,9 +668,17 @@ class KeuanganFakultas extends Controller
             'P2' => ['label' => 'Penguji II', 'amount' => 'P2_H', 'status' => 'P2_Stat'],
             'P3' => ['label' => 'Penguji III', 'amount' => 'P3_H', 'status' => 'P3_Stat'],
         ];
+        $jumlahSanksiByTanggal = $tanggalTerpilih->mapWithKeys(function ($tanggal) {
+            return [$tanggal => $this->jumlahSanksiPembayaranPadaTanggal($tanggal)];
+        });
         $reports = collect();
 
         foreach ($honorariums as $honorarium) {
+            $tanggalUjian = substr((string) $honorarium->tanggal_ujian, 0, 10);
+            $penyesuaianHonor = $this->penyesuaianHonorPembimbing(
+                $honorarium,
+                (float) $jumlahSanksiByTanggal->get($tanggalUjian, 0)
+            );
             foreach ($peranHonorarium as $role => $definition) {
                 $kodeDosen = trim((string) $honorarium->{$role});
                 if ($kodeDosen === '' || (int) $honorarium->{$definition['status']} !== $statusDibutuhkan) {
@@ -682,7 +695,6 @@ class KeuanganFakultas extends Controller
                 }
 
                 $report = $reports->get($kodeDosen);
-                $tanggalUjian = substr((string) $honorarium->tanggal_ujian, 0, 10);
                 if (!$report->tanggal->has($tanggalUjian)) {
                     $report->tanggal->put($tanggalUjian, (object) [
                         'tanggal' => $tanggalUjian,
@@ -692,13 +704,18 @@ class KeuanganFakultas extends Controller
                 }
 
                 $laporanTanggal = $report->tanggal->get($tanggalUjian);
-                $honor = (float) $honorarium->{$definition['amount']};
+                $honor = isset($penyesuaianHonor['amounts'][$role])
+                    ? (float) $penyesuaianHonor['amounts'][$role]
+                    : (float) $honorarium->{$definition['amount']};
                 $laporanTanggal->items->push((object) [
                     'nim' => $honorarium->C_NPM,
                     'nama_mahasiswa' => $namaMahasiswa->get($honorarium->C_NPM, '-'),
                     'tipe_ujian' => $honorarium->tipe_ujian ?: '-',
                     'peran' => $definition['label'],
                     'honor' => $honor,
+                    'keterangan' => isset($penyesuaianHonor['notes'][$role])
+                        ? $penyesuaianHonor['notes'][$role]
+                        : '',
                 ]);
                 $laporanTanggal->subtotal_honor += $honor;
                 $report->total_honor += $honor;
@@ -1180,6 +1197,68 @@ class KeuanganFakultas extends Controller
             'P2' => ['amount' => 'P2_H', 'status' => 'P2_Stat', 'master' => 'penguji_2'],
             'P3' => ['amount' => 'P3_H', 'status' => 'P3_Stat', 'master' => 'penguji_3'],
         ];
+    }
+
+    protected function jumlahSanksiPembayaranPadaTanggal($tanggal)
+    {
+        if (!Schema::hasTable('mst_sanksi_pembayaran') || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggal)) {
+            return 0;
+        }
+
+        $sanksi = DB::table('mst_sanksi_pembayaran')
+            ->where('tanggal_mulai', '<=', $tanggal)
+            ->where('tanggal_selesai', '>=', $tanggal)
+            ->orderBy('tanggal_mulai', 'desc')
+            ->orderBy('id_sanksi_pembayaran', 'desc')
+            ->first();
+
+        return $sanksi ? (float) $sanksi->jumlah_sanksi : 0;
+    }
+
+    protected function penyesuaianHonorPembimbing($honorarium, $jumlahSanksi)
+    {
+        $amounts = [];
+        $notes = [];
+        foreach ($this->honorariumRoles() as $role => $definition) {
+            $amounts[$role] = (float) $honorarium->{$definition['amount']};
+            $notes[$role] = '';
+        }
+
+        $jumlahSanksi = max(0, (float) $jumlahSanksi);
+        if ($jumlahSanksi <= 0) {
+            return compact('amounts', 'notes');
+        }
+
+        $adaPembimbingUtama = trim((string) $honorarium->PU) !== '';
+        $adaPembimbingPendamping = trim((string) $honorarium->PP) !== '';
+        $pembimbingUtamaHadir = !isset($honorarium->pembimbing_utama_hadir)
+            || (int) $honorarium->pembimbing_utama_hadir === 1;
+        $pembimbingPendampingHadir = !isset($honorarium->pembimbing_pendamping_hadir)
+            || (int) $honorarium->pembimbing_pendamping_hadir === 1;
+
+        if ($adaPembimbingUtama && !$pembimbingUtamaHadir) {
+            $potongan = min($jumlahSanksi, $amounts['PU']);
+            $amounts['PU'] -= $potongan;
+            $notes['PU'] = 'Dikurangi ' . Helper::formatRupiah($potongan) . ' karena Pembimbing Utama tidak hadir.';
+
+            if ($adaPembimbingPendamping && $pembimbingPendampingHadir) {
+                $amounts['PP'] += $potongan;
+                $notes['PP'] = trim($notes['PP'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' dari sanksi Pembimbing Utama.');
+            }
+        }
+
+        if ($adaPembimbingPendamping && !$pembimbingPendampingHadir) {
+            $potongan = min($jumlahSanksi, $amounts['PP']);
+            $amounts['PP'] -= $potongan;
+            $notes['PP'] = trim($notes['PP'] . ' Dikurangi ' . Helper::formatRupiah($potongan) . ' karena Pembimbing Pendamping tidak hadir.');
+
+            if ($adaPembimbingUtama && $pembimbingUtamaHadir) {
+                $amounts['PU'] += $potongan;
+                $notes['PU'] = trim($notes['PU'] . ' Ditambah ' . Helper::formatRupiah($potongan) . ' dari sanksi Pembimbing Pendamping.');
+            }
+        }
+
+        return compact('amounts', 'notes');
     }
 
     protected function honorariumTotalSql($tableAlias = 'honorarium', $hanyaBelumLunas = false)

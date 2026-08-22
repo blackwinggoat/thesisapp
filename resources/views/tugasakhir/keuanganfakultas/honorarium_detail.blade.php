@@ -379,6 +379,10 @@
                                             <td class="text-right"><strong class="honorarium-row-total" data-total-honor="{{ $honorarium->total_honor }}">{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
                                         @endif
                                         <td>
+                                            @php
+                                                $honorTersesuaikan = isset($honorarium->honor_tersesuaikan) ? $honorarium->honor_tersesuaikan : [];
+                                                $catatanHonorTersesuaikan = isset($honorarium->catatan_honor_tersesuaikan) ? $honorarium->catatan_honor_tersesuaikan : [];
+                                            @endphp
                                             <button type="button" class="btn btn-primary btn-sm view-honorarium-btn"
                                                 data-toggle="modal" data-target="#statusModal"
                                                 data-honorarium-id="{{ $honorarium->id }}"
@@ -388,12 +392,18 @@
                                                 data-p1="{{ helper::getDeskripsi($honorarium->P1) }}"
                                                 data-p2="{{ helper::getDeskripsi($honorarium->P2) }}"
                                                 data-p3="{{ helper::getDeskripsi($honorarium->P3) }}"
-                                                data-ks-h="{{ helper::formatRupiah($honorarium->KS_H) }}"
-                                                data-pu-h="{{ helper::formatRupiah($honorarium->PU_H) }}"
-                                                data-pp-h="{{ helper::formatRupiah($honorarium->PP_H) }}"
-                                                data-p1-h="{{ helper::formatRupiah($honorarium->P1_H) }}"
-                                                data-p2-h="{{ helper::formatRupiah($honorarium->P2_H) }}"
-                                                data-p3-h="{{ helper::formatRupiah($honorarium->P3_H) }}">
+                                                data-ks-h="{{ helper::formatRupiah(isset($honorTersesuaikan['KS']) ? $honorTersesuaikan['KS'] : $honorarium->KS_H) }}"
+                                                data-pu-h="{{ helper::formatRupiah(isset($honorTersesuaikan['PU']) ? $honorTersesuaikan['PU'] : $honorarium->PU_H) }}"
+                                                data-pp-h="{{ helper::formatRupiah(isset($honorTersesuaikan['PP']) ? $honorTersesuaikan['PP'] : $honorarium->PP_H) }}"
+                                                data-p1-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P1']) ? $honorTersesuaikan['P1'] : $honorarium->P1_H) }}"
+                                                data-p2-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P2']) ? $honorTersesuaikan['P2'] : $honorarium->P2_H) }}"
+                                                data-p3-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P3']) ? $honorTersesuaikan['P3'] : $honorarium->P3_H) }}"
+                                                data-ks-note="{{ !empty($catatanHonorTersesuaikan['KS']) ? $catatanHonorTersesuaikan['KS'] : '-' }}"
+                                                data-pu-note="{{ !empty($catatanHonorTersesuaikan['PU']) ? $catatanHonorTersesuaikan['PU'] : '-' }}"
+                                                data-pp-note="{{ !empty($catatanHonorTersesuaikan['PP']) ? $catatanHonorTersesuaikan['PP'] : '-' }}"
+                                                data-p1-note="{{ !empty($catatanHonorTersesuaikan['P1']) ? $catatanHonorTersesuaikan['P1'] : '-' }}"
+                                                data-p2-note="{{ !empty($catatanHonorTersesuaikan['P2']) ? $catatanHonorTersesuaikan['P2'] : '-' }}"
+                                                data-p3-note="{{ !empty($catatanHonorTersesuaikan['P3']) ? $catatanHonorTersesuaikan['P3'] : '-' }}">
                                                 <i class="fa fa-info-circle"></i> View
                                             </button>
                                         </td>
@@ -428,7 +438,7 @@
     <!-- Status Modal -->
     <div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="statusModalLabel">Honorarium Status</h5>
@@ -437,47 +447,56 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Role</th>
-                                <th>Name</th>
-                                <th>Honor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>KS</td>
-                                <td id="modal-ks"></td>
-                                <td id="modal-ks-h"></td>
-                            </tr>
-                            <tr>
-                                <td>PU</td>
-                                <td id="modal-pu"></td>
-                                <td id="modal-pu-h"></td>
-                            </tr>
-                            <tr>
-                                <td>PP</td>
-                                <td id="modal-pp"></td>
-                                <td id="modal-pp-h"></td>
-                            </tr>
-                            <tr>
-                                <td>P1</td>
-                                <td id="modal-p1"></td>
-                                <td id="modal-p1-h"></td>
-                            </tr>
-                            <tr>
-                                <td>P2</td>
-                                <td id="modal-p2"></td>
-                                <td id="modal-p2-h"></td>
-                            </tr>
-                            <tr>
-                                <td>P3</td>
-                                <td id="modal-p3"></td>
-                                <td id="modal-p3-h"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Role</th>
+                                    <th>Name</th>
+                                    <th>Honor</th>
+                                    <th>Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>KS</td>
+                                    <td id="modal-ks"></td>
+                                    <td id="modal-ks-h"></td>
+                                    <td id="modal-ks-note"></td>
+                                </tr>
+                                <tr>
+                                    <td>PU</td>
+                                    <td id="modal-pu"></td>
+                                    <td id="modal-pu-h"></td>
+                                    <td id="modal-pu-note"></td>
+                                </tr>
+                                <tr>
+                                    <td>PP</td>
+                                    <td id="modal-pp"></td>
+                                    <td id="modal-pp-h"></td>
+                                    <td id="modal-pp-note"></td>
+                                </tr>
+                                <tr>
+                                    <td>P1</td>
+                                    <td id="modal-p1"></td>
+                                    <td id="modal-p1-h"></td>
+                                    <td id="modal-p1-note"></td>
+                                </tr>
+                                <tr>
+                                    <td>P2</td>
+                                    <td id="modal-p2"></td>
+                                    <td id="modal-p2-h"></td>
+                                    <td id="modal-p2-note"></td>
+                                </tr>
+                                <tr>
+                                    <td>P3</td>
+                                    <td id="modal-p3"></td>
+                                    <td id="modal-p3-h"></td>
+                                    <td id="modal-p3-note"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -604,6 +623,12 @@
                     var p1Honor = $(this).data('p1-h');
                     var p2Honor = $(this).data('p2-h');
                     var p3Honor = $(this).data('p3-h');
+                    var ksNote = $(this).data('ks-note');
+                    var puNote = $(this).data('pu-note');
+                    var ppNote = $(this).data('pp-note');
+                    var p1Note = $(this).data('p1-note');
+                    var p2Note = $(this).data('p2-note');
+                    var p3Note = $(this).data('p3-note');
 
                     $('#modal-ks').text(ks);
                     $('#modal-pu').text(pu);
@@ -617,6 +642,12 @@
                     $('#modal-p1-h').text(p1Honor);
                     $('#modal-p2-h').text(p2Honor);
                     $('#modal-p3-h').text(p3Honor);
+                    $('#modal-ks-note').text(ksNote || '-');
+                    $('#modal-pu-note').text(puNote || '-');
+                    $('#modal-pp-note').text(ppNote || '-');
+                    $('#modal-p1-note').text(p1Note || '-');
+                    $('#modal-p2-note').text(p2Note || '-');
+                    $('#modal-p3-note').text(p3Note || '-');
                 });
             }
 
