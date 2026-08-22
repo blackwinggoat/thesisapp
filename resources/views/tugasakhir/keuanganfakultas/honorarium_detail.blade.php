@@ -62,6 +62,17 @@
             font-size: 11px;
             margin-top: 3px;
         }
+
+        .honorarium-type-column {
+            min-width: 360px;
+            width: 360px;
+            white-space: nowrap;
+        }
+
+        .honorarium-type-column select.form-control {
+            min-width: 340px;
+            width: 100%;
+        }
     </style>
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
@@ -159,7 +170,7 @@
                                     @if (!$isAkademikHonorarium)
                                         <th>Available</th>
                                     @endif
-                                    <th>Type</th>
+                                    <th class="honorarium-type-column">Type</th>
                                     @if ($isAkademikHonorarium)
                                         <th>Nomor SK Ujian</th>
                                     @else
@@ -207,7 +218,7 @@
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>
+                                        <td class="honorarium-type-column">
                                             <strong>{{ $honorarium->C_NPM }}</strong>
                                             <span class="honorarium-student-class label {{ $honorarium->mahasiswa_eksekutif ? 'label-primary' : 'label-default' }}">
                                                 {{ $honorarium->mahasiswa_eksekutif ? 'Eksekutif' : 'Reguler' }}
