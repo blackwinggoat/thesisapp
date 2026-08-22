@@ -358,7 +358,13 @@
                                                 data-pp="{{ helper::getDeskripsi($honorarium->PP) }}"
                                                 data-p1="{{ helper::getDeskripsi($honorarium->P1) }}"
                                                 data-p2="{{ helper::getDeskripsi($honorarium->P2) }}"
-                                                data-p3="{{ helper::getDeskripsi($honorarium->P3) }}">
+                                                data-p3="{{ helper::getDeskripsi($honorarium->P3) }}"
+                                                data-ks-h="{{ helper::formatRupiah($honorarium->KS_H) }}"
+                                                data-pu-h="{{ helper::formatRupiah($honorarium->PU_H) }}"
+                                                data-pp-h="{{ helper::formatRupiah($honorarium->PP_H) }}"
+                                                data-p1-h="{{ helper::formatRupiah($honorarium->P1_H) }}"
+                                                data-p2-h="{{ helper::formatRupiah($honorarium->P2_H) }}"
+                                                data-p3-h="{{ helper::formatRupiah($honorarium->P3_H) }}">
                                                 <i class="fa fa-info-circle"></i> View
                                             </button>
                                         </td>
@@ -407,32 +413,39 @@
                             <tr>
                                 <th>Role</th>
                                 <th>Name</th>
+                                <th>Honor</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>KS</td>
                                 <td id="modal-ks"></td>
+                                <td id="modal-ks-h"></td>
                             </tr>
                             <tr>
                                 <td>PU</td>
                                 <td id="modal-pu"></td>
+                                <td id="modal-pu-h"></td>
                             </tr>
                             <tr>
                                 <td>PP</td>
                                 <td id="modal-pp"></td>
+                                <td id="modal-pp-h"></td>
                             </tr>
                             <tr>
                                 <td>P1</td>
                                 <td id="modal-p1"></td>
+                                <td id="modal-p1-h"></td>
                             </tr>
                             <tr>
                                 <td>P2</td>
                                 <td id="modal-p2"></td>
+                                <td id="modal-p2-h"></td>
                             </tr>
                             <tr>
                                 <td>P3</td>
                                 <td id="modal-p3"></td>
+                                <td id="modal-p3-h"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -556,6 +569,12 @@
                     var p1 = $(this).data('p1');
                     var p2 = $(this).data('p2');
                     var p3 = $(this).data('p3');
+                    var ksHonor = $(this).data('ks-h');
+                    var puHonor = $(this).data('pu-h');
+                    var ppHonor = $(this).data('pp-h');
+                    var p1Honor = $(this).data('p1-h');
+                    var p2Honor = $(this).data('p2-h');
+                    var p3Honor = $(this).data('p3-h');
 
                     $('#modal-ks').text(ks);
                     $('#modal-pu').text(pu);
@@ -563,6 +582,12 @@
                     $('#modal-p1').text(p1);
                     $('#modal-p2').text(p2);
                     $('#modal-p3').text(p3);
+                    $('#modal-ks-h').text(ksHonor);
+                    $('#modal-pu-h').text(puHonor);
+                    $('#modal-pp-h').text(ppHonor);
+                    $('#modal-p1-h').text(p1Honor);
+                    $('#modal-p2-h').text(p2Honor);
+                    $('#modal-p3-h').text(p3Honor);
                 });
             }
 

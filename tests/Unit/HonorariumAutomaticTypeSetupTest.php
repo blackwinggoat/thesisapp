@@ -79,7 +79,7 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('max-width: 105px', $detail);
         $this->assertStringContainsString('honorarium-type-column', $detail);
         $this->assertStringContainsString('max-width: 250px', $detail);
-        $this->assertStringNotContainsString('modal-pu-h', $detail);
+        $this->assertStringContainsString('modal-pu-h', $detail);
         $this->assertStringNotContainsString('modal-pu-status', $detail);
         $this->assertStringContainsString('@if (!$isAkademikHonorarium)', $detail);
         $this->assertStringContainsString('nomorSkUjianHonorariumByNim', $controller);
