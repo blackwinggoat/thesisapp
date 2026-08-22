@@ -161,7 +161,6 @@
                         </table>
                     @endif
                     <div class="date-summary">
-                        <div class="date-summary-line">SUBTOTAL PENYESUAIAN: {{ $formatPenyesuaianHonor($laporanTanggal->subtotal_penyesuaian) }}</div>
                         <div class="date-summary-line">TOTAL DITERIMA: {{ helper::formatRupiah($laporanTanggal->subtotal_honor) }}</div>
                     </div>
                 </div>

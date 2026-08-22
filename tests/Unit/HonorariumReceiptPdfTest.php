@@ -49,7 +49,7 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString('Honor Diterima', $pdfView);
         $this->assertStringContainsString('Tabel Penyesuaian Honorarium', $pdfView);
         $this->assertStringContainsString('SUBTOTAL PENERIMAAN', $pdfView);
-        $this->assertStringContainsString('SUBTOTAL PENYESUAIAN', $pdfView);
+        $this->assertStringNotContainsString('SUBTOTAL PENYESUAIAN', $pdfView);
         $this->assertStringContainsString('TOTAL DITERIMA', $pdfView);
         $this->assertStringContainsString('TOTAL SUBTOTAL PENERIMAAN', $pdfView);
         $this->assertStringContainsString('TOTAL PENYESUAIAN HONORARIUM', $pdfView);

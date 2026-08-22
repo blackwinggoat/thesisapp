@@ -41,6 +41,12 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('honorariumDenganJadwalQuery', $keuangan);
         $this->assertStringContainsString('jadwal.tgl_ujian as date', $keuangan);
         $this->assertStringContainsString('honorariumBelumTerhubungJadwalQuery', $keuangan);
+        $this->assertStringContainsString("->join('trt_reg as registrasi'", $keuangan);
+        $this->assertStringContainsString("->join('trt_jadwal_ujian as jadwal'", $keuangan);
+        $this->assertStringContainsString("->join('trt_jadwal_ujian_per_mhs as peserta'", $keuangan);
+        $this->assertStringContainsString("->on('jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id')", $keuangan);
+        $this->assertStringContainsString("->on('peserta.jadwal_ujian', '=', 'jadwal.id')", $keuangan);
+        $this->assertStringNotContainsString("->leftJoin('trt_jadwal_ujian_per_mhs as peserta'", $keuangan);
         $this->assertStringContainsString("Tidak ada honorarium aktif dengan jadwal ujian pada tanggal", $keuangan);
         $this->assertStringContainsString("return '(' . implode(' OR ', \$conditions) . ')';", $keuangan);
         $this->assertStringContainsString('paging: false', $detailView);

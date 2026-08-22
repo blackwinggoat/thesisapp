@@ -1170,14 +1170,14 @@ class KeuanganFakultas extends Controller
     {
         return DB::table('trt_honorium as honorarium')
             ->whereRaw($this->honorariumOutstandingSql())
-            ->leftJoin('trt_reg as registrasi', function ($join) {
+            ->join('trt_reg as registrasi', function ($join) {
                 $join->on('registrasi.C_NPM', '=', 'honorarium.C_NPM')
                     ->on('registrasi.status', '=', 'honorarium.exam_type');
             })
-            ->leftJoin('trt_jadwal_ujian_per_mhs as peserta', 'peserta.C_NPM', '=', 'honorarium.C_NPM')
-            ->leftJoin('trt_jadwal_ujian as jadwal', function ($join) {
-                $join->on('jadwal.id', '=', 'peserta.jadwal_ujian')
-                    ->on('jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id');
+            ->join('trt_jadwal_ujian as jadwal', 'jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id')
+            ->join('trt_jadwal_ujian_per_mhs as peserta', function ($join) {
+                $join->on('peserta.C_NPM', '=', 'honorarium.C_NPM')
+                    ->on('peserta.jadwal_ujian', '=', 'jadwal.id');
             });
     }
 
@@ -1185,14 +1185,14 @@ class KeuanganFakultas extends Controller
     {
         return DB::table('trt_honorium as honorarium')
             ->whereRaw($this->honorariumFullyPaidSql())
-            ->leftJoin('trt_reg as registrasi', function ($join) {
+            ->join('trt_reg as registrasi', function ($join) {
                 $join->on('registrasi.C_NPM', '=', 'honorarium.C_NPM')
                     ->on('registrasi.status', '=', 'honorarium.exam_type');
             })
-            ->leftJoin('trt_jadwal_ujian_per_mhs as peserta', 'peserta.C_NPM', '=', 'honorarium.C_NPM')
-            ->leftJoin('trt_jadwal_ujian as jadwal', function ($join) {
-                $join->on('jadwal.id', '=', 'peserta.jadwal_ujian')
-                    ->on('jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id');
+            ->join('trt_jadwal_ujian as jadwal', 'jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id')
+            ->join('trt_jadwal_ujian_per_mhs as peserta', function ($join) {
+                $join->on('peserta.C_NPM', '=', 'honorarium.C_NPM')
+                    ->on('peserta.jadwal_ujian', '=', 'jadwal.id');
             });
     }
 
