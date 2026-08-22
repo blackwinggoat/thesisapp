@@ -53,13 +53,25 @@
                 </div>
                 <br>
                 <div class="table-responsive">
+                    <style>
+                        .dosen-name-stack {
+                            min-width: 220px;
+                        }
+
+                        .dosen-functional-position {
+                            display: block;
+                            margin-top: 3px;
+                            font-size: 11px;
+                            line-height: 1.35;
+                            color: #777;
+                        }
+                    </style>
                     <table class="table table-striped table-hover" id="datatable-dosen-pembimbing">
                         <thead class="the-box dark full">
                         <tr>
                             <th>No</th>
                             <th>NIDN</th>
                             <th>Nama</th>
-                            <th>Jabatan Fungsional</th>
                             <th>Jumlah Bimbingan</th>
                             <th>Jumlah Bimbingan Semester Aktif<br><small>{{ $semesterAktifLabel }} {{ $semesterRange->tahun_akademik }}</small></th>
                             <th>Jumlah Menguji</th>
@@ -73,8 +85,12 @@
                             <tr class="odd gradeX">
                                 <td width="1%" align="center">{{++$key}}</td>
                                 <td>{{$value->C_KODE_DOSEN}}</td>
-                                <td>{{$value->NAMA_DOSEN}}</td>
-                                <td>{{$value->jabatan_fungsional}}</td>
+                                <td class="dosen-name-stack">
+                                    <strong>{{$value->NAMA_DOSEN}}</strong>
+                                    @if (!empty($value->jabatan_fungsional))
+                                        <span class="dosen-functional-position">{{$value->jabatan_fungsional}}</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <table class="table">
                                         <thead class="bg-info text-white text-center">
