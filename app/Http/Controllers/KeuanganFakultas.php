@@ -692,6 +692,7 @@ class KeuanganFakultas extends Controller
                         'kode_dosen' => $kodeDosen,
                         'nama_dosen' => Helper::getNamaDosenByKode($kodeDosen),
                         'tanggal' => collect(),
+                        'adjustments' => collect(),
                         'total_penerimaan' => 0,
                         'total_penyesuaian' => 0,
                         'total_honor' => 0,
@@ -728,7 +729,8 @@ class KeuanganFakultas extends Controller
                     'honor' => $honor,
                 ]);
                 if (abs($penyesuaian) > 0) {
-                    $laporanTanggal->adjustments->push((object) [
+                    $adjustment = (object) [
+                        'tanggal' => $tanggalUjian,
                         'nim' => $honorarium->C_NPM,
                         'nama_mahasiswa' => $namaMahasiswa->get($honorarium->C_NPM, '-'),
                         'tipe_ujian' => $honorarium->tipe_ujian ?: '-',
@@ -740,7 +742,9 @@ class KeuanganFakultas extends Controller
                         'dasar' => isset($penyesuaianHonor['notes'][$role])
                             ? $penyesuaianHonor['notes'][$role]
                             : '',
-                    ]);
+                    ];
+                    $laporanTanggal->adjustments->push($adjustment);
+                    $report->adjustments->push($adjustment);
                 }
                 $laporanTanggal->subtotal_penerimaan += $honorAwal;
                 $laporanTanggal->subtotal_penyesuaian += $penyesuaian;
@@ -769,6 +773,11 @@ class KeuanganFakultas extends Controller
                         return $laporanTanggal;
                     })
                     ->sortBy('tanggal')
+                    ->values();
+                $report->adjustments = $report->adjustments
+                    ->sortBy(function ($item) {
+                        return $item->tanggal . '|' . strtolower($item->nama_mahasiswa . '|' . $item->nim . '|' . $item->peran);
+                    })
                     ->values();
 
                 return $report;

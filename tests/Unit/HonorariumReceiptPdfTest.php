@@ -26,6 +26,9 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString("'penyesuaian' => \$penyesuaian", $controller);
         $this->assertStringContainsString("'adjustments' => collect()", $controller);
         $this->assertStringContainsString("'tanggal' => collect()", $controller);
+        $this->assertStringContainsString("'tanggal' => \$tanggalUjian", $controller);
+        $this->assertStringContainsString('$report->adjustments->push($adjustment)', $controller);
+        $this->assertStringContainsString('$report->adjustments = $report->adjustments', $controller);
         $this->assertStringContainsString("'total_penerimaan' => 0", $controller);
         $this->assertStringContainsString("'total_penyesuaian' => 0", $controller);
         $this->assertStringContainsString("'subtotal_penerimaan' => 0", $controller);
@@ -48,6 +51,10 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString("\$report->tanggal->pluck('tanggal')", $pdfView);
         $this->assertStringContainsString('Honor Diterima', $pdfView);
         $this->assertStringContainsString('Tabel Penyesuaian Honorarium', $pdfView);
+        $this->assertSame(1, substr_count($pdfView, 'Tabel Penyesuaian Honorarium'));
+        $this->assertStringContainsString('@if ($report->adjustments->isNotEmpty())', $pdfView);
+        $this->assertStringNotContainsString('@if ($laporanTanggal->adjustments->isNotEmpty())', $pdfView);
+        $this->assertStringContainsString("helper::tgl_indo_lengkap(\$adjustment->tanggal)", $pdfView);
         $this->assertStringContainsString('SUBTOTAL PENERIMAAN', $pdfView);
         $this->assertStringNotContainsString('SUBTOTAL PENYESUAIAN', $pdfView);
         $this->assertStringContainsString('TOTAL DITERIMA', $pdfView);

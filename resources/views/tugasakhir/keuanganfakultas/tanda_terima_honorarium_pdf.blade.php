@@ -133,38 +133,39 @@
                         </tr>
                         </tbody>
                     </table>
-                    @if ($laporanTanggal->adjustments->isNotEmpty())
-                        <div class="adjustment-title">Tabel Penyesuaian Honorarium</div>
-                        <table class="adjustment-table">
-                            <thead>
-                                <tr>
-                                    <th class="number">No.</th>
-                                    <th class="student">Mahasiswa / NIM</th>
-                                    <th class="role">Peran</th>
-                                    <th class="kind">Jenis</th>
-                                    <th class="amount">Nilai</th>
-                                    <th class="basis">Dasar Perubahan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($laporanTanggal->adjustments as $adjustment)
-                                    <tr>
-                                        <td class="number">{{ $loop->iteration }}</td>
-                                        <td class="student"><strong>{{ $adjustment->nama_mahasiswa }}</strong><br>{{ $adjustment->nim }}</td>
-                                        <td class="role">{{ $adjustment->peran }}</td>
-                                        <td class="kind">{{ $adjustment->jenis }}</td>
-                                        <td class="amount">{{ helper::formatRupiah($adjustment->nilai) }}</td>
-                                        <td class="basis">{{ $adjustment->dasar }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
                     <div class="date-summary">
                         <div class="date-summary-line">TOTAL DITERIMA: {{ helper::formatRupiah($laporanTanggal->subtotal_honor) }}</div>
                     </div>
                 </div>
             @endforeach
+
+            @if ($report->adjustments->isNotEmpty())
+                <div class="adjustment-title">Tabel Penyesuaian Honorarium</div>
+                <table class="adjustment-table">
+                    <thead>
+                        <tr>
+                            <th class="number">No.</th>
+                            <th class="student">Mahasiswa / NIM</th>
+                            <th class="role">Peran</th>
+                            <th class="kind">Jenis</th>
+                            <th class="amount">Nilai</th>
+                            <th class="basis">Dasar Perubahan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($report->adjustments as $adjustment)
+                            <tr>
+                                <td class="number">{{ $loop->iteration }}</td>
+                                <td class="student"><strong>{{ $adjustment->nama_mahasiswa }}</strong><br>{{ $adjustment->nim }}<br><span style="font-size: 7pt;">Ujian: {{ helper::tgl_indo_lengkap($adjustment->tanggal) }}</span></td>
+                                <td class="role">{{ $adjustment->peran }}</td>
+                                <td class="kind">{{ $adjustment->jenis }}</td>
+                                <td class="amount">{{ helper::formatRupiah($adjustment->nilai) }}</td>
+                                <td class="basis">{{ $adjustment->dasar }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
 
             <table class="overall-summary">
                 <tr>
