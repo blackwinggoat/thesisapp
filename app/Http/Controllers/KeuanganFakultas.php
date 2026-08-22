@@ -1482,7 +1482,7 @@ class KeuanganFakultas extends Controller
         if (auth()->check() && (int) auth()->user()->level === 9) {
             return redirect()->back()->with([
                 'status' => 'danger',
-                'message' => 'Penetapan tipe honorarium dilakukan oleh Akademik Fakultas.',
+                'message' => 'Penetapan tipe honorarium dilakukan oleh Akademik Prodi.',
             ]);
         }
 

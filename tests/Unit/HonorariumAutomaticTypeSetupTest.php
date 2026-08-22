@@ -49,7 +49,7 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
         $summary = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium.blade.php');
         $detail = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium_detail.blade.php');
-        $sidebar = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/layouts/sidebarakademikfakultas.blade.php');
+        $sidebar = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/layouts/sidebarakademikprodi.blade.php');
 
         $this->assertStringContainsString('honorarium_penetapan_home', $controller);
         $this->assertStringContainsString('renderHonorariumHome', $controller);
@@ -97,7 +97,7 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString("{{ \$honorarium->mahasiswa_eksekutif ? 'Eksekutif' : 'Reguler' }}", $detail);
         $this->assertStringContainsString('@else', $detail);
         $this->assertStringContainsString('<strong>{{ $honorarium->tipe_ujian }}</strong>', $detail);
-        $this->assertStringContainsString('Penetapan tipe honorarium dilakukan oleh Akademik Fakultas.', $controller);
+        $this->assertStringContainsString('Penetapan tipe honorarium dilakukan oleh Akademik Prodi.', $controller);
     }
 
     public function testAutomaticPaymentNameFollowsExamFinalProjectAndClassRules()

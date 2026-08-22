@@ -373,6 +373,16 @@ Route::group(['middleware' => 'akademik_prodi'], function () {
     Route::get('/akademikprodi/cetakskpenguji/{pendaftaran_id}/{nim}', 'Prodi@cetakskpenguji');
     Route::get('/akademikprodi/cetak_berita_acara/{pendaftaran_id}/{nim}', 'Prodi@cetakBeritaAcara');
 
+    // Penetapan honorarium dikelola oleh Akademik Prodi.
+    Route::group(['prefix' => 'fakultas/honorarium'], function () {
+        Route::get('/', 'KeuanganFakultas@honorarium_penetapan_home')->name('honorarium_penetapan_home');
+        Route::get('/tanggal/{date}', 'KeuanganFakultas@honorarium_penetapan_detail_tanggal')->name('honorarium_penetapan_detail_tanggal');
+        Route::post('/save_all', 'KeuanganFakultas@honorarium_save_all')->name('honorarium_penetapan_save_all');
+        Route::post('/pembimbing-attendance', 'KeuanganFakultas@honorarium_update_pembimbing_attendance')->name('honorarium_penetapan_pembimbing_attendance');
+        Route::post('/tanggal/{date}/setup-type-ujian', 'KeuanganFakultas@honorarium_setup_type_ujian_otomatis')->name('honorarium_penetapan_setup_type_ujian_otomatis');
+        Route::post('/tanggal/{date}/reset-type', 'KeuanganFakultas@honorarium_reset_type')->name('honorarium_penetapan_reset_type');
+    });
+
 });
 
 Route::group(['middleware' => 'dekan'], function () {
@@ -445,14 +455,6 @@ Route::group(['middleware' => 'akademik_fakultas'], function () {
     Route::get('/fakultas/cetakskpenguji/{pendaftaran_id}/{nim}', 'Prodi@cetakskpenguji');
     Route::get('/fakultas/cetak_berita_acara/{pendaftaran_id}/{nim}', 'Prodi@cetakBeritaAcara');
 
-    Route::group(['prefix' => 'fakultas/honorarium'], function () {
-        Route::get('/', 'KeuanganFakultas@honorarium_penetapan_home')->name('honorarium_penetapan_home');
-        Route::get('/tanggal/{date}', 'KeuanganFakultas@honorarium_penetapan_detail_tanggal')->name('honorarium_penetapan_detail_tanggal');
-        Route::post('/save_all', 'KeuanganFakultas@honorarium_save_all')->name('honorarium_penetapan_save_all');
-        Route::post('/pembimbing-attendance', 'KeuanganFakultas@honorarium_update_pembimbing_attendance')->name('honorarium_penetapan_pembimbing_attendance');
-        Route::post('/tanggal/{date}/setup-type-ujian', 'KeuanganFakultas@honorarium_setup_type_ujian_otomatis')->name('honorarium_penetapan_setup_type_ujian_otomatis');
-        Route::post('/tanggal/{date}/reset-type', 'KeuanganFakultas@honorarium_reset_type')->name('honorarium_penetapan_reset_type');
-    });
 });
 
 Route::group(['middleware' => 'dosen'], function () {
