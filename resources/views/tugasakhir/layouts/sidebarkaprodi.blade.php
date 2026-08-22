@@ -81,13 +81,8 @@
             <ul class="submenu">
                 <li><a href="{{ url('prodi/master/dosen') }}">Dosen</a></li>
                 <li><a href="{{ url('prodi/master/jenis_tugas_akhir') }}">Jenis Tugas Akhir</a></li>
+                <li><a href="{{ url('prodi/scope_ta') }}">Bidang Ilmu TA</a></li>
             </ul>
-        </li>
-        <li>
-            <a href="{{ url('prodi/scope_ta')}}">
-                <i class="fa fa-sitemap icon-sidebar"></i>
-                Bidang Ilmu TA
-            </a>
         </li>
         <li>
             <a href="{{ url('prodi/topik')}}">

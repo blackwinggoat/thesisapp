@@ -35,10 +35,14 @@
             </a>
         </li>
         <li>
-            <a href="{{ url('prodi/scope_ta')}}">
-                <i class="fa fa-stack-overflow icon-sidebar"></i>
-                Bidang Ilmu TA
+            <a href="#fakelink">
+                <i class="fa fa-database icon-sidebar"></i>
+                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
+                Master
             </a>
+            <ul class="submenu">
+                <li><a href="{{ url('prodi/scope_ta') }}">Bidang Ilmu TA</a></li>
+            </ul>
         </li>
         <li>
             <a href="{{ url('prodi/topik')}}">
