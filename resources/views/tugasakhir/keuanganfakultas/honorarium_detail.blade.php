@@ -296,11 +296,11 @@
                                         @if (!$isAkademikHonorarium)
                                             <td class="honorarium-advisor-presence">
                                                 <div>
-                                                    <strong>P1 :</strong>
+                                                    <strong>PU :</strong>
                                                     <i class="fa {{ $honorarium->pembimbing_utama_hadir ? 'fa-check' : 'fa-times' }}"></i>
                                                 </div>
                                                 <div>
-                                                    <strong>P2 :</strong>
+                                                    <strong>PP :</strong>
                                                     <i class="fa {{ $honorarium->pembimbing_pendamping_hadir ? 'fa-check' : 'fa-times' }}"></i>
                                                 </div>
                                             </td>

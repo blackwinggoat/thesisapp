@@ -73,8 +73,10 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('Kehadiran Pembimbing', $detail);
         $this->assertStringContainsString('honorarium-advisor-attendance', $detail);
         $this->assertStringContainsString('honorarium-advisor-presence', $detail);
-        $this->assertStringContainsString('<strong>P1 :</strong>', $detail);
-        $this->assertStringContainsString('<strong>P2 :</strong>', $detail);
+        $this->assertStringContainsString('<strong>PU :</strong>', $detail);
+        $this->assertStringContainsString('<strong>PP :</strong>', $detail);
+        $this->assertStringNotContainsString('<strong>P1 :</strong>', $detail);
+        $this->assertStringNotContainsString('<strong>P2 :</strong>', $detail);
         $this->assertStringContainsString('pembimbing-attendance-checkbox', $detail);
         $this->assertStringContainsString('change.pembimbingAttendance', $detail);
         $this->assertStringContainsString('honorarium_penetapan_pembimbing_attendance', $detail);
