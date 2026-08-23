@@ -57,8 +57,8 @@
                         <table class="table" id="datatable-example">
                             <thead class="the-box dark full">
                                 <tr>
-                                    <th class="text-center">Konfirmasi Terima</th>
                                     <th>No</th>
+                                    <th class="text-center">Konfirmasi Terima</th>
                                     <th>Tanggal Ujian</th>
                                     <th>Mahasiswa</th>
                                     <th>Penugasan Dosen</th>
@@ -76,6 +76,7 @@
                                 @foreach ($honorariumByDate as $dateKey => $group)
                                     @php $modalId = 'honorarium-date-' . str_replace('-', '', $dateKey); @endphp
                                     <tr>
+                                        <td>{{ $loop->iteration }}</td>
                                         <td class="text-center">
                                             @if ($group->available_count > 0)
                                                 <label class="honorarium-date-confirmation" title="Konfirmasi semua honorarium tersedia pada tanggal ini">
@@ -90,7 +91,6 @@
                                                 <span class="text-muted">Belum tersedia</span>
                                             @endif
                                         </td>
-                                        <td>{{ $loop->iteration }}</td>
                                         <td>
                                             <strong>{{ \Carbon\Carbon::parse($group->date)->format('d/m/Y') }}</strong>
                                         </td>
