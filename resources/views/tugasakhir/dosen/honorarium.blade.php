@@ -57,6 +57,7 @@
                         <table class="table" id="datatable-example">
                             <thead class="the-box dark full">
                                 <tr>
+                                    <th class="text-center">Konfirmasi Terima</th>
                                     <th>No</th>
                                     <th>Tanggal Ujian</th>
                                     <th>Mahasiswa</th>
@@ -75,6 +76,20 @@
                                 @foreach ($honorariumByDate as $dateKey => $group)
                                     @php $modalId = 'honorarium-date-' . str_replace('-', '', $dateKey); @endphp
                                     <tr>
+                                        <td class="text-center">
+                                            @if ($group->available_count > 0)
+                                                <label class="honorarium-date-confirmation" title="Konfirmasi semua honorarium tersedia pada tanggal ini">
+                                                    <input type="checkbox"
+                                                        name="honorarium_dates[]"
+                                                        value="{{ $dateKey }}"
+                                                        data-amount="{{ $group->available_total }}"
+                                                        data-count="{{ $group->available_count }}">
+                                                    <span>{{ $group->available_count }} item</span>
+                                                </label>
+                                            @else
+                                                <span class="text-muted">Belum tersedia</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
                                             <strong>{{ \Carbon\Carbon::parse($group->date)->format('d/m/Y') }}</strong>
@@ -114,7 +129,9 @@
                         </table>
                     </div>
                     <div class="honorarium-save">
-                        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Simpan Konfirmasi Pembayaran</button>
+                        <button type="submit" class="btn btn-success" id="confirmHonorariumButton" disabled>
+                            <i class="fa fa-check"></i> Konfirmasi Telah Terima
+                        </button>
                     </div>
 
                 @foreach ($honorariumByDate as $dateKey => $group)
@@ -137,7 +154,6 @@
                                                     <th>Honor Dasar</th>
                                                     <th>Perubahan</th>
                                                     <th>Honor Diterima</th>
-                                                    <th class="text-center">Konfirmasi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -177,19 +193,6 @@
                                                                 <span class="badge badge-success">Rp {{ number_format($honorarium->amount, 0, ',', '.') }}</span>
                                                             @else
                                                                 <span class="text-muted">Belum tersedia</span>
-                                                            @endif
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <input type="hidden" name="honorariums[{{ $honorarium->id }}][id]" value="{{ $honorarium->id }}">
-                                                            <input type="hidden" name="honorariums[{{ $honorarium->id }}][C_NPM]" value="{{ $honorarium->C_NPM }}">
-                                                            <input type="hidden" name="honorariums[{{ $honorarium->id }}][role]" value="{{ $honorarium->role }}">
-                                                            @if ($honorarium->status == 1)
-                                                                <label class="checkbox-inline honorarium-confirmation">
-                                                                    <input type="checkbox" name="honorariums[{{ $honorarium->id }}][status]" value="on" data-amount="{{ $honorarium->amount }}">
-                                                                    Sudah diterima
-                                                                </label>
-                                                            @else
-                                                                <span class="text-muted">Menunggu</span>
                                                             @endif
                                                         </td>
                                                     </tr>
@@ -240,9 +243,15 @@
             white-space: nowrap;
         }
 
-        .honorarium-confirmation {
+        .honorarium-date-confirmation {
             color: #3c763d;
             font-weight: 600;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .honorarium-date-confirmation input {
+            margin-right: 5px;
         }
 
         .badge-info {
@@ -267,12 +276,19 @@
     </style>
     <script>
         $(function() {
-            $('input[name$="[status]"]').change(function() {
+            $('input[name="honorarium_dates[]"]').change(function() {
                 var totalAvailable = parseFloat('{{ $totalAvailable }}');
-                $('input[name$="[status]"]:checked').each(function() {
+                var selectedCount = 0;
+
+                $('input[name="honorarium_dates[]"]:checked').each(function() {
                     totalAvailable -= parseFloat($(this).data('amount'));
+                    selectedCount += parseInt($(this).data('count'), 10);
                 });
+
                 $('#totalAvailable').text(Math.max(totalAvailable, 0).toLocaleString('id-ID'));
+                $('#confirmHonorariumButton')
+                    .prop('disabled', selectedCount === 0)
+                    .html('<i class="fa fa-check"></i> Konfirmasi Telah Terima' + (selectedCount > 0 ? ' (' + selectedCount + ' item)' : ''));
             });
         });
     </script>

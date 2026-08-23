@@ -2028,45 +2028,92 @@ class dosen extends Controller
             'Penguji III' => ['dosen' => 'P3', 'status' => 'P3_Stat'],
         ];
         $kodeDosen = (string) auth()->user()->name;
+        $confirmedCount = 0;
 
         try {
-            DB::transaction(function () use ($request, $roleColumns, $kodeDosen) {
-                foreach ((array) $request->honorariums as $honorarium) {
-                    if (!isset($honorarium['status']) || $honorarium['status'] !== 'on') {
-                        continue;
+            DB::transaction(function () use ($request, $roleColumns, $kodeDosen, &$confirmedCount) {
+                $selectedDates = collect((array) $request->input('honorarium_dates', []))
+                    ->map(function ($date) {
+                        return substr((string) $date, 0, 10);
+                    })
+                    ->filter(function ($date) {
+                        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date);
+                    })
+                    ->unique()
+                    ->values();
+
+                if ($selectedDates->isNotEmpty()) {
+                    $assignments = $this->getHonorariumAssignmentsForDosen($kodeDosen)
+                        ->filter(function ($assignment) use ($selectedDates) {
+                            return $assignment->has_schedule
+                                && (int) $assignment->status === 1
+                                && $selectedDates->contains((string) $assignment->date);
+                        })
+                        ->values();
+
+                    if ($assignments->isEmpty()) {
+                        throw new \RuntimeException('Tidak ada honorarium tersedia pada tanggal yang dipilih.');
                     }
 
-                    $role = isset($honorarium['role']) ? $honorarium['role'] : '';
-                    $definition = isset($roleColumns[$role]) ? $roleColumns[$role] : null;
-                    $honorariumId = isset($honorarium['id']) ? (int) $honorarium['id'] : 0;
-                    $nim = isset($honorarium['C_NPM']) ? $honorarium['C_NPM'] : '';
-                    if (!$definition || $honorariumId < 1 || $nim === '') {
-                        throw new \RuntimeException('Data konfirmasi honorarium tidak valid.');
+                    foreach ($assignments as $assignment) {
+                        $this->konfirmasiHonorariumDosen($assignment, $roleColumns, $kodeDosen);
+                        $confirmedCount++;
                     }
+                } else {
+                    foreach ((array) $request->honorariums as $honorarium) {
+                        if (!isset($honorarium['status']) || $honorarium['status'] !== 'on') {
+                            continue;
+                        }
 
-                    $record = DB::table('trt_honorium')
-                        ->where('id', $honorariumId)
-                        ->where('C_NPM', $nim)
-                        ->lockForUpdate()
-                        ->first();
-                    if (!$record || (string) $record->{$definition['dosen']} !== $kodeDosen) {
-                        throw new \RuntimeException('Anda tidak memiliki akses untuk mengonfirmasi penugasan honorarium ini.');
+                        $assignment = (object) [
+                            'id' => isset($honorarium['id']) ? (int) $honorarium['id'] : 0,
+                            'C_NPM' => isset($honorarium['C_NPM']) ? $honorarium['C_NPM'] : '',
+                            'role' => isset($honorarium['role']) ? $honorarium['role'] : '',
+                        ];
+                        $this->konfirmasiHonorariumDosen($assignment, $roleColumns, $kodeDosen);
+                        $confirmedCount++;
                     }
-                    if ((int) $record->{$definition['status']} !== 1) {
-                        throw new \RuntimeException('Honorarium belum tersedia atau sudah dikonfirmasi.');
-                    }
+                }
 
-                    DB::table('trt_honorium')
-                        ->where('id', $honorariumId)
-                        ->where('C_NPM', $nim)
-                        ->update([$definition['status'] => 3]);
+                if ($confirmedCount < 1) {
+                    throw new \RuntimeException('Pilih minimal satu tanggal honorarium yang akan dikonfirmasi.');
                 }
             });
         } catch (\RuntimeException $exception) {
             return redirect()->back()->with('status', 'danger')->with('message', $exception->getMessage());
         }
 
-        return redirect()->back()->with('status', 'success')->with('message', 'Honorarium berhasil dikonfirmasi.');
+        return redirect()->back()
+            ->with('status', 'success')
+            ->with('message', $confirmedCount . ' honorarium berhasil dikonfirmasi dan dipindahkan ke riwayat.');
+    }
+
+    protected function konfirmasiHonorariumDosen($assignment, array $roleColumns, $kodeDosen)
+    {
+        $role = isset($assignment->role) ? $assignment->role : '';
+        $definition = isset($roleColumns[$role]) ? $roleColumns[$role] : null;
+        $honorariumId = isset($assignment->id) ? (int) $assignment->id : 0;
+        $nim = isset($assignment->C_NPM) ? $assignment->C_NPM : '';
+        if (!$definition || $honorariumId < 1 || $nim === '') {
+            throw new \RuntimeException('Data konfirmasi honorarium tidak valid.');
+        }
+
+        $record = DB::table('trt_honorium')
+            ->where('id', $honorariumId)
+            ->where('C_NPM', $nim)
+            ->lockForUpdate()
+            ->first();
+        if (!$record || (string) $record->{$definition['dosen']} !== (string) $kodeDosen) {
+            throw new \RuntimeException('Anda tidak memiliki akses untuk mengonfirmasi penugasan honorarium ini.');
+        }
+        if ((int) $record->{$definition['status']} !== 1) {
+            throw new \RuntimeException('Honorarium belum tersedia atau sudah dikonfirmasi.');
+        }
+
+        DB::table('trt_honorium')
+            ->where('id', $honorariumId)
+            ->where('C_NPM', $nim)
+            ->update([$definition['status'] => 3]);
     }
 
     public function history_honorarium()
