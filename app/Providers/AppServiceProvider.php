@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use App\Services\SystemMailSettings;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
 
         setlocale(LC_ALL, "id");
         Carbon::setLocale("id");
+        SystemMailSettings::apply();
     }
 
     /**

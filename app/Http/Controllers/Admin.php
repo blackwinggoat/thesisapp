@@ -4,12 +4,43 @@ namespace App\Http\Controllers;
 
 use App\Helper;
 use App\Model\mst_periode_jabatan;
+use App\Services\SystemMailSettings;
 
 class Admin extends Controller
 {
     public function periode_jabatan(){
         $data = mst_periode_jabatan::all();
         return view('tugasakhir.admin.periode_jabatan', compact('data'));
+    }
+
+    public function mail_settings()
+    {
+        $settings = SystemMailSettings::all();
+        $passwordMask = SystemMailSettings::maskedPassword();
+
+        return view('tugasakhir.admin.mail_settings', compact('settings', 'passwordMask'));
+    }
+
+    public function mail_settings_update()
+    {
+        request()->validate([
+            'driver' => 'required|in:smtp,sendmail,mail,log',
+            'host' => 'required_if:enabled,1|nullable|string|max:191',
+            'port' => 'required_if:enabled,1|nullable|integer|min:1|max:65535',
+            'username' => 'nullable|string|max:191',
+            'password' => 'nullable|string|max:191',
+            'encryption' => 'nullable|in:tls,ssl',
+            'from_address' => 'required_if:enabled,1|nullable|email|max:191',
+            'from_name' => 'nullable|string|max:191',
+        ]);
+
+        try {
+            SystemMailSettings::update(request()->all());
+
+            return redirect()->back()->with(['status' => 'berhasil']);
+        } catch (\Exception $exception) {
+            return redirect()->back()->withInput()->with(['status' => 'gagal']);
+        }
     }
 
     public function periode_jabatan_update(){

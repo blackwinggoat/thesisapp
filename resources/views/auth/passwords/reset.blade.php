@@ -1,65 +1,109 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <title>Reset Password | Thesis App FIKOM UMI</title>
+    <style>
+        body {
+            min-height: 100vh;
+            background: url("{{ asset('img/bg3@2x.png') }}") no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
 
-@section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">{{ __('Reset Password') }}</div>
+        .reset-card {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, .96);
+            border-radius: 8px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .24);
+            padding: 30px;
+        }
 
-                <div class="card-body">
-                    <form method="POST" action="{{ route('password.request') }}" aria-label="{{ __('Reset Password') }}">
-                        @csrf
+        .reset-title {
+            margin: 0;
+            color: #1F2937;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.25;
+        }
 
-                        <input type="hidden" name="token" value="{{ $token }}">
+        .reset-subtitle {
+            margin: 7px 0 22px;
+            color: #64748B;
+            font-size: 14px;
+            line-height: 1.55;
+        }
 
-                        <div class="form-group row">
-                            <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('E-Mail Address') }}</label>
+        .form-control {
+            height: 42px;
+            border-radius: 5px;
+        }
 
-                            <div class="col-md-6">
-                                <input id="email" type="email" class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}" name="email" value="{{ $email ?? old('email') }}" required autofocus>
+        .btn-reset {
+            width: 100%;
+            height: 42px;
+            background: #CFA323;
+            border: none;
+            border-radius: 5px;
+            color: #111827;
+            font-weight: 700;
+        }
 
-                                @if ($errors->has('email'))
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $errors->first('email') }}</strong>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
+        .login-link {
+            display: block;
+            margin-top: 16px;
+            text-align: center;
+            color: #1F6F8B;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="reset-card">
+        <h1 class="reset-title">Buat Password Baru</h1>
+        <p class="reset-subtitle">Gunakan password baru yang kuat dan tidak mudah ditebak.</p>
 
-                        <div class="form-group row">
-                            <label for="password" class="col-md-4 col-form-label text-md-right">{{ __('Password') }}</label>
-
-                            <div class="col-md-6">
-                                <input id="password" type="password" class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}" name="password" required>
-
-                                @if ($errors->has('password'))
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $errors->first('password') }}</strong>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="password-confirm" class="col-md-4 col-form-label text-md-right">{{ __('Confirm Password') }}</label>
-
-                            <div class="col-md-6">
-                                <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required>
-                            </div>
-                        </div>
-
-                        <div class="form-group row mb-0">
-                            <div class="col-md-6 offset-md-4">
-                                <button type="submit" class="btn btn-primary">
-                                    {{ __('Reset Password') }}
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+        @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <ul style="margin: 0; padding-left: 18px;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-        </div>
+        @endif
+
+        <form method="POST" action="{{ route('password.request') }}" aria-label="Reset password">
+            @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
+
+            <div class="form-group">
+                <label for="email">Email terdaftar</label>
+                <input id="email" type="email" class="form-control" name="email" value="{{ $email ?? old('email') }}" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password baru</label>
+                <input id="password" type="password" class="form-control" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password-confirm">Konfirmasi password baru</label>
+                <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required>
+            </div>
+
+            <button type="submit" class="btn-reset">Simpan Password Baru</button>
+        </form>
+
+        <a class="login-link" href="{{ route('login') }}">Kembali ke halaman login</a>
     </div>
-</div>
-@endsection
+</body>
+</html>

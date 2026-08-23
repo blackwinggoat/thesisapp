@@ -160,6 +160,12 @@
                 Periode Jabatan
             </a>
         </li>
+        <li>
+            <a href="{{ route('admin.mail_settings') }}">
+                <i class="fa fa-envelope icon-sidebar"></i>
+                Email Sistem
+            </a>
+        </li>
     </ul>
 </div><!-- /.sidebar-left -->
 <!-- END SIDEBAR LEFT -->

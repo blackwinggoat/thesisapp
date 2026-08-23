@@ -43,6 +43,8 @@ Route::group(['middleware' => 'admin'], function () {
     Route::group(['prefix' => 'data-master'], function () {
         Route::get('/periode-jabatan', 'Admin@periode_jabatan')->name('get_master_periode_jabatan');
         Route::post('/periode-jabatan', 'Admin@periode_jabatan_update')->name('update_master_periode_jabatan');
+        Route::get('/email-sistem', 'Admin@mail_settings')->name('admin.mail_settings');
+        Route::post('/email-sistem', 'Admin@mail_settings_update')->name('admin.mail_settings.update');
     });
     //AKADEMIK-PRODI
     /*

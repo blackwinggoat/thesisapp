@@ -82,7 +82,7 @@
 					<button type="submit" class="btn btn-warning btn-lg btn-perspective btn-block">LOGIN</button>
 				</div>
 			</form>
-			<p class="text-center"><strong><a href="{{ route('password.request') }}">Forgot your password?</a></strong></p>
+			<p class="text-center"><strong><a href="{{ route('password.request') }}">Lupa password?</a></strong></p>
 			<p class="text-center">or</p>
 			<p class="text-center"><strong><a href="{{ route('register') }}" >Create new account</a></strong></p>
 		</div><!-- /.login-wrapper -->
