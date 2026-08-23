@@ -8,7 +8,7 @@
     <meta name="keywords" content="admin,bootstrap,template,responsive admin,dashboard template,web apps template">
     <meta name="author" content="Ari Rusmanto, Isoh Design Studio, Warung Themes">
     <meta content="{{ csrf_token() }}" name="csrf-token">
-    <title>SIMPRODI | Tugas Akhir @yield('tambahan')</title>
+    <title>Thesis App FIKOM UMI @yield('tambahan')</title>
 
 
     <!-- BOOTSTRAP CSS (REQUIRED ALL PAGE)-->

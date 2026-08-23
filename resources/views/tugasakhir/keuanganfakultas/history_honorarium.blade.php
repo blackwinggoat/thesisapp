@@ -2,7 +2,7 @@
 @section('isi')
     <div class="page-content">
         <div class="container-fluid">
-            <h1 class="page-heading">Sistem Informasi Program Studi <small>TUGAS AKHIR</small></h1>
+            <h1 class="page-heading thesis-page-heading">Thesis App <small>FIKOM UMI</small></h1>
 
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>

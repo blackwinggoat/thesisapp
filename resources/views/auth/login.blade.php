@@ -8,7 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <title>Login | SIMPRODI - Tugas Akhir</title>
+    <title>Login | Thesis App FIKOM UMI</title>
     <style>
         body {
             background : url("{{ asset('img/bg3@2x.png') }}") no-repeat center center fixed;

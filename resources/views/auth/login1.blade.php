@@ -6,7 +6,7 @@
 		<meta name="description" content="Sentir, Responsive admin and dashboard UI kits template">
 		<meta name="keywords" content="admin,bootstrap,template,responsive admin,dashboard template,web apps template">
 		<meta name="author" content="Ari Rusmanto, Isoh Design Studio, Warung Themes">
-		<title>Login | SIMPRODI - Tugas Akhir</title>
+		<title>Login | Thesis App FIKOM UMI</title>
  
 		<!-- BOOTSTRAP CSS (REQUIRED ALL PAGE)-->
 		<link href="{{ asset('master/assets/css/bootstrap.min.css')}}" rel="stylesheet">

@@ -1804,6 +1804,39 @@ h1.page-heading small {
 	color: #ACB5BE;
 }
 
+h1.page-heading.thesis-page-heading {
+	color: #1F2937;
+	font-size: 24px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+h1.page-heading.thesis-page-heading small {
+	display: inline-block;
+	margin-left: 8px;
+	color: #1F6F8B;
+	font-size: 16px;
+	font-weight: 600;
+	letter-spacing: 0;
+	text-transform: uppercase;
+	vertical-align: baseline;
+}
+
+@media (max-width: 767px) {
+	h1.page-heading.thesis-page-heading {
+		font-size: 21px;
+		line-height: 1.25;
+	}
+
+	h1.page-heading.thesis-page-heading small {
+		display: block;
+		margin: 3px 0 0;
+		font-size: 13px;
+	}
+}
+
 
 /**
 -------------------------------------------

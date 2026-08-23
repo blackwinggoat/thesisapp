@@ -5,7 +5,7 @@
 
         <div class="container-fluid">
             <!-- Begin page heading -->
-            <h1 class="page-heading">SIMPRODI <small>Tugas Akhir</small></h1>
+            <h1 class="page-heading thesis-page-heading">Thesis App <small>FIKOM UMI</small></h1>
             <!-- End page heading -->
             @if (Auth::user()->level == 5)
                 @php
