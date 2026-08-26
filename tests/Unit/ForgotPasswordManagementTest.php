@@ -34,8 +34,8 @@ class ForgotPasswordManagementTest extends TestCase
         $this->assertStringContainsString('Crypt::encrypt', $service);
         $this->assertStringContainsString('Config::set(\'mail.host\'', $service);
         $this->assertStringContainsString('SystemMailSettings::apply();', file_get_contents(__DIR__ . '/../../app/Providers/AppServiceProvider.php'));
-        $this->assertStringContainsString('Lupa password?', $login);
-        $this->assertStringContainsString("route('password.request')", $login);
+        $this->assertStringNotContainsString('Lupa password?', $login);
+        $this->assertStringNotContainsString("route('password.request')", $login);
         $this->assertStringContainsString('Jika email tersebut terdaftar', $forgotController);
         $this->assertStringContainsString('throttle:5,1', $forgotController);
         $this->assertStringContainsString('SystemMailSettings::isReady()', $forgotController);

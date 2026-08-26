@@ -76,19 +76,6 @@
             line-height: 1.2;
         }
 
-        .forgot-password-link {
-            display: block;
-            margin-left: 207px;
-            margin-top: 8px;
-            color: #ffffff;
-            font-size: 12px;
-            text-decoration: none;
-        }
-
-        .forgot-password-link:hover {
-            color: #CFA323;
-            text-decoration: underline;
-        }
     </style>
 </head>
 
@@ -107,7 +94,6 @@
                 </button>
             </span><br>
             <button type="submit" class="button-login">Login</button>
-            <a class="forgot-password-link" href="{{ route('password.request') }}">Lupa password?</a>
         </form>
     </div>
 </body>
