@@ -25,6 +25,7 @@ class AdminUserManagementTest extends TestCase
         $this->assertStringContainsString('Auth::loginUsingId($sourceUserId)', $controller);
         $this->assertStringContainsString("login_as_source_user_level", $controller);
         $this->assertStringContainsString('(int) $targetUser->level === 1', $controller);
+        $this->assertStringContainsString('!array_key_exists((int) $targetUser->level, $roleLabels)', $controller);
     }
 
     public function testAdminUserManagementViewAndNavigationAreWired()
@@ -39,6 +40,7 @@ class AdminUserManagementTest extends TestCase
         $this->assertStringContainsString("route('admin.users.login_as'", $view);
         $this->assertStringContainsString('js-reset-password', $view);
         $this->assertStringContainsString('Login As', $view);
+        $this->assertStringContainsString('array_key_exists((int) $user->level, $roleLabels)', $view);
 
         $this->assertStringContainsString("route('admin.users.index')", $sidebar);
         $this->assertStringContainsString('Manajemen User', $sidebar);

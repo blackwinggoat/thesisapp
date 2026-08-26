@@ -108,7 +108,9 @@
                     @foreach ($data as $key => $user)
                         @php
                             $roleLabel = $roleLabels[(int) $user->level] ?? 'Role tidak dikenal';
-                            $canLoginAs = (int) $user->level !== 1 && (int) $user->id !== (int) Auth::id();
+                            $canLoginAs = array_key_exists((int) $user->level, $roleLabels)
+                                && (int) $user->level !== 1
+                                && (int) $user->id !== (int) Auth::id();
                         @endphp
                         <tr>
                             <td align="center">{{ $data->firstItem() + $key }}</td>

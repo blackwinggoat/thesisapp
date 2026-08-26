@@ -104,6 +104,7 @@ class Admin extends Controller
     public function login_as_user(Request $request, $id)
     {
         $authUser = $request->user();
+        $roleLabels = $this->roleLabels();
         if (!$authUser || (int) $authUser->level !== 1) {
             return redirect('/')->with('danger', 'Akses login as hanya untuk akun admin.');
         }
@@ -117,8 +118,8 @@ class Admin extends Controller
             return redirect()->back()->with('danger', 'User tujuan tidak ditemukan.');
         }
 
-        if ((int) $targetUser->id === (int) $authUser->id || (int) $targetUser->level === 1) {
-            return redirect()->back()->with('danger', 'Login As tidak tersedia untuk akun admin.');
+        if ((int) $targetUser->id === (int) $authUser->id || (int) $targetUser->level === 1 || !array_key_exists((int) $targetUser->level, $roleLabels)) {
+            return redirect()->back()->with('danger', 'Login As hanya tersedia untuk role resmi selain admin.');
         }
 
         $request->session()->put('login_as_source_user_id', $authUser->id);
