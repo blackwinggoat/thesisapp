@@ -23,8 +23,9 @@ class LaporanMahasiswaFeatureStructureTest extends TestCase
 
         $this->assertStringContainsString("where('trt_laporan_mahasiswa.C_KODE_DOSEN', auth()->user()->name)", $dosen);
         $this->assertStringContainsString("whereIn('status', ['baru', 'ditinjau'])", $dosen);
-        $this->assertStringContainsString("case 'proditi':", $prodi);
-        $this->assertStringContainsString("case 'prodisi':", $prodi);
+        $this->assertStringContainsString('protected function getProdiScope', $prodi);
+        $this->assertStringContainsString("'kode_prodi' => '55201'", $prodi);
+        $this->assertStringContainsString("'kode_prodi' => '57201'", $prodi);
         $this->assertStringContainsString("where('trt_laporan_mahasiswa.C_KODE_PRODI', \$kodeProdi)", $prodi);
     }
 

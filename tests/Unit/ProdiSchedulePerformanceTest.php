@@ -12,7 +12,8 @@ class ProdiSchedulePerformanceTest extends TestCase
         $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/jadwal.blade.php');
 
         $this->assertStringContainsString('jumlah_tipe_ujian', $controller);
-        $this->assertStringContainsString("->groupBy('nama_periode')", $controller);
+        $this->assertStringContainsString("->groupBy('nama_periode', 'status_prodi')", $controller);
+        $this->assertStringContainsString('$periode->status_prodi . \'-\' . $periode->nama_periode', $controller);
         $this->assertStringContainsString("compact('pendaftaran', 'mstpendaftaran', 'jadwalujian')", $controller);
         $this->assertStringContainsString('$value->jumlah_tipe_ujian', $view);
         $this->assertStringNotContainsString('mst_pendaftaran::where("nama_periode"', $view);

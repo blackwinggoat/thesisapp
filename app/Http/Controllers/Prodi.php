@@ -41,6 +41,71 @@ use Illuminate\Support\Facades\Input;
 
 class Prodi extends Controller
 {
+    protected function getProdiScope($user = null)
+    {
+        $user = $user ?: auth()->user();
+        $username = strtolower(trim((string) ($user->name ?? '')));
+
+        if (in_array($username, ['proditi', 'akademikproditi'], true)) {
+            return [
+                'nim_prefix' => '130',
+                'nim_like' => '130%',
+                'kode_prodi' => '55201',
+                'status_prodi' => 1,
+                'label' => 'Teknik Informatika',
+            ];
+        }
+
+        if (in_array($username, ['prodisi', 'akademikprodisi'], true)) {
+            return [
+                'nim_prefix' => '131',
+                'nim_like' => '131%',
+                'kode_prodi' => '57201',
+                'status_prodi' => 2,
+                'label' => 'Sistem Informasi',
+            ];
+        }
+
+        return [
+            'nim_prefix' => null,
+            'nim_like' => '%',
+            'kode_prodi' => null,
+            'status_prodi' => null,
+            'label' => 'Semua Program Studi',
+        ];
+    }
+
+    protected function applyProdiNimScope($query, $column)
+    {
+        $scope = $this->getProdiScope();
+        if (!empty($scope['nim_prefix'])) {
+            $query->where($column, 'LIKE', $scope['nim_prefix'] . '%');
+        }
+
+        return $query;
+    }
+
+    protected function applyProdiStatusScope($query, $column = 'status_prodi')
+    {
+        $scope = $this->getProdiScope();
+        if (!is_null($scope['status_prodi'])) {
+            $query->where($column, $scope['status_prodi']);
+        }
+
+        return $query;
+    }
+
+    protected function currentStatusProdiForWrite(Request $request)
+    {
+        $scope = $this->getProdiScope();
+        if (!is_null($scope['status_prodi'])) {
+            return $scope['status_prodi'];
+        }
+
+        $statusProdi = (int) $request->input('status_prodi');
+        return in_array($statusProdi, [1, 2], true) ? $statusProdi : null;
+    }
+
     private function preparePenilaiBatchViewData($data)
     {
         $data = collect($data);
@@ -293,11 +358,7 @@ class Prodi extends Controller
             ->select("*")
             ->where('trt_bimbingan.status_bimbingan', $status);
 
-        if (Auth::user()->name == 'proditi') {
-            $query->where('trt_bimbingan.C_NPM', 'LIKE', '130%');
-        } elseif (Auth::user()->name == 'prodisi') {
-            $query->where('trt_bimbingan.C_NPM', 'LIKE', '131%');
-        }
+        $this->applyProdiNimScope($query, 'trt_bimbingan.C_NPM');
 
         $data = $query
             ->orderBy('updated_at', 'desc')
@@ -400,14 +461,16 @@ class Prodi extends Controller
 
     protected function getDaftarApproveHasilUjianProposalPeriode($isHistory = false)
     {
-        $statusProdi = Auth::user()->name == "proditi" ? 1 : 2;
+        $statusProdi = $this->getProdiScope()['status_prodi'];
 
         $query = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
             ->where(function ($q) {
                 $q->where('mst_pendaftaran.tipe_ujian', 0)
                     ->orWhere('mst_pendaftaran.tipe_ujian', 3);
             })
-            ->where('mst_pendaftaran.status_prodi', $statusProdi)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('mst_pendaftaran.status_prodi', $statusProdi);
+            })
             ->orderBy('mst_pendaftaran.created_at', 'desc');
 
         if ($isHistory) {
@@ -502,14 +565,16 @@ class Prodi extends Controller
 
     protected function approveSemuaHasilUjian($tipeUjian, $statusSaatIni, $statusTujuan)
     {
-        $statusProdi = Auth::user()->name == "proditi" ? 1 : 2;
+        $statusProdi = $this->getProdiScope()['status_prodi'];
         $peserta = DB::table('trt_reg as rg')
             ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
             ->join('mst_pendaftaran as mp', 'mp.pendaftaran_id', '=', 'rg.pendaftaran_id')
             ->select('rg.reg_id', 'tb.bimbingan_id')
             ->where('rg.status', $tipeUjian)
             ->where('tb.status_bimbingan', $statusSaatIni)
-            ->where('mp.status_prodi', $statusProdi)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('mp.status_prodi', $statusProdi);
+            })
             ->where(function ($query) use ($tipeUjian) {
                 $query->where('mp.tipe_ujian', $tipeUjian)
                     ->orWhere('mp.tipe_ujian', 3);
@@ -773,14 +838,16 @@ class Prodi extends Controller
 
     protected function getDaftarApproveHasilUjianTaPeriode($isHistory = false)
     {
-        $statusProdi = Auth::user()->name == "proditi" ? 1 : 2;
+        $statusProdi = $this->getProdiScope()['status_prodi'];
 
         $query = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
             ->where(function ($q) {
                 $q->where('mst_pendaftaran.tipe_ujian', 2)
                     ->orWhere('mst_pendaftaran.tipe_ujian', 3);
             })
-            ->where('mst_pendaftaran.status_prodi', $statusProdi)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('mst_pendaftaran.status_prodi', $statusProdi);
+            })
             ->orderBy('mst_pendaftaran.created_at', 'desc');
 
         if ($isHistory) {
@@ -1369,11 +1436,8 @@ class Prodi extends Controller
     protected function queryLaporanMahasiswaProdi()
     {
         $kodeProdi = $this->kodeProdiLaporanMahasiswa();
-        if ($kodeProdi === null) {
-            abort(403, 'Akun Program Studi tidak memiliki cakupan laporan mahasiswa.');
-        }
 
-        return DB::table('trt_laporan_mahasiswa')
+        $query = DB::table('trt_laporan_mahasiswa')
             ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_laporan_mahasiswa.C_NPM')
             ->leftJoin('t_mst_dosen', 't_mst_dosen.C_KODE_DOSEN', '=', 'trt_laporan_mahasiswa.C_KODE_DOSEN')
             ->leftJoin('trt_prodi', 'trt_prodi.kode_prodi', '=', 'trt_laporan_mahasiswa.C_KODE_PRODI')
@@ -1382,8 +1446,13 @@ class Prodi extends Controller
                 't_mst_mahasiswa.NAMA_MAHASISWA',
                 't_mst_dosen.NAMA_DOSEN',
                 'trt_prodi.nama as nama_prodi'
-            )
-            ->where('trt_laporan_mahasiswa.C_KODE_PRODI', $kodeProdi);
+            );
+
+        if ($kodeProdi !== null) {
+            $query->where('trt_laporan_mahasiswa.C_KODE_PRODI', $kodeProdi);
+        }
+
+        return $query;
     }
 
     protected function findLaporanMahasiswaProdi($id)
@@ -1395,14 +1464,7 @@ class Prodi extends Controller
 
     protected function kodeProdiLaporanMahasiswa()
     {
-        switch ((string) auth()->user()->name) {
-            case 'proditi':
-                return '55201';
-            case 'prodisi':
-                return '57201';
-            default:
-                return null;
-        }
+        return $this->getProdiScope()['kode_prodi'];
     }
 
     protected function getMahasiswaBimbinganByPeran($kodeDosen, $kolomPembimbing, $peranPembimbing)
@@ -1472,12 +1534,8 @@ class Prodi extends Controller
 
     public function mahasiswa(Request $request)
     {
-        $nimPrefix = '';
-        if (auth()->user()->name == "prodisi") {
-            $nimPrefix = '131';
-        } else if (auth()->user()->name == "proditi") {
-            $nimPrefix = '130';
-        }
+        $scope = $this->getProdiScope();
+        $nimPrefix = $scope['nim_prefix'] ?: '';
 
         $q = trim((string) $request->get('q', ''));
         $statusAkun = trim((string) $request->get('status_akun', 'semua'));
@@ -1527,9 +1585,7 @@ class Prodi extends Controller
             ->paginate($perPage)
             ->appends($request->query());
 
-        $scopeMahasiswaLabel = $nimPrefix === ''
-            ? 'Semua Program Studi'
-            : ($nimPrefix === '130' ? 'Teknik Informatika' : 'Sistem Informasi');
+        $scopeMahasiswaLabel = $scope['label'];
 
         return view('tugasakhir.prodi.mahasiswa', compact('data', 'q', 'statusAkun', 'perPage', 'scopeMahasiswaLabel', 'studentClassFeatureReady'));
     }
@@ -1544,12 +1600,7 @@ class Prodi extends Controller
             return redirect()->back()->with('error', 'Tabel jenis kelas mahasiswa belum tersedia. Jalankan migrasi terlebih dahulu.');
         }
 
-        $nimPrefix = '';
-        if (auth()->user()->name == 'prodisi') {
-            $nimPrefix = '131';
-        } elseif (auth()->user()->name == 'proditi') {
-            $nimPrefix = '130';
-        }
+        $nimPrefix = $this->getProdiScope()['nim_prefix'] ?: '';
 
         $mahasiswa = DB::table('t_mst_mahasiswa')
             ->where('C_NPM', $nim)
@@ -1768,8 +1819,10 @@ class Prodi extends Controller
             ->where('C_NPM', $nim);
 
         if ((int) $authUser->level === 5) {
-            $nimPrefix = $authUser->name === 'prodisi' ? '131' : '130';
-            $mahasiswaQuery->where('C_NPM', 'LIKE', $nimPrefix . '%');
+            $scope = $this->getProdiScope($authUser);
+            if (!empty($scope['nim_prefix'])) {
+                $mahasiswaQuery->where('C_NPM', 'LIKE', $scope['nim_prefix'] . '%');
+            }
         }
 
         $mahasiswa = $mahasiswaQuery->first();
@@ -1811,13 +1864,13 @@ class Prodi extends Controller
 
     public function topik()
     {
-        $nimPrefix = Auth::user()->name == 'proditi' ? '130%' : '131%';
+        $nimLike = $this->getProdiScope()['nim_like'];
 
         $data_pengusul = DB::table('trt_topik')
             ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
             ->select('t_mst_mahasiswa.C_NPM', 't_mst_mahasiswa.NAMA_MAHASISWA')
             ->where('trt_topik.status', 0)
-            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimPrefix)
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
             ->distinct()
             ->orderBy('t_mst_mahasiswa.C_NPM', 'desc')
             ->get();
@@ -1827,7 +1880,7 @@ class Prodi extends Controller
 
     public function topik_riwayat(Request $request)
     {
-        $nimPrefix = Auth::user()->name == 'proditi' ? '130%' : '131%';
+        $nimLike = $this->getProdiScope()['nim_like'];
         $q = trim((string) $request->get('q', ''));
         $jenisTugasAkhirId = (int) $request->get('jenis_tugas_akhir_id', 0);
         $perPage = (int) $request->get('per_page', 50);
@@ -1849,7 +1902,7 @@ class Prodi extends Controller
                 'trt_topik.kerangka',
                 'trt_topik.status'
             )
-            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimPrefix);
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike);
 
         if ($q !== '') {
             $query->where(function ($subQuery) use ($q) {
@@ -1913,37 +1966,21 @@ class Prodi extends Controller
 
     public function usulan_pembimbing()
     {
-        if (Auth::user()->name == 'proditi') {
-            $data = DB::table('trt_topik')
-                ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->select('t_mst_mahasiswa.*', 'trt_topik.*')
-                ->where('trt_topik.status', 1)
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '130%')
-                ->whereNotIn(
-                    't_mst_mahasiswa.C_NPM',
-                    function ($q) {
-                        $q
-                            ->select('C_NPM')
-                            ->from('trt_bimbingan');
-                    }
-                )
-                ->get();
-        } else {
-            $data = DB::table('trt_topik')
-                ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->select('t_mst_mahasiswa.*', 'trt_topik.*')
-                ->where('trt_topik.status', 1)
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '131%')
-                ->whereNotIn(
-                    't_mst_mahasiswa.C_NPM',
-                    function ($q) {
-                        $q
-                            ->select('C_NPM')
-                            ->from('trt_bimbingan');
-                    }
-                )
-                ->get();
-        }
+        $nimLike = $this->getProdiScope()['nim_like'];
+        $data = DB::table('trt_topik')
+            ->join('t_mst_mahasiswa', 'trt_topik.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->select('t_mst_mahasiswa.*', 'trt_topik.*')
+            ->where('trt_topik.status', 1)
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+            ->whereNotIn(
+                't_mst_mahasiswa.C_NPM',
+                function ($q) {
+                    $q
+                        ->select('C_NPM')
+                        ->from('trt_bimbingan');
+                }
+            )
+            ->get();
         return view('tugasakhir.prodi.usulan_pembimbing', compact('data'));
     }
 
@@ -2209,45 +2246,27 @@ class Prodi extends Controller
 
     public function sk_pembimbing()
     {
-        if (Auth::user()->name == 'proditi') {
-            $data = DB::table('t_mst_mahasiswa')
-                ->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->join('t_mst_dosen', 'C_KODE_DOSEN', '=', 'trt_bimbingan.pembimbing_I_id')
-                ->select('t_mst_mahasiswa.NAMA_MAHASISWA', 't_mst_dosen.NAMA_DOSEN')
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '130%')
-                ->get();
+        $nimLike = $this->getProdiScope()['nim_like'];
 
-            $penetapan_pengusulan = DB::table('trt_bimbingan')
-                ->join('users', 'trt_bimbingan.C_NPM', '=', 'users.name')
-                ->select('*')
-                ->where('status_sk', '<>', 1)
-                ->where('trt_bimbingan.C_NPM', 'LIKE', '130%')
-                ->get();
+        $data = DB::table('t_mst_mahasiswa')
+            ->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->join('t_mst_dosen', 'C_KODE_DOSEN', '=', 'trt_bimbingan.pembimbing_I_id')
+            ->select('t_mst_mahasiswa.NAMA_MAHASISWA', 't_mst_dosen.NAMA_DOSEN')
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+            ->get();
 
-            $riwayat_usulan = DB::table('trt_sk')
-                ->select('nomor', 'tgl_surat')
-                ->distinct('nomor')
-                ->get();
-        } else {
-            $data = DB::table('t_mst_mahasiswa')
-                ->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->join('t_mst_dosen', 'C_KODE_DOSEN', '=', 'trt_bimbingan.pembimbing_I_id')
-                ->select('t_mst_mahasiswa.NAMA_MAHASISWA', 't_mst_dosen.NAMA_DOSEN')
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '131%')
-                ->get();
+        $penetapan_pengusulan = DB::table('trt_bimbingan')
+            ->join('users', 'trt_bimbingan.C_NPM', '=', 'users.name')
+            ->select('*')
+            ->where('status_sk', '<>', 1)
+            ->where('trt_bimbingan.C_NPM', 'LIKE', $nimLike)
+            ->get();
 
-            $penetapan_pengusulan = DB::table('trt_bimbingan')
-                ->join('users', 'trt_bimbingan.C_NPM', '=', 'users.name')
-                ->select('*')
-                ->where('status_sk', '<>', 1)
-                ->where('trt_bimbingan.C_NPM', 'LIKE', '131%')
-                ->get();
+        $riwayat_usulan = DB::table('trt_sk')
+            ->select('nomor', 'tgl_surat')
+            ->distinct('nomor')
+            ->get();
 
-            $riwayat_usulan = DB::table('trt_sk')
-                ->select('nomor', 'tgl_surat')
-                ->distinct('nomor')
-                ->get();
-        }
         return view('tugasakhir.prodi.sk_pembimbing', compact('riwayat_usulan', 'penetapan_pengusulan', 'data'));
     }
 
@@ -2447,21 +2466,18 @@ class Prodi extends Controller
 
     public function peserta_proposal()
     {
-        if (Auth::user()->name == 'proditi') {
-            $pendaftaran = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', 0)
-                ->where('mst_pendaftaran.status_prodi', 1)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        } else {
-            $pendaftaran = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', 0)
-                ->where('mst_pendaftaran.status_prodi', 2)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        }
+        $statusProdi = $this->getProdiScope()['status_prodi'];
+        $pendaftaran = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
+            ->where(function ($query) {
+                $query->where('tipe_ujian', 0)
+                    ->orWhere('tipe_ujian', 3);
+            })
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('mst_pendaftaran.status_prodi', $statusProdi);
+            })
+            ->orderBy('mst_pendaftaran.created_at', 'desc')
+            ->get();
+
         return view('tugasakhir.prodi.peserta_proposal', compact('pendaftaran'));
     }
 
@@ -2476,21 +2492,18 @@ class Prodi extends Controller
 
     public function peserta_ujianmeja()
     {
-        if (Auth::user()->name == 'proditi') {
-            $pendaftaran = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', 2)
-                ->where('mst_pendaftaran.status_prodi', 1)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        } else {
-            $pendaftaran = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
-                ->where('tipe_ujian', 2)
-                ->where('mst_pendaftaran.status_prodi', 2)
-                ->orwhere('tipe_ujian', 3)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        }
+        $statusProdi = $this->getProdiScope()['status_prodi'];
+        $pendaftaran = mst_pendaftaran::join("trt_jadwal_ujian", "trt_jadwal_ujian.pendaftaran_id", "=", "mst_pendaftaran.pendaftaran_id")
+            ->where(function ($query) {
+                $query->where('tipe_ujian', 2)
+                    ->orWhere('tipe_ujian', 3);
+            })
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('mst_pendaftaran.status_prodi', $statusProdi);
+            })
+            ->orderBy('mst_pendaftaran.created_at', 'desc')
+            ->get();
+
         return view('tugasakhir.prodi.peserta_ujianmeja', compact('pendaftaran'));
     }
 
@@ -2548,39 +2561,69 @@ class Prodi extends Controller
 
     public function jadwal()
     {
-        $statusProdi = Auth::user()->name == 'proditi' ? 1 : 2;
+        $statusProdi = $this->getProdiScope()['status_prodi'];
 
         $pendaftaran = mst_pendaftaran::where('status_ujian', 0)
-            ->where('status_prodi', $statusProdi)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('status_prodi', $statusProdi);
+            })
             ->orderBy('pendaftaran_id', 'asc')
             ->get()
-            ->unique('nama_periode')
+            ->unique(function ($periode) {
+                return $periode->status_prodi . '-' . $periode->nama_periode;
+            })
             ->sortByDesc('created_at')
             ->values();
 
         $jumlahTipePeriode = DB::table('mst_pendaftaran')
             ->whereIn('nama_periode', $pendaftaran->pluck('nama_periode')->filter()->values())
-            ->select('nama_periode', DB::raw('COUNT(*) AS jumlah_tipe_ujian'))
-            ->groupBy('nama_periode')
-            ->pluck('jumlah_tipe_ujian', 'nama_periode');
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('status_prodi', $statusProdi);
+            })
+            ->select('nama_periode', 'status_prodi', DB::raw('COUNT(*) AS jumlah_tipe_ujian'))
+            ->groupBy('nama_periode', 'status_prodi')
+            ->get()
+            ->mapWithKeys(function ($periode) {
+                return [$periode->status_prodi . '-' . $periode->nama_periode => $periode->jumlah_tipe_ujian];
+            });
 
         $pendaftaran->each(function ($periode) use ($jumlahTipePeriode) {
-            $periode->jumlah_tipe_ujian = (int) $jumlahTipePeriode->get($periode->nama_periode, 0);
+            $periodeKey = $periode->status_prodi . '-' . $periode->nama_periode;
+            $periode->jumlah_tipe_ujian = (int) $jumlahTipePeriode->get($periodeKey, 0);
+            $periode->prodi_label = $this->getStatusProdiLabel($periode->status_prodi);
         });
 
         $mstpendaftaran = mst_pendaftaran::whereNotIn('pendaftaran_id', TrtJadwalUjian::select('pendaftaran_id'))
-            ->where('status_prodi', $statusProdi)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('status_prodi', $statusProdi);
+            })
             ->orderBy('pendaftaran_id', 'asc')
             ->get()
-            ->unique('nama_periode')
+            ->unique(function ($periode) {
+                return $periode->status_prodi . '-' . $periode->nama_periode;
+            })
+            ->each(function ($periode) {
+                $periode->prodi_label = $this->getStatusProdiLabel($periode->status_prodi);
+            })
             ->values();
 
         $jadwalujian = TrtJadwalUjian::join('mst_pendaftaran', 'mst_pendaftaran.pendaftaran_id', '=', 'trt_jadwal_ujian.pendaftaran_id')
-            ->where('mst_pendaftaran.status_prodi', $statusProdi)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('mst_pendaftaran.status_prodi', $statusProdi);
+            })
             ->orderBy('mst_pendaftaran.created_at', 'desc')
             ->get();
 
+        $jadwalujian->each(function ($jadwal) {
+            $jadwal->prodi_label = $this->getStatusProdiLabel($jadwal->status_prodi);
+        });
+
         return view('tugasakhir.prodi.jadwal', compact('pendaftaran', 'mstpendaftaran', 'jadwalujian'));
+    }
+
+    protected function getStatusProdiLabel($statusProdi)
+    {
+        return (int) $statusProdi === 1 ? 'Teknik Informatika' : 'Sistem Informasi';
     }
 
     public function scope_ta()
@@ -2604,12 +2647,7 @@ class Prodi extends Controller
         $lulusanPeriodeChart = [];
         $lulusanBidangChart = [];
 
-        $nimLike = '%';
-        if (Auth::user()->name == 'proditi') {
-            $nimLike = '130%';
-        } elseif (Auth::user()->name == 'prodisi') {
-            $nimLike = '131%';
-        }
+        $nimLike = $this->getProdiScope()['nim_like'];
 
         try {
             $lulusanRows = DB::table('trt_bimbingan')
@@ -2747,42 +2785,32 @@ class Prodi extends Controller
 
     public function jadwalpostadd(Request $request)
     {
-        $mst = mst_pendaftaran::where("nama_periode", $request->nama_periode)->first();
+        $statusProdi = $this->currentStatusProdiForWrite($request);
+        if ($statusProdi === null) {
+            return redirect::to('prodi/jadwal')->with('error', 'Program studi wajib dipilih untuk akun admin.');
+        }
+
+        $mst = mst_pendaftaran::where("nama_periode", $request->nama_periode)
+            ->where('status_prodi', $statusProdi)
+            ->first();
         if (empty($mst)) {
             if ($request->tipe_ujian == "3") {
                 for ($i = 0; $i < 3; $i++) {
-                    if (Auth::user()->name == "proditi") {
-                        $request->merge([
-                            "tipe_ujian" => $i,
-                            "user_id" => "00",
-                            "jml_peserta" => 0,
-                            "status_prodi" => 1
-                        ]);
-                    } else {
-                        $request->merge([
-                            "tipe_ujian" => $i,
-                            "user_id" => "00",
-                            "jml_peserta" => 0,
-                            "status_prodi" => 2
-                        ]);
-                    }
+                    $request->merge([
+                        "tipe_ujian" => $i,
+                        "user_id" => "00",
+                        "jml_peserta" => 0,
+                        "status_prodi" => $statusProdi
+                    ]);
 
                     mst_pendaftaran::create($request->all());
                 }
             } else {
-                if (Auth::user()->name == "proditi") {
-                    $request->merge([
-                        "user_id" => "00",
-                        "jml_peserta" => 0,
-                        'status_prodi' => 1
-                    ]);
-                } else {
-                    $request->merge([
-                        "user_id" => "00",
-                        "jml_peserta" => 0,
-                        'status_prodi' => 2
-                    ]);
-                }
+                $request->merge([
+                    "user_id" => "00",
+                    "jml_peserta" => 0,
+                    'status_prodi' => $statusProdi
+                ]);
                 mst_pendaftaran::create($request->all());
             }
         }
@@ -3073,47 +3101,42 @@ class Prodi extends Controller
 
     public function sk_ujian()
     {
-        if (Auth::user()->name == "proditi" || Auth::user()->name == "akademikproditi") {
-            $pendaftaran = mst_pendaftaran::where('status_prodi', 1)
-                ->get();
-            $jadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
-                ->where('mst_pendaftaran.tipe_ujian', '=', 0)
-                ->where('mst_pendaftaran.status_prodi', 1)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        } else {
-            $pendaftaran = mst_pendaftaran::where('status_prodi', 2)
-                ->get();
-            $jadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
-                ->where('mst_pendaftaran.tipe_ujian', '=', 0)
-                ->where('mst_pendaftaran.status_prodi', 2)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        }
+        $statusProdi = $this->getProdiScope()['status_prodi'];
+
+        $pendaftaran = mst_pendaftaran::when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('status_prodi', $statusProdi);
+            })
+            ->get();
+
+        $jadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
+            ->where('mst_pendaftaran.tipe_ujian', '=', 0)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('mst_pendaftaran.status_prodi', $statusProdi);
+            })
+            ->orderBy('mst_pendaftaran.created_at', 'desc')
+            ->get();
+
         return view('tugasakhir.prodi.sk_ujian', compact('pendaftaran', "jadwalujian"));
     }
 
     public function sk_ujian_ta()
     {
-        if (Auth::user()->name == 'proditi') {
-            $pendaftaran = mst_pendaftaran::where('status_prodi', 1)
-                ->get();
-            $jadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
-                ->where('tipe_ujian', '=', 2)
-                ->where('status_sk', '=', 0)
-                ->where('mst_pendaftaran.status_prodi', '=', 1)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        } else {
-            $pendaftaran = mst_pendaftaran::where('status_prodi', 2)
-                ->get();
-            $jadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
-                ->where('tipe_ujian', '=', 2)
-                ->where('status_sk', '=', 0)
-                ->where('mst_pendaftaran.status_prodi', '=', 2)
-                ->orderBy('mst_pendaftaran.created_at', 'desc')
-                ->get();
-        }
+        $statusProdi = $this->getProdiScope()['status_prodi'];
+
+        $pendaftaran = mst_pendaftaran::when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('status_prodi', $statusProdi);
+            })
+            ->get();
+
+        $jadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
+            ->where('tipe_ujian', '=', 2)
+            ->where('status_sk', '=', 0)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('mst_pendaftaran.status_prodi', '=', $statusProdi);
+            })
+            ->orderBy('mst_pendaftaran.created_at', 'desc')
+            ->get();
+
         return view('tugasakhir.prodi.sk_ujian_ta', compact('pendaftaran', "jadwalujian"));
     }
 
@@ -4013,28 +4036,12 @@ class Prodi extends Controller
 
     protected function getReportContext()
     {
-        $username = strtolower(trim((string) auth()->user()->name));
-
-        if ($username === 'proditi') {
-            return [
-                'nim_like' => '130%',
-                'status_prodi' => 1,
-                'label' => 'Teknik Informatika',
-            ];
-        }
-
-        if ($username === 'prodisi') {
-            return [
-                'nim_like' => '131%',
-                'status_prodi' => 2,
-                'label' => 'Sistem Informasi',
-            ];
-        }
+        $scope = $this->getProdiScope();
 
         return [
-            'nim_like' => '%',
-            'status_prodi' => null,
-            'label' => Helper::getProgramStudiByAuthUser($username) ?: 'Program Studi',
+            'nim_like' => $scope['nim_like'],
+            'status_prodi' => $scope['status_prodi'],
+            'label' => $scope['label'],
         ];
     }
 
@@ -4132,17 +4139,12 @@ class Prodi extends Controller
 
     public function persyaratan_proposal()
     {
-        if (Auth::user()->name == 'proditi') {
-            $data = TrtPengajuanDokumen::join("t_mst_mahasiswa", "trt_pengajuan_dokumen.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
-                ->where("type", 0)
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '130%')
-                ->get(["NAMA_MAHASISWA", "t_mst_mahasiswa.C_NPM"]);
-        } else {
-            $data = TrtPengajuanDokumen::join("t_mst_mahasiswa", "trt_pengajuan_dokumen.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
-                ->where("type", 0)
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '131%')
-                ->get(["NAMA_MAHASISWA", "t_mst_mahasiswa.C_NPM"]);
-        }
+        $nimLike = $this->getProdiScope()['nim_like'];
+        $data = TrtPengajuanDokumen::join("t_mst_mahasiswa", "trt_pengajuan_dokumen.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
+            ->where("type", 0)
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+            ->get(["NAMA_MAHASISWA", "t_mst_mahasiswa.C_NPM"]);
+
         return view("tugasakhir.prodi.persyaratan_proposal", compact("data"));
     }
 
@@ -4154,17 +4156,12 @@ class Prodi extends Controller
 
     public function persyaratan_ujianmeja()
     {
-        if (Auth::user()->name == 'proditi') {
-            $data = TrtPengajuanDokumen::join("t_mst_mahasiswa", "trt_pengajuan_dokumen.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
-                ->where("type", 2)
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '130%')
-                ->get(["NAMA_MAHASISWA", "t_mst_mahasiswa.C_NPM"]);
-        } else {
-            $data = TrtPengajuanDokumen::join("t_mst_mahasiswa", "trt_pengajuan_dokumen.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
-                ->where("type", 2)
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '131%')
-                ->get(["NAMA_MAHASISWA", "t_mst_mahasiswa.C_NPM"]);
-        }
+        $nimLike = $this->getProdiScope()['nim_like'];
+        $data = TrtPengajuanDokumen::join("t_mst_mahasiswa", "trt_pengajuan_dokumen.C_NPM", "=", "t_mst_mahasiswa.C_NPM")
+            ->where("type", 2)
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+            ->get(["NAMA_MAHASISWA", "t_mst_mahasiswa.C_NPM"]);
+
         return view("tugasakhir.prodi.persyaratan_ujianmeja", compact("data"));
     }
 
@@ -5522,11 +5519,7 @@ class Prodi extends Controller
             ->where('status_bimbingan', $status)
             ->whereBetween('updated_at', [$tanggal_dari, $tanggal_sampai]);
 
-        if (Auth::user()->name == 'proditi') {
-            $query->where('trt_bimbingan.C_NPM', 'LIKE', '130%');
-        } elseif (Auth::user()->name == 'prodisi') {
-            $query->where('trt_bimbingan.C_NPM', 'LIKE', '131%');
-        }
+        $this->applyProdiNimScope($query, 'trt_bimbingan.C_NPM');
 
         $data = $query
             ->orderBy('updated_at', 'desc')
@@ -5590,61 +5583,34 @@ class Prodi extends Controller
     // Surat Keputusan Pembimbing
     public function surat_keputusan_pembimbing()
     {
-        if (Auth::user()->name == "proditi") {
-            $data = DB::table('t_mst_mahasiswa')
-                ->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->join('t_mst_dosen', 'C_KODE_DOSEN', '=', 'trt_bimbingan.pembimbing_I_id')
-                ->select('t_mst_mahasiswa.NAMA_MAHASISWA', 't_mst_dosen.NAMA_DOSEN')
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '130%')
-                ->get();
+        $nimLike = $this->getProdiScope()['nim_like'];
 
-            $penetapan_pengusulan = DB::table('trt_bimbingan')
-                ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->select('*')
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '130%')
-                ->where('status_sk', '<>', 1)
-                ->get();
+        $data = DB::table('t_mst_mahasiswa')
+            ->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->join('t_mst_dosen', 'C_KODE_DOSEN', '=', 'trt_bimbingan.pembimbing_I_id')
+            ->select('t_mst_mahasiswa.NAMA_MAHASISWA', 't_mst_dosen.NAMA_DOSEN')
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+            ->get();
 
-            $riwayat_usulan = DB::table('trt_sk')
-                ->select('nomor', 'tgl_surat')
-                ->distinct('nomor')
-                ->orderBy('tgl_surat', 'DESC')
-                ->get();
+        $penetapan_pengusulan = DB::table('trt_bimbingan')
+            ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
+            ->select('*')
+            ->where('t_mst_mahasiswa.C_NPM', 'LIKE', $nimLike)
+            ->where('status_sk', '<>', 1)
+            ->get();
 
-            $data_sk = DB::table('mst_sk_pembimbing')
-                ->join('trt_bimbingan', 'mst_sk_pembimbing.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
-                ->select('*')
-                ->where('trt_bimbingan.C_NPM', 'LIKE', '130%')
-                ->orderBy('mst_sk_pembimbing.sk_pembimbing_id', 'DESC')
-                ->get();
-        } else {
-            $data = DB::table('t_mst_mahasiswa')
-                ->join('trt_bimbingan', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->join('t_mst_dosen', 'C_KODE_DOSEN', '=', 'trt_bimbingan.pembimbing_I_id')
-                ->select('t_mst_mahasiswa.NAMA_MAHASISWA', 't_mst_dosen.NAMA_DOSEN')
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '131%')
-                ->get();
+        $riwayat_usulan = DB::table('trt_sk')
+            ->select('nomor', 'tgl_surat')
+            ->distinct('nomor')
+            ->orderBy('tgl_surat', 'DESC')
+            ->get();
 
-            $penetapan_pengusulan = DB::table('trt_bimbingan')
-                ->join('t_mst_mahasiswa', 'trt_bimbingan.C_NPM', '=', 't_mst_mahasiswa.C_NPM')
-                ->select('*')
-                ->where('t_mst_mahasiswa.C_NPM', 'LIKE', '131%')
-                ->where('status_sk', '<>', 1)
-                ->get();
-
-            $riwayat_usulan = DB::table('trt_sk')
-                ->select('nomor', 'tgl_surat')
-                ->distinct('nomor')
-                ->orderBy('tgl_surat', 'DESC')
-                ->get();
-
-            $data_sk = DB::table('mst_sk_pembimbing')
-                ->join('trt_bimbingan', 'mst_sk_pembimbing.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
-                ->select('*')
-                ->where('trt_bimbingan.C_NPM', 'LIKE', '131%')
-                ->orderBy('mst_sk_pembimbing.sk_pembimbing_id', 'DESC')
-                ->get();
-        }
+        $data_sk = DB::table('mst_sk_pembimbing')
+            ->join('trt_bimbingan', 'mst_sk_pembimbing.bimbingan_id', '=', 'trt_bimbingan.bimbingan_id')
+            ->select('*')
+            ->where('trt_bimbingan.C_NPM', 'LIKE', $nimLike)
+            ->orderBy('mst_sk_pembimbing.sk_pembimbing_id', 'DESC')
+            ->get();
 
         return view('tugasakhir.prodi.surat_keputusan_pembimbing', compact('riwayat_usulan', 'penetapan_pengusulan', 'data', 'data_sk'));
     }
@@ -5661,33 +5627,25 @@ class Prodi extends Controller
 
     public function surat_penugasan_ujian_tugas_akhir()
     {
-        if (Auth::user()->name == "proditi") {
-            $data_sk_penugasan = DB::table('mst_sk_penugasan')
-                ->select('*')
-                ->join('trt_bimbingan', 'trt_bimbingan.bimbingan_id', '=', 'mst_sk_penugasan.bimbingan_id')
-                ->where('trt_bimbingan.C_NPM', 'LIKE', '130%')
-                ->orderBy('mst_sk_penugasan.sk_penugasan_id', 'DESC')
-                ->get();
+        $nimLike = $this->getProdiScope()['nim_like'];
+        $statusProdi = $this->getProdiScope()['status_prodi'];
 
-            $daftar_surat_usulan = DB::table('trt_sk_ujian_ta')
-                ->select('*')
-                ->join('mst_pendaftaran', 'mst_pendaftaran.pendaftaran_id', '=', 'trt_sk_ujian_ta.pendaftaran_id')
-                ->orderBy('trt_sk_ujian_ta.sk_id', 'DESC')
-                ->get();
-        } else {
-            $data_sk_penugasan = DB::table('mst_sk_penugasan')
-                ->select('*')
-                ->join('trt_bimbingan', 'trt_bimbingan.bimbingan_id', '=', 'mst_sk_penugasan.bimbingan_id')
-                ->where('trt_bimbingan.C_NPM', 'LIKE', '131%')
-                ->orderBy('mst_sk_penugasan.sk_penugasan_id', 'DESC')
-                ->get();
+        $data_sk_penugasan = DB::table('mst_sk_penugasan')
+            ->select('*')
+            ->join('trt_bimbingan', 'trt_bimbingan.bimbingan_id', '=', 'mst_sk_penugasan.bimbingan_id')
+            ->where('trt_bimbingan.C_NPM', 'LIKE', $nimLike)
+            ->orderBy('mst_sk_penugasan.sk_penugasan_id', 'DESC')
+            ->get();
 
-            $daftar_surat_usulan = DB::table('trt_sk_ujian_ta')
-                ->select('*')
-                ->join('mst_pendaftaran', 'mst_pendaftaran.pendaftaran_id', '=', 'trt_sk_ujian_ta.pendaftaran_id')
-                ->orderBy('trt_sk_ujian_ta.sk_id', 'DESC')
-                ->get();
-        }
+        $daftar_surat_usulan = DB::table('trt_sk_ujian_ta')
+            ->select('*')
+            ->join('mst_pendaftaran', 'mst_pendaftaran.pendaftaran_id', '=', 'trt_sk_ujian_ta.pendaftaran_id')
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('mst_pendaftaran.status_prodi', $statusProdi);
+            })
+            ->orderBy('trt_sk_ujian_ta.sk_id', 'DESC')
+            ->get();
+
         return view('tugasakhir.prodi.surat_penugasan_ujian_tugas_akhir', compact('daftar_surat_usulan', 'data_sk_penugasan'));
     }
 

@@ -13,6 +13,9 @@
             <li><a href="{{ url('/') }}">Home</a></li>
             <li class="active">Jadwal Ujian</li>
         </ol>
+        @php
+            $showProdiColumn = !in_array(Auth::user()->name, ['proditi', 'prodisi', 'akademikproditi', 'akademikprodisi']);
+        @endphp
 
         <h3 class="page-heading">Form Periode Pendaftaran</h3>
         <!-- BEGIN DATA TABLE -->
@@ -27,10 +30,22 @@
                         </div>
                     </div>
                     <br><br>
-                    @if (Auth::user()->name == 'proditi')
+                    @if (Auth::user()->name == 'proditi' || Auth::user()->name == 'akademikproditi')
                         <input type="hidden" name="status_prodi" value="1">
-                    @else
+                    @elseif (Auth::user()->name == 'prodisi' || Auth::user()->name == 'akademikprodisi')
                         <input type="hidden" name="status_prodi" value="2">
+                    @else
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label">Program Studi</label>
+                        <div class="col-xs-5">
+                            <select class="form-control bold-border" name="status_prodi" required>
+                                <option selected disabled>Pilih Program Studi</option>
+                                <option value="1">Teknik Informatika</option>
+                                <option value="2">Sistem Informasi</option>
+                            </select>
+                        </div>
+                    </div>
+                    <br><br>
                     @endif
                     <div class="form-group">
                         <label class="col-lg-2 control-label">Tipe Ujian</label>
@@ -85,6 +100,9 @@
                     <thead class="the-box dark full">
                         <tr>
                             <th>No</th>
+                            @if($showProdiColumn)
+                            <th>Program Studi</th>
+                            @endif
                             <th>Periode</th>
                             <th>Tipe Ujian</th>
                             <th>Tanggal periode</th>
@@ -98,6 +116,9 @@
                         @foreach ($pendaftaran as $key => $value)
                         <tr class="odd gradeX">
                             <td width="1%" align="center">{{++$key}}</td>
+                            @if($showProdiColumn)
+                            <td>{{$value->prodi_label}}</td>
+                            @endif
                             <td>{{$value->nama_periode}}</td>
                             <td>
                                 @if($value->jumlah_tipe_ujian < 3) @if($value->tipe_ujian == 0)
@@ -143,7 +164,9 @@
                                 onchange="namaPeriodeChange(this)" required>
                                 <option selected disabled>Pilih Periode</option>
                                 @foreach ($mstpendaftaran as $value)
-                                <option value="{{$value->pendaftaran_id}}">{{$value->nama_periode}}</option>
+                                <option value="{{$value->pendaftaran_id}}">
+                                    {{$value->nama_periode}}@if($showProdiColumn) - {{$value->prodi_label}}@endif
+                                </option>
                                 @endforeach
                             </select>
                         </div><!-- /.col-xs-5 -->
@@ -184,6 +207,9 @@
                     <thead class="the-box dark full">
                         <tr>
                             <th>No</th>
+                            @if($showProdiColumn)
+                            <th>Program Studi</th>
+                            @endif
                             <th>Tanggal Ujian</th>
                             <th>Nama Periode</th>
                             <th>Tipe Ujian</th>
@@ -196,6 +222,9 @@
                         @foreach($jadwalujian as $i => $d)
                         <tr class="odd gradeX">
                             <td width="1%" align="center">{{++$i}}</td>
+                            @if($showProdiColumn)
+                            <td>{{$d->prodi_label}}</td>
+                            @endif
                             <td>{{$d->tgl_ujian}}</td>
                             <td>{{$d->nama_periode}}</td>
                             @php
@@ -260,6 +289,7 @@ Apakah Anda yakin ingin menghapus data?
         console.log("Selamat Datang di Bagian Satu");
         var nama_periode = $('input[name="nama_periode"]').val();
         var tipe_ujian = $('select[name="tipe_ujian"]').val();
+        var status_prodi = $('select[name="status_prodi"]').length ? $('select[name="status_prodi"]').val() : 'fixed';
         var tgl_start = $('input[name="tgl_start"]').val();
         var tgl_end = $('input[name="tgl_end"]').val();
         var kuota = $('input[name="kuota"]').val();
@@ -270,7 +300,7 @@ Apakah Anda yakin ingin menghapus data?
         console.log(kuota);
         
 
-       if (nama_periode == "" || tipe_ujian == "" || tgl_start == "" || tgl_end == "" || kuota == "") {
+       if (nama_periode == "" || tipe_ujian == "" || status_prodi == "" || status_prodi == null || tgl_start == "" || tgl_end == "" || kuota == "") {
             console.log("Ini Bagian Satu");
             $('#tombol_dua').attr("disabled", "disabled");
             $('#status').html("Data Pada Form Belum Lengkap");

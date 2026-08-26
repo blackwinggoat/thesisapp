@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 class MahasiswaPhotoCompletionTest extends TestCase
 {
-    public function testPhotoIsRequiredAndStoredWithStudentProfile()
+    public function testWhatsappIsRequiredAndPhotoCanBeStoredWithStudentProfile()
     {
         $helper = file_get_contents(__DIR__ . '/../../app/Helper.php');
         $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/mhs.php');
@@ -14,11 +14,13 @@ class MahasiswaPhotoCompletionTest extends TestCase
         $dosenController = file_get_contents(__DIR__ . '/../../app/Http/Controllers/dosen.php');
 
         $this->assertStringContainsString("'D_FOTO_MAHASISWA'", $helper);
-        $this->assertStringContainsString("\$missing[] = 'Foto';", $helper);
+        $this->assertStringContainsString("\$missing[] = 'Nomor WhatsApp';", $helper);
+        $this->assertStringNotContainsString("\$missing[] = 'Foto';", $helper);
         $this->assertStringContainsString("asset('gambar/' . \$photo)", $helper);
         $this->assertStringContainsString("asset('images/defaults/student-female.png')", $helper);
         $this->assertStringContainsString("asset('images/defaults/student-male.png')", $helper);
-        $this->assertStringContainsString("'foto' => (\$fotoWajib ? 'required' : 'nullable')", $controller);
+        $this->assertStringContainsString("'no_wa' => 'required|max:20'", $controller);
+        $this->assertStringContainsString("'foto' => 'nullable|file|image|mimes:jpeg,jpg,png,webp|max:5120'", $controller);
         $this->assertStringContainsString("mimes:jpeg,jpg,png,webp", $controller);
         $this->assertStringContainsString("'foto.uploaded' => 'Upload foto gagal diproses server. Coba gunakan file yang lebih kecil lalu unggah kembali.'", $controller);
         $this->assertStringContainsString("->store('mahasiswa', 'public')", $controller);

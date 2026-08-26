@@ -22,11 +22,10 @@ class MahasiswaDownloadPdfTest extends TestCase
         $downloadView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/mhs/download.blade.php');
         $this->assertStringContainsString("url('mhs/surat_sk_ujian_meja')", $downloadView);
         $this->assertStringContainsString("url('mhs/surat_sk_ujian_meja_pdf')", $downloadView);
-        $this->assertStringContainsString("url('mhs/surat_sk_pembimbing_pdf')", $downloadView);
+        $this->assertStringContainsString("url('sk_pembimbing_pdf')", $downloadView);
         $this->assertStringContainsString("url('mhs/surat_sk_proposal_pdf')", $downloadView);
-        $this->assertStringContainsString("PDF::loadView('tugasakhir.fakultas.cetakskpembimbing_pdf'", $controller);
+        $this->assertStringContainsString("return redirect('sk_pembimbing_pdf/' . \$nomor);", $controller);
         $this->assertStringContainsString("PDF::loadView('tugasakhir.prodi.cetakskpenguji_pdf'", $controller);
-        $this->assertStringContainsString("where('bimbingan.C_NPM', \$nim)", $controller);
         $this->assertStringContainsString("where('peserta.C_NPM', \$nim)", $controller);
         $this->assertStringContainsString('publicImageDataUri', $view);
         $this->assertStringContainsString('pdfOfficialImageDataUri', $view);

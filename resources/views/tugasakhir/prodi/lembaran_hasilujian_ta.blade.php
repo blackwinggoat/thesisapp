@@ -122,6 +122,11 @@
 <button id="btnPrint" onclick="prints()" class="button">Print</button>
 
 <body>
+    @php
+        $programStudiSurat = substr((string) $nim, 0, 3) === '130'
+            ? 'PROGRAM STUDI TEKNIK INFORMATIKA'
+            : 'PROGRAM STUDI SISTEM INFORMASI';
+    @endphp
     <div class="header" style="position: relative; display: flex; align-items: center; justify-content: space-between;">
         <div style="display: flex; align-items: center; margin-right: 30px !important;">
             <img src="{{ asset('umi.png') }}" alt="Logo Institusi"
@@ -132,11 +137,7 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $programStudiSurat }}</h4><br>
         </div>
     </div>
     <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
@@ -332,11 +333,7 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $programStudiSurat }}</h4><br>
         </div>
     </div>
     <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
@@ -508,11 +505,7 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $programStudiSurat }}</h4><br>
         </div>
     </div>
     <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
@@ -683,11 +676,7 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $programStudiSurat }}</h4><br>
         </div>
     </div>
     <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
@@ -858,11 +847,7 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $programStudiSurat }}</h4><br>
         </div>
     </div>
     <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
@@ -1033,11 +1018,7 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $programStudiSurat }}</h4><br>
         </div>
     </div>
     <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>
@@ -1208,11 +1189,7 @@
             <h4 class="textheader" style="margin: 0; font-size: 16px;">YAYASAN WAKAF UMI</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">UNIVERSITAS MUSLIM INDONESIA</h4><br>
             <h4 class="textheader" style="margin: 0; font-size: 16px;">FAKULTAS ILMU KOMPUTER</h4><br>
-            @if (Auth::user()->name == 'proditi')
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI TEKNIK INFORMATIKA</h4><br>
-            @else
-                <h4 class="textheader" style="margin: 0; font-size: 16px;">PROGRAM STUDI SISTEM INFORMASI</h4><br>
-            @endif
+            <h4 class="textheader" style="margin: 0; font-size: 16px;">{{ $programStudiSurat }}</h4><br>
         </div>
     </div>
     <span style="border: solid 0.5px; width: 100%; display: block; margin-top: 10px;"></span>

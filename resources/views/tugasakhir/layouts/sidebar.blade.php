@@ -21,11 +21,23 @@
             </a>
         </li>
 
-        <li class="static">MENU KETUA PRODI</li>
+        <li class="static">MENU PROGRAM STUDI (ADMIN)</li>
+        <li>
+            <a href="{{ route('tampilDownload')}}">
+                <i class="fa  fa-download icon-sidebar"></i>
+                Download
+            </a>
+        </li>
         <li>
             <a href="{{ url('prodi/dosen_pembimbing')}}">
-                <i class="fa  fa-institution icon-sidebar"></i>
+                <i class="fa fa-graduation-cap icon-sidebar"></i>
                 Dosen Pembimbing
+            </a>
+        </li>
+        <li>
+            <a href="{{ url('prodi/laporan_mahasiswa')}}">
+                <i class="fa fa-comments icon-sidebar"></i>
+                Laporan Mahasiswa
             </a>
         </li>
         <li>
@@ -36,23 +48,36 @@
         </li>
         <li>
             <a href="#fakelink">
+                <i class="fa fa-bar-chart-o icon-sidebar"></i>
+                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
+                Report
+            </a>
+            <ul class="submenu">
+                <li><a href="{{ url('prodi/report') }}">Dashboard</a></li>
+                <li><a href="{{ url('prodi/report/laporan') }}">Pusat Laporan</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#fakelink">
                 <i class="fa fa-database icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
                 Master
             </a>
             <ul class="submenu">
+                <li><a href="{{ url('prodi/master/dosen') }}">Dosen</a></li>
+                <li><a href="{{ url('prodi/master/jenis_tugas_akhir') }}">Jenis Tugas Akhir</a></li>
                 <li><a href="{{ url('prodi/scope_ta') }}">Bidang Ilmu TA</a></li>
             </ul>
         </li>
         <li>
             <a href="{{ url('prodi/topik')}}">
-                <i class="fa fa-files-o icon-sidebar"></i>
+                <i class="fa fa-lightbulb-o icon-sidebar"></i>
                 Topik Penelitian
             </a>
         </li>
         <li>
             <a href="{{ url('prodi/usulan_pembimbing')}}">
-                <i class="fa fa-stack-overflow icon-sidebar"></i>
+                <i class="fa fa-user-plus icon-sidebar"></i>
                 Usulan Pembimbing
             </a>
         </li>
@@ -63,7 +88,7 @@
             </a>
         </li>
         <li>
-            <a href="{{ url('prodi/usulan_timujianta')}}">
+            <a href="{{ url('prodi/sk_ujian_ta')}}">
                 <i class="fa fa-file-text icon-sidebar"></i>
                 Surat Usulan Tim Ujian TA
             </a>
@@ -80,8 +105,19 @@
             </ul>
         </li>
         <li>
-            <a href="{{ url('prodi/syarat_ujian')}}">
+            <a href="#fakelink">
                 <i class="fa fa-file-text icon-sidebar"></i>
+                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
+                Konfirmasi Persyaratan Ujian
+            </a>
+            <ul class="submenu">
+                <li><a href="{{ url('prodi/persyaratan_proposal')}}">Proposal</a></li>
+                <li><a href="{{ url('prodi/persyaratan_ujianmeja')}}">Ujian Meja</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="{{ url('prodi/syarat_ujian')}}">
+                <i class="fa fa-list-ul icon-sidebar"></i>
                 Persyaratan Ujian
             </a>
         </li>
@@ -92,10 +128,38 @@
             </a>
         </li>
         <li>
-            <a href="{{ url('prodi/sk_ujian')}}">
-                <i class="fa fa-paperclip icon-sidebar"></i>
-                SK Ujian
+            <a href="#fakelink">
+                <i class="fa fa-calendar icon-sidebar"></i>
+                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
+                Jadwal Ujian Per Mahasiswa
             </a>
+            <ul class="submenu">
+                <li><a href="{{ url('prodi/jadwalpermhs/proposal')}}">Proposal</a></li>
+                <li><a href="{{ url('prodi/jadwalpermhs/ujianmeja')}}">Ujian Meja</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#fakelink">
+                <i class="fa fa-gavel icon-sidebar"></i>
+                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
+                Surat Keputusan
+            </a>
+            <ul class="submenu">
+                <li><a href="{{ url('prodi/sk_ujian')}}">SK Ujian</a></li>
+                <li><a href="{{ url('prodi/surat_keputusan_pembimbing')}}">Surat Pembimbing</a></li>
+                <li><a href="{{ url('prodi/surat_penugasan_ujian_tugas_akhir')}}">Surat Penugasan Ujian TA</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#fakelink">
+                <i class="fa fa-check-square-o icon-sidebar"></i>
+                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
+                Approve Hasil Ujian
+            </a>
+            <ul class="submenu">
+                <li><a href="{{ url('prodi/approve_hasilujian_proposal')}}">Proposal</a></li>
+                <li><a href="{{ url('prodi/approve_hasilujian_ta')}}">Ujian Meja</a></li>
+            </ul>
         </li>
         <li>
             <a href="{{url('prodi/pengumuman')}}">
