@@ -219,6 +219,12 @@
 
         <li class="static">MASTER DATA</li>
         <li>
+            <a href="{{ route('admin.users.index') }}">
+                <i class="fa fa-users icon-sidebar"></i>
+                Manajemen User
+            </a>
+        </li>
+        <li>
             <a href="{{url('/data-master/periode-jabatan')}}">
                 <i class="fa fa-paperclip icon-sidebar"></i>
                 Periode Jabatan

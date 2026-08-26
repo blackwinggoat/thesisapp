@@ -34,6 +34,7 @@ Route::get('/', 'HomeController@index');
 Route::get('/jadwal-dosen/{token}', 'Prodi@jadwalDosenLink');
 Route::get('/sk_pembimbing/{nomor}', 'HomeController@surat_sk_pembimbing')->middleware('auth');
 Route::get('/sk_pembimbing_pdf/{nomor}', 'HomeController@surat_sk_pembimbing_pdf')->middleware('auth');
+Route::post('/admin/back-to-admin', 'Admin@back_to_admin')->middleware('auth')->name('admin.back_to_admin');
 
 
 Route::group(['middleware' => 'admin'], function () {
@@ -45,6 +46,9 @@ Route::group(['middleware' => 'admin'], function () {
         Route::post('/periode-jabatan', 'Admin@periode_jabatan_update')->name('update_master_periode_jabatan');
         Route::get('/email-sistem', 'Admin@mail_settings')->name('admin.mail_settings');
         Route::post('/email-sistem', 'Admin@mail_settings_update')->name('admin.mail_settings.update');
+        Route::get('/users', 'Admin@users')->name('admin.users.index');
+        Route::post('/users/{id}/reset-password', 'Admin@reset_user_password')->name('admin.users.reset_password');
+        Route::post('/users/{id}/login-as', 'Admin@login_as_user')->name('admin.users.login_as');
     });
     //AKADEMIK-PRODI
     /*

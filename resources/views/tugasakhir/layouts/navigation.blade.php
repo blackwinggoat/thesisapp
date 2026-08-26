@@ -101,6 +101,17 @@ BEGIN PAGE
                             @elseif(Auth::user()->level==9)
                                 <li><a href="{{ url('keuanganfakultas/ubah_password')}}">Change password</a></li>
                             @endif
+                            @if ((int) session('login_as_source_user_level') === 1 && !empty(session('login_as_source_user_id')))
+                                <li>
+                                    <a href="{{ route('admin.back_to_admin') }}"
+                                       onclick="event.preventDefault(); document.getElementById('back-to-admin-form').submit();">
+                                        <i class="fa fa-reply"></i> Kembali ke Admin
+                                    </a>
+                                    <form id="back-to-admin-form" action="{{ route('admin.back_to_admin') }}" method="POST" style="display: none;">
+                                        @csrf
+                                    </form>
+                                </li>
+                            @endif
                             <li class="divider"></li>
                             <li>
                                 <a class="dropdown-item" href="{{ route('logout') }}"
