@@ -217,6 +217,38 @@
         </li>
 
 
+        <li class="static">MENU KEUANGAN FAKULTAS</li>
+        <li>
+            <a href="{{ route('master_pembayaran_home') }}">
+                <i class="fa fa-money icon-sidebar"></i>
+                Master Pembayaran
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('sanksi_pembayaran_home') }}">
+                <i class="fa fa-exclamation-circle icon-sidebar"></i>
+                Sanksi Pembayaran
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('honorarium_home') }}">
+                <i class="fa fa-google-wallet icon-sidebar"></i>
+                Honorarium
+            </a>
+        </li>
+        <li>
+            <a href="#fakelink">
+                <i class="fa fa-envelope icon-sidebar"></i>
+                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
+                Report
+            </a>
+            <ul class="submenu">
+                <li><a href="{{ route('report_periode_ujian_home') }}">Periode Ujian</a></li>
+                <li><a href="{{ route('report_dosen_home') }}">Dosen</a></li>
+            </ul>
+        </li>
+
+
         <li class="static">MASTER DATA</li>
         <li>
             <a href="{{ route('admin.users.index') }}">

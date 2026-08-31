@@ -15,7 +15,7 @@ class keuangan_fakultas
      */
     public function handle($request, Closure $next)
     {
-        if (auth()->check() && ($request->user()->level==9)) {
+        if (auth()->check() && in_array((int) $request->user()->level, [1, 9], true)) {
             return $next($request);
         }
         return redirect()->guest('/');
