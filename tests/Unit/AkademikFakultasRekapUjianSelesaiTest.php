@@ -39,7 +39,7 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/fakultas/rekap_ujian_selesai.blade.php');
 
         $this->assertStringContainsString("route('fakultas.rekap_ujian_selesai')", $sidebar);
-        $this->assertStringContainsString('Rekap Ujian TA Selesai', $sidebar);
+        $this->assertStringContainsString('SK Yudisium', $sidebar);
         $this->assertStringContainsString('Jumlah Mahasiswa', $view);
         $this->assertStringContainsString('Type Mahasiswa', $view);
         $this->assertStringContainsString('Nomor Surat', $view);

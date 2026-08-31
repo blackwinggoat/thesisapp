@@ -54,6 +54,6 @@ class AdminAkademikFakultasAccessTest extends TestCase
 
         $this->assertStringContainsString('MENU AKADEMIK-FAKULTAS', $sidebar);
         $this->assertStringContainsString("route('fakultas.rekap_ujian_selesai')", $sidebar);
-        $this->assertStringContainsString('Rekap Ujian TA Selesai', $sidebar);
+        $this->assertStringContainsString('SK Yudisium', $sidebar);
     }
 }

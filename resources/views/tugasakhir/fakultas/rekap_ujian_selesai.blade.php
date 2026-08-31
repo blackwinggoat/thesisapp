@@ -8,7 +8,7 @@
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
                 <li><a href="{{ url('/') }}">Home</a></li>
-                <li class="active">Rekap Ujian TA Selesai</li>
+                <li class="active">SK Yudisium</li>
             </ol>
 
             @if (session('status'))
@@ -18,7 +18,7 @@
                 </div>
             @endif
 
-            <h3 class="page-heading">Rekap Ujian Tugas Akhir Selesai</h3>
+            <h3 class="page-heading">SK Yudisium</h3>
 
             <div class="the-box">
                 <div class="table-responsive">

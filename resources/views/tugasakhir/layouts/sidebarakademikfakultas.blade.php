@@ -62,7 +62,7 @@
         <li>
             <a href="{{ route('fakultas.rekap_ujian_selesai') }}">
                 <i class="fa fa-list-alt icon-sidebar"></i>
-                Rekap Ujian TA Selesai
+                SK Yudisium
             </a>
         </li>
     </ul>
