@@ -84,7 +84,7 @@
         <div class="gambar">
         <form role = "form"  action="{{ route('login') }}" aria-label="{{ __('Login') }}" method="POST">
             @csrf
-            <label style="color:white;margin-top:280px;margin-left:102px;" for="">USERNAME</label>
+            <label style="color:white;margin-top:280px;margin-left:102px;" for="">Usernamex</label>
             <input required placeholder="Enter username" style="margin-left:24px;padding:2px;" name="email" ><br>    
             <label style="color:white;margin-left:102px;" for="">PASSWORD</label>
             <span class="password-group">
