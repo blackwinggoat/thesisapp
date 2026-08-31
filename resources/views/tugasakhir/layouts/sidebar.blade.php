@@ -184,6 +184,12 @@
                 Surat Penugasan Ujian TA
             </a>
         </li>
+        <li>
+            <a href="{{ route('fakultas.rekap_ujian_selesai') }}">
+                <i class="fa fa-list-alt icon-sidebar"></i>
+                Rekap Ujian TA Selesai
+            </a>
+        </li>
 
 
         <li class="static">MENU WAKIL DEKAN</li>
