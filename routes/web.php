@@ -49,6 +49,7 @@ Route::group(['middleware' => 'admin'], function () {
         Route::get('/users', 'Admin@users')->name('admin.users.index');
         Route::post('/users/{id}/reset-password', 'Admin@reset_user_password')->name('admin.users.reset_password');
         Route::post('/users/{id}/login-as', 'Admin@login_as_user')->name('admin.users.login_as');
+        Route::delete('/users/{id}', 'Admin@delete_user')->name('admin.users.delete');
     });
     //AKADEMIK-PRODI
     /*

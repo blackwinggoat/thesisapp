@@ -101,6 +101,31 @@ class Admin extends Controller
         return redirect()->back()->with('status', 'password_reset')->with('target_user_name', $targetUser->name);
     }
 
+    public function delete_user(Request $request, $id)
+    {
+        $authUser = $request->user();
+        if (!$authUser || (int) $authUser->level !== 1) {
+            return redirect('/')->with('danger', 'Akses hapus user hanya untuk akun admin.');
+        }
+
+        $targetUser = DB::table('users')
+            ->select('id', 'name', 'level')
+            ->where('id', $id)
+            ->first();
+
+        if (!$targetUser) {
+            return redirect()->back()->with('status', 'user_not_found');
+        }
+
+        if ((int) $targetUser->id === (int) $authUser->id || (int) $targetUser->level === 1) {
+            return redirect()->back()->with('danger', 'Akun admin atau akun yang sedang digunakan tidak dapat dihapus.');
+        }
+
+        DB::table('users')->where('id', $id)->delete();
+
+        return redirect()->back()->with('status', 'user_deleted')->with('target_user_name', $targetUser->name);
+    }
+
     public function login_as_user(Request $request, $id)
     {
         $authUser = $request->user();

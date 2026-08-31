@@ -22,6 +22,10 @@
             <div class="alert alert-success">
                 Password user <strong>{{ session('target_user_name') }}</strong> berhasil diperbarui.
             </div>
+        @elseif (session('status') === 'user_deleted')
+            <div class="alert alert-success">
+                User <strong>{{ session('target_user_name') }}</strong> berhasil dihapus. Data master dosen/mahasiswa tidak ikut dihapus.
+            </div>
         @elseif (session('status') === 'user_not_found')
             <div class="alert alert-danger">User tujuan tidak ditemukan.</div>
         @endif
@@ -96,7 +100,7 @@
                         <th>Nama / Identitas</th>
                         <th>Email</th>
                         <th>Role</th>
-                        <th style="width: 190px;">Aksi</th>
+                        <th style="width: 250px;">Aksi</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -110,6 +114,8 @@
                             $roleLabel = $roleLabels[(int) $user->level] ?? 'Role tidak dikenal';
                             $canLoginAs = array_key_exists((int) $user->level, $roleLabels)
                                 && (int) $user->level !== 1
+                                && (int) $user->id !== (int) Auth::id();
+                            $canDeleteUser = (int) $user->level !== 1
                                 && (int) $user->id !== (int) Auth::id();
                         @endphp
                         <tr>
@@ -139,6 +145,16 @@
                                     </form>
                                 @else
                                     <span class="label label-default">Login As tidak tersedia</span>
+                                @endif
+
+                                @if ($canDeleteUser)
+                                    <form action="{{ route('admin.users.delete', $user->id) }}" method="post" style="display: inline-block;" onsubmit="return confirm('Hapus user {{ $user->display_name ?: $user->name }}? Data master dosen/mahasiswa tidak ikut dihapus.');">
+                                        {{ csrf_field() }}
+                                        {{ method_field('DELETE') }}
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus User">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
                                 @endif
                             </td>
                         </tr>

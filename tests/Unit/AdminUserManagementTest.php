@@ -14,13 +14,17 @@ class AdminUserManagementTest extends TestCase
         $this->assertStringContainsString("Route::get('/users', 'Admin@users')->name('admin.users.index');", $routes);
         $this->assertStringContainsString("Route::post('/users/{id}/reset-password', 'Admin@reset_user_password')->name('admin.users.reset_password');", $routes);
         $this->assertStringContainsString("Route::post('/users/{id}/login-as', 'Admin@login_as_user')->name('admin.users.login_as');", $routes);
+        $this->assertStringContainsString("Route::delete('/users/{id}', 'Admin@delete_user')->name('admin.users.delete');", $routes);
         $this->assertStringContainsString("Route::post('/admin/back-to-admin', 'Admin@back_to_admin')->middleware('auth')->name('admin.back_to_admin');", $routes);
 
         $this->assertStringContainsString('public function users(Request $request)', $controller);
         $this->assertStringContainsString('public function reset_user_password(Request $request, $id)', $controller);
+        $this->assertStringContainsString('public function delete_user(Request $request, $id)', $controller);
         $this->assertStringContainsString('public function login_as_user(Request $request, $id)', $controller);
         $this->assertStringContainsString('public function back_to_admin(Request $request)', $controller);
         $this->assertStringContainsString('Hash::make($request->password)', $controller);
+        $this->assertStringContainsString("DB::table('users')->where('id', \$id)->delete();", $controller);
+        $this->assertStringContainsString('(int) $targetUser->id === (int) $authUser->id', $controller);
         $this->assertStringContainsString('Auth::loginUsingId($targetUser->id)', $controller);
         $this->assertStringContainsString('Auth::loginUsingId($sourceUserId)', $controller);
         $this->assertStringContainsString("login_as_source_user_level", $controller);
@@ -38,6 +42,10 @@ class AdminUserManagementTest extends TestCase
         $this->assertStringContainsString("route('admin.users.index')", $view);
         $this->assertStringContainsString("route('admin.users.reset_password'", $view);
         $this->assertStringContainsString("route('admin.users.login_as'", $view);
+        $this->assertStringContainsString("route('admin.users.delete'", $view);
+        $this->assertStringContainsString("method_field('DELETE')", $view);
+        $this->assertStringContainsString('fa fa-trash', $view);
+        $this->assertStringContainsString('Data master dosen/mahasiswa tidak ikut dihapus', $view);
         $this->assertStringContainsString('js-reset-password', $view);
         $this->assertStringContainsString('Login As', $view);
         $this->assertStringContainsString('array_key_exists((int) $user->level, $roleLabels)', $view);
