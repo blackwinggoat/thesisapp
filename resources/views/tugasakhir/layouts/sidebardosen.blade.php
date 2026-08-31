@@ -23,7 +23,7 @@
                                 Back to Prodi
                             </a>
                         @endif
-                        @include('tugasakhir.layouts.partials.back_to_admin')
+                        @include('tugasakhir.layouts.back_to_admin')
                         <a href="{{ url('dsn/profil') }}" class="btn btn-primary btn-xs" title="Edit profil dosen"><i
                                 class="fa fa-user"></i></a>
                         <a href="{{ url('dsn/ubah_password') }}" class="btn btn-success btn-xs" title="Ubah kata sandi"><i

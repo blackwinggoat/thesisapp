@@ -12,7 +12,7 @@
                     @if ((int) session('login_as_source_user_level') === 5 && !empty(session('login_as_source_user_id')))
                         <a style="display: inline-block; width: 105px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;" href="{{ url('mhs/back_to_prodi') }}" class="btn btn-primary btn-xs">Back to Prodi</a>
                     @endif
-                    @include('tugasakhir.layouts.partials.back_to_admin')
+                    @include('tugasakhir.layouts.back_to_admin')
                     <a style="display: inline-block; width: 30px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;" href="{{url('mhs/ubah_password')}}" class="btn btn-success btn-xs"><i class="fa fa-cog"></i></a>
                     <a style="display: inline-block; width: 80px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;" class="btn btn-danger btn-xs" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();

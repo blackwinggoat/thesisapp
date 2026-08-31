@@ -17,7 +17,7 @@
                         @endif
                         
                     </strong></h4>
-                    @include('tugasakhir.layouts.partials.back_to_admin')
+                    @include('tugasakhir.layouts.back_to_admin')
                     <a style="display: inline-block; width: 30px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;"
                         href="{{ url('akademikprodi/ubah_password') }}" class="btn btn-success btn-xs"><i
                             class="fa fa-cog"></i></a>
