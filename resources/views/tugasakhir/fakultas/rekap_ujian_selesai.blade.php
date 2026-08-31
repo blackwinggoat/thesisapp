@@ -29,8 +29,8 @@
                                 <th>Tanggal Ujian</th>
                                 <th class="text-center">Jumlah Mahasiswa</th>
                                 <th class="text-center">Type Mahasiswa</th>
-                                <th style="min-width: 260px;">Nomor Surat</th>
-                                <th class="text-center" style="width: 110px;">Detail</th>
+                                <th style="min-width: 260px;">SK per Program Studi</th>
+                                <th class="text-center" style="width: 180px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -51,19 +51,22 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <form action="{{ route('fakultas.rekap_ujian_selesai_nomor_surat') }}" method="POST" class="form-inline">
-                                            @csrf
-                                            <input type="hidden" name="tanggal_ujian" value="{{ $rekap->tanggal_ujian }}">
-                                            <div class="input-group" style="width: 100%;">
-                                                <input type="text" name="nomor_surat" class="form-control" maxlength="150"
-                                                    value="{{ $rekap->nomor_surat }}" placeholder="Masukkan nomor surat">
-                                                <span class="input-group-btn">
-                                                    <button type="submit" class="btn btn-success" title="Simpan nomor surat" data-toggle="tooltip" aria-label="Simpan nomor surat">
-                                                        <i class="fa fa-save"></i>
-                                                    </button>
-                                                </span>
+                                        @if ($rekap->jumlah_teknik_informatika > 0)
+                                            <a href="{{ route('fakultas.sk_yudisium_data', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '130']) }}"
+                                                class="btn btn-default btn-xs" title="Kelola SK Yudisium Teknik Informatika" data-toggle="tooltip">
+                                                <i class="fa fa-pencil"></i> TI
+                                            </a>
+                                            <span class="text-muted">{{ $rekap->nomor_surat_ti ?: 'Nomor belum diisi' }}</span>
+                                        @endif
+                                        @if ($rekap->jumlah_sistem_informasi > 0)
+                                            <div style="margin-top: {{ $rekap->jumlah_teknik_informatika > 0 ? '7px' : '0' }};">
+                                                <a href="{{ route('fakultas.sk_yudisium_data', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '131']) }}"
+                                                    class="btn btn-default btn-xs" title="Kelola SK Yudisium Sistem Informasi" data-toggle="tooltip">
+                                                    <i class="fa fa-pencil"></i> SI
+                                                </a>
+                                                <span class="text-muted">{{ $rekap->nomor_surat_si ?: 'Nomor belum diisi' }}</span>
                                             </div>
-                                        </form>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-primary btn-sm show-completed-exam-details"
@@ -72,11 +75,20 @@
                                             title="Lihat informasi mahasiswa" data-toggle="tooltip" aria-label="Lihat informasi mahasiswa">
                                             <i class="fa fa-info-circle"></i>
                                         </button>
-                                        <span data-toggle="tooltip" title="Template PDF belum tersedia">
-                                            <button type="button" class="btn btn-danger btn-sm" disabled aria-label="PDF belum tersedia">
-                                                <i class="fa fa-file-pdf-o"></i>
-                                            </button>
-                                        </span>
+                                        @if ($rekap->jumlah_teknik_informatika > 0)
+                                            <a href="{{ route('fakultas.cetak_sk_yudisium', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '130']) }}"
+                                                target="_blank" class="btn btn-danger btn-sm" title="Buka PDF SK Yudisium Teknik Informatika"
+                                                data-toggle="tooltip" aria-label="Buka PDF SK Yudisium Teknik Informatika">
+                                                <i class="fa fa-file-pdf-o"></i> TI
+                                            </a>
+                                        @endif
+                                        @if ($rekap->jumlah_sistem_informasi > 0)
+                                            <a href="{{ route('fakultas.cetak_sk_yudisium', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '131']) }}"
+                                                target="_blank" class="btn btn-danger btn-sm" title="Buka PDF SK Yudisium Sistem Informasi"
+                                                data-toggle="tooltip" aria-label="Buka PDF SK Yudisium Sistem Informasi">
+                                                <i class="fa fa-file-pdf-o"></i> SI
+                                            </a>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

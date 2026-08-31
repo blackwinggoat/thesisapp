@@ -34,6 +34,7 @@ Route::get('/', 'HomeController@index');
 Route::get('/jadwal-dosen/{token}', 'Prodi@jadwalDosenLink');
 Route::get('/sk_pembimbing/{nomor}', 'HomeController@surat_sk_pembimbing')->middleware('auth');
 Route::get('/sk_pembimbing_pdf/{nomor}', 'HomeController@surat_sk_pembimbing_pdf')->middleware('auth');
+Route::get('/verifikasi/sk-yudisium/{token}', 'fakultas@verifikasi_sk_yudisium')->name('verifikasi_sk_yudisium');
 Route::post('/admin/back-to-admin', 'Admin@back_to_admin')->middleware('auth')->name('admin.back_to_admin');
 
 
@@ -459,6 +460,9 @@ Route::group(['middleware' => 'akademik_fakultas'], function () {
     Route::get('/fakultas/rekap-ujian-selesai', 'fakultas@rekap_ujian_selesai')->name('fakultas.rekap_ujian_selesai');
     Route::get('/fakultas/rekap-ujian-selesai/{date}/peserta', 'fakultas@rekap_ujian_selesai_peserta')->name('fakultas.rekap_ujian_selesai_peserta');
     Route::post('/fakultas/rekap-ujian-selesai/nomor-surat', 'fakultas@rekap_ujian_selesai_nomor_surat')->name('fakultas.rekap_ujian_selesai_nomor_surat');
+    Route::get('/fakultas/sk-yudisium/{date}/{kode_prodi}', 'fakultas@sk_yudisium_data')->name('fakultas.sk_yudisium_data');
+    Route::post('/fakultas/sk-yudisium/data', 'fakultas@simpan_data_sk_yudisium')->name('fakultas.simpan_data_sk_yudisium');
+    Route::get('/fakultas/sk-yudisium/{date}/{kode_prodi}/pdf', 'fakultas@cetak_sk_yudisium')->name('fakultas.cetak_sk_yudisium');
 
     Route::get('/fakultas/detail_ujian/{nim}/{tipe_ujian}', 'fakultas@detail_ujian');
     // Surat Keputusan

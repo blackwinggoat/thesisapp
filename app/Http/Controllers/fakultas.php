@@ -21,6 +21,7 @@ use Barryvdh\DomPDF\Facade as PDF;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Exception;
 
 class fakultas extends Controller
@@ -238,49 +239,138 @@ class fakultas extends Controller
         return Schema::hasTable('trt_mahasiswa_eksekutif');
     }
 
-    public function rekap_ujian_selesai()
+    protected function dokumenYudisiumTersedia()
     {
-        $query = $this->rekapUjianTugasAkhirSelesaiQuery();
-        $selects = [
-            'jadwal.tgl_ujian as tanggal_ujian',
-            DB::raw('COUNT(DISTINCT peserta.C_NPM) as jumlah_mahasiswa'),
-            DB::raw("COUNT(DISTINCT CASE WHEN peserta.C_NPM LIKE '130%' THEN peserta.C_NPM END) as jumlah_teknik_informatika"),
-            DB::raw("COUNT(DISTINCT CASE WHEN peserta.C_NPM LIKE '131%' THEN peserta.C_NPM END) as jumlah_sistem_informasi"),
-            DB::raw('NULL as nomor_surat'),
-        ];
-
-        if ($this->mahasiswaEksekutifTersedia()) {
-            $query->leftJoin('trt_mahasiswa_eksekutif as kelas_eksekutif', 'kelas_eksekutif.C_NPM', '=', 'peserta.C_NPM');
-            $selects[] = DB::raw('COUNT(DISTINCT CASE WHEN kelas_eksekutif.C_NPM IS NULL THEN peserta.C_NPM END) as jumlah_reguler');
-            $selects[] = DB::raw('COUNT(DISTINCT CASE WHEN kelas_eksekutif.C_NPM IS NOT NULL THEN peserta.C_NPM END) as jumlah_eksekutif');
-        } else {
-            $selects[] = DB::raw('COUNT(DISTINCT peserta.C_NPM) as jumlah_reguler');
-            $selects[] = DB::raw('0 as jumlah_eksekutif');
-        }
-
-        if ($this->tabelRekapUjianSelesaiTersedia()) {
-            $query->leftJoin('trt_rekap_ujian_selesai as rekap_surat', function ($join) {
-                $join->on('rekap_surat.tanggal_ujian', '=', 'jadwal.tgl_ujian')
-                    ->where('rekap_surat.tipe_ujian', '=', 2);
-            });
-            $selects[4] = DB::raw('MAX(rekap_surat.nomor_surat) as nomor_surat');
-        }
-
-        $data = $query
-            ->select($selects)
-            ->groupBy('jadwal.tgl_ujian')
-            ->orderBy('jadwal.tgl_ujian', 'desc')
-            ->get();
-
-        return view('tugasakhir.fakultas.rekap_ujian_selesai', compact('data'));
+        return Schema::hasTable('trt_sk_yudisium');
     }
 
-    public function rekap_ujian_selesai_peserta($date)
+    protected function dataMahasiswaYudisiumTersedia()
     {
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
-            abort(404);
+        return Schema::hasTable('trt_yudisium_mahasiswa');
+    }
+
+    protected function kodeProdiYudisium($kodeProdi)
+    {
+        $kodeProdi = trim((string) $kodeProdi);
+
+        return in_array($kodeProdi, ['130', '131'], true) ? $kodeProdi : null;
+    }
+
+    protected function namaProdiYudisium($kodeProdi)
+    {
+        return $kodeProdi === '130' ? 'Teknik Informatika' : 'Sistem Informasi';
+    }
+
+    protected function emailProdiYudisium($kodeProdi)
+    {
+        return $kodeProdi === '130'
+            ? 's1.teknik.informatika@umi.ac.id'
+            : 's1.sistem.informasi@umi.ac.id';
+    }
+
+    protected function dokumenYudisium($date, $kodeProdi)
+    {
+        if (!$this->dokumenYudisiumTersedia()) {
+            return null;
         }
 
+        return DB::table('trt_sk_yudisium')
+            ->where('tanggal_ujian', $date)
+            ->where('tipe_ujian', 2)
+            ->where('kode_prodi', $kodeProdi)
+            ->first();
+    }
+
+    protected function simpanDokumenYudisium($date, $kodeProdi, $nomorSurat)
+    {
+        $dokumen = $this->dokumenYudisium($date, $kodeProdi);
+        $payload = [
+            'nomor_surat' => trim((string) $nomorSurat),
+            'updated_by' => auth()->id(),
+            'updated_at' => now(),
+        ];
+
+        if (!$dokumen || empty($dokumen->verification_token)) {
+            $payload['verification_token'] = Str::random(48);
+        }
+
+        if ($dokumen) {
+            DB::table('trt_sk_yudisium')->where('id', $dokumen->id)->update($payload);
+        } else {
+            DB::table('trt_sk_yudisium')->insert(array_merge($payload, [
+                'tanggal_ujian' => $date,
+                'tipe_ujian' => 2,
+                'kode_prodi' => $kodeProdi,
+                'created_by' => auth()->id(),
+                'created_at' => now(),
+            ]));
+        }
+
+        return $this->dokumenYudisium($date, $kodeProdi);
+    }
+
+    protected function nilaiHurufYudisium($nilai)
+    {
+        if ($nilai === null) {
+            return null;
+        }
+
+        if ($nilai > 85) {
+            return 'A';
+        }
+        if ($nilai >= 81) {
+            return 'A-';
+        }
+        if ($nilai >= 76) {
+            return 'B+';
+        }
+        if ($nilai >= 71) {
+            return 'B';
+        }
+        if ($nilai >= 66) {
+            return 'B-';
+        }
+        if ($nilai >= 61) {
+            return 'C+';
+        }
+        if ($nilai >= 56) {
+            return 'C';
+        }
+        if ($nilai >= 51) {
+            return 'C-';
+        }
+        if ($nilai >= 46) {
+            return 'D';
+        }
+
+        return 'E';
+    }
+
+    protected function kategoriYudisium($ipk)
+    {
+        if ($ipk === null || $ipk === '') {
+            return null;
+        }
+
+        $ipk = (float) $ipk;
+        if ($ipk >= 3.51) {
+            return 'I';
+        }
+        if ($ipk >= 3.01) {
+            return 'II';
+        }
+        if ($ipk >= 2.76) {
+            return 'III';
+        }
+        if ($ipk >= 2.00) {
+            return 'IV';
+        }
+
+        return null;
+    }
+
+    protected function pesertaYudisium($date, $kodeProdi)
+    {
         $peserta = $this->rekapUjianTugasAkhirSelesaiQuery()
             ->leftJoin('trt_bimbingan as bimbingan', 'bimbingan.bimbingan_id', '=', 'registrasi.bimbingan_id')
             ->leftJoin('trt_penguji as penguji', function ($join) {
@@ -288,6 +378,7 @@ class fakultas extends Controller
                     ->where('penguji.tipe_ujian', '=', 2);
             })
             ->whereDate('jadwal.tgl_ujian', $date)
+            ->where('peserta.C_NPM', 'like', $kodeProdi . '%')
             ->select(
                 'peserta.C_NPM as nim',
                 'mahasiswa.NAMA_MAHASISWA as nama',
@@ -310,7 +401,16 @@ class fakultas extends Controller
                 ->get(['reg_id', 'nidn', 'nilai_1', 'nilai_2', 'nilai_3', 'nilai_4', 'nilai_5'])
                 ->groupBy('reg_id');
 
-        $payload = $peserta->map(function ($mahasiswa) use ($hasilByRegId) {
+        $metadataByNim = !$this->dataMahasiswaYudisiumTersedia() || $peserta->isEmpty()
+            ? collect()
+            : DB::table('trt_yudisium_mahasiswa')
+                ->where('tanggal_ujian', $date)
+                ->where('tipe_ujian', 2)
+                ->whereIn('C_NPM', $peserta->pluck('nim')->all())
+                ->get()
+                ->keyBy('C_NPM');
+
+        return $peserta->map(function ($mahasiswa) use ($hasilByRegId, $metadataByNim) {
             $penilaiWajib = collect([
                 $mahasiswa->pembimbing_I_id,
                 $mahasiswa->pembimbing_II_id,
@@ -345,20 +445,304 @@ class fakultas extends Controller
             $nilaiUjianTa = $penilaiWajib->isNotEmpty() && !$nilaiPenilai->contains(null)
                 ? round($nilaiPenilai->sum() / $penilaiWajib->count(), 2)
                 : null;
+            $metadata = $metadataByNim->get($mahasiswa->nim);
+            $ipk = $metadata && $metadata->ipk !== null && $metadata->ipk !== ''
+                ? (float) $metadata->ipk
+                : null;
 
-            return [
+            return (object) [
                 'nim' => (string) $mahasiswa->nim,
                 'nama' => $mahasiswa->nama ?: '-',
-                'nilai_ujian_ta' => $nilaiUjianTa === null ? 'Belum lengkap' : number_format($nilaiUjianTa, 2, ',', '.'),
-                // Thesis Apps belum menyimpan IPK; disiapkan agar sumber akademik resmi dapat dihubungkan kemudian.
-                'ipk' => 'Belum tersedia',
+                'nilai_ujian_ta' => $nilaiUjianTa,
+                'nilai_huruf' => $this->nilaiHurufYudisium($nilaiUjianTa),
+                'nomor_alumni' => $metadata && trim((string) $metadata->nomor_alumni) !== ''
+                    ? trim((string) $metadata->nomor_alumni)
+                    : null,
+                'ipk' => $ipk,
+                'kategori_yudisium' => $this->kategoriYudisium($ipk),
             ];
         })->values();
+    }
+
+    protected function kekuranganDokumenYudisium($dokumen, $peserta)
+    {
+        $kekurangan = [];
+
+        if (!$dokumen || trim((string) $dokumen->nomor_surat) === '') {
+            $kekurangan[] = 'Nomor surat belum diisi.';
+        }
+        if ($peserta->isEmpty()) {
+            $kekurangan[] = 'Peserta ujian tidak ditemukan.';
+        }
+
+        $nilaiBelumLengkap = $peserta->filter(function ($mahasiswa) {
+            return $mahasiswa->nilai_ujian_ta === null;
+        })->count();
+        if ($nilaiBelumLengkap > 0) {
+            $kekurangan[] = $nilaiBelumLengkap . ' nilai ujian TA belum lengkap.';
+        }
+
+        $alumniBelumLengkap = $peserta->filter(function ($mahasiswa) {
+            return trim((string) $mahasiswa->nomor_alumni) === '';
+        })->count();
+        if ($alumniBelumLengkap > 0) {
+            $kekurangan[] = $alumniBelumLengkap . ' nomor alumni belum diisi.';
+        }
+
+        $ipkBelumLengkap = $peserta->filter(function ($mahasiswa) {
+            return $mahasiswa->ipk === null || $mahasiswa->kategori_yudisium === null;
+        })->count();
+        if ($ipkBelumLengkap > 0) {
+            $kekurangan[] = $ipkBelumLengkap . ' IPK belum valid untuk yudisium.';
+        }
+
+        return $kekurangan;
+    }
+
+    public function rekap_ujian_selesai()
+    {
+        $query = $this->rekapUjianTugasAkhirSelesaiQuery();
+        $selects = [
+            'jadwal.tgl_ujian as tanggal_ujian',
+            DB::raw('COUNT(DISTINCT peserta.C_NPM) as jumlah_mahasiswa'),
+            DB::raw("COUNT(DISTINCT CASE WHEN peserta.C_NPM LIKE '130%' THEN peserta.C_NPM END) as jumlah_teknik_informatika"),
+            DB::raw("COUNT(DISTINCT CASE WHEN peserta.C_NPM LIKE '131%' THEN peserta.C_NPM END) as jumlah_sistem_informasi"),
+            DB::raw('NULL as nomor_surat_ti'),
+            DB::raw('NULL as nomor_surat_si'),
+        ];
+
+        if ($this->mahasiswaEksekutifTersedia()) {
+            $query->leftJoin('trt_mahasiswa_eksekutif as kelas_eksekutif', 'kelas_eksekutif.C_NPM', '=', 'peserta.C_NPM');
+            $selects[] = DB::raw('COUNT(DISTINCT CASE WHEN kelas_eksekutif.C_NPM IS NULL THEN peserta.C_NPM END) as jumlah_reguler');
+            $selects[] = DB::raw('COUNT(DISTINCT CASE WHEN kelas_eksekutif.C_NPM IS NOT NULL THEN peserta.C_NPM END) as jumlah_eksekutif');
+        } else {
+            $selects[] = DB::raw('COUNT(DISTINCT peserta.C_NPM) as jumlah_reguler');
+            $selects[] = DB::raw('0 as jumlah_eksekutif');
+        }
+
+        if ($this->dokumenYudisiumTersedia()) {
+            $query->leftJoin('trt_sk_yudisium as yudisium_ti', function ($join) {
+                $join->on('yudisium_ti.tanggal_ujian', '=', 'jadwal.tgl_ujian')
+                    ->where('yudisium_ti.tipe_ujian', '=', 2)
+                    ->where('yudisium_ti.kode_prodi', '=', '130');
+            });
+            $query->leftJoin('trt_sk_yudisium as yudisium_si', function ($join) {
+                $join->on('yudisium_si.tanggal_ujian', '=', 'jadwal.tgl_ujian')
+                    ->where('yudisium_si.tipe_ujian', '=', 2)
+                    ->where('yudisium_si.kode_prodi', '=', '131');
+            });
+            $selects[4] = DB::raw('MAX(yudisium_ti.nomor_surat) as nomor_surat_ti');
+            $selects[5] = DB::raw('MAX(yudisium_si.nomor_surat) as nomor_surat_si');
+        }
+
+        $data = $query
+            ->select($selects)
+            ->groupBy('jadwal.tgl_ujian')
+            ->orderBy('jadwal.tgl_ujian', 'desc')
+            ->get();
+
+        return view('tugasakhir.fakultas.rekap_ujian_selesai', compact('data'));
+    }
+
+    public function rekap_ujian_selesai_peserta($date)
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
+            abort(404);
+        }
+
+        $payload = $this->pesertaYudisium($date, '130')
+            ->merge($this->pesertaYudisium($date, '131'))
+            ->sortBy('nim')
+            ->values()
+            ->map(function ($mahasiswa) {
+                return [
+                    'nim' => $mahasiswa->nim,
+                    'nama' => $mahasiswa->nama,
+                    'nilai_ujian_ta' => $mahasiswa->nilai_ujian_ta === null
+                        ? 'Belum lengkap'
+                        : number_format($mahasiswa->nilai_ujian_ta, 2, ',', '.'),
+                    'ipk' => $mahasiswa->ipk === null
+                        ? 'Belum tersedia'
+                        : number_format($mahasiswa->ipk, 2, ',', '.'),
+                ];
+            });
 
         return response()->json([
             'tanggal_ujian' => $date,
             'data' => $payload,
         ]);
+    }
+
+    public function sk_yudisium_data($date, $kodeProdi)
+    {
+        $kodeProdi = $this->kodeProdiYudisium($kodeProdi);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date) || !$kodeProdi) {
+            abort(404);
+        }
+        if (!$this->dokumenYudisiumTersedia() || !$this->dataMahasiswaYudisiumTersedia()) {
+            return redirect()->route('fakultas.rekap_ujian_selesai')->with([
+                'status' => 'danger',
+                'message' => 'Penyimpanan SK Yudisium belum siap. Jalankan migrasi sistem terlebih dahulu.',
+            ]);
+        }
+
+        $peserta = $this->pesertaYudisium($date, $kodeProdi);
+        if ($peserta->isEmpty()) {
+            abort(404);
+        }
+
+        $dokumen = $this->dokumenYudisium($date, $kodeProdi);
+        $kekurangan = $this->kekuranganDokumenYudisium($dokumen, $peserta);
+        $programStudi = $this->namaProdiYudisium($kodeProdi);
+
+        return view('tugasakhir.fakultas.sk_yudisium_data', compact(
+            'date',
+            'kodeProdi',
+            'programStudi',
+            'peserta',
+            'dokumen',
+            'kekurangan'
+        ));
+    }
+
+    public function simpan_data_sk_yudisium(Request $request)
+    {
+        $validated = $request->validate([
+            'tanggal_ujian' => 'required|date_format:Y-m-d',
+            'kode_prodi' => 'required|in:130,131',
+            'nomor_surat' => 'nullable|string|max:150',
+            'mahasiswa' => 'required|array',
+            'mahasiswa.*.nim' => 'required|string|max:15',
+            'mahasiswa.*.nomor_alumni' => 'nullable|string|max:30',
+            'mahasiswa.*.ipk' => 'nullable|numeric|min:0|max:4',
+        ]);
+
+        $date = $validated['tanggal_ujian'];
+        $kodeProdi = $validated['kode_prodi'];
+        if (!$this->dokumenYudisiumTersedia() || !$this->dataMahasiswaYudisiumTersedia()) {
+            return redirect()->route('fakultas.rekap_ujian_selesai')->with([
+                'status' => 'danger',
+                'message' => 'Penyimpanan SK Yudisium belum siap. Jalankan migrasi sistem terlebih dahulu.',
+            ]);
+        }
+
+        $peserta = $this->pesertaYudisium($date, $kodeProdi);
+        $nimTerdaftar = $peserta->pluck('nim')->map(function ($nim) {
+            return (string) $nim;
+        })->sort()->values();
+        $inputMahasiswa = collect($validated['mahasiswa'])->keyBy(function ($mahasiswa) {
+            return (string) $mahasiswa['nim'];
+        });
+        $nimInput = $inputMahasiswa->keys()->sort()->values();
+
+        if ($nimTerdaftar->isEmpty() || $nimTerdaftar->diff($nimInput)->isNotEmpty() || $nimInput->diff($nimTerdaftar)->isNotEmpty()) {
+            return redirect()->back()->withInput()->withErrors([
+                'mahasiswa' => 'Daftar mahasiswa berubah. Muat ulang halaman sebelum menyimpan data yudisium.',
+            ]);
+        }
+
+        DB::transaction(function () use ($date, $kodeProdi, $validated, $peserta, $inputMahasiswa) {
+            $this->simpanDokumenYudisium($date, $kodeProdi, $validated['nomor_surat'] ?? '');
+
+            foreach ($peserta as $mahasiswa) {
+                $input = $inputMahasiswa->get($mahasiswa->nim);
+                $nomorAlumni = trim((string) ($input['nomor_alumni'] ?? ''));
+                $ipk = $input['ipk'] ?? null;
+                $payload = [
+                    'nomor_alumni' => $nomorAlumni === '' ? null : $nomorAlumni,
+                    'ipk' => $ipk === '' || $ipk === null ? null : (float) $ipk,
+                    'updated_by' => auth()->id(),
+                    'updated_at' => now(),
+                ];
+                $record = DB::table('trt_yudisium_mahasiswa')
+                    ->where('tanggal_ujian', $date)
+                    ->where('tipe_ujian', 2)
+                    ->where('C_NPM', $mahasiswa->nim);
+
+                if ($record->exists()) {
+                    $record->update($payload);
+                } else {
+                    DB::table('trt_yudisium_mahasiswa')->insert(array_merge($payload, [
+                        'tanggal_ujian' => $date,
+                        'tipe_ujian' => 2,
+                        'C_NPM' => $mahasiswa->nim,
+                        'created_by' => auth()->id(),
+                        'created_at' => now(),
+                    ]));
+                }
+            }
+        });
+
+        return redirect()->route('fakultas.sk_yudisium_data', [$date, $kodeProdi])->with([
+            'status' => 'success',
+            'message' => 'Data SK Yudisium berhasil disimpan.',
+        ]);
+    }
+
+    public function cetak_sk_yudisium($date, $kodeProdi)
+    {
+        $kodeProdi = $this->kodeProdiYudisium($kodeProdi);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date) || !$kodeProdi) {
+            abort(404);
+        }
+
+        $peserta = $this->pesertaYudisium($date, $kodeProdi);
+        $dokumen = $this->dokumenYudisium($date, $kodeProdi);
+        $kekurangan = $this->kekuranganDokumenYudisium($dokumen, $peserta);
+        if (!empty($kekurangan)) {
+            return redirect()->route('fakultas.sk_yudisium_data', [$date, $kodeProdi])->with([
+                'status' => 'danger',
+                'message' => 'PDF belum dapat dibuat. ' . implode(' ', $kekurangan),
+            ]);
+        }
+
+        if (empty($dokumen->verification_token)) {
+            $dokumen = $this->simpanDokumenYudisium($date, $kodeProdi, $dokumen->nomor_surat);
+        }
+
+        $tanggalSurat = Carbon::parse($date);
+        $programStudi = $this->namaProdiYudisium($kodeProdi);
+        $emailProgramStudi = $this->emailProdiYudisium($kodeProdi);
+        $dekan = helper::getDekanByTanggal($date);
+        $namaDekan = $dekan && !empty($dekan->nama) ? $dekan->nama : '-';
+        $verificationUrl = route('verifikasi_sk_yudisium', ['token' => $dokumen->verification_token]);
+        $safeNomorSurat = trim(preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $dokumen->nomor_surat), '-');
+
+        return PDF::loadView('tugasakhir.fakultas.sk_yudisium_pdf', compact(
+            'dokumen',
+            'peserta',
+            'tanggalSurat',
+            'programStudi',
+            'emailProgramStudi',
+            'namaDekan',
+            'verificationUrl'
+        ))
+            ->setPaper('a4', 'portrait')
+            ->stream('SK-Yudisium-' . ($safeNomorSurat ?: $kodeProdi . '-' . $date) . '.pdf');
+    }
+
+    public function verifikasi_sk_yudisium($token)
+    {
+        if (!preg_match('/^[A-Za-z0-9]{32,64}$/', (string) $token) || !$this->dokumenYudisiumTersedia()) {
+            abort(404);
+        }
+
+        $dokumen = DB::table('trt_sk_yudisium')
+            ->where('verification_token', $token)
+            ->where('tipe_ujian', 2)
+            ->first();
+        if (!$dokumen || !$this->kodeProdiYudisium($dokumen->kode_prodi)) {
+            abort(404);
+        }
+
+        $programStudi = $this->namaProdiYudisium($dokumen->kode_prodi);
+        $jumlahMahasiswa = $this->pesertaYudisium($dokumen->tanggal_ujian, $dokumen->kode_prodi)->count();
+
+        return view('tugasakhir.fakultas.verifikasi_sk_yudisium', compact(
+            'dokumen',
+            'programStudi',
+            'jumlahMahasiswa'
+        ));
     }
 
     public function rekap_ujian_selesai_nomor_surat(Request $request)
