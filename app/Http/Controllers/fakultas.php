@@ -211,6 +211,216 @@ class fakultas extends Controller
     }
     // Akhir Approve Hasil Ujian TA
 
+    protected function rekapUjianTugasAkhirSelesaiQuery()
+    {
+        return DB::table('trt_jadwal_ujian as jadwal')
+            ->join('trt_jadwal_ujian_per_mhs as peserta', 'peserta.jadwal_ujian', '=', 'jadwal.id')
+            ->join('mst_pendaftaran as pendaftaran', 'pendaftaran.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
+            ->join('trt_reg as registrasi', function ($join) {
+                $join->on('registrasi.C_NPM', '=', 'peserta.C_NPM')
+                    ->on('registrasi.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
+                    ->where('registrasi.status', '=', 2);
+            })
+            ->leftJoin('t_mst_mahasiswa as mahasiswa', 'mahasiswa.C_NPM', '=', 'peserta.C_NPM')
+            ->where('pendaftaran.tipe_ujian', 2)
+            ->whereNotNull('jadwal.tgl_ujian')
+            ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
+            ->whereDate('jadwal.tgl_ujian', '<', Carbon::today()->toDateString());
+    }
+
+    protected function tabelRekapUjianSelesaiTersedia()
+    {
+        return Schema::hasTable('trt_rekap_ujian_selesai');
+    }
+
+    protected function mahasiswaEksekutifTersedia()
+    {
+        return Schema::hasTable('trt_mahasiswa_eksekutif');
+    }
+
+    public function rekap_ujian_selesai()
+    {
+        $query = $this->rekapUjianTugasAkhirSelesaiQuery();
+        $selects = [
+            'jadwal.tgl_ujian as tanggal_ujian',
+            DB::raw('COUNT(DISTINCT peserta.C_NPM) as jumlah_mahasiswa'),
+            DB::raw("COUNT(DISTINCT CASE WHEN peserta.C_NPM LIKE '130%' THEN peserta.C_NPM END) as jumlah_teknik_informatika"),
+            DB::raw("COUNT(DISTINCT CASE WHEN peserta.C_NPM LIKE '131%' THEN peserta.C_NPM END) as jumlah_sistem_informasi"),
+            DB::raw('NULL as nomor_surat'),
+        ];
+
+        if ($this->mahasiswaEksekutifTersedia()) {
+            $query->leftJoin('trt_mahasiswa_eksekutif as kelas_eksekutif', 'kelas_eksekutif.C_NPM', '=', 'peserta.C_NPM');
+            $selects[] = DB::raw('COUNT(DISTINCT CASE WHEN kelas_eksekutif.C_NPM IS NULL THEN peserta.C_NPM END) as jumlah_reguler');
+            $selects[] = DB::raw('COUNT(DISTINCT CASE WHEN kelas_eksekutif.C_NPM IS NOT NULL THEN peserta.C_NPM END) as jumlah_eksekutif');
+        } else {
+            $selects[] = DB::raw('COUNT(DISTINCT peserta.C_NPM) as jumlah_reguler');
+            $selects[] = DB::raw('0 as jumlah_eksekutif');
+        }
+
+        if ($this->tabelRekapUjianSelesaiTersedia()) {
+            $query->leftJoin('trt_rekap_ujian_selesai as rekap_surat', function ($join) {
+                $join->on('rekap_surat.tanggal_ujian', '=', 'jadwal.tgl_ujian')
+                    ->where('rekap_surat.tipe_ujian', '=', 2);
+            });
+            $selects[4] = DB::raw('MAX(rekap_surat.nomor_surat) as nomor_surat');
+        }
+
+        $data = $query
+            ->select($selects)
+            ->groupBy('jadwal.tgl_ujian')
+            ->orderBy('jadwal.tgl_ujian', 'desc')
+            ->get();
+
+        return view('tugasakhir.fakultas.rekap_ujian_selesai', compact('data'));
+    }
+
+    public function rekap_ujian_selesai_peserta($date)
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
+            abort(404);
+        }
+
+        $peserta = $this->rekapUjianTugasAkhirSelesaiQuery()
+            ->leftJoin('trt_bimbingan as bimbingan', 'bimbingan.bimbingan_id', '=', 'registrasi.bimbingan_id')
+            ->leftJoin('trt_penguji as penguji', function ($join) {
+                $join->on('penguji.C_NPM', '=', 'peserta.C_NPM')
+                    ->where('penguji.tipe_ujian', '=', 2);
+            })
+            ->whereDate('jadwal.tgl_ujian', $date)
+            ->select(
+                'peserta.C_NPM as nim',
+                'mahasiswa.NAMA_MAHASISWA as nama',
+                'registrasi.reg_id',
+                'bimbingan.pembimbing_I_id',
+                'bimbingan.pembimbing_II_id',
+                'penguji.ketua_sidang_id',
+                'penguji.penguji_I_id',
+                'penguji.penguji_II_id',
+                'penguji.penguji_III_id'
+            )
+            ->distinct()
+            ->orderBy('peserta.C_NPM')
+            ->get();
+
+        $hasilByRegId = $peserta->isEmpty()
+            ? collect()
+            : DB::table('trt_hasil')
+                ->whereIn('reg_id', $peserta->pluck('reg_id')->filter()->unique()->all())
+                ->get(['reg_id', 'nidn', 'nilai_1', 'nilai_2', 'nilai_3', 'nilai_4', 'nilai_5'])
+                ->groupBy('reg_id');
+
+        $payload = $peserta->map(function ($mahasiswa) use ($hasilByRegId) {
+            $penilaiWajib = collect([
+                $mahasiswa->pembimbing_I_id,
+                $mahasiswa->pembimbing_II_id,
+                $mahasiswa->ketua_sidang_id,
+                $mahasiswa->penguji_I_id,
+                $mahasiswa->penguji_II_id,
+                $mahasiswa->penguji_III_id,
+            ])->map(function ($kodeDosen) {
+                return trim((string) $kodeDosen);
+            })->filter(function ($kodeDosen) {
+                return $kodeDosen !== '' && $kodeDosen !== '--';
+            })->unique()->values();
+
+            $hasilPerPenilai = collect($hasilByRegId->get($mahasiswa->reg_id, collect()))
+                ->keyBy('nidn');
+            $nilaiPenilai = $penilaiWajib->map(function ($kodeDosen) use ($hasilPerPenilai) {
+                $hasil = $hasilPerPenilai->get($kodeDosen);
+                if (!$hasil) {
+                    return null;
+                }
+
+                $nilai = [$hasil->nilai_1, $hasil->nilai_2, $hasil->nilai_3, $hasil->nilai_4, $hasil->nilai_5];
+                foreach ($nilai as $item) {
+                    if (!is_numeric($item) || (float) $item <= 0) {
+                        return null;
+                    }
+                }
+
+                return array_sum($nilai);
+            });
+
+            $nilaiUjianTa = $penilaiWajib->isNotEmpty() && !$nilaiPenilai->contains(null)
+                ? round($nilaiPenilai->sum() / $penilaiWajib->count(), 2)
+                : null;
+
+            return [
+                'nim' => (string) $mahasiswa->nim,
+                'nama' => $mahasiswa->nama ?: '-',
+                'nilai_ujian_ta' => $nilaiUjianTa === null ? 'Belum lengkap' : number_format($nilaiUjianTa, 2, ',', '.'),
+                // Thesis Apps belum menyimpan IPK; disiapkan agar sumber akademik resmi dapat dihubungkan kemudian.
+                'ipk' => 'Belum tersedia',
+            ];
+        })->values();
+
+        return response()->json([
+            'tanggal_ujian' => $date,
+            'data' => $payload,
+        ]);
+    }
+
+    public function rekap_ujian_selesai_nomor_surat(Request $request)
+    {
+        $validated = $request->validate([
+            'tanggal_ujian' => 'required|date_format:Y-m-d',
+            'nomor_surat' => 'nullable|string|max:150',
+        ]);
+
+        $date = $validated['tanggal_ujian'];
+        if (!$this->tabelRekapUjianSelesaiTersedia()) {
+            return redirect()->back()->with([
+                'status' => 'danger',
+                'message' => 'Penyimpanan nomor surat belum siap. Jalankan migrasi sistem terlebih dahulu.',
+            ]);
+        }
+
+        if (!$this->rekapUjianTugasAkhirSelesaiQuery()->whereDate('jadwal.tgl_ujian', $date)->exists()) {
+            return redirect()->back()->with([
+                'status' => 'danger',
+                'message' => 'Tanggal ujian tidak ditemukan pada rekap ujian TA selesai.',
+            ]);
+        }
+
+        $nomorSurat = trim((string) ($validated['nomor_surat'] ?? ''));
+        if ($nomorSurat === '') {
+            DB::table('trt_rekap_ujian_selesai')
+                ->where('tanggal_ujian', $date)
+                ->where('tipe_ujian', 2)
+                ->delete();
+
+            return redirect()->back()->with([
+                'status' => 'success',
+                'message' => 'Nomor surat untuk tanggal ujian tersebut dihapus.',
+            ]);
+        }
+
+        $rekapSurat = DB::table('trt_rekap_ujian_selesai')
+            ->where('tanggal_ujian', $date)
+            ->where('tipe_ujian', 2);
+        $payload = [
+            'nomor_surat' => $nomorSurat,
+            'updated_by' => auth()->id(),
+            'updated_at' => now(),
+        ];
+
+        if ($rekapSurat->exists()) {
+            $rekapSurat->update($payload);
+        } else {
+            DB::table('trt_rekap_ujian_selesai')->insert(array_merge($payload, [
+                'tanggal_ujian' => $date,
+                'tipe_ujian' => 2,
+                'created_at' => now(),
+            ]));
+        }
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Nomor surat berhasil disimpan untuk seluruh mahasiswa ujian pada tanggal tersebut.',
+        ]);
+    }
+
     // Halaman Lembaran Hasil Ujian
     public function lembaran_hasilujian_ujian_ta($pendaftaran_id, $nim, $reg_id)
     {

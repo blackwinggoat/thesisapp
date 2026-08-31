@@ -455,6 +455,11 @@ Route::group(['middleware' => 'akademik_fakultas'], function () {
     Route::get("/fakultas/detail_rekap_nilai_ujian_ta/{id}", "fakultas@detail_rekap_nilai_ujian_ta");
     Route::get("/fakultas/lembaran_hasilujian_ujian_ta/{id}/{nim}/{regid}", "fakultas@lembaran_hasilujian_ujian_ta");
 
+    // Rekap Ujian TA yang tanggal pelaksanaannya sudah lewat.
+    Route::get('/fakultas/rekap-ujian-selesai', 'fakultas@rekap_ujian_selesai')->name('fakultas.rekap_ujian_selesai');
+    Route::get('/fakultas/rekap-ujian-selesai/{date}/peserta', 'fakultas@rekap_ujian_selesai_peserta')->name('fakultas.rekap_ujian_selesai_peserta');
+    Route::post('/fakultas/rekap-ujian-selesai/nomor-surat', 'fakultas@rekap_ujian_selesai_nomor_surat')->name('fakultas.rekap_ujian_selesai_nomor_surat');
+
     Route::get('/fakultas/detail_ujian/{nim}/{tipe_ujian}', 'fakultas@detail_ujian');
     // Surat Keputusan
     Route::get('/fakultas/sk_ujian', "fakultas@sk_ujian")->name('tampilSKUjianFakultas');

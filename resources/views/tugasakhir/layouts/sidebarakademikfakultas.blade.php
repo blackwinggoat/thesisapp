@@ -48,7 +48,7 @@
                 Surat Penugasan Ujian TA
             </a>
         </li>
-                <li>
+        <li>
             <a href="#fakelink">
                 <i class="fa fa-table icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
@@ -58,6 +58,12 @@
                 <li><a href="{{url('fakultas/rekap_nilai_proposal')}}">Proposal</a></li>
                 <li><a href="{{url('fakultas/rekap_nilai_ujian_ta')}}">Ujian Meja</a></li>
             </ul>
+        </li>
+        <li>
+            <a href="{{ route('fakultas.rekap_ujian_selesai') }}">
+                <i class="fa fa-list-alt icon-sidebar"></i>
+                Rekap Ujian TA Selesai
+            </a>
         </li>
     </ul>
 </div><!-- /.sidebar-left -->
