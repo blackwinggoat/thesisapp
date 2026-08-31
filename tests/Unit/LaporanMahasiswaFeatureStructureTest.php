@@ -30,6 +30,19 @@ class LaporanMahasiswaFeatureStructureTest extends TestCase
         $this->assertStringContainsString("leftJoin('trt_prodi', 'trt_prodi.kode_prodi', '=', 't_mst_mahasiswa.C_KODE_PRODI')", $prodi);
     }
 
+    public function testProdiScopeRecognizesDescriptiveProgramAccountNames()
+    {
+        $controller = new \App\Http\Controllers\Prodi();
+        $scopeMethod = new \ReflectionMethod($controller, 'getProdiScope');
+        $scopeMethod->setAccessible(true);
+
+        $teknikInformatika = $scopeMethod->invoke($controller, (object) ['name' => 'Teknik Informatika']);
+        $sistemInformasi = $scopeMethod->invoke($controller, (object) ['name' => 'Sistem Informasi']);
+
+        $this->assertSame('130', $teknikInformatika['nim_prefix']);
+        $this->assertSame('131', $sistemInformasi['nim_prefix']);
+    }
+
     public function testDetailPembimbingProvidesCoordinationAndReportAction()
     {
         $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/dosen/detail_pembimbing.blade.php');

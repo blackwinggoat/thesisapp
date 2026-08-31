@@ -46,7 +46,7 @@ class Prodi extends Controller
         $user = $user ?: auth()->user();
         $username = strtolower(trim((string) ($user->name ?? '')));
 
-        if (in_array($username, ['proditi', 'akademikproditi'], true)) {
+        if (in_array($username, ['proditi', 'akademikproditi', 'teknik informatika', 'ti'], true)) {
             return [
                 'nim_prefix' => '130',
                 'nim_like' => '130%',
@@ -56,7 +56,7 @@ class Prodi extends Controller
             ];
         }
 
-        if (in_array($username, ['prodisi', 'akademikprodisi'], true)) {
+        if (in_array($username, ['prodisi', 'akademikprodisi', 'sistem informasi', 'si'], true)) {
             return [
                 'nim_prefix' => '131',
                 'nim_like' => '131%',
