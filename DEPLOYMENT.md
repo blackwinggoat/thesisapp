@@ -49,13 +49,19 @@ key; the private key remains on the local computer.
 Host thesisapps-production
     HostName rs5-sgp.serverhostgroup.com
     User thesisapp
-    Port 1988
+    Port 22
     IdentityFile ~/.ssh/id_ed25519_thesisapps
     IdentitiesOnly yes
 ```
 
-External SSH access through port `1988` was verified on 2026-08-02. Deploy the
-exact `origin/main` commit with one command:
+Before using SSH deployment, hosting must allow the selected SSH port from the
+local public IP. Confirm the connection first:
+
+```bash
+ssh thesisapps-production 'printf "ssh-direct-ok\n"'
+```
+
+Once it succeeds, deploy the exact `origin/main` commit with one command:
 
 ```bash
 scripts/deploy-production-ssh.sh
@@ -69,6 +75,17 @@ scripts/deploy-production-ssh.sh --dry-run
 
 The helper refuses a dirty worktree, refetches the server checkout, writes the
 exact SHA approval, and then calls the same guarded cPanel deployment script.
+
+## Current recovery state
+
+The cPanel-managed repository is `/home/thesisapp/repositories/thesisapp` and
+is used by `scripts/deploy-production.sh`. Its API token is read from the
+macOS Keychain, so this route does not require opening cPanel in a browser.
+
+Do not run a full automated production deployment until the source drift audit
+is complete. The live checkout currently contains legacy tracked differences
+outside the Git release; narrow, reviewed file deployments remain the safe
+route until those differences are reconciled and backed up.
 
 ## Rollback
 
