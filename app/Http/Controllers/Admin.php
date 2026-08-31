@@ -123,7 +123,7 @@ class Admin extends Controller
 
         DB::table('users')->where('id', $id)->delete();
 
-        return redirect()->back()->with('status', 'user_deleted')->with('target_user_name', $targetUser->name);
+        return redirect()->route('admin.users.index')->with('status', 'user_deleted')->with('target_user_name', $targetUser->name);
     }
 
     public function login_as_user(Request $request, $id)
