@@ -55,4 +55,28 @@ class AdminUserManagementTest extends TestCase
         $this->assertStringContainsString("route('admin.back_to_admin')", $navigation);
         $this->assertStringContainsString('Kembali ke Admin', $navigation);
     }
+
+    public function testAdminLoginAsReturnButtonIsSharedAcrossRoleSidebars()
+    {
+        $partial = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/layouts/partials/back_to_admin.blade.php');
+        $sidebars = [
+            'sidebarkaprodi.blade.php',
+            'sidebarakademikprodi.blade.php',
+            'sidebarwakildekan.blade.php',
+            'sidebarkeuanganfakultas.blade.php',
+            'sidebardekan.blade.php',
+            'sidebarakademikfakultas.blade.php',
+            'sidebardosen.blade.php',
+            'sidebarmhs.blade.php',
+        ];
+
+        $this->assertStringContainsString("route('admin.back_to_admin')", $partial);
+        $this->assertStringContainsString("session('login_as_source_user_level')", $partial);
+        $this->assertStringContainsString('Kembali ke Admin', $partial);
+
+        foreach ($sidebars as $sidebar) {
+            $contents = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/layouts/' . $sidebar);
+            $this->assertStringContainsString("@include('tugasakhir.layouts.partials.back_to_admin')", $contents, $sidebar);
+        }
+    }
 }

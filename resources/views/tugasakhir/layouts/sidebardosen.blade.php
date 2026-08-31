@@ -18,11 +18,12 @@
                     <br /><strong>{{ helper::getDeskripsi(auth()->user()->name) }}{{ helper::getNamaMhs(auth()->user()->name) }}</strong>
                 </h4>
                 <div class="dosen-sidebar-actions">
-                        @if (in_array((int) session('login_as_source_user_level'), [1, 5], true) && !empty(session('login_as_source_user_id')))
+                        @if ((int) session('login_as_source_user_level') === 5 && !empty(session('login_as_source_user_id')))
                             <a href="{{ url('dsn/back_to_prodi') }}" class="btn btn-primary btn-xs">
-                                {{ (int) session('login_as_source_user_level') === 1 ? 'Back to Admin' : 'Back to Prodi' }}
+                                Back to Prodi
                             </a>
                         @endif
+                        @include('tugasakhir.layouts.partials.back_to_admin')
                         <a href="{{ url('dsn/profil') }}" class="btn btn-primary btn-xs" title="Edit profil dosen"><i
                                 class="fa fa-user"></i></a>
                         <a href="{{ url('dsn/ubah_password') }}" class="btn btn-success btn-xs" title="Ubah kata sandi"><i

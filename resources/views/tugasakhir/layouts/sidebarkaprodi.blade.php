@@ -19,6 +19,7 @@
                         }}
                     </strong>
                     </h4>
+                    @include('tugasakhir.layouts.partials.back_to_admin')
                     <a style="display: inline-block; width: 30px; padding: 0px; height: 30px; color: white; line-height: 2.3; border-radius: 5px;"
                         href="{{url('prodi/ubah_password')}}" class="btn btn-success btn-xs"><i
                             class="fa fa-cog"></i></a>
