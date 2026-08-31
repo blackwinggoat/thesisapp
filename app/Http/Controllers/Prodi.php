@@ -1435,12 +1435,10 @@ class Prodi extends Controller
 
     protected function queryLaporanMahasiswaProdi()
     {
-        $kodeProdi = $this->kodeProdiLaporanMahasiswa();
-
         $query = DB::table('trt_laporan_mahasiswa')
             ->join('t_mst_mahasiswa', 't_mst_mahasiswa.C_NPM', '=', 'trt_laporan_mahasiswa.C_NPM')
             ->leftJoin('t_mst_dosen', 't_mst_dosen.C_KODE_DOSEN', '=', 'trt_laporan_mahasiswa.C_KODE_DOSEN')
-            ->leftJoin('trt_prodi', 'trt_prodi.kode_prodi', '=', 'trt_laporan_mahasiswa.C_KODE_PRODI')
+            ->leftJoin('trt_prodi', 'trt_prodi.kode_prodi', '=', 't_mst_mahasiswa.C_KODE_PRODI')
             ->select(
                 'trt_laporan_mahasiswa.*',
                 't_mst_mahasiswa.NAMA_MAHASISWA',
@@ -1448,9 +1446,7 @@ class Prodi extends Controller
                 'trt_prodi.nama as nama_prodi'
             );
 
-        if ($kodeProdi !== null) {
-            $query->where('trt_laporan_mahasiswa.C_KODE_PRODI', $kodeProdi);
-        }
+        $this->applyProdiNimScope($query, 't_mst_mahasiswa.C_NPM');
 
         return $query;
     }

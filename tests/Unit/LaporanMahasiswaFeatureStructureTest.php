@@ -26,7 +26,8 @@ class LaporanMahasiswaFeatureStructureTest extends TestCase
         $this->assertStringContainsString('protected function getProdiScope', $prodi);
         $this->assertStringContainsString("'kode_prodi' => '55201'", $prodi);
         $this->assertStringContainsString("'kode_prodi' => '57201'", $prodi);
-        $this->assertStringContainsString("where('trt_laporan_mahasiswa.C_KODE_PRODI', \$kodeProdi)", $prodi);
+        $this->assertStringContainsString("\$this->applyProdiNimScope(\$query, 't_mst_mahasiswa.C_NPM')", $prodi);
+        $this->assertStringContainsString("leftJoin('trt_prodi', 'trt_prodi.kode_prodi', '=', 't_mst_mahasiswa.C_KODE_PRODI')", $prodi);
     }
 
     public function testDetailPembimbingProvidesCoordinationAndReportAction()
