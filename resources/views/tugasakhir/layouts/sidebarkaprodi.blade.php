@@ -11,7 +11,11 @@
                 <div class="media-body">
                     <h4>Welcome, <br /><strong>Program Studi
                         {{
-                            Auth::user()->name == 'proditi' ? 'Teknik Informatika' : (Auth::user()->name == 'prodisi' ? 'Sistem Informasi' : 'Admin')
+                            in_array(strtolower(Auth::user()->name), ['proditi', 'akademikproditi'], true)
+                                ? 'Teknik Informatika'
+                                : (in_array(strtolower(Auth::user()->name), ['prodinyalilis', 'prodisi', 'akademikprodisi'], true)
+                                    ? 'Sistem Informasi'
+                                    : 'Belum Dipetakan')
                         }}
                     </strong>
                     </h4>

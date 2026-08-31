@@ -68,10 +68,12 @@ BEGIN PAGE
                             @elseif(Auth::user()->level==4)
                                 Hi, <strong>Akademik Fakultas</strong>
                             @elseif(Auth::user()->level==5)
-                                @if (Auth::user()->name == 'proditi')
+                                @if (in_array(strtolower(Auth::user()->name), ['proditi', 'akademikproditi'], true))
                                     Hi, <strong>Teknik Informatika</strong>
-                                @else
+                                @elseif (in_array(strtolower(Auth::user()->name), ['prodinyalilis', 'prodisi', 'akademikprodisi'], true))
                                     Hi, <strong>Sistem Informasi</strong>
+                                @else
+                                    Hi, <strong>Akun Prodi belum dipetakan</strong>
                                 @endif
                             @elseif(Auth::user()->level==6)
                                 Hi, <strong>Akademik Prodi</strong>

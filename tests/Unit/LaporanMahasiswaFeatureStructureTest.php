@@ -43,6 +43,24 @@ class LaporanMahasiswaFeatureStructureTest extends TestCase
         $this->assertSame('131', $sistemInformasi['nim_prefix']);
     }
 
+    public function testProdiScopeRecognizesRegisteredAccountsAndFailsClosedForUnknownAccount()
+    {
+        $controller = new \App\Http\Controllers\Prodi();
+        $scopeMethod = new \ReflectionMethod($controller, 'getProdiScope');
+        $scopeMethod->setAccessible(true);
+
+        $sistemInformasi = $scopeMethod->invoke($controller, (object) ['name' => 'prodinyalilis', 'level' => 5]);
+        $unknownProdi = $scopeMethod->invoke($controller, (object) ['name' => 'uat-prodi-slider', 'level' => 5]);
+        $admin = $scopeMethod->invoke($controller, (object) ['name' => 'admin', 'level' => 1]);
+
+        $this->assertSame('131', $sistemInformasi['nim_prefix']);
+        $this->assertTrue($sistemInformasi['is_mapped']);
+        $this->assertSame('__unmapped_prodi__', $unknownProdi['nim_prefix']);
+        $this->assertFalse($unknownProdi['is_mapped']);
+        $this->assertNull($admin['nim_prefix']);
+        $this->assertTrue($admin['is_mapped']);
+    }
+
     public function testDetailPembimbingProvidesCoordinationAndReportAction()
     {
         $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/dosen/detail_pembimbing.blade.php');

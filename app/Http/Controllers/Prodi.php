@@ -46,6 +46,18 @@ class Prodi extends Controller
         $user = $user ?: auth()->user();
         $username = strtolower(trim((string) ($user->name ?? '')));
 
+        // Admin is the only role allowed to work across both study programs.
+        if ((int) ($user->level ?? 0) === 1) {
+            return [
+                'nim_prefix' => null,
+                'nim_like' => '%',
+                'kode_prodi' => null,
+                'status_prodi' => null,
+                'label' => 'Semua Program Studi',
+                'is_mapped' => true,
+            ];
+        }
+
         if (in_array($username, ['proditi', 'akademikproditi', 'teknik informatika', 'ti'], true)) {
             return [
                 'nim_prefix' => '130',
@@ -53,25 +65,29 @@ class Prodi extends Controller
                 'kode_prodi' => '55201',
                 'status_prodi' => 1,
                 'label' => 'Teknik Informatika',
+                'is_mapped' => true,
             ];
         }
 
-        if (in_array($username, ['prodisi', 'akademikprodisi', 'sistem informasi', 'si'], true)) {
+        if (in_array($username, ['prodinyalilis', 'prodisi', 'akademikprodisi', 'sistem informasi', 'si'], true)) {
             return [
                 'nim_prefix' => '131',
                 'nim_like' => '131%',
                 'kode_prodi' => '57201',
                 'status_prodi' => 2,
                 'label' => 'Sistem Informasi',
+                'is_mapped' => true,
             ];
         }
 
+        // Do not let an unmapped Prodi account fall back to all student data.
         return [
-            'nim_prefix' => null,
-            'nim_like' => '%',
+            'nim_prefix' => '__unmapped_prodi__',
+            'nim_like' => '__unmapped_prodi__%',
             'kode_prodi' => null,
-            'status_prodi' => null,
-            'label' => 'Semua Program Studi',
+            'status_prodi' => -1,
+            'label' => 'Akun Prodi belum dipetakan',
+            'is_mapped' => false,
         ];
     }
 
@@ -98,6 +114,10 @@ class Prodi extends Controller
     protected function currentStatusProdiForWrite(Request $request)
     {
         $scope = $this->getProdiScope();
+        if (!$scope['is_mapped']) {
+            abort(403, 'Akun Prodi belum dipetakan ke program studi.');
+        }
+
         if (!is_null($scope['status_prodi'])) {
             return $scope['status_prodi'];
         }
