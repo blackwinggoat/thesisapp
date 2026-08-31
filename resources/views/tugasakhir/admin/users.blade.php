@@ -148,7 +148,7 @@
                                 @endif
 
                                 @if ($canDeleteUser)
-                                    <form action="{{ route('admin.users.delete', $user->id) }}" method="post" style="display: inline-block;" onsubmit="return confirm('Hapus user {{ $user->display_name ?: $user->name }}? Data master dosen/mahasiswa tidak ikut dihapus.');">
+                                    <form action="{{ route('admin.users.delete', $user->id) }}" method="post" class="js-delete-user" style="display: inline-block;" data-display-name="{{ $user->display_name ?: $user->name }}">
                                         {{ csrf_field() }}
                                         {{ method_field('DELETE') }}
                                         <button type="submit" class="btn btn-danger btn-sm" title="Hapus User">
@@ -210,6 +210,11 @@
             $('#resetPasswordForm').attr('action', button.data('action'));
             $('#resetPasswordTargetName').text(button.data('display-name') + ' (' + button.data('user-name') + ')');
             $('#resetPasswordForm input[type="password"]').val('');
+        });
+
+        $('.js-delete-user').on('submit', function () {
+            var displayName = $(this).data('display-name') || 'user ini';
+            return confirm('Hapus user ' + displayName + '? Data master dosen/mahasiswa tidak ikut dihapus.');
         });
     });
 </script>
