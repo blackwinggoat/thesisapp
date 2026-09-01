@@ -30,7 +30,7 @@
             @endif
 
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-7">
                     <h3 class="page-heading">Data SK Yudisium {{ $programStudi }}</h3>
                     <p class="text-muted" style="margin-top: -8px;">
                         Ujian Tugas Akhir tanggal {{ helper::tgl_indo_lengkap($date) }}
@@ -39,7 +39,7 @@
                         Nilai TA dihitung dari penilaian Thesis Apps. IPK ditarik dari nilai akhir aktif SIAKAD.
                     </p>
                 </div>
-                <div class="col-md-4 text-right" style="padding-top: 18px;">
+                <div class="col-md-5 text-right" style="padding-top: 18px;">
                     <a href="{{ route('fakultas.rekap_ujian_selesai') }}" class="btn btn-default">
                         <i class="fa fa-arrow-left"></i> Kembali
                     </a>
@@ -59,6 +59,10 @@
                             </button>
                         </span>
                     @endif
+                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#reset-yudisium-modal"
+                        title="Reset data SK Yudisium">
+                        <i class="fa fa-undo"></i> Reset
+                    </button>
                 </div>
             </div>
 
@@ -199,6 +203,44 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="reset-yudisium-modal" tabindex="-1" role="dialog" aria-labelledby="reset-yudisium-title">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="reset-yudisium-title">
+                        <i class="fa fa-exclamation-triangle text-warning"></i> Reset Data SK Yudisium
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Data SK Yudisium <strong>{{ $programStudi }}</strong> untuk tanggal
+                        <strong>{{ helper::tgl_indo_lengkap($date) }}</strong> akan direset.
+                    </p>
+                    <ul style="margin-bottom: 0; padding-left: 20px;">
+                        <li>Nomor surat dan token verifikasi PDF dihapus.</li>
+                        <li>Nomor alumni dan IPK seluruh peserta dihapus.</li>
+                        <li>Nilai ujian dan jadwal tetap tersimpan.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                    <form action="{{ route('fakultas.reset_data_sk_yudisium') }}" method="POST" style="display: inline-block;">
+                        @csrf
+                        <input type="hidden" name="tanggal_ujian" value="{{ $date }}">
+                        <input type="hidden" name="kode_prodi" value="{{ $kodeProdi }}">
+                        <input type="hidden" name="konfirmasi" value="RESET">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa fa-undo"></i> Ya, Reset Data
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 @endsection

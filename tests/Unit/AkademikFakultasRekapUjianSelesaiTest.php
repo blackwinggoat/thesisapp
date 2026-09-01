@@ -76,9 +76,8 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString('fa-file-pdf-o', $view);
         $this->assertStringContainsString("route('fakultas.sk_yudisium_data'", $view);
         $this->assertStringNotContainsString("route('fakultas.cetak_sk_yudisium'", $view);
-        $this->assertStringContainsString("route('fakultas.reset_data_sk_yudisium')", $view);
-        $this->assertStringContainsString('reset-yudisium-form', $view);
-        $this->assertStringContainsString('Nilai ujian serta jadwal tidak akan dihapus.', $view);
+        $this->assertStringNotContainsString("route('fakultas.reset_data_sk_yudisium')", $view);
+        $this->assertStringContainsString('btn-group btn-group-sm', $view);
         $this->assertStringContainsString('Nomor Alumni', $dataView);
         $this->assertStringContainsString('Nomor alumni terakhir terpakai:', $dataView);
         $this->assertStringContainsString('Lanjutkan Nomor Berikutnya', $dataView);
@@ -86,6 +85,9 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString('Tarik IPK SIAKAD', $dataView);
         $this->assertStringContainsString("route('fakultas.sinkronkan_ipk_sk_yudisium')", $dataView);
         $this->assertStringContainsString("route('fakultas.cetak_sk_yudisium'", $dataView);
+        $this->assertStringContainsString("route('fakultas.reset_data_sk_yudisium')", $dataView);
+        $this->assertStringContainsString('reset-yudisium-modal', $dataView);
+        $this->assertStringContainsString('Nilai ujian dan jadwal tetap tersimpan.', $dataView);
         $this->assertStringContainsString('Simpan Data Yudisium', $dataView);
         $this->assertStringContainsString('SURAT KEPUTUSAN', $pdfView);
         $this->assertStringContainsString('DAFTAR ALUMNI FAKULTAS ILMU KOMPUTER', $pdfView);
