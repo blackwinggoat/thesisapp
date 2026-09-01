@@ -77,7 +77,8 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString("route('fakultas.sk_yudisium_data'", $view);
         $this->assertStringNotContainsString("route('fakultas.cetak_sk_yudisium'", $view);
         $this->assertStringNotContainsString("route('fakultas.reset_data_sk_yudisium')", $view);
-        $this->assertStringContainsString('btn-group btn-group-sm', $view);
+        $this->assertStringContainsString('yudisium-action-buttons', $view);
+        $this->assertStringContainsString('style="margin-left: 6px;"', $view);
         $this->assertStringContainsString('Nomor Alumni', $dataView);
         $this->assertStringContainsString('Nomor alumni terakhir terpakai:', $dataView);
         $this->assertStringContainsString('Lanjutkan Nomor Berikutnya', $dataView);

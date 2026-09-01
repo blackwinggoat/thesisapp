@@ -69,8 +69,8 @@
                                         @endif
                                     </td>
                                     <td class="text-center" style="white-space: nowrap;">
-                                        <div class="btn-group btn-group-sm" role="group" aria-label="Aksi SK Yudisium">
-                                            <button type="button" class="btn btn-primary show-completed-exam-details"
+                                        <div class="yudisium-action-buttons" role="group" aria-label="Aksi SK Yudisium">
+                                            <button type="button" class="btn btn-primary btn-sm show-completed-exam-details"
                                                 data-detail-url="{{ route('fakultas.rekap_ujian_selesai_peserta', $rekap->tanggal_ujian) }}"
                                                 data-date-label="{{ helper::tgl_indo_lengkap($rekap->tanggal_ujian) }}"
                                                 title="Lihat informasi mahasiswa" data-toggle="tooltip" aria-label="Lihat informasi mahasiswa">
@@ -78,14 +78,16 @@
                                             </button>
                                             @if ($rekap->jumlah_teknik_informatika > 0)
                                                 <a href="{{ route('fakultas.sk_yudisium_data', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '130']) }}"
-                                                    class="btn btn-danger" title="Atur dan periksa PDF SK Yudisium Teknik Informatika"
+                                                    class="btn btn-danger btn-sm" style="margin-left: 6px;"
+                                                    title="Atur dan periksa PDF SK Yudisium Teknik Informatika"
                                                     data-toggle="tooltip" aria-label="Atur dan periksa PDF SK Yudisium Teknik Informatika">
                                                     <i class="fa fa-file-pdf-o"></i> TI
                                                 </a>
                                             @endif
                                             @if ($rekap->jumlah_sistem_informasi > 0)
                                                 <a href="{{ route('fakultas.sk_yudisium_data', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '131']) }}"
-                                                    class="btn btn-danger" title="Atur dan periksa PDF SK Yudisium Sistem Informasi"
+                                                    class="btn btn-danger btn-sm" style="margin-left: 6px;"
+                                                    title="Atur dan periksa PDF SK Yudisium Sistem Informasi"
                                                     data-toggle="tooltip" aria-label="Atur dan periksa PDF SK Yudisium Sistem Informasi">
                                                     <i class="fa fa-file-pdf-o"></i> SI
                                                 </a>
