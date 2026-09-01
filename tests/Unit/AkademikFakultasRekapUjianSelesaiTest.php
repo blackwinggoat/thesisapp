@@ -21,6 +21,7 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString("Route::post('/fakultas/rekap-ujian-selesai/nomor-surat', 'fakultas@rekap_ujian_selesai_nomor_surat')", $routes);
         $this->assertStringContainsString("Route::get('/fakultas/sk-yudisium/{date}/{kode_prodi}', 'fakultas@sk_yudisium_data')", $routes);
         $this->assertStringContainsString("Route::post('/fakultas/sk-yudisium/data', 'fakultas@simpan_data_sk_yudisium')", $routes);
+        $this->assertStringContainsString("Route::post('/fakultas/sk-yudisium/ipk', 'fakultas@sinkronkan_ipk_sk_yudisium')", $routes);
         $this->assertStringContainsString("Route::get('/fakultas/sk-yudisium/{date}/{kode_prodi}/pdf', 'fakultas@cetak_sk_yudisium')", $routes);
         $this->assertStringContainsString("Route::get('/verifikasi/sk-yudisium/{token}', 'fakultas@verifikasi_sk_yudisium')", $routes);
     }
@@ -29,6 +30,7 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
     {
         $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/fakultas.php');
         $migration = file_get_contents(__DIR__ . '/../../database/migrations/2026_09_01_020000_create_sk_yudisium_tables.php');
+        $ipkMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_09_01_030000_add_siakad_ipk_metadata_to_yudisium_mahasiswa.php');
 
         $this->assertStringContainsString("->where('pendaftaran.tipe_ujian', 2)", $controller);
         $this->assertStringContainsString("->whereDate('jadwal.tgl_ujian', '<', Carbon::today()->toDateString())", $controller);
@@ -41,6 +43,10 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString("Schema::create('trt_yudisium_mahasiswa'", $migration);
         $this->assertStringContainsString("'sk_yudisium_tanggal_tipe_prodi_unique'", $migration);
         $this->assertStringContainsString("'yudisium_mahasiswa_tanggal_tipe_nim_unique'", $migration);
+        $this->assertStringContainsString("ipk_sumber", $ipkMigration);
+        $this->assertStringContainsString("ipk_disinkronkan_pada", $ipkMigration);
+        $this->assertStringContainsString('SiakadIpkService', $controller);
+        $this->assertStringContainsString('sinkronkan_ipk_sk_yudisium', $controller);
     }
 
     public function testViewsProvideYudisiumDataEntryPdfAndQrVerification()
@@ -63,6 +69,8 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString("route('fakultas.sk_yudisium_data'", $view);
         $this->assertStringContainsString("route('fakultas.cetak_sk_yudisium'", $view);
         $this->assertStringContainsString('Nomor Alumni', $dataView);
+        $this->assertStringContainsString('Tarik IPK SIAKAD', $dataView);
+        $this->assertStringContainsString("route('fakultas.sinkronkan_ipk_sk_yudisium')", $dataView);
         $this->assertStringContainsString('Simpan Data Yudisium', $dataView);
         $this->assertStringContainsString('SURAT KEPUTUSAN', $pdfView);
         $this->assertStringContainsString('DAFTAR ALUMNI FAKULTAS ILMU KOMPUTER', $pdfView);

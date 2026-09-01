@@ -35,11 +35,18 @@
                     <p class="text-muted" style="margin-top: -8px;">
                         Ujian Tugas Akhir tanggal {{ helper::tgl_indo_lengkap($date) }}
                     </p>
+                    <p class="text-muted" style="margin-top: -4px;">
+                        Nilai TA dihitung dari penilaian Thesis Apps. IPK ditarik dari nilai akhir aktif SIAKAD.
+                    </p>
                 </div>
                 <div class="col-md-4 text-right" style="padding-top: 18px;">
                     <a href="{{ route('fakultas.rekap_ujian_selesai') }}" class="btn btn-default">
                         <i class="fa fa-arrow-left"></i> Kembali
                     </a>
+                    <button type="button" id="sync-all-yudisium-ipk" class="btn btn-info"
+                        title="Tarik IPK seluruh peserta dari SIAKAD">
+                        <i class="fa fa-cloud-download"></i> <span class="yudisium-sync-all-label">Tarik IPK SIAKAD</span>
+                    </button>
                     @if (empty($kekurangan))
                         <a href="{{ route('fakultas.cetak_sk_yudisium', ['date' => $date, 'kode_prodi' => $kodeProdi]) }}"
                             target="_blank" class="btn btn-danger" title="Buka PDF SK Yudisium">
@@ -121,9 +128,28 @@
                                                 placeholder="Nomor alumni">
                                         </td>
                                         <td>
-                                            <input type="number" name="mahasiswa[{{ $index }}][ipk]" min="0" max="4" step="0.01"
-                                                class="form-control input-sm yudisium-ipk"
-                                                value="{{ $ipkValue }}" aria-label="IPK {{ $mahasiswa->nim }}">
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" name="mahasiswa[{{ $index }}][ipk]"
+                                                    class="form-control yudisium-ipk" readonly
+                                                    value="{{ $ipkValue }}" aria-label="IPK {{ $mahasiswa->nim }}"
+                                                    placeholder="Belum ditarik">
+                                                <span class="input-group-btn">
+                                                    <button type="button" class="btn btn-info yudisium-sync-ipk"
+                                                        data-nim="{{ $mahasiswa->nim }}" title="Tarik IPK dari SIAKAD">
+                                                        <i class="fa fa-cloud-download"></i>
+                                                    </button>
+                                                </span>
+                                            </div>
+                                            <small class="text-muted yudisium-ipk-status">
+                                                @if ($mahasiswa->ipk_sumber)
+                                                    {{ $mahasiswa->ipk_sumber }}
+                                                    @if ($mahasiswa->ipk_disinkronkan_pada)
+                                                        | {{ date('d-m-Y H:i', strtotime($mahasiswa->ipk_disinkronkan_pada)) }}
+                                                    @endif
+                                                @else
+                                                    Belum ditarik dari SIAKAD
+                                                @endif
+                                            </small>
                                         </td>
                                         <td class="text-center yudisium-category">
                                             {{ $mahasiswa->kategori_yudisium ?: '-' }}
@@ -150,6 +176,9 @@
         $(function() {
             $('[data-toggle="tooltip"]').tooltip();
 
+            var syncIpkUrl = {!! json_encode(route('fakultas.sinkronkan_ipk_sk_yudisium')) !!};
+            var csrfToken = {!! json_encode(csrf_token()) !!};
+
             function kategoriYudisium(ipk) {
                 if (ipk >= 3.51) return 'I';
                 if (ipk >= 3.01) return 'II';
@@ -158,9 +187,71 @@
                 return '-';
             }
 
-            $('.yudisium-ipk').on('input', function() {
-                var value = parseFloat($(this).val());
-                $(this).closest('tr').find('.yudisium-category').text(isNaN(value) ? '-' : kategoriYudisium(value));
+            function syncIpk($button) {
+                var $row = $button.closest('tr');
+                var $status = $row.find('.yudisium-ipk-status');
+
+                $button.prop('disabled', true).find('i').removeClass('fa-cloud-download').addClass('fa-spinner fa-spin');
+                $status.text('Menghubungi SIAKAD...');
+
+                return $.ajax({
+                    url: syncIpkUrl,
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        _token: csrfToken,
+                        tanggal_ujian: '{{ $date }}',
+                        kode_prodi: '{{ $kodeProdi }}',
+                        nim: $button.data('nim')
+                    }
+                }).done(function(response) {
+                    $row.find('.yudisium-ipk').val(response.ipk);
+                    $row.find('.yudisium-category').text(response.kategori_yudisium || '-');
+                    $status.removeClass('text-danger').addClass('text-muted')
+                        .text(response.source + ' | ' + response.synced_at + ' | ' + response.total_sks + ' SKS');
+                }).fail(function(xhr) {
+                    var message = xhr.responseJSON && xhr.responseJSON.message
+                        ? xhr.responseJSON.message
+                        : 'IPK tidak dapat ditarik dari SIAKAD.';
+                    $status.text(message).removeClass('text-muted').addClass('text-danger');
+                }).always(function() {
+                    $button.prop('disabled', false).find('i').removeClass('fa-spinner fa-spin').addClass('fa-cloud-download');
+                });
+            }
+
+            $('.yudisium-sync-ipk').on('click', function() {
+                syncIpk($(this));
+            });
+
+            $('#sync-all-yudisium-ipk').on('click', function() {
+                var $allButton = $(this);
+                var $allLabel = $allButton.find('.yudisium-sync-all-label');
+                var $buttons = $('.yudisium-sync-ipk');
+                var current = 0;
+                var succeeded = 0;
+                var failed = 0;
+
+                if ($buttons.length === 0 || $allButton.prop('disabled')) {
+                    return;
+                }
+
+                $allButton.prop('disabled', true).find('i').removeClass('fa-cloud-download').addClass('fa-spinner fa-spin');
+                function next() {
+                    if (current >= $buttons.length) {
+                        $allButton.prop('disabled', false).find('i').removeClass('fa-spinner fa-spin').addClass('fa-cloud-download');
+                        $allLabel.text('Tarik IPK SIAKAD (' + succeeded + ' berhasil, ' + failed + ' gagal)');
+                        return;
+                    }
+
+                    var $button = $buttons.eq(current++);
+                    syncIpk($button).done(function() {
+                        succeeded++;
+                    }).fail(function() {
+                        failed++;
+                    }).always(next);
+                }
+
+                next();
             });
         });
     </script>

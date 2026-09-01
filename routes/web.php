@@ -462,6 +462,7 @@ Route::group(['middleware' => 'akademik_fakultas'], function () {
     Route::post('/fakultas/rekap-ujian-selesai/nomor-surat', 'fakultas@rekap_ujian_selesai_nomor_surat')->name('fakultas.rekap_ujian_selesai_nomor_surat');
     Route::get('/fakultas/sk-yudisium/{date}/{kode_prodi}', 'fakultas@sk_yudisium_data')->name('fakultas.sk_yudisium_data');
     Route::post('/fakultas/sk-yudisium/data', 'fakultas@simpan_data_sk_yudisium')->name('fakultas.simpan_data_sk_yudisium');
+    Route::post('/fakultas/sk-yudisium/ipk', 'fakultas@sinkronkan_ipk_sk_yudisium')->name('fakultas.sinkronkan_ipk_sk_yudisium');
     Route::get('/fakultas/sk-yudisium/{date}/{kode_prodi}/pdf', 'fakultas@cetak_sk_yudisium')->name('fakultas.cetak_sk_yudisium');
 
     Route::get('/fakultas/detail_ujian/{nim}/{tipe_ujian}', 'fakultas@detail_ujian');

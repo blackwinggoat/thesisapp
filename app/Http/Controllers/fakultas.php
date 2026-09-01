@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use App\Services\SiakadIpkService;
 use Exception;
 
 class fakultas extends Controller
@@ -249,6 +250,13 @@ class fakultas extends Controller
         return Schema::hasTable('trt_yudisium_mahasiswa');
     }
 
+    protected function metadataIpkSiakadTersedia()
+    {
+        return $this->dataMahasiswaYudisiumTersedia()
+            && Schema::hasColumn('trt_yudisium_mahasiswa', 'ipk_sumber')
+            && Schema::hasColumn('trt_yudisium_mahasiswa', 'ipk_disinkronkan_pada');
+    }
+
     protected function kodeProdiYudisium($kodeProdi)
     {
         $kodeProdi = trim((string) $kodeProdi);
@@ -449,6 +457,12 @@ class fakultas extends Controller
             $ipk = $metadata && $metadata->ipk !== null && $metadata->ipk !== ''
                 ? (float) $metadata->ipk
                 : null;
+            $ipkSumber = $metadata && $this->metadataIpkSiakadTersedia()
+                ? trim((string) ($metadata->ipk_sumber ?? ''))
+                : '';
+            $ipkDisinkronkanPada = $metadata && $this->metadataIpkSiakadTersedia()
+                ? ($metadata->ipk_disinkronkan_pada ?? null)
+                : null;
 
             return (object) [
                 'nim' => (string) $mahasiswa->nim,
@@ -459,6 +473,8 @@ class fakultas extends Controller
                     ? trim((string) $metadata->nomor_alumni)
                     : null,
                 'ipk' => $ipk,
+                'ipk_sumber' => $ipkSumber !== '' ? $ipkSumber : null,
+                'ipk_disinkronkan_pada' => $ipkDisinkronkanPada,
                 'kategori_yudisium' => $this->kategoriYudisium($ipk),
             ];
         })->values();
@@ -614,7 +630,6 @@ class fakultas extends Controller
             'mahasiswa' => 'required|array',
             'mahasiswa.*.nim' => 'required|string|max:15',
             'mahasiswa.*.nomor_alumni' => 'nullable|string|max:30',
-            'mahasiswa.*.ipk' => 'nullable|numeric|min:0|max:4',
         ]);
 
         $date = $validated['tanggal_ujian'];
@@ -647,10 +662,8 @@ class fakultas extends Controller
             foreach ($peserta as $mahasiswa) {
                 $input = $inputMahasiswa->get($mahasiswa->nim);
                 $nomorAlumni = trim((string) ($input['nomor_alumni'] ?? ''));
-                $ipk = $input['ipk'] ?? null;
                 $payload = [
                     'nomor_alumni' => $nomorAlumni === '' ? null : $nomorAlumni,
-                    'ipk' => $ipk === '' || $ipk === null ? null : (float) $ipk,
                     'updated_by' => auth()->id(),
                     'updated_at' => now(),
                 ];
@@ -676,6 +689,80 @@ class fakultas extends Controller
         return redirect()->route('fakultas.sk_yudisium_data', [$date, $kodeProdi])->with([
             'status' => 'success',
             'message' => 'Data SK Yudisium berhasil disimpan.',
+        ]);
+    }
+
+    public function sinkronkan_ipk_sk_yudisium(Request $request)
+    {
+        $validated = $request->validate([
+            'tanggal_ujian' => 'required|date_format:Y-m-d',
+            'kode_prodi' => 'required|in:130,131',
+            'nim' => 'required|string|max:15',
+        ]);
+
+        if (!$this->metadataIpkSiakadTersedia()) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Penyimpanan IPK SIAKAD belum siap. Jalankan migrasi sistem terlebih dahulu.',
+            ], 409);
+        }
+
+        $date = $validated['tanggal_ujian'];
+        $kodeProdi = $validated['kode_prodi'];
+        $nim = trim((string) $validated['nim']);
+        $mahasiswa = $this->pesertaYudisium($date, $kodeProdi)->first(function ($item) use ($nim) {
+            return (string) $item->nim === $nim;
+        });
+
+        if (!$mahasiswa) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Mahasiswa tidak terdaftar pada SK Yudisium ini.',
+            ], 404);
+        }
+
+        $result = app(SiakadIpkService::class)->syncByNim($nim);
+        if (empty($result['ok'])) {
+            return response()->json([
+                'ok' => false,
+                'message' => $result['message'] ?? 'IPK dari SIAKAD tidak dapat ditarik.',
+            ], 422);
+        }
+
+        $now = now();
+        $payload = [
+            'ipk' => (float) $result['ipk'],
+            'ipk_sumber' => (string) $result['source'],
+            'ipk_disinkronkan_pada' => $now,
+            'updated_by' => auth()->id(),
+            'updated_at' => $now,
+        ];
+        $record = DB::table('trt_yudisium_mahasiswa')
+            ->where('tanggal_ujian', $date)
+            ->where('tipe_ujian', 2)
+            ->where('C_NPM', $nim);
+
+        if ($record->exists()) {
+            $record->update($payload);
+        } else {
+            DB::table('trt_yudisium_mahasiswa')->insert(array_merge($payload, [
+                'tanggal_ujian' => $date,
+                'tipe_ujian' => 2,
+                'C_NPM' => $nim,
+                'created_by' => auth()->id(),
+                'created_at' => $now,
+            ]));
+        }
+
+        return response()->json([
+            'ok' => true,
+            'ipk' => number_format((float) $result['ipk'], 2, '.', ''),
+            'kategori_yudisium' => $this->kategoriYudisium($result['ipk']),
+            'total_sks' => (int) $result['total_sks'],
+            'course_count' => (int) $result['course_count'],
+            'source' => (string) $result['source'],
+            'synced_at' => $now->format('d-m-Y H:i'),
+            'message' => 'IPK berhasil ditarik dari SIAKAD.',
         ]);
     }
 

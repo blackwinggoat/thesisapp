@@ -35,4 +35,11 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
+    'siakad_ipk' => [
+        'api_key' => env('SIAKAD_IPK_API_KEY'),
+        'base_url' => env('SIAKAD_IPK_BASE_URL'),
+        'endpoint' => env('SIAKAD_IPK_ENDPOINT', 'mhs-nilai'),
+        'timeout' => (int) env('SIAKAD_IPK_TIMEOUT', 20),
+    ],
+
 ];
