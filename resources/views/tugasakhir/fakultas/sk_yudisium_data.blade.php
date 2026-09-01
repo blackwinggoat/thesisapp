@@ -87,7 +87,14 @@
                         <label for="nomor_surat">Nomor Surat Keputusan</label>
                         <input id="nomor_surat" type="text" name="nomor_surat" maxlength="150" class="form-control"
                             value="{{ old('nomor_surat', $dokumen->nomor_surat ?? '') }}"
-                            placeholder="Contoh: 827/A.10/SI-FIK/UMI/VIII/2026">
+                            placeholder="Masukkan nomor SK Yudisium">
+                        <span class="help-block" style="margin-bottom: 0;">
+                            <span class="label label-info" style="font-size: 12px;">Contoh</span>
+                            <strong style="margin-left: 5px;">{{ $contohNomorSuratYudisium }}</strong>
+                            <span class="text-muted" style="margin-left: 5px;">
+                                Nomor terakhir tersimpan: {{ $nomorSuratYudisiumTerakhir === null ? 'belum ada' : $nomorSuratYudisiumTerakhir }}.
+                            </span>
+                        </span>
                     </div>
                 </div>
 

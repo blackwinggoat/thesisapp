@@ -274,6 +274,49 @@ class fakultas extends Controller
             });
     }
 
+    protected function nomorSuratYudisiumTerakhir()
+    {
+        if (!$this->dokumenYudisiumTersedia()) {
+            return null;
+        }
+
+        return DB::table('trt_sk_yudisium')
+            ->whereNotNull('nomor_surat')
+            ->where('nomor_surat', '!=', '')
+            ->pluck('nomor_surat')
+            ->reduce(function ($terakhir, $nomorSurat) {
+                if (!preg_match('/^\s*([1-9][0-9]{0,8})(?:\D|$)/', (string) $nomorSurat, $matches)) {
+                    return $terakhir;
+                }
+
+                $nomorUrut = (int) $matches[1];
+
+                return $terakhir === null || $nomorUrut > $terakhir
+                    ? $nomorUrut
+                    : $terakhir;
+            });
+    }
+
+    protected function bulanRomawiYudisium($bulan)
+    {
+        $bulanRomawi = [
+            1 => 'I',
+            2 => 'II',
+            3 => 'III',
+            4 => 'IV',
+            5 => 'V',
+            6 => 'VI',
+            7 => 'VII',
+            8 => 'VIII',
+            9 => 'IX',
+            10 => 'X',
+            11 => 'XI',
+            12 => 'XII',
+        ];
+
+        return $bulanRomawi[(int) $bulan] ?? '';
+    }
+
     protected function metadataIpkSiakadTersedia()
     {
         return $this->dataMahasiswaYudisiumTersedia()
@@ -636,6 +679,11 @@ class fakultas extends Controller
         $programStudi = $this->namaProdiYudisium($kodeProdi);
         $nomorAlumniTerakhir = $this->nomorAlumniTerakhir();
         $nomorAlumniBerikutnya = ($nomorAlumniTerakhir ?: 0) + 1;
+        $nomorSuratYudisiumTerakhir = $this->nomorSuratYudisiumTerakhir();
+        $tanggalUjian = Carbon::parse($date);
+        $contohNomorSuratYudisium = (($nomorSuratYudisiumTerakhir ?: 0) + 1)
+            . '/A.10/SI-FIK/UMI/' . $this->bulanRomawiYudisium($tanggalUjian->month)
+            . '/' . $tanggalUjian->year;
 
         return view('tugasakhir.fakultas.sk_yudisium_data', compact(
             'date',
@@ -645,7 +693,9 @@ class fakultas extends Controller
             'dokumen',
             'kekurangan',
             'nomorAlumniTerakhir',
-            'nomorAlumniBerikutnya'
+            'nomorAlumniBerikutnya',
+            'nomorSuratYudisiumTerakhir',
+            'contohNomorSuratYudisium'
         ));
     }
 

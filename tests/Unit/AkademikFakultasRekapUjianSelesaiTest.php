@@ -49,6 +49,9 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString('SiakadIpkService', $controller);
         $this->assertStringContainsString('sinkronkan_ipk_sk_yudisium', $controller);
         $this->assertStringContainsString('protected function nomorAlumniTerakhir()', $controller);
+        $this->assertStringContainsString('protected function nomorSuratYudisiumTerakhir()', $controller);
+        $this->assertStringContainsString('protected function bulanRomawiYudisium($bulan)', $controller);
+        $this->assertStringContainsString(". '/A.10/SI-FIK/UMI/'", $controller);
         $this->assertStringContainsString("'mahasiswa.*.nomor_alumni' => ['nullable', 'regex:/^[1-9][0-9]{0,8}$/']", $controller);
         $this->assertStringContainsString('Nomor alumni tidak boleh digunakan oleh lebih dari satu mahasiswa.', $controller);
         $this->assertStringContainsString('public function reset_data_sk_yudisium(Request $request)', $controller);
@@ -80,6 +83,9 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString('yudisium-action-buttons', $view);
         $this->assertStringContainsString('style="margin-left: 6px;"', $view);
         $this->assertStringContainsString('Nomor Alumni', $dataView);
+        $this->assertStringContainsString('Masukkan nomor SK Yudisium', $dataView);
+        $this->assertStringContainsString('$contohNomorSuratYudisium', $dataView);
+        $this->assertStringContainsString('Nomor terakhir tersimpan:', $dataView);
         $this->assertStringContainsString('Nomor alumni terakhir terpakai:', $dataView);
         $this->assertStringContainsString('Lanjutkan Nomor Berikutnya', $dataView);
         $this->assertStringContainsString('yudisium-alumni-number', $dataView);
