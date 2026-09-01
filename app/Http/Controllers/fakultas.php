@@ -836,6 +836,52 @@ class fakultas extends Controller
         ]);
     }
 
+    public function reset_data_sk_yudisium(Request $request)
+    {
+        $validated = $request->validate([
+            'tanggal_ujian' => 'required|date_format:Y-m-d',
+            'kode_prodi' => 'required|in:130,131',
+            'konfirmasi' => 'required|in:RESET',
+        ]);
+
+        if (!$this->dokumenYudisiumTersedia() || !$this->dataMahasiswaYudisiumTersedia()) {
+            return redirect()->route('fakultas.rekap_ujian_selesai')->with([
+                'status' => 'danger',
+                'message' => 'Penyimpanan SK Yudisium belum siap. Jalankan migrasi sistem terlebih dahulu.',
+            ]);
+        }
+
+        $date = $validated['tanggal_ujian'];
+        $kodeProdi = $validated['kode_prodi'];
+        $peserta = $this->pesertaYudisium($date, $kodeProdi);
+        if ($peserta->isEmpty()) {
+            return redirect()->route('fakultas.rekap_ujian_selesai')->with([
+                'status' => 'danger',
+                'message' => 'Peserta SK Yudisium tidak ditemukan. Tidak ada data yang direset.',
+            ]);
+        }
+
+        DB::transaction(function () use ($date, $kodeProdi, $peserta) {
+            DB::table('trt_yudisium_mahasiswa')
+                ->where('tanggal_ujian', $date)
+                ->where('tipe_ujian', 2)
+                ->whereIn('C_NPM', $peserta->pluck('nim')->all())
+                ->delete();
+
+            DB::table('trt_sk_yudisium')
+                ->where('tanggal_ujian', $date)
+                ->where('tipe_ujian', 2)
+                ->where('kode_prodi', $kodeProdi)
+                ->delete();
+        });
+
+        return redirect()->route('fakultas.rekap_ujian_selesai')->with([
+            'status' => 'success',
+            'message' => 'Data SK Yudisium ' . $this->namaProdiYudisium($kodeProdi)
+                . ' tanggal ' . helper::tgl_indo_lengkap($date) . ' berhasil direset. Nilai ujian dan jadwal tetap tersimpan.',
+        ]);
+    }
+
     public function cetak_sk_yudisium($date, $kodeProdi)
     {
         $kodeProdi = $this->kodeProdiYudisium($kodeProdi);

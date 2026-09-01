@@ -30,7 +30,7 @@
                                 <th class="text-center">Jumlah Mahasiswa</th>
                                 <th class="text-center">Type Mahasiswa</th>
                                 <th style="min-width: 260px;">SK per Program Studi</th>
-                                <th class="text-center" style="width: 180px;">Aksi</th>
+                                <th class="text-center" style="width: 250px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -76,18 +76,44 @@
                                             <i class="fa fa-info-circle"></i>
                                         </button>
                                         @if ($rekap->jumlah_teknik_informatika > 0)
-                                            <a href="{{ route('fakultas.cetak_sk_yudisium', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '130']) }}"
-                                                target="_blank" class="btn btn-danger btn-sm" title="Buka PDF SK Yudisium Teknik Informatika"
-                                                data-toggle="tooltip" aria-label="Buka PDF SK Yudisium Teknik Informatika">
+                                            <a href="{{ route('fakultas.sk_yudisium_data', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '130']) }}"
+                                                class="btn btn-danger btn-sm" title="Atur dan periksa PDF SK Yudisium Teknik Informatika"
+                                                data-toggle="tooltip" aria-label="Atur dan periksa PDF SK Yudisium Teknik Informatika">
                                                 <i class="fa fa-file-pdf-o"></i> TI
                                             </a>
+                                            <form action="{{ route('fakultas.reset_data_sk_yudisium') }}" method="POST"
+                                                class="reset-yudisium-form" style="display: inline-block;"
+                                                data-program-studi="Teknik Informatika"
+                                                data-date-label="{{ helper::tgl_indo_lengkap($rekap->tanggal_ujian) }}">
+                                                @csrf
+                                                <input type="hidden" name="tanggal_ujian" value="{{ $rekap->tanggal_ujian }}">
+                                                <input type="hidden" name="kode_prodi" value="130">
+                                                <input type="hidden" name="konfirmasi" value="RESET">
+                                                <button type="submit" class="btn btn-warning btn-sm" title="Reset data SK Yudisium Teknik Informatika"
+                                                    data-toggle="tooltip" aria-label="Reset data SK Yudisium Teknik Informatika">
+                                                    <i class="fa fa-undo"></i> TI
+                                                </button>
+                                            </form>
                                         @endif
                                         @if ($rekap->jumlah_sistem_informasi > 0)
-                                            <a href="{{ route('fakultas.cetak_sk_yudisium', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '131']) }}"
-                                                target="_blank" class="btn btn-danger btn-sm" title="Buka PDF SK Yudisium Sistem Informasi"
-                                                data-toggle="tooltip" aria-label="Buka PDF SK Yudisium Sistem Informasi">
+                                            <a href="{{ route('fakultas.sk_yudisium_data', ['date' => $rekap->tanggal_ujian, 'kode_prodi' => '131']) }}"
+                                                class="btn btn-danger btn-sm" title="Atur dan periksa PDF SK Yudisium Sistem Informasi"
+                                                data-toggle="tooltip" aria-label="Atur dan periksa PDF SK Yudisium Sistem Informasi">
                                                 <i class="fa fa-file-pdf-o"></i> SI
                                             </a>
+                                            <form action="{{ route('fakultas.reset_data_sk_yudisium') }}" method="POST"
+                                                class="reset-yudisium-form" style="display: inline-block;"
+                                                data-program-studi="Sistem Informasi"
+                                                data-date-label="{{ helper::tgl_indo_lengkap($rekap->tanggal_ujian) }}">
+                                                @csrf
+                                                <input type="hidden" name="tanggal_ujian" value="{{ $rekap->tanggal_ujian }}">
+                                                <input type="hidden" name="kode_prodi" value="131">
+                                                <input type="hidden" name="konfirmasi" value="RESET">
+                                                <button type="submit" class="btn btn-warning btn-sm" title="Reset data SK Yudisium Sistem Informasi"
+                                                    data-toggle="tooltip" aria-label="Reset data SK Yudisium Sistem Informasi">
+                                                    <i class="fa fa-undo"></i> SI
+                                                </button>
+                                            </form>
                                         @endif
                                     </td>
                                 </tr>
@@ -169,6 +195,18 @@
                     .fail(function() {
                         tableBody.html('<tr><td colspan="4" class="text-center text-danger">Data mahasiswa tidak dapat dimuat.</td></tr>');
                     });
+            });
+
+            $('.reset-yudisium-form').on('submit', function(event) {
+                var form = $(this);
+                var message = 'Reset seluruh data SK Yudisium ' + form.data('program-studi') +
+                    ' tanggal ' + form.data('date-label') + '?\n\n' +
+                    'Nomor surat, nomor alumni, IPK, dan data penerbitan PDF akan dihapus. ' +
+                    'Nilai ujian serta jadwal tidak akan dihapus.';
+
+                if (!window.confirm(message)) {
+                    event.preventDefault();
+                }
             });
         });
     </script>

@@ -22,6 +22,7 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString("Route::get('/fakultas/sk-yudisium/{date}/{kode_prodi}', 'fakultas@sk_yudisium_data')", $routes);
         $this->assertStringContainsString("Route::post('/fakultas/sk-yudisium/data', 'fakultas@simpan_data_sk_yudisium')", $routes);
         $this->assertStringContainsString("Route::post('/fakultas/sk-yudisium/ipk', 'fakultas@sinkronkan_ipk_sk_yudisium')", $routes);
+        $this->assertStringContainsString("Route::post('/fakultas/sk-yudisium/reset', 'fakultas@reset_data_sk_yudisium')", $routes);
         $this->assertStringContainsString("Route::get('/fakultas/sk-yudisium/{date}/{kode_prodi}/pdf', 'fakultas@cetak_sk_yudisium')", $routes);
         $this->assertStringContainsString("Route::get('/verifikasi/sk-yudisium/{token}', 'fakultas@verifikasi_sk_yudisium')", $routes);
     }
@@ -50,6 +51,10 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString('protected function nomorAlumniTerakhir()', $controller);
         $this->assertStringContainsString("'mahasiswa.*.nomor_alumni' => ['nullable', 'regex:/^[1-9][0-9]{0,8}$/']", $controller);
         $this->assertStringContainsString('Nomor alumni tidak boleh digunakan oleh lebih dari satu mahasiswa.', $controller);
+        $this->assertStringContainsString('public function reset_data_sk_yudisium(Request $request)', $controller);
+        $this->assertStringContainsString("->whereIn('C_NPM', \$peserta->pluck('nim')->all())", $controller);
+        $this->assertStringContainsString("->where('kode_prodi', \$kodeProdi)", $controller);
+        $this->assertStringContainsString('Nilai ujian dan jadwal tetap tersimpan.', $controller);
     }
 
     public function testViewsProvideYudisiumDataEntryPdfAndQrVerification()
@@ -70,13 +75,17 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString('fa-info-circle', $view);
         $this->assertStringContainsString('fa-file-pdf-o', $view);
         $this->assertStringContainsString("route('fakultas.sk_yudisium_data'", $view);
-        $this->assertStringContainsString("route('fakultas.cetak_sk_yudisium'", $view);
+        $this->assertStringNotContainsString("route('fakultas.cetak_sk_yudisium'", $view);
+        $this->assertStringContainsString("route('fakultas.reset_data_sk_yudisium')", $view);
+        $this->assertStringContainsString('reset-yudisium-form', $view);
+        $this->assertStringContainsString('Nilai ujian serta jadwal tidak akan dihapus.', $view);
         $this->assertStringContainsString('Nomor Alumni', $dataView);
         $this->assertStringContainsString('Nomor alumni terakhir terpakai:', $dataView);
         $this->assertStringContainsString('Lanjutkan Nomor Berikutnya', $dataView);
         $this->assertStringContainsString('yudisium-alumni-number', $dataView);
         $this->assertStringContainsString('Tarik IPK SIAKAD', $dataView);
         $this->assertStringContainsString("route('fakultas.sinkronkan_ipk_sk_yudisium')", $dataView);
+        $this->assertStringContainsString("route('fakultas.cetak_sk_yudisium'", $dataView);
         $this->assertStringContainsString('Simpan Data Yudisium', $dataView);
         $this->assertStringContainsString('SURAT KEPUTUSAN', $pdfView);
         $this->assertStringContainsString('DAFTAR ALUMNI FAKULTAS ILMU KOMPUTER', $pdfView);
