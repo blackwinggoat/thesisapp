@@ -47,6 +47,9 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString("ipk_disinkronkan_pada", $ipkMigration);
         $this->assertStringContainsString('SiakadIpkService', $controller);
         $this->assertStringContainsString('sinkronkan_ipk_sk_yudisium', $controller);
+        $this->assertStringContainsString('protected function nomorAlumniTerakhir()', $controller);
+        $this->assertStringContainsString("'mahasiswa.*.nomor_alumni' => ['nullable', 'regex:/^[1-9][0-9]{0,8}$/']", $controller);
+        $this->assertStringContainsString('Nomor alumni tidak boleh digunakan oleh lebih dari satu mahasiswa.', $controller);
     }
 
     public function testViewsProvideYudisiumDataEntryPdfAndQrVerification()
@@ -69,6 +72,9 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString("route('fakultas.sk_yudisium_data'", $view);
         $this->assertStringContainsString("route('fakultas.cetak_sk_yudisium'", $view);
         $this->assertStringContainsString('Nomor Alumni', $dataView);
+        $this->assertStringContainsString('Nomor alumni terakhir terpakai:', $dataView);
+        $this->assertStringContainsString('Lanjutkan Nomor Berikutnya', $dataView);
+        $this->assertStringContainsString('yudisium-alumni-number', $dataView);
         $this->assertStringContainsString('Tarik IPK SIAKAD', $dataView);
         $this->assertStringContainsString("route('fakultas.sinkronkan_ipk_sk_yudisium')", $dataView);
         $this->assertStringContainsString('Simpan Data Yudisium', $dataView);

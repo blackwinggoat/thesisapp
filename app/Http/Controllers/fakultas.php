@@ -250,6 +250,30 @@ class fakultas extends Controller
         return Schema::hasTable('trt_yudisium_mahasiswa');
     }
 
+    protected function nomorAlumniTerakhir()
+    {
+        if (!$this->dataMahasiswaYudisiumTersedia()) {
+            return null;
+        }
+
+        return DB::table('trt_yudisium_mahasiswa')
+            ->whereNotNull('nomor_alumni')
+            ->where('nomor_alumni', '!=', '')
+            ->pluck('nomor_alumni')
+            ->reduce(function ($terakhir, $nomorAlumni) {
+                $nomorAlumni = trim((string) $nomorAlumni);
+                if (!preg_match('/^[1-9][0-9]{0,8}$/', $nomorAlumni)) {
+                    return $terakhir;
+                }
+
+                $nomorAlumni = (int) $nomorAlumni;
+
+                return $terakhir === null || $nomorAlumni > $terakhir
+                    ? $nomorAlumni
+                    : $terakhir;
+            });
+    }
+
     protected function metadataIpkSiakadTersedia()
     {
         return $this->dataMahasiswaYudisiumTersedia()
@@ -610,6 +634,8 @@ class fakultas extends Controller
         $dokumen = $this->dokumenYudisium($date, $kodeProdi);
         $kekurangan = $this->kekuranganDokumenYudisium($dokumen, $peserta);
         $programStudi = $this->namaProdiYudisium($kodeProdi);
+        $nomorAlumniTerakhir = $this->nomorAlumniTerakhir();
+        $nomorAlumniBerikutnya = ($nomorAlumniTerakhir ?: 0) + 1;
 
         return view('tugasakhir.fakultas.sk_yudisium_data', compact(
             'date',
@@ -617,7 +643,9 @@ class fakultas extends Controller
             'programStudi',
             'peserta',
             'dokumen',
-            'kekurangan'
+            'kekurangan',
+            'nomorAlumniTerakhir',
+            'nomorAlumniBerikutnya'
         ));
     }
 
@@ -629,7 +657,9 @@ class fakultas extends Controller
             'nomor_surat' => 'nullable|string|max:150',
             'mahasiswa' => 'required|array',
             'mahasiswa.*.nim' => 'required|string|max:15',
-            'mahasiswa.*.nomor_alumni' => 'nullable|string|max:30',
+            'mahasiswa.*.nomor_alumni' => ['nullable', 'regex:/^[1-9][0-9]{0,8}$/'],
+        ], [
+            'mahasiswa.*.nomor_alumni.regex' => 'Nomor alumni harus berupa angka positif, maksimal 9 digit, dan tidak diawali angka nol.',
         ]);
 
         $date = $validated['tanggal_ujian'];
@@ -654,6 +684,46 @@ class fakultas extends Controller
             return redirect()->back()->withInput()->withErrors([
                 'mahasiswa' => 'Daftar mahasiswa berubah. Muat ulang halaman sebelum menyimpan data yudisium.',
             ]);
+        }
+
+        $nomorAlumniByNim = $inputMahasiswa->mapWithKeys(function ($mahasiswa) {
+            $nomorAlumni = trim((string) ($mahasiswa['nomor_alumni'] ?? ''));
+
+            return [(string) $mahasiswa['nim'] => $nomorAlumni === '' ? null : $nomorAlumni];
+        });
+        $nomorAlumniTerisi = $nomorAlumniByNim->filter(function ($nomorAlumni) {
+            return $nomorAlumni !== null;
+        });
+        $duplikatDalamForm = $nomorAlumniTerisi
+            ->groupBy(function ($nomorAlumni) {
+                return $nomorAlumni;
+            })
+            ->filter(function ($nomorSama) {
+                return $nomorSama->count() > 1;
+            });
+
+        if ($duplikatDalamForm->isNotEmpty()) {
+            return redirect()->back()->withInput()->withErrors([
+                'mahasiswa' => 'Nomor alumni tidak boleh digunakan oleh lebih dari satu mahasiswa.',
+            ]);
+        }
+
+        if ($nomorAlumniTerisi->isNotEmpty()) {
+            $nomorAlumniBentrok = DB::table('trt_yudisium_mahasiswa')
+                ->whereIn('nomor_alumni', $nomorAlumniTerisi->values()->all())
+                ->get(['C_NPM', 'nomor_alumni'])
+                ->first(function ($record) use ($nomorAlumniByNim) {
+                    $nomorUntukMahasiswa = $nomorAlumniByNim->get((string) $record->C_NPM);
+
+                    return $nomorUntukMahasiswa === null
+                        || $nomorUntukMahasiswa !== trim((string) $record->nomor_alumni);
+                });
+
+            if ($nomorAlumniBentrok) {
+                return redirect()->back()->withInput()->withErrors([
+                    'mahasiswa' => 'Salah satu nomor alumni sudah digunakan mahasiswa lain. Periksa nomor terakhir sebelum menyimpan.',
+                ]);
+            }
         }
 
         DB::transaction(function () use ($date, $kodeProdi, $validated, $peserta, $inputMahasiswa) {

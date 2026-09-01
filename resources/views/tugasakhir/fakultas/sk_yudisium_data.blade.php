@@ -87,6 +87,32 @@
                     </div>
                 </div>
 
+                @php
+                    $pesertaSudahMemilikiNomorAlumni = $peserta->contains(function ($mahasiswa) {
+                        return trim((string) $mahasiswa->nomor_alumni) !== '';
+                    });
+                @endphp
+                <div class="the-box" style="border-left: 4px solid #3c8dbc;">
+                    <div class="row">
+                        <div class="col-sm-7">
+                            <strong>Nomor alumni terakhir terpakai:</strong>
+                            <span class="label label-primary" style="font-size: 14px; margin-left: 5px;">
+                                {{ $nomorAlumniTerakhir === null ? 'Belum ada' : $nomorAlumniTerakhir }}
+                            </span>
+                            <p class="text-muted" style="margin: 7px 0 0;">
+                                Nomor yang disarankan untuk peserta pertama adalah
+                                <strong>{{ $nomorAlumniBerikutnya }}</strong>. Ubah kolom pertama bila diperlukan.
+                            </p>
+                        </div>
+                        <div class="col-sm-5 text-right" style="padding-top: 4px;">
+                            <button type="button" id="continue-alumni-numbers" class="btn btn-primary">
+                                <i class="fa fa-sort-numeric-asc"></i> Lanjutkan Nomor Berikutnya
+                            </button>
+                            <div id="alumni-number-status" class="text-muted" style="margin-top: 7px;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="the-box">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" id="yudisium-student-table">
@@ -122,10 +148,16 @@
                                         </td>
                                         <td class="text-center">{{ $mahasiswa->nilai_huruf ?: '-' }}</td>
                                         <td>
-                                            <input type="text" name="mahasiswa[{{ $index }}][nomor_alumni]" maxlength="30"
-                                                class="form-control input-sm"
-                                                value="{{ old('mahasiswa.' . $index . '.nomor_alumni', $mahasiswa->nomor_alumni) }}"
-                                                placeholder="Nomor alumni">
+                                            @php
+                                                $nomorAlumniDefault = $mahasiswa->nomor_alumni;
+                                                if (!$pesertaSudahMemilikiNomorAlumni && $index === 0) {
+                                                    $nomorAlumniDefault = $nomorAlumniBerikutnya;
+                                                }
+                                            @endphp
+                                            <input type="text" name="mahasiswa[{{ $index }}][nomor_alumni]" maxlength="9"
+                                                class="form-control input-sm yudisium-alumni-number" inputmode="numeric"
+                                                value="{{ old('mahasiswa.' . $index . '.nomor_alumni', $nomorAlumniDefault) }}"
+                                                placeholder="Nomor alumni" aria-label="Nomor alumni {{ $mahasiswa->nim }}">
                                         </td>
                                         <td>
                                             <div class="input-group input-group-sm">
@@ -221,6 +253,26 @@
 
             $('.yudisium-sync-ipk').on('click', function() {
                 syncIpk($(this));
+            });
+
+            $('#continue-alumni-numbers').on('click', function() {
+                var $inputs = $('.yudisium-alumni-number');
+                var $status = $('#alumni-number-status');
+                var firstNumber = $.trim($inputs.first().val());
+
+                if (!/^[1-9][0-9]{0,8}$/.test(firstNumber)) {
+                    $status.removeClass('text-success').addClass('text-danger')
+                        .text('Isi nomor alumni peserta pertama dengan angka yang valid.');
+                    $inputs.first().focus();
+                    return;
+                }
+
+                var startNumber = parseInt(firstNumber, 10);
+                $inputs.each(function(index) {
+                    $(this).val(startNumber + index);
+                });
+                $status.removeClass('text-danger').addClass('text-success')
+                    .text($inputs.length + ' nomor telah disusun berurutan dan masih dapat dikoreksi.');
             });
 
             $('#sync-all-yudisium-ipk').on('click', function() {
