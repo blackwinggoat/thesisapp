@@ -97,6 +97,12 @@ class AkademikFakultasRekapUjianSelesaiTest extends TestCase
         $this->assertStringContainsString('Nilai ujian dan jadwal tetap tersimpan.', $dataView);
         $this->assertStringContainsString('Simpan Data Yudisium', $dataView);
         $this->assertStringContainsString('SURAT KEPUTUSAN', $pdfView);
+        $this->assertStringContainsString('Hasil Ujian Tugas Akhir mahasiswa', $pdfView);
+        $this->assertStringContainsString('Ketentuan akademik Universitas Muslim Indonesia', $pdfView);
+        $this->assertStringContainsString('Keputusan rapat Tim Penguji', $pdfView);
+        $this->assertStringContainsString('Peserta Yudisium Ujian Tugas Akhir', $pdfView);
+        $this->assertStringContainsString('{{ $tanggalHijriah }}', $pdfView);
+        $this->assertStringContainsString("app(IndonesianHijriDateService::class)->format(\$tanggalSurat)", file_get_contents(__DIR__ . '/../../app/Http/Controllers/fakultas.php'));
         $this->assertStringContainsString('DAFTAR ALUMNI FAKULTAS ILMU KOMPUTER', $pdfView);
         $this->assertStringContainsString('qrCodeDataUri($verificationUrl', $pdfView);
         $this->assertStringContainsString('SK Yudisium Terverifikasi', $verificationView);

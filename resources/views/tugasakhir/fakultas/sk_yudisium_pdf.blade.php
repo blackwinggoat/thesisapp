@@ -31,6 +31,11 @@
         .signature-table { margin-top: 12px; }
         .signature-table td { vertical-align: top; }
         .signature-right { text-align: center; width: 46%; }
+        .signature-date { border-collapse: collapse; margin: 0 auto; text-align: left; }
+        .signature-date td { padding: 0; vertical-align: top; }
+        .signature-date-label { padding-right: 4px !important; white-space: nowrap; }
+        .signature-date-separator { text-align: center; width: 12px; }
+        .signature-date-value { padding-left: 5px !important; }
         .qr-space { line-height: 0; text-align: center; }
         .verification-qr { height: 68px; margin: 5px 0 3px; width: 68px; }
         .official-name { font-weight: bold; text-decoration: underline; }
@@ -91,17 +96,17 @@
             <tr>
                 <td class="legal-label">Menimbang</td>
                 <td class="legal-separator">:</td>
-                <td class="legal-value">hasil Ujian Tugas Akhir mahasiswa Program Studi {{ $programStudi }} Fakultas Ilmu Komputer Universitas Muslim Indonesia.</td>
+                <td class="legal-value">Hasil Ujian Tugas Akhir mahasiswa Program Studi {{ $programStudi }} Fakultas Ilmu Komputer Universitas Muslim Indonesia.</td>
             </tr>
             <tr>
                 <td class="legal-label">Mengingat</td>
                 <td class="legal-separator">:</td>
-                <td class="legal-value">ketentuan akademik Universitas Muslim Indonesia yang berlaku.</td>
+                <td class="legal-value">Ketentuan akademik Universitas Muslim Indonesia yang berlaku.</td>
             </tr>
             <tr>
                 <td class="legal-label">Memperhatikan</td>
                 <td class="legal-separator">:</td>
-                <td class="legal-value">keputusan rapat Tim Penguji Fakultas Ilmu Komputer Universitas Muslim Indonesia tanggal {{ helper::tgl_indo_lengkap($tanggalSurat->format('Y-m-d')) }}.</td>
+                <td class="legal-value">Keputusan rapat Tim Penguji Fakultas Ilmu Komputer Universitas Muslim Indonesia tanggal {{ helper::tgl_indo_lengkap($tanggalSurat->format('Y-m-d')) }}.</td>
             </tr>
         </table>
 
@@ -110,7 +115,7 @@
             <tr>
                 <td class="legal-label">Menetapkan</td>
                 <td class="legal-separator">:</td>
-                <td class="legal-value">peserta Yudisium Ujian Tugas Akhir Mahasiswa Program Studi <strong>{{ $programStudi }} Fakultas Ilmu Komputer</strong> Universitas Muslim Indonesia dengan nama terlampir.</td>
+                <td class="legal-value">Peserta Yudisium Ujian Tugas Akhir Mahasiswa Program Studi <strong>{{ $programStudi }} Fakultas Ilmu Komputer</strong> Universitas Muslim Indonesia dengan nama terlampir.</td>
             </tr>
         </table>
 
@@ -121,8 +126,24 @@
             <tr>
                 <td width="54%"></td>
                 <td class="signature-right">
-                    Ditetapkan di: Makassar<br>
-                    Pada tanggal: {{ helper::tgl_indo_lengkap($tanggalSurat->format('Y-m-d')) }}<br><br>
+                    <table class="signature-date">
+                        <tr>
+                            <td class="signature-date-label">Ditetapkan di</td>
+                            <td class="signature-date-separator">:</td>
+                            <td class="signature-date-value">Makassar</td>
+                        </tr>
+                        <tr>
+                            <td class="signature-date-label">Pada Tanggal</td>
+                            <td class="signature-date-separator">:</td>
+                            <td class="signature-date-value">{{ $tanggalHijriah }}</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td class="signature-date-value">{{ helper::tgl_indo_lengkap($tanggalSurat->format('Y-m-d')) }} M</td>
+                        </tr>
+                    </table>
+                    <br>
                     Ketua Yudisium,<br>
                     Dekan,
                     <div class="qr-space">

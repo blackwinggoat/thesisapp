@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use App\Services\IndonesianHijriDateService;
 use App\Services\SiakadIpkService;
 use Exception;
 
@@ -954,6 +955,7 @@ class fakultas extends Controller
         }
 
         $tanggalSurat = Carbon::parse($date);
+        $tanggalHijriah = app(IndonesianHijriDateService::class)->format($tanggalSurat);
         $programStudi = $this->namaProdiYudisium($kodeProdi);
         $emailProgramStudi = $this->emailProdiYudisium($kodeProdi);
         $dekan = helper::getDekanByTanggal($date);
@@ -965,6 +967,7 @@ class fakultas extends Controller
             'dokumen',
             'peserta',
             'tanggalSurat',
+            'tanggalHijriah',
             'programStudi',
             'emailProgramStudi',
             'namaDekan',
