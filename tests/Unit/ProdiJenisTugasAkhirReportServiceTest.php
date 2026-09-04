@@ -23,8 +23,10 @@ class ProdiJenisTugasAkhirReportServiceTest extends TestCase
         $this->assertSame(3, $report['distribution'][0]['count']);
         $this->assertEquals(75.0, $report['distribution'][0]['percentage']);
         $this->assertSame('13020220004', $report['rows'][0]['nim']);
-        $this->assertSame(1, $report['summary']['fallback_date_count']);
+        $this->assertSame(0, $report['summary']['fallback_date_count']);
         $this->assertSame(1, $report['summary']['default_type_count']);
+        $this->assertSame(3, $report['summary']['date_source_counts']['jadwal_ujian']);
+        $this->assertSame(1, $report['summary']['date_source_counts']['master_mahasiswa']);
     }
 
     public function testItCalculatesDistributionByCohort()
@@ -56,6 +58,30 @@ class ProdiJenisTugasAkhirReportServiceTest extends TestCase
         $this->assertArrayNotHasKey('nama', $payload);
         $this->assertNull($service->decodeVerificationToken($token . '0', 'testing-signing-key'));
         $this->assertNull($service->decodeVerificationToken('not-a-token', 'testing-signing-key'));
+    }
+
+    public function testItOnlyFlagsRowsWithoutAnyTraceableGraduationDate()
+    {
+        $rows = $this->rows();
+        $rows[] = $this->row(
+            '13020220005',
+            'TA-SM',
+            'Tugas Akhir Skripsi Mandiri',
+            '2022',
+            '2025/2026',
+            '',
+            'tidak_diketahui'
+        );
+
+        $report = (new ProdiJenisTugasAkhirReportService())->aggregate(
+            $rows,
+            'Teknik Informatika',
+            'tahun_ajaran',
+            '2025/2026'
+        );
+
+        $this->assertSame(1, $report['summary']['fallback_date_count']);
+        $this->assertSame(1, $report['summary']['date_source_counts']['tidak_diketahui']);
     }
 
     private function rows()

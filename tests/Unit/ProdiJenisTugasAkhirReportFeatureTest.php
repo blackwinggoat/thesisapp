@@ -45,6 +45,11 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringNotContainsString("\$row['nama']", $pdf);
         $this->assertStringContainsString("count(\$report['comparison']) > 10", $pdf);
         $this->assertSame(1, substr_count($pdf, '<table class="signature-wrap">'));
+        $this->assertStringContainsString('<div class="signature-heading">', $pdf);
+        $this->assertStringContainsString('<div class="signature-qr-box">', $pdf);
+        $this->assertStringContainsString('<div class="signature-identity">', $pdf);
+        $this->assertGreaterThan(strpos($pdf, '<div class="signature-heading">'), strpos($pdf, '<div class="signature-qr-box">'));
+        $this->assertGreaterThan(strpos($pdf, '<div class="signature-qr-box">'), strpos($pdf, '<div class="signature-identity">'));
         $this->assertGreaterThan(strpos($pdf, 'B. Perbandingan Seluruh'), strpos($pdf, '<table class="signature-wrap">'));
         $this->assertGreaterThan(strpos($pdf, '<div class="quality-note">'), strpos($pdf, '<table class="signature-wrap">'));
         $this->assertStringContainsString('tidak memublikasikan identitas mahasiswa', $verification);

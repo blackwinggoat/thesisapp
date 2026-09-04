@@ -89,9 +89,12 @@ class ProdiJenisTugasAkhirReportService
         })->values();
 
         $dominant = $distribution->first();
-        $fallbackDateCount = $selectedRows->filter(function ($row) {
-            return ($row['tanggal_source'] ?? '') !== 'jadwal_ujian';
-        })->count();
+        $fallbackDateCount = $selectedRows->where('tanggal_source', 'tidak_diketahui')->count();
+        $dateSourceCounts = $selectedRows->groupBy(function ($row) {
+            return (string) ($row['tanggal_source'] ?? 'tidak_diketahui');
+        })->map(function ($sourceRows) {
+            return $sourceRows->count();
+        })->all();
         $defaultTypeCount = $selectedRows->where('jenis_default', true)->count();
         $generatedAt = Carbon::now();
 
@@ -114,6 +117,7 @@ class ProdiJenisTugasAkhirReportService
                 'dominant_percentage' => $dominant['percentage'] ?? 0,
                 'fallback_date_count' => $fallbackDateCount,
                 'default_type_count' => $defaultTypeCount,
+                'date_source_counts' => $dateSourceCounts,
             ],
         ];
         $report['report_hash'] = $this->buildReportHash($report);
@@ -196,6 +200,15 @@ class ProdiJenisTugasAkhirReportService
             ->groupBy('jpm.C_NPM')
             ->pluck('tanggal_ujian', 'nim');
 
+        $resultDates = DB::table('trt_hasil as hasil')
+            ->join('trt_reg as reg', 'reg.reg_id', '=', 'hasil.reg_id')
+            ->join('trt_bimbingan as bimbingan', 'bimbingan.bimbingan_id', '=', 'reg.bimbingan_id')
+            ->where('bimbingan.C_NPM', 'LIKE', $nimLike)
+            ->where('reg.status', 2)
+            ->select('bimbingan.C_NPM as nim', DB::raw('MAX(COALESCE(hasil.updated_at, hasil.created_at)) as tanggal_hasil'))
+            ->groupBy('bimbingan.C_NPM')
+            ->pluck('tanggal_hasil', 'nim');
+
         return DB::table('trt_bimbingan as tb')
             ->join('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'tb.C_NPM')
             ->leftJoin('mst_jenis_tugas_akhir as jta', 'jta.jenis_tugas_akhir_id', '=', 'tb.jenis_tugas_akhir_id')
@@ -217,12 +230,17 @@ class ProdiJenisTugasAkhirReportService
             ->orderBy('tb.bimbingan_id', 'desc')
             ->get()
             ->unique('nim')
-            ->map(function ($row) use ($examDates) {
+            ->map(function ($row) use ($examDates, $resultDates) {
                 $examDate = $this->validDate($examDates->get($row->nim));
                 $masterDate = $this->validDate($row->tanggal_lulus_master);
+                $resultDate = $this->validDate($resultDates->get($row->nim));
                 $statusDate = $this->firstValidDate([$row->last_update, $row->updated_at, $row->created_at]);
-                $graduationDate = $examDate ?: ($masterDate ?: $statusDate);
-                $dateSource = $examDate ? 'jadwal_ujian' : ($masterDate ? 'master_mahasiswa' : 'status_bimbingan');
+                $graduationDate = $examDate ?: ($masterDate ?: ($resultDate ?: $statusDate));
+                $dateSource = $examDate
+                    ? 'jadwal_ujian'
+                    : ($masterDate
+                        ? 'master_mahasiswa'
+                        : ($resultDate ? 'hasil_ujian_ta' : ($statusDate ? 'status_kelulusan' : 'tidak_diketahui')));
                 $typeCode = trim((string) $row->jenis_code);
                 $isDefaultType = $typeCode === '';
 

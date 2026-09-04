@@ -40,7 +40,10 @@
         .signature-wrap td { vertical-align: top; }
         .signature-note { color: #374151; font-size: 7.2pt; line-height: 1.25; padding: 6px 12px 0 0; }
         .signature { text-align: center; width: 38%; }
-        .verification-qr { height: 48px; margin: 2px 0 0; width: 48px; }
+        .signature-heading { line-height: 1.3; }
+        .signature-qr-box { height: 58px; padding: 5px 0; text-align: center; }
+        .signature-identity { line-height: 1.3; }
+        .verification-qr { display: block; height: 48px; margin: 0 auto; width: 48px; }
         .official-name { font-weight: bold; text-decoration: underline; }
         .footer { bottom: -8mm; color: #5b6572; font-family: Arial, sans-serif; font-size: 6.5pt; left: 0; position: fixed; right: 0; text-align: center; }
     </style>
@@ -156,8 +159,12 @@
     @if ($report['summary']['fallback_date_count'] > 0 || $report['summary']['default_type_count'] > 0)
         <div class="quality-note">
             <strong>Catatan kualitas data:</strong>
-            {{ number_format($report['summary']['fallback_date_count']) }} mahasiswa menggunakan tanggal fallback dan
-            {{ number_format($report['summary']['default_type_count']) }} mahasiswa menggunakan klasifikasi default TA-SM.
+            @if ($report['summary']['fallback_date_count'] > 0)
+                {{ number_format($report['summary']['fallback_date_count']) }} mahasiswa belum memiliki tanggal kelulusan yang dapat ditelusuri.
+            @endif
+            @if ($report['summary']['default_type_count'] > 0)
+                {{ number_format($report['summary']['default_type_count']) }} mahasiswa belum memiliki jenis tugas akhir dan sementara diklasifikasikan sebagai TA-SM.
+            @endif
         </div>
     @endif
 
@@ -168,15 +175,19 @@
                 jumlah mahasiswa, periode, dan sidik laporan tanpa memublikasikan identitas mahasiswa.
             </td>
             <td class="signature">
-                Makassar, {{ helper::tgl_indo_lengkap($report['generated_at']->format('Y-m-d')) }}<br>
-                Ketua Program Studi {{ $scope['program_studi'] }},
-                <div>
+                <div class="signature-heading">
+                    Makassar, {{ helper::tgl_indo_lengkap($report['generated_at']->format('Y-m-d')) }}<br>
+                    Ketua Program Studi {{ $scope['program_studi'] }},
+                </div>
+                <div class="signature-qr-box">
                     <a href="{{ $verificationUrl }}">
                         <img class="verification-qr" src="{{ \App\Helper::qrCodeDataUri($verificationUrl, 130) }}" alt="QR verifikasi laporan">
                     </a>
                 </div>
-                <span class="official-name">{{ $kaprodi->nama ?: '-' }}</span><br>
-                NIDN: {{ $kaprodi->nidn ?: '-' }}
+                <div class="signature-identity">
+                    <span class="official-name">{{ $kaprodi->nama ?: '-' }}</span><br>
+                    NIDN: {{ $kaprodi->nidn ?: '-' }}
+                </div>
             </td>
         </tr>
     </table>

@@ -205,8 +205,12 @@
             @if ($report['summary']['fallback_date_count'] > 0 || $report['summary']['default_type_count'] > 0)
                 <div class="jenis-ta-data-note">
                     <strong>Catatan kualitas data:</strong>
-                    {{ number_format($report['summary']['fallback_date_count']) }} mahasiswa menggunakan tanggal fallback dan
-                    {{ number_format($report['summary']['default_type_count']) }} mahasiswa menggunakan klasifikasi default TA-SM.
+                    @if ($report['summary']['fallback_date_count'] > 0)
+                        {{ number_format($report['summary']['fallback_date_count']) }} mahasiswa belum memiliki tanggal kelulusan yang dapat ditelusuri.
+                    @endif
+                    @if ($report['summary']['default_type_count'] > 0)
+                        {{ number_format($report['summary']['default_type_count']) }} mahasiswa belum memiliki jenis tugas akhir dan sementara diklasifikasikan sebagai TA-SM.
+                    @endif
                 </div>
             @endif
         </div>
