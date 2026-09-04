@@ -23,7 +23,7 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringContainsString('Persebaran Jenis TA', $adminSidebar);
     }
 
-    public function testViewsContainDetailedReportPdfAndPrivateVerificationPage()
+    public function testViewsContainAggregateReportPdfAndPrivateVerificationPage()
     {
         $web = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/report_jenis_tugas_akhir.blade.php');
         $pdf = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/report_jenis_tugas_akhir_pdf.blade.php');
@@ -32,12 +32,21 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringContainsString('Tahun Ajaran', $web);
         $this->assertStringContainsString('Angkatan', $web);
         $this->assertStringContainsString('Perbandingan Seluruh', $web);
-        $this->assertStringContainsString('Daftar Mahasiswa Lulus', $web);
+        $this->assertStringNotContainsString('Daftar Mahasiswa Lulus', $web);
+        $this->assertStringNotContainsString("\$row['nim']", $web);
+        $this->assertStringNotContainsString("\$row['nama']", $web);
         $this->assertStringContainsString('Generate PDF', $web);
         $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $pdf);
         $this->assertStringContainsString("publicImageDataUri('images/branding/fikom-pdf.jpg')", $pdf);
         $this->assertStringContainsString('qrCodeDataUri($verificationUrl', $pdf);
         $this->assertStringContainsString('Ketua Program Studi', $pdf);
+        $this->assertStringNotContainsString('Daftar Mahasiswa Lulus', $pdf);
+        $this->assertStringNotContainsString("\$row['nim']", $pdf);
+        $this->assertStringNotContainsString("\$row['nama']", $pdf);
+        $this->assertStringContainsString("count(\$report['comparison']) > 10", $pdf);
+        $this->assertSame(1, substr_count($pdf, '<table class="signature-wrap">'));
+        $this->assertGreaterThan(strpos($pdf, 'B. Perbandingan Seluruh'), strpos($pdf, '<table class="signature-wrap">'));
+        $this->assertGreaterThan(strpos($pdf, '<div class="quality-note">'), strpos($pdf, '<table class="signature-wrap">'));
         $this->assertStringContainsString('tidak memublikasikan identitas mahasiswa', $verification);
         $this->assertStringNotContainsString("\$payload['nim']", $verification);
         $this->assertStringNotContainsString("\$payload['nama']", $verification);

@@ -4,45 +4,43 @@
     <meta charset="utf-8">
     <title>Laporan Persebaran Jenis Tugas Akhir</title>
     <style>
-        @page { margin: 10mm 12mm 13mm; }
+        @page { margin: 8mm 10mm 10mm; }
         * { box-sizing: border-box; }
         body { color: #111827; font-family: "Times New Roman", serif; font-size: 8.5pt; line-height: 1.18; margin: 0; }
         .letterhead table { border-collapse: collapse; width: 100%; }
         .letterhead td { vertical-align: middle; }
-        .logo-umi { height: 46px; width: auto; }
-        .logo-fikom { height: 37px; margin-left: 9px; vertical-align: middle; width: auto; }
-        .letterhead-title { font-size: 11pt; font-weight: bold; line-height: 1.05; text-align: right; }
-        .letterhead-divider { border-top: 3px double #111; margin-top: 6px; }
-        .letterhead-address { font-size: 7.2pt; line-height: 1.18; padding-top: 6px; text-align: center; }
-        .report-title { font-size: 14pt; font-weight: bold; margin: 14px 0 2px; text-align: center; text-decoration: underline; }
-        .report-subtitle { font-size: 10.5pt; font-weight: bold; line-height: 1.25; margin-bottom: 12px; text-align: center; }
-        .meta { border-collapse: collapse; margin-bottom: 10px; width: 100%; }
-        .meta td { padding: 2px 4px; vertical-align: top; }
+        .logo-umi { height: 42px; width: auto; }
+        .logo-fikom { height: 34px; margin-left: 8px; vertical-align: middle; width: auto; }
+        .letterhead-title { font-size: 10.5pt; font-weight: bold; line-height: 1.04; text-align: right; }
+        .letterhead-divider { border-top: 3px double #111; margin-top: 4px; }
+        .letterhead-address { font-size: 7pt; line-height: 1.15; padding-top: 4px; text-align: center; }
+        .report-title { font-size: 13.5pt; font-weight: bold; margin: 9px 0 1px; text-align: center; text-decoration: underline; }
+        .report-subtitle { font-size: 10pt; font-weight: bold; line-height: 1.18; margin-bottom: 7px; text-align: center; }
+        .meta { border-collapse: collapse; margin-bottom: 6px; width: 100%; }
+        .meta td { padding: 1.5px 4px; vertical-align: top; }
         .meta-label { color: #374151; font-weight: bold; width: 13%; }
         .meta-separator { width: 1.5%; }
-        .summary { border-collapse: collapse; margin: 0 0 10px; width: 100%; }
-        .summary td { border: 1px solid #aeb8c4; padding: 7px 8px; text-align: center; vertical-align: middle; width: 25%; }
-        .summary strong { display: block; font-size: 14pt; line-height: 1; margin-bottom: 4px; }
-        .section-title { background: #354052; color: #fff; font-size: 9pt; font-weight: bold; margin: 11px 0 0; padding: 5px 7px; }
+        .summary { border-collapse: collapse; margin: 0 0 7px; width: 100%; }
+        .summary td { border: 1px solid #aeb8c4; padding: 5px 8px; text-align: center; vertical-align: middle; width: 25%; }
+        .summary strong { display: block; font-size: 13pt; line-height: 1; margin-bottom: 2px; }
+        .section-title { background: #354052; color: #fff; font-size: 9pt; font-weight: bold; margin: 7px 0 0; padding: 4px 7px; }
+        .comparison-page-break { page-break-before: always; }
         table.report-table { border-collapse: collapse; font-size: 7.3pt; width: 100%; }
         .report-table thead { display: table-header-group; }
         .report-table tr { page-break-inside: avoid; }
-        .report-table th, .report-table td { border: 1px solid #4b5563; padding: 3.2px 4px; vertical-align: middle; }
+        .report-table th, .report-table td { border: 1px solid #4b5563; padding: 2.4px 4px; vertical-align: middle; }
         .report-table th { background: #e5e9ee; font-weight: bold; text-align: center; }
         .center { text-align: center; }
         .right { text-align: right; }
         .nowrap { white-space: nowrap; }
         .type-code { font-weight: bold; }
         .comparison-table { font-size: 6.8pt !important; }
-        .detail-table { font-size: 6.4pt !important; }
-        .detail-table th, .detail-table td { padding: 2.3px 3px; }
-        .detail-table .student-name { font-weight: bold; }
-        .quality-note { background: #fff8e6; border: 1px solid #d7b56d; margin-top: 8px; padding: 6px 8px; }
-        .signature-wrap { border-collapse: collapse; margin: 9px 0 2px; page-break-inside: avoid; width: 100%; }
+        .quality-note { background: #fff8e6; border: 1px solid #d7b56d; margin-top: 6px; padding: 5px 8px; }
+        .signature-wrap { border-collapse: collapse; margin: 7px 0 0; page-break-inside: avoid; width: 100%; }
         .signature-wrap td { vertical-align: top; }
-        .signature-note { color: #374151; font-size: 7.5pt; line-height: 1.35; padding: 8px 12px 0 0; }
+        .signature-note { color: #374151; font-size: 7.2pt; line-height: 1.25; padding: 6px 12px 0 0; }
         .signature { text-align: center; width: 38%; }
-        .verification-qr { height: 58px; margin: 3px 0 1px; width: 58px; }
+        .verification-qr { height: 48px; margin: 2px 0 0; width: 48px; }
         .official-name { font-weight: bold; text-decoration: underline; }
         .footer { bottom: -8mm; color: #5b6572; font-family: Arial, sans-serif; font-size: 6.5pt; left: 0; position: fixed; right: 0; text-align: center; }
     </style>
@@ -126,27 +124,7 @@
         </tbody>
     </table>
 
-    <table class="signature-wrap">
-        <tr>
-            <td class="signature-note" width="62%">
-                Laporan ini disahkan secara elektronik. QR memuat tautan verifikasi metadata,
-                jumlah mahasiswa, periode, dan sidik laporan tanpa memublikasikan identitas mahasiswa.
-            </td>
-            <td class="signature">
-                Makassar, {{ helper::tgl_indo_lengkap($report['generated_at']->format('Y-m-d')) }}<br>
-                Ketua Program Studi {{ $scope['program_studi'] }},
-                <div>
-                    <a href="{{ $verificationUrl }}">
-                        <img class="verification-qr" src="{{ \App\Helper::qrCodeDataUri($verificationUrl, 130) }}" alt="QR verifikasi laporan">
-                    </a>
-                </div>
-                <span class="official-name">{{ $kaprodi->nama ?: '-' }}</span><br>
-                NIDN: {{ $kaprodi->nidn ?: '-' }}
-            </td>
-        </tr>
-    </table>
-
-    <div class="section-title">B. Perbandingan Seluruh {{ $report['mode_label'] }}</div>
+    <div class="section-title{{ count($report['comparison']) > 10 ? ' comparison-page-break' : '' }}">B. Perbandingan Seluruh {{ $report['mode_label'] }}</div>
     <table class="report-table comparison-table">
         <thead>
             <tr>
@@ -175,36 +153,6 @@
         </tbody>
     </table>
 
-    <div class="section-title">C. Daftar Mahasiswa Lulus</div>
-    <table class="report-table detail-table">
-        <thead>
-            <tr>
-                <th style="width: 4%;">No</th>
-                <th style="width: 11%;">NIM</th>
-                <th style="width: 20%;">Nama</th>
-                <th style="width: 7%;">Angkatan</th>
-                <th style="width: 12%;">Tanggal Lulus</th>
-                <th style="width: 8%;">Jenis TA</th>
-                <th>Judul</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($report['rows'] as $index => $row)
-                <tr>
-                    <td class="center">{{ $index + 1 }}</td>
-                    <td class="center nowrap">{{ $row['nim'] }}</td>
-                    <td class="student-name">{{ $row['nama'] }}</td>
-                    <td class="center">{{ $row['angkatan'] }}</td>
-                    <td class="center nowrap">{{ $row['tanggal_lulus_label'] }}</td>
-                    <td class="center type-code">{{ $row['jenis_code'] }}</td>
-                    <td>{{ $row['judul'] ?: '-' }}</td>
-                </tr>
-            @empty
-                <tr><td colspan="7" class="center">Belum ada mahasiswa lulus pada periode ini.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-
     @if ($report['summary']['fallback_date_count'] > 0 || $report['summary']['default_type_count'] > 0)
         <div class="quality-note">
             <strong>Catatan kualitas data:</strong>
@@ -212,6 +160,26 @@
             {{ number_format($report['summary']['default_type_count']) }} mahasiswa menggunakan klasifikasi default TA-SM.
         </div>
     @endif
+
+    <table class="signature-wrap">
+        <tr>
+            <td class="signature-note" width="62%">
+                Laporan ini disahkan secara elektronik. QR memuat tautan verifikasi metadata,
+                jumlah mahasiswa, periode, dan sidik laporan tanpa memublikasikan identitas mahasiswa.
+            </td>
+            <td class="signature">
+                Makassar, {{ helper::tgl_indo_lengkap($report['generated_at']->format('Y-m-d')) }}<br>
+                Ketua Program Studi {{ $scope['program_studi'] }},
+                <div>
+                    <a href="{{ $verificationUrl }}">
+                        <img class="verification-qr" src="{{ \App\Helper::qrCodeDataUri($verificationUrl, 130) }}" alt="QR verifikasi laporan">
+                    </a>
+                </div>
+                <span class="official-name">{{ $kaprodi->nama ?: '-' }}</span><br>
+                NIDN: {{ $kaprodi->nidn ?: '-' }}
+            </td>
+        </tr>
+    </table>
 
 </body>
 </html>

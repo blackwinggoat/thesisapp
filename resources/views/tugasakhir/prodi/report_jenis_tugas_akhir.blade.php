@@ -28,7 +28,6 @@
     .jenis-ta-table td { vertical-align: middle !important; }
     .jenis-ta-table .metric { font-size: 12px; white-space: nowrap; }
     .jenis-ta-table .metric small { color: #627d98; display: block; }
-    .jenis-ta-detail-title { max-width: 370px; min-width: 240px; white-space: normal; }
     .jenis-ta-data-note { background: #fff8e6; border-left: 4px solid #b7791f; color: #674d00; margin-top: 16px; padding: 11px 13px; }
     @media (max-width: 991px) {
         .jenis-ta-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -197,41 +196,6 @@
                                 </tr>
                             @empty
                                 <tr><td colspan="{{ count($report['type_columns']) + 2 }}" class="text-center">Belum ada data pembanding.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="jenis-ta-section">
-                <h3>Daftar Mahasiswa Lulus</h3>
-                <p class="jenis-ta-section-note">Tanggal lulus mengutamakan jadwal ujian akhir; data tanpa jadwal memakai tanggal kelulusan master atau perubahan status bimbingan.</p>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped jenis-ta-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 45px;" class="text-center">No</th>
-                                <th style="width: 125px;">NIM</th>
-                                <th style="min-width: 180px;">Nama</th>
-                                <th style="width: 85px;" class="text-center">Angkatan</th>
-                                <th style="width: 120px;">Tanggal Lulus</th>
-                                <th style="width: 90px;" class="text-center">Jenis TA</th>
-                                <th class="jenis-ta-detail-title">Judul</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($report['rows'] as $index => $row)
-                                <tr>
-                                    <td class="text-center">{{ $index + 1 }}</td>
-                                    <td>{{ $row['nim'] }}</td>
-                                    <td><strong>{{ $row['nama'] }}</strong></td>
-                                    <td class="text-center">{{ $row['angkatan'] }}</td>
-                                    <td>{{ $row['tanggal_lulus_label'] }}</td>
-                                    <td class="text-center"><span class="label label-primary">{{ $row['jenis_code'] }}</span></td>
-                                    <td class="jenis-ta-detail-title">{{ $row['judul'] ?: '-' }}</td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="7" class="text-center">Belum ada mahasiswa lulus pada periode ini.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
