@@ -46,14 +46,9 @@
         .signature-identity { line-height: 1.3; }
         .verification-qr { display: block; height: 48px; margin: 0 auto; width: 48px; }
         .official-name { font-weight: bold; text-decoration: underline; }
-        .footer { bottom: -8mm; color: #5b6572; font-family: Arial, sans-serif; font-size: 6.5pt; left: 0; position: fixed; right: 0; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="footer">
-        Thesis App FIKOM UMI | Sidik laporan: {{ substr($report['report_hash'], 0, 16) }}
-    </div>
-
     <div class="letterhead">
         <table>
             <tr>

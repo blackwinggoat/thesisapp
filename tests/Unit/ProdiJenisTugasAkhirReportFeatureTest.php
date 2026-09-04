@@ -49,6 +49,8 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringContainsString('B. {{ $report[\'cross_title\'] }}', $pdf);
         $this->assertStringContainsString('C. Perbandingan Seluruh', $pdf);
         $this->assertStringContainsString("\$report['cross_distribution']", $pdf);
+        $this->assertStringNotContainsString('Sidik laporan:', $pdf);
+        $this->assertStringNotContainsString('class="footer"', $pdf);
         $this->assertSame(1, substr_count($pdf, '<table class="signature-wrap">'));
         $this->assertStringContainsString('<div class="signature-heading">', $pdf);
         $this->assertStringContainsString('<div class="signature-qr-box">', $pdf);
