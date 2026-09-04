@@ -1047,11 +1047,7 @@
                 const homeScopeLulusanBidang = @json($homeScopeLulusanBidang);
                 const homeStatusBimbinganProdi = @json($homeStatusBimbinganProdi);
                 const homeRataLamaBimbinganProdiPerAngkatan = @json($homeRataLamaBimbinganProdiPerAngkatan);
-                const homeJenisTugasAkhirTrendCharts = @json($jenisTugasAkhirTrendCharts ?? [
-                    'series' => [],
-                    'by_cohort' => [],
-                    'by_academic_year' => [],
-                ]);
+                const homeJenisTugasAkhirTrendCharts = @json($jenisTugasAkhirTrendCharts);
 
                 const renderHomeJenisTugasAkhirLine = (elementId, data) => {
                     const series = homeJenisTugasAkhirTrendCharts.series || [];

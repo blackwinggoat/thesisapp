@@ -24,6 +24,10 @@ class HomeJenisTugasAkhirTrendChartTest extends TestCase
 
         $this->assertStringContainsString('home-prodi-jenis-ta-angkatan', $view);
         $this->assertStringContainsString('home-prodi-jenis-ta-tahun-ajaran', $view);
+        $this->assertStringContainsString(
+            '@json($jenisTugasAkhirTrendCharts)',
+            $view
+        );
         $this->assertSame(2, substr_count($view, "renderHomeJenisTugasAkhirLine("));
         $this->assertRegExp(
             '/<div class="row">\s*<div class="col-sm-6">.*home-prodi-jenis-ta-angkatan.*<div class="col-sm-6">.*home-prodi-jenis-ta-tahun-ajaran/s',
