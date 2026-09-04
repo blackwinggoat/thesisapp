@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ProdiJenisTugasAkhirReportService;
 use Barryvdh\DomPDF\Facade as PDF;
 use Auth;
 use DB;
 use helper;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -26,7 +28,37 @@ class HomeController extends Controller
      */
     public function index()
     {
-            return view('/tugasakhir/layouts/content');
+        $jenisTugasAkhirTrendCharts = [
+            'series' => [],
+            'by_cohort' => [],
+            'by_academic_year' => [],
+        ];
+
+        $user = auth()->user();
+        if ((int) ($user->level ?? 0) === 5) {
+            $username = strtolower(trim((string) ($user->name ?? '')));
+            $nimPrefix = null;
+
+            if (in_array($username, ['proditi', 'teknik informatika', 'ti'], true)) {
+                $nimPrefix = '130';
+            } elseif (in_array($username, ['prodinyalilis', 'prodisi', 'sistem informasi', 'si'], true)) {
+                $nimPrefix = '131';
+            }
+
+            if ($nimPrefix !== null) {
+                try {
+                    $jenisTugasAkhirTrendCharts = app(ProdiJenisTugasAkhirReportService::class)
+                        ->buildTrendCharts($nimPrefix);
+                } catch (\Throwable $e) {
+                    Log::warning('Grafik persebaran jenis TA pada Home gagal dimuat.', [
+                        'username' => $username,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        return view('/tugasakhir/layouts/content', compact('jenisTugasAkhirTrendCharts'));
     }
 
     public function surat_sk_pembimbing($nomor)

@@ -197,6 +197,38 @@
                         </div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="the-box" style="min-height: 490px;">
+                            <h4 class="small-title">PERSEBARAN JENIS TUGAS AKHIR PER ANGKATAN</h4>
+                            <p class="text-muted" style="min-height: 38px;">Jumlah lulusan setiap jenis tugas akhir berdasarkan angkatan mahasiswa.</p>
+                            <div class="home-jenis-ta-legend" style="min-height: 54px;">
+                                @foreach (($jenisTugasAkhirTrendCharts['series'] ?? []) as $series)
+                                    <span style="display: inline-block; margin: 0 10px 7px 0; white-space: nowrap;">
+                                        <span style="background: {{ $series['color'] }}; display: inline-block; height: 8px; margin-right: 4px; width: 18px;"></span>
+                                        <strong>{{ $series['code'] }}</strong>
+                                    </span>
+                                @endforeach
+                            </div>
+                            <div id="home-prodi-jenis-ta-angkatan" style="height: 330px;"></div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="the-box" style="min-height: 490px;">
+                            <h4 class="small-title">PERSEBARAN JENIS TUGAS AKHIR PER TAHUN AJARAN</h4>
+                            <p class="text-muted" style="min-height: 38px;">Jumlah lulusan setiap jenis tugas akhir berdasarkan tahun ajaran kelulusan.</p>
+                            <div class="home-jenis-ta-legend" style="min-height: 54px;">
+                                @foreach (($jenisTugasAkhirTrendCharts['series'] ?? []) as $series)
+                                    <span style="display: inline-block; margin: 0 10px 7px 0; white-space: nowrap;">
+                                        <span style="background: {{ $series['color'] }}; display: inline-block; height: 8px; margin-right: 4px; width: 18px;"></span>
+                                        <strong>{{ $series['code'] }}</strong>
+                                    </span>
+                                @endforeach
+                            </div>
+                            <div id="home-prodi-jenis-ta-tahun-ajaran" style="height: 330px;"></div>
+                        </div>
+                    </div>
+                </div>
             @elseif(Auth::user()->level == 6)
                 @php
                     $semesterRange = helper::getCurrentSemesterDateRange();
@@ -1015,6 +1047,48 @@
                 const homeScopeLulusanBidang = @json($homeScopeLulusanBidang);
                 const homeStatusBimbinganProdi = @json($homeStatusBimbinganProdi);
                 const homeRataLamaBimbinganProdiPerAngkatan = @json($homeRataLamaBimbinganProdiPerAngkatan);
+                const homeJenisTugasAkhirTrendCharts = @json($jenisTugasAkhirTrendCharts ?? [
+                    'series' => [],
+                    'by_cohort' => [],
+                    'by_academic_year' => [],
+                ]);
+
+                const renderHomeJenisTugasAkhirLine = (elementId, data) => {
+                    const series = homeJenisTugasAkhirTrendCharts.series || [];
+                    const ykeys = series.map(item => item.key);
+                    const hasData = Array.isArray(data) && data.some(item =>
+                        ykeys.some(key => Number(item[key] || 0) > 0)
+                    );
+
+                    if (!hasData) {
+                        renderHomeChartNoData(elementId, 'Belum ada data lulusan berdasarkan jenis tugas akhir');
+                        return;
+                    }
+
+                    Morris.Line({
+                        element: elementId,
+                        data: data,
+                        xkey: 'period',
+                        ykeys: ykeys,
+                        labels: series.map(item => item.code),
+                        lineColors: series.map(item => item.color),
+                        pointFillColors: series.map(item => item.color),
+                        parseTime: false,
+                        smooth: false,
+                        xLabelAngle: 35,
+                        hideHover: 'auto',
+                        resize: true
+                    });
+                };
+
+                renderHomeJenisTugasAkhirLine(
+                    'home-prodi-jenis-ta-angkatan',
+                    homeJenisTugasAkhirTrendCharts.by_cohort || []
+                );
+                renderHomeJenisTugasAkhirLine(
+                    'home-prodi-jenis-ta-tahun-ajaran',
+                    homeJenisTugasAkhirTrendCharts.by_academic_year || []
+                );
 
                 if (document.getElementById('home-prodi-status-bimbingan')) {
                     Morris.Bar({
