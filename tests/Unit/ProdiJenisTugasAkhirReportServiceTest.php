@@ -33,6 +33,7 @@ class ProdiJenisTugasAkhirReportServiceTest extends TestCase
         $this->assertSame(4, $report['cross_distribution'][0]['total']);
         $this->assertSame(3, $report['cross_distribution'][0]['counts']['TA-SM']['count']);
         $this->assertEquals(75.0, $report['cross_distribution'][0]['counts']['TA-SM']['percentage']);
+        $this->assertArrayNotHasKey('comparison', $report);
     }
 
     public function testItCalculatesDistributionByCohort()

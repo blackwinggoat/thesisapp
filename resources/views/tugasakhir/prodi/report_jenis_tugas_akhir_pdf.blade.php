@@ -153,35 +153,6 @@
         </tbody>
     </table>
 
-    <div class="section-title{{ count($report['comparison']) > 10 || count($report['cross_distribution']) > 10 ? ' comparison-page-break' : '' }}">C. Perbandingan Seluruh {{ $report['mode_label'] }}</div>
-    <table class="report-table comparison-table">
-        <thead>
-            <tr>
-                <th>{{ $report['mode_label'] }}</th>
-                @foreach ($report['type_columns'] as $type)
-                    <th>{{ $type['code'] }}<br><span style="font-weight: normal;">Jumlah / %</span></th>
-                @endforeach
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($report['comparison'] as $period)
-                <tr>
-                    <td class="center"><strong>{{ $period['period'] }}</strong></td>
-                    @foreach ($report['type_columns'] as $type)
-                        <td class="center nowrap">
-                            {{ number_format($period['counts'][$type['code']]['count']) }} /
-                            {{ number_format($period['counts'][$type['code']]['percentage'], 2, ',', '.') }}%
-                        </td>
-                    @endforeach
-                    <td class="center"><strong>{{ number_format($period['total']) }}</strong></td>
-                </tr>
-            @empty
-                <tr><td colspan="{{ count($report['type_columns']) + 2 }}" class="center">Belum ada data pembanding.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-
     @if ($report['summary']['fallback_date_count'] > 0 || $report['summary']['default_type_count'] > 0)
         <div class="quality-note">
             <strong>Catatan kualitas data:</strong>

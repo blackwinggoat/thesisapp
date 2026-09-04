@@ -66,7 +66,6 @@ class ProdiJenisTugasAkhirReportService
             return $type['count'] > 0;
         })->sortByDesc('count')->values();
 
-        $comparison = $this->buildPeriodMatrix($rows, $periodKey, $periodOptions, $typeColumns);
         $crossPeriodKey = $mode === 'angkatan' ? 'tahun_ajaran' : 'angkatan';
         $crossMode = $mode === 'angkatan' ? 'tahun_ajaran' : 'angkatan';
         $crossLabel = $mode === 'angkatan' ? 'Tahun Ajaran' : 'Angkatan';
@@ -105,7 +104,6 @@ class ProdiJenisTugasAkhirReportService
             'period_options' => $periodOptions,
             'type_columns' => $typeColumns->all(),
             'distribution' => $distribution->all(),
-            'comparison' => $comparison->all(),
             'cross_distribution' => $crossDistribution->all(),
             'cross_dimension_label' => $crossLabel,
             'cross_title' => $crossTitle,

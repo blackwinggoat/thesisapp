@@ -202,40 +202,6 @@
                 </div>
             </section>
 
-            <section class="jenis-ta-section">
-                <h3>Perbandingan Seluruh {{ $report['mode_label'] }}</h3>
-                <p class="jenis-ta-section-note">Nilai pada setiap sel menunjukkan jumlah mahasiswa dan persentasenya di dalam periode yang sama.</p>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover jenis-ta-table">
-                        <thead>
-                            <tr>
-                                <th>{{ $report['mode_label'] }}</th>
-                                @foreach ($report['type_columns'] as $type)
-                                    <th class="text-center">{{ $type['code'] }}</th>
-                                @endforeach
-                                <th class="text-center">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($report['comparison'] as $period)
-                                <tr class="{{ $period['period'] === $report['selected_period'] ? 'info' : '' }}">
-                                    <td><strong>{{ $period['period'] }}</strong></td>
-                                    @foreach ($report['type_columns'] as $type)
-                                        <td class="text-center metric">
-                                            <strong>{{ number_format($period['counts'][$type['code']]['count']) }}</strong>
-                                            <small>{{ number_format($period['counts'][$type['code']]['percentage'], 2, ',', '.') }}%</small>
-                                        </td>
-                                    @endforeach
-                                    <td class="text-center"><strong>{{ number_format($period['total']) }}</strong></td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="{{ count($report['type_columns']) + 2 }}" class="text-center">Belum ada data pembanding.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
             @if ($report['summary']['fallback_date_count'] > 0 || $report['summary']['default_type_count'] > 0)
                 <div class="jenis-ta-data-note">
                     <strong>Catatan kualitas data:</strong>
