@@ -25,5 +25,7 @@ class ProdiReportMenuTest extends TestCase
         $this->assertStringContainsString('public function report_laporan_excel(', $controller);
         $this->assertStringContainsString('Distribusi Jumlah Bimbingan Utama', $view);
         $this->assertStringContainsString('Download Excel', $view);
+        $this->assertStringContainsString('Persebaran Jenis TA', $sidebar);
+        $this->assertStringContainsString("route('prodi.report_jenis_tugas_akhir')", $sidebar);
     }
 }

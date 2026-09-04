@@ -35,6 +35,7 @@ Route::get('/jadwal-dosen/{token}', 'Prodi@jadwalDosenLink');
 Route::get('/sk_pembimbing/{nomor}', 'HomeController@surat_sk_pembimbing')->middleware('auth');
 Route::get('/sk_pembimbing_pdf/{nomor}', 'HomeController@surat_sk_pembimbing_pdf')->middleware('auth');
 Route::get('/verifikasi/sk-yudisium/{token}', 'fakultas@verifikasi_sk_yudisium')->name('verifikasi_sk_yudisium');
+Route::get('/verifikasi/laporan-jenis-tugas-akhir/{token}', 'Prodi@verifikasi_report_jenis_tugas_akhir')->name('verifikasi_report_jenis_tugas_akhir');
 Route::post('/admin/back-to-admin', 'Admin@back_to_admin')->middleware('auth')->name('admin.back_to_admin');
 
 
@@ -132,6 +133,8 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get('/prodi/report', 'Prodi@report');
     Route::get('/prodi/report/laporan', 'Prodi@report_laporan');
     Route::get('/prodi/report/laporan/excel', 'Prodi@report_laporan_excel');
+    Route::get('/prodi/report/jenis-tugas-akhir', 'Prodi@report_jenis_tugas_akhir')->name('prodi.report_jenis_tugas_akhir');
+    Route::get('/prodi/report/jenis-tugas-akhir/pdf', 'Prodi@report_jenis_tugas_akhir_pdf')->name('prodi.report_jenis_tugas_akhir_pdf');
     Route::get('/prodi/laporan_mahasiswa', 'Prodi@laporan_mahasiswa');
     Route::get('/prodi/laporan_mahasiswa/{id}', 'Prodi@laporan_mahasiswa_detail');
     Route::post('/prodi/laporan_mahasiswa/{id}/tindakan', 'Prodi@laporan_mahasiswa_tindakan_post');

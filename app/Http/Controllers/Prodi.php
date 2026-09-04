@@ -24,6 +24,7 @@ use App\TrtLevelPembimbing;
 use App\TrtPengajuanDokumen;
 use App\TrtPenguji;
 use App\TrtSyaratUjian;
+use App\Services\ProdiJenisTugasAkhirReportService;
 use Barryvdh\DomPDF\Facade as PDF;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -3851,6 +3852,100 @@ class Prodi extends Controller
             ->view('tugasakhir.prodi.report_laporan_excel', compact('report'))
             ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    public function report_jenis_tugas_akhir(Request $request)
+    {
+        $scope = $this->getJenisTugasAkhirReportScope($request);
+        $service = app(ProdiJenisTugasAkhirReportService::class);
+        $reportWarnings = [];
+        $report = $this->safeReportSection(
+            'persebaran_jenis_tugas_akhir_lulusan',
+            function () use ($service, $scope, $request) {
+                return $service->build(
+                    $scope['nim_prefix'],
+                    $scope['program_studi'],
+                    $request->input('mode', 'tahun_ajaran'),
+                    $request->input('periode')
+                );
+            },
+            $service->aggregate([], $scope['program_studi'], $request->input('mode', 'tahun_ajaran')),
+            $reportWarnings
+        );
+
+        return view('tugasakhir.prodi.report_jenis_tugas_akhir', compact(
+            'scope',
+            'report',
+            'reportWarnings'
+        ));
+    }
+
+    public function report_jenis_tugas_akhir_pdf(Request $request)
+    {
+        $scope = $this->getJenisTugasAkhirReportScope($request);
+        $service = app(ProdiJenisTugasAkhirReportService::class);
+        $report = $service->build(
+            $scope['nim_prefix'],
+            $scope['program_studi'],
+            $request->input('mode', 'tahun_ajaran'),
+            $request->input('periode')
+        );
+        $kaprodi = Helper::getKaprodiByProdiAndTanggal($scope['program_studi'], Carbon::today());
+        $verificationToken = $service->buildVerificationToken($report);
+        $verificationUrl = route('verifikasi_report_jenis_tugas_akhir', ['token' => $verificationToken]);
+        $emailProgramStudi = $scope['nim_prefix'] === '130'
+            ? 's1.teknik.informatika@umi.ac.id'
+            : 's1.sistem.informasi@umi.ac.id';
+        $safePeriod = preg_replace('/[^0-9A-Za-z-]+/', '-', $report['selected_period']);
+        $filename = 'Laporan-Persebaran-Jenis-TA-'
+            . $scope['nim_prefix'] . '-'
+            . ($safePeriod ?: date('Ymd')) . '.pdf';
+
+        return PDF::loadView('tugasakhir.prodi.report_jenis_tugas_akhir_pdf', compact(
+            'scope',
+            'report',
+            'kaprodi',
+            'verificationUrl',
+            'emailProgramStudi'
+        ))
+            ->setPaper('a4', 'landscape')
+            ->stream($filename);
+    }
+
+    public function verifikasi_report_jenis_tugas_akhir($token)
+    {
+        $payload = app(ProdiJenisTugasAkhirReportService::class)->decodeVerificationToken($token);
+        if (!$payload) {
+            abort(404);
+        }
+
+        return view('tugasakhir.prodi.verifikasi_report_jenis_tugas_akhir', compact('payload'));
+    }
+
+    protected function getJenisTugasAkhirReportScope(Request $request)
+    {
+        $scope = $this->getProdiScope();
+        if (!$scope['is_mapped']) {
+            abort(403, 'Akun Prodi belum dipetakan ke program studi.');
+        }
+
+        if ($scope['nim_prefix'] === '130' || $scope['nim_prefix'] === '131') {
+            return [
+                'nim_prefix' => $scope['nim_prefix'],
+                'program_studi' => $scope['label'],
+                'can_select_program' => false,
+            ];
+        }
+
+        $nimPrefix = in_array((string) $request->input('program_studi'), ['130', '131'], true)
+            ? (string) $request->input('program_studi')
+            : '130';
+
+        return [
+            'nim_prefix' => $nimPrefix,
+            'program_studi' => $nimPrefix === '130' ? 'Teknik Informatika' : 'Sistem Informasi',
+            'can_select_program' => true,
+        ];
     }
 
     protected function getBimbinganDistributionReport($nimLike, $selectedAcademicYear = null)
