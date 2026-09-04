@@ -100,6 +100,20 @@ class ProdiJenisTugasAkhirReportServiceTest extends TestCase
         $this->assertSame(1, $report['summary']['date_source_counts']['tidak_diketahui']);
     }
 
+    public function testItBuildsLineChartSeriesByCohortAndAcademicYear()
+    {
+        $charts = (new ProdiJenisTugasAkhirReportService())->aggregateTrendCharts($this->rows());
+        $seriesByCode = collect($charts['series'])->keyBy('code');
+        $taSmKey = $seriesByCode->get('TA-SM')['key'];
+        $nsAiKey = $seriesByCode->get('NS-AI')['key'];
+
+        $this->assertSame(['2021', '2022'], array_column($charts['by_cohort'], 'period'));
+        $this->assertSame(3, $charts['by_cohort'][1][$taSmKey]);
+        $this->assertSame(1, $charts['by_cohort'][1][$nsAiKey]);
+        $this->assertSame(['2024/2025', '2025/2026'], array_column($charts['by_academic_year'], 'period'));
+        $this->assertSame(4, $charts['by_academic_year'][1]['total']);
+    }
+
     private function rows()
     {
         return [

@@ -63,6 +63,7 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringContainsString('<div class="signature-heading">', $pdf);
         $this->assertStringContainsString('<div class="signature-qr-box">', $pdf);
         $this->assertStringContainsString('<div class="signature-identity">', $pdf);
+        $this->assertSame(1, substr_count($pdf, 'qrCodeDataUri($verificationUrl'));
         $this->assertGreaterThan(strpos($pdf, '<div class="signature-heading">'), strpos($pdf, '<div class="signature-qr-box">'));
         $this->assertGreaterThan(strpos($pdf, '<div class="signature-qr-box">'), strpos($pdf, '<div class="signature-identity">'));
         $this->assertGreaterThan(strpos($pdf, 'B. {{ $report[\'cross_title\'] }}'), strpos($pdf, '<table class="signature-wrap">'));

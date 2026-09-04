@@ -51,6 +51,42 @@
         <div class="row">
             <div class="col-sm-12">
                 <div class="the-box">
+                    <h4 class="small-title">Jumlah Lulusan per Jenis Tugas Akhir Berdasarkan Angkatan</h4>
+                    <p class="text-muted">Setiap garis menunjukkan perkembangan jumlah lulusan untuk satu jenis tugas akhir pada setiap angkatan.</p>
+                    <div class="jenis-ta-chart-legend">
+                        @foreach ($jenisTugasAkhirTrendCharts['series'] as $series)
+                            <span style="display: inline-block; margin: 0 14px 8px 0; white-space: nowrap;">
+                                <span style="background: {{ $series['color'] }}; display: inline-block; height: 9px; margin-right: 5px; width: 20px;"></span>
+                                <strong>{{ $series['code'] }}</strong>
+                            </span>
+                        @endforeach
+                    </div>
+                    <div id="report-jenis-ta-angkatan" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="the-box">
+                    <h4 class="small-title">Jumlah Lulusan per Jenis Tugas Akhir Berdasarkan Tahun Ajaran</h4>
+                    <p class="text-muted">Setiap garis menunjukkan perkembangan jumlah lulusan untuk satu jenis tugas akhir pada setiap tahun ajaran.</p>
+                    <div class="jenis-ta-chart-legend">
+                        @foreach ($jenisTugasAkhirTrendCharts['series'] as $series)
+                            <span style="display: inline-block; margin: 0 14px 8px 0; white-space: nowrap;">
+                                <span style="background: {{ $series['color'] }}; display: inline-block; height: 9px; margin-right: 5px; width: 20px;"></span>
+                                <strong>{{ $series['code'] }}</strong>
+                            </span>
+                        @endforeach
+                    </div>
+                    <div id="report-jenis-ta-tahun-ajaran" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="the-box">
                     <h4 class="small-title">
                         Mahasiswa Aktif Lebih dari Dua Tahun sejak SK Pembimbing
                         <span class="label label-danger">{{ $mahasiswaMelewatiDuaTahunSk->count() }}</span>
@@ -231,6 +267,7 @@
 <script>
     const statusBimbinganChart = {!! json_encode($statusBimbinganChart) !!};
     const topikStatusChart = {!! json_encode($topikStatusChart) !!};
+    const jenisTugasAkhirTrendCharts = {!! json_encode($jenisTugasAkhirTrendCharts) !!};
     const dosenPembimbingChart = {!! json_encode($dosenPembimbingChart) !!};
     const lamaBimbinganChart = {!! json_encode($lamaBimbinganChart) !!};
     const periodePesertaChart = {!! json_encode($periodePesertaChart) !!};
@@ -264,6 +301,34 @@
             }
         });
     };
+
+    const renderJenisTugasAkhirLine = (id, data) => {
+        const series = jenisTugasAkhirTrendCharts.series || [];
+        const ykeys = series.map(item => item.key);
+
+        if (!hasSeriesData(data, ykeys)) {
+            renderNoData(id, 'Belum ada data lulusan berdasarkan jenis tugas akhir');
+            return;
+        }
+
+        Morris.Line({
+            element: id,
+            data: data,
+            xkey: 'period',
+            ykeys: ykeys,
+            labels: series.map(item => item.code),
+            lineColors: series.map(item => item.color),
+            pointFillColors: series.map(item => item.color),
+            parseTime: false,
+            smooth: false,
+            xLabelAngle: 35,
+            hideHover: 'auto',
+            resize: true
+        });
+    };
+
+    renderJenisTugasAkhirLine('report-jenis-ta-angkatan', jenisTugasAkhirTrendCharts.by_cohort || []);
+    renderJenisTugasAkhirLine('report-jenis-ta-tahun-ajaran', jenisTugasAkhirTrendCharts.by_academic_year || []);
 
     if (hasSeriesData(dosenPembimbingChart, ['aktif', 'lulus'])) {
         Morris.Bar({

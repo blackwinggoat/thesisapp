@@ -3352,6 +3352,20 @@ class Prodi extends Controller
 
         $reportWarnings = [];
 
+        $jenisTugasAkhirTrendCharts = $this->safeReportSection(
+            'persebaran_jenis_tugas_akhir_dashboard',
+            function () use ($reportContext) {
+                if (!in_array($reportContext['nim_prefix'], ['130', '131'], true)) {
+                    return ['series' => [], 'by_cohort' => [], 'by_academic_year' => []];
+                }
+
+                return app(ProdiJenisTugasAkhirReportService::class)
+                    ->buildTrendCharts($reportContext['nim_prefix']);
+            },
+            ['series' => [], 'by_cohort' => [], 'by_academic_year' => []],
+            $reportWarnings
+        );
+
         $statusCounts = $this->safeReportSection(
             'status_bimbingan',
             function () use ($nimLike) {
@@ -3799,6 +3813,7 @@ class Prodi extends Controller
             'reportWarnings',
             'summaryCards',
             'queueCards',
+            'jenisTugasAkhirTrendCharts',
             'statusBimbinganChart',
             'topikStatusChart',
             'bidangIlmuChart',
@@ -4150,6 +4165,7 @@ class Prodi extends Controller
         $scope = $this->getProdiScope();
 
         return [
+            'nim_prefix' => $scope['nim_prefix'],
             'nim_like' => $scope['nim_like'],
             'status_prodi' => $scope['status_prodi'],
             'label' => $scope['label'],

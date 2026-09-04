@@ -27,5 +27,14 @@ class ProdiReportMenuTest extends TestCase
         $this->assertStringContainsString('Download Excel', $view);
         $this->assertStringContainsString('Persebaran Jenis TA', $sidebar);
         $this->assertStringContainsString("route('prodi.report_jenis_tugas_akhir')", $sidebar);
+        $this->assertStringContainsString('buildTrendCharts(', $controller);
+
+        $dashboard = file_get_contents(
+            __DIR__ . '/../../resources/views/tugasakhir/prodi/report.blade.php'
+        );
+        $this->assertStringContainsString('report-jenis-ta-angkatan', $dashboard);
+        $this->assertStringContainsString('report-jenis-ta-tahun-ajaran', $dashboard);
+        $this->assertSame(2, substr_count($dashboard, 'renderJenisTugasAkhirLine('));
+        $this->assertStringContainsString('Morris.Line({', $dashboard);
     }
 }

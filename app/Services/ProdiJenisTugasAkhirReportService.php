@@ -23,6 +23,34 @@ class ProdiJenisTugasAkhirReportService
         return $report;
     }
 
+    public function buildTrendCharts($nimPrefix)
+    {
+        return $this->aggregateTrendCharts($this->loadGraduatedStudents($nimPrefix));
+    }
+
+    public function aggregateTrendCharts($rows)
+    {
+        $rows = collect($rows)->map(function ($row) {
+            return is_array($row) ? $row : (array) $row;
+        })->values();
+        $typeColumns = $this->buildTypeColumns($rows);
+        $colors = ['#16794a', '#2563a8', '#b7791f', '#b8325a', '#0f766e', '#6b46a5', '#4b5563'];
+        $series = $typeColumns->values()->map(function ($type, $index) use ($colors) {
+            return [
+                'key' => 'jenis_' . $index,
+                'code' => $type['code'],
+                'description' => $type['description'],
+                'color' => $colors[$index % count($colors)],
+            ];
+        });
+
+        return [
+            'series' => $series->all(),
+            'by_cohort' => $this->buildTrendRows($rows, 'angkatan', 'angkatan', $series)->all(),
+            'by_academic_year' => $this->buildTrendRows($rows, 'tahun_ajaran', 'tahun_ajaran', $series)->all(),
+        ];
+    }
+
     public function aggregate($rows, $programStudi, $mode = 'tahun_ajaran', $selectedPeriod = null)
     {
         $mode = in_array($mode, ['tahun_ajaran', 'angkatan'], true) ? $mode : 'tahun_ajaran';
@@ -50,16 +78,7 @@ class ProdiJenisTugasAkhirReportService
             ]);
         })->values();
 
-        $typeColumns = $rows->groupBy(function ($row) {
-            return (string) ($row['jenis_code'] ?? 'TA-SM');
-        })->map(function ($typeRows, $code) {
-            $first = $typeRows->first();
-
-            return [
-                'code' => $code,
-                'description' => $first['jenis_description'] ?? $code,
-            ];
-        })->sortKeys()->values();
+        $typeColumns = $this->buildTypeColumns($rows);
 
         $totalSelected = $selectedRows->count();
         $distribution = $typeColumns->map(function ($type, $index) use ($selectedRows, $totalSelected) {
@@ -338,6 +357,46 @@ class ProdiJenisTugasAkhirReportService
                 'total' => $total,
                 'counts' => $counts,
             ];
+        })->values();
+    }
+
+    protected function buildTypeColumns($rows)
+    {
+        return collect($rows)->groupBy(function ($row) {
+            return (string) ($row['jenis_code'] ?? 'TA-SM');
+        })->map(function ($typeRows, $code) {
+            $first = $typeRows->first();
+
+            return [
+                'code' => $code,
+                'description' => $first['jenis_description'] ?? $code,
+            ];
+        })->sortKeys()->values();
+    }
+
+    protected function buildTrendRows($rows, $periodKey, $mode, $series)
+    {
+        $periods = $this->sortPeriods(
+            collect($rows)->pluck($periodKey)->filter(function ($period) {
+                return (string) $period !== 'Tidak diketahui';
+            })->unique()->values()->all(),
+            $mode
+        );
+
+        return collect(array_reverse($periods))->map(function ($period) use ($rows, $periodKey, $series) {
+            $periodRows = collect($rows)->filter(function ($row) use ($periodKey, $period) {
+                return (string) ($row[$periodKey] ?? '') === (string) $period;
+            });
+            $point = [
+                'period' => (string) $period,
+                'total' => $periodRows->count(),
+            ];
+
+            foreach ($series as $item) {
+                $point[$item['key']] = $periodRows->where('jenis_code', $item['code'])->count();
+            }
+
+            return $point;
         })->values();
     }
 
