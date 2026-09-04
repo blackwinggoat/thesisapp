@@ -34,6 +34,10 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringNotContainsString('Perbandingan Seluruh', $web);
         $this->assertStringContainsString("\$report['cross_title']", $web);
         $this->assertStringContainsString("\$report['cross_distribution']", $web);
+        $this->assertStringContainsString("\$report['summary']['context_count']", $web);
+        $this->assertStringContainsString("\$report['summary']['context_label']", $web);
+        $this->assertStringNotContainsString('Total lulusan seluruh periode', $web);
+        $this->assertStringNotContainsString("\$report['summary']['total_all_periods']", $web);
         $this->assertStringNotContainsString('Daftar Mahasiswa Lulus', $web);
         $this->assertStringNotContainsString("\$row['nim']", $web);
         $this->assertStringNotContainsString("\$row['nama']", $web);
@@ -49,6 +53,10 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringNotContainsString('Perbandingan Seluruh', $pdf);
         $this->assertStringNotContainsString("\$report['comparison']", $pdf);
         $this->assertStringContainsString("\$report['cross_distribution']", $pdf);
+        $this->assertStringContainsString("\$report['summary']['context_count']", $pdf);
+        $this->assertStringContainsString("\$report['summary']['context_label']", $pdf);
+        $this->assertStringNotContainsString('Total lulusan seluruh periode', $pdf);
+        $this->assertStringNotContainsString("\$report['summary']['total_all_periods']", $pdf);
         $this->assertStringNotContainsString('Sidik laporan:', $pdf);
         $this->assertStringNotContainsString('class="footer"', $pdf);
         $this->assertSame(1, substr_count($pdf, '<table class="signature-wrap">'));

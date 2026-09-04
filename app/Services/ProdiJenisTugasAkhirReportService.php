@@ -11,8 +11,16 @@ class ProdiJenisTugasAkhirReportService
     public function build($nimPrefix, $programStudi, $mode = 'tahun_ajaran', $selectedPeriod = null)
     {
         $rows = $this->loadGraduatedStudents($nimPrefix);
+        $report = $this->aggregate($rows, $programStudi, $mode, $selectedPeriod);
 
-        return $this->aggregate($rows, $programStudi, $mode, $selectedPeriod);
+        if ($report['mode'] === 'angkatan') {
+            $report['summary']['context_count'] = $this->loadCohortStudentCount(
+                $nimPrefix,
+                $report['selected_period']
+            );
+        }
+
+        return $report;
     }
 
     public function aggregate($rows, $programStudi, $mode = 'tahun_ajaran', $selectedPeriod = null)
@@ -95,6 +103,12 @@ class ProdiJenisTugasAkhirReportService
         })->all();
         $defaultTypeCount = $selectedRows->where('jenis_default', true)->count();
         $generatedAt = Carbon::now();
+        $contextCount = $mode === 'tahun_ajaran'
+            ? $crossDistribution->count()
+            : $totalSelected;
+        $contextLabel = $mode === 'tahun_ajaran'
+            ? 'Angkatan mengikuti ujian'
+            : 'Total mahasiswa Angkatan ' . ($selectedPeriod ?: '-');
 
         $report = [
             'program_studi' => $programStudi,
@@ -112,10 +126,11 @@ class ProdiJenisTugasAkhirReportService
             'generated_at' => $generatedAt,
             'summary' => [
                 'total' => $totalSelected,
-                'total_all_periods' => $rows->count(),
                 'type_count' => $distribution->count(),
                 'dominant_code' => $dominant['code'] ?? '-',
                 'dominant_percentage' => $dominant['percentage'] ?? 0,
+                'context_count' => $contextCount,
+                'context_label' => $contextLabel,
                 'fallback_date_count' => $fallbackDateCount,
                 'default_type_count' => $defaultTypeCount,
                 'date_source_counts' => $dateSourceCounts,
@@ -264,6 +279,19 @@ class ProdiJenisTugasAkhirReportService
                 ];
             })
             ->values();
+    }
+
+    protected function loadCohortStudentCount($nimPrefix, $cohort)
+    {
+        if (!preg_match('/^\d{3}$/', (string) $nimPrefix)
+            || !preg_match('/^\d{4}$/', (string) $cohort)) {
+            return 0;
+        }
+
+        return DB::table('t_mst_mahasiswa')
+            ->where('C_NPM', 'LIKE', $nimPrefix . $cohort . '%')
+            ->distinct()
+            ->count('C_NPM');
     }
 
     protected function sortPeriods(array $periods, $mode)

@@ -27,6 +27,9 @@ class ProdiJenisTugasAkhirReportServiceTest extends TestCase
         $this->assertSame(1, $report['summary']['default_type_count']);
         $this->assertSame(3, $report['summary']['date_source_counts']['jadwal_ujian']);
         $this->assertSame(1, $report['summary']['date_source_counts']['master_mahasiswa']);
+        $this->assertSame(1, $report['summary']['context_count']);
+        $this->assertSame('Angkatan mengikuti ujian', $report['summary']['context_label']);
+        $this->assertArrayNotHasKey('total_all_periods', $report['summary']);
         $this->assertSame('Angkatan', $report['cross_dimension_label']);
         $this->assertCount(1, $report['cross_distribution']);
         $this->assertSame('2022', $report['cross_distribution'][0]['period']);
@@ -48,6 +51,8 @@ class ProdiJenisTugasAkhirReportServiceTest extends TestCase
         $this->assertSame('Angkatan', $report['mode_label']);
         $this->assertSame('2022', $report['selected_period']);
         $this->assertSame(4, $report['summary']['total']);
+        $this->assertSame(4, $report['summary']['context_count']);
+        $this->assertSame('Total mahasiswa Angkatan 2022', $report['summary']['context_label']);
         $this->assertCount(2, $report['distribution']);
         $this->assertEquals(100.0, array_sum(array_column($report['distribution'], 'percentage')));
         $this->assertSame('Tahun Ajaran', $report['cross_dimension_label']);

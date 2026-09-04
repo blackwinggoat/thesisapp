@@ -92,7 +92,7 @@
             <td><strong>{{ number_format($report['summary']['total']) }}</strong>Mahasiswa lulus</td>
             <td><strong>{{ number_format($report['summary']['type_count']) }}</strong>Jenis tugas akhir</td>
             <td><strong>{{ $report['summary']['dominant_code'] }}</strong>Jenis terbanyak</td>
-            <td><strong>{{ number_format($report['summary']['dominant_percentage'], 2, ',', '.') }}%</strong>Persentase terbesar</td>
+            <td><strong>{{ number_format($report['summary']['context_count']) }}</strong>{{ $report['summary']['context_label'] }}</td>
         </tr>
     </table>
 

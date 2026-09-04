@@ -118,8 +118,8 @@
                     <span class="label-text">Jenis terbanyak - {{ number_format($report['summary']['dominant_percentage'], 2, ',', '.') }}%</span>
                 </div>
                 <div class="jenis-ta-summary-item">
-                    <span class="value">{{ number_format($report['summary']['total_all_periods']) }}</span>
-                    <span class="label-text">Total lulusan seluruh periode</span>
+                    <span class="value">{{ number_format($report['summary']['context_count']) }}</span>
+                    <span class="label-text">{{ $report['summary']['context_label'] }}</span>
                 </div>
             </div>
 
