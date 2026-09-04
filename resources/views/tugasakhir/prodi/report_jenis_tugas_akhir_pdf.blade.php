@@ -24,6 +24,7 @@
         .summary td { border: 1px solid #aeb8c4; padding: 5px 8px; text-align: center; vertical-align: middle; width: 25%; }
         .summary strong { display: block; font-size: 13pt; line-height: 1; margin-bottom: 2px; }
         .section-title { background: #354052; color: #fff; font-size: 9pt; font-weight: bold; margin: 7px 0 0; padding: 4px 7px; }
+        .section-note { color: #374151; font-size: 6.8pt; line-height: 1.2; padding: 3px 1px; }
         .comparison-page-break { page-break-before: always; }
         table.report-table { border-collapse: collapse; font-size: 7.3pt; width: 100%; }
         .report-table thead { display: table-header-group; }
@@ -127,7 +128,37 @@
         </tbody>
     </table>
 
-    <div class="section-title{{ count($report['comparison']) > 10 ? ' comparison-page-break' : '' }}">B. Perbandingan Seluruh {{ $report['mode_label'] }}</div>
+    <div class="section-title{{ count($report['cross_distribution']) > 10 ? ' comparison-page-break' : '' }}">B. {{ $report['cross_title'] }}</div>
+    <div class="section-note">{{ $report['cross_note'] }} Nilai pada setiap sel menunjukkan jumlah mahasiswa dan persentasenya.</div>
+    <table class="report-table comparison-table">
+        <thead>
+            <tr>
+                <th>{{ $report['cross_dimension_label'] }}</th>
+                @foreach ($report['type_columns'] as $type)
+                    <th>{{ $type['code'] }}<br><span style="font-weight: normal;">Jumlah / %</span></th>
+                @endforeach
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($report['cross_distribution'] as $period)
+                <tr>
+                    <td class="center"><strong>{{ $period['period'] }}</strong></td>
+                    @foreach ($report['type_columns'] as $type)
+                        <td class="center nowrap">
+                            {{ number_format($period['counts'][$type['code']]['count']) }} /
+                            {{ number_format($period['counts'][$type['code']]['percentage'], 2, ',', '.') }}%
+                        </td>
+                    @endforeach
+                    <td class="center"><strong>{{ number_format($period['total']) }}</strong></td>
+                </tr>
+            @empty
+                <tr><td colspan="{{ count($report['type_columns']) + 2 }}" class="center">Belum ada data persebaran silang.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <div class="section-title{{ count($report['comparison']) > 10 || count($report['cross_distribution']) > 10 ? ' comparison-page-break' : '' }}">C. Perbandingan Seluruh {{ $report['mode_label'] }}</div>
     <table class="report-table comparison-table">
         <thead>
             <tr>

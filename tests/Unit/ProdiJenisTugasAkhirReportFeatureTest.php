@@ -32,6 +32,8 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringContainsString('Tahun Ajaran', $web);
         $this->assertStringContainsString('Angkatan', $web);
         $this->assertStringContainsString('Perbandingan Seluruh', $web);
+        $this->assertStringContainsString("\$report['cross_title']", $web);
+        $this->assertStringContainsString("\$report['cross_distribution']", $web);
         $this->assertStringNotContainsString('Daftar Mahasiswa Lulus', $web);
         $this->assertStringNotContainsString("\$row['nim']", $web);
         $this->assertStringNotContainsString("\$row['nama']", $web);
@@ -44,6 +46,9 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringNotContainsString("\$row['nim']", $pdf);
         $this->assertStringNotContainsString("\$row['nama']", $pdf);
         $this->assertStringContainsString("count(\$report['comparison']) > 10", $pdf);
+        $this->assertStringContainsString('B. {{ $report[\'cross_title\'] }}', $pdf);
+        $this->assertStringContainsString('C. Perbandingan Seluruh', $pdf);
+        $this->assertStringContainsString("\$report['cross_distribution']", $pdf);
         $this->assertSame(1, substr_count($pdf, '<table class="signature-wrap">'));
         $this->assertStringContainsString('<div class="signature-heading">', $pdf);
         $this->assertStringContainsString('<div class="signature-qr-box">', $pdf);

@@ -27,6 +27,12 @@ class ProdiJenisTugasAkhirReportServiceTest extends TestCase
         $this->assertSame(1, $report['summary']['default_type_count']);
         $this->assertSame(3, $report['summary']['date_source_counts']['jadwal_ujian']);
         $this->assertSame(1, $report['summary']['date_source_counts']['master_mahasiswa']);
+        $this->assertSame('Angkatan', $report['cross_dimension_label']);
+        $this->assertCount(1, $report['cross_distribution']);
+        $this->assertSame('2022', $report['cross_distribution'][0]['period']);
+        $this->assertSame(4, $report['cross_distribution'][0]['total']);
+        $this->assertSame(3, $report['cross_distribution'][0]['counts']['TA-SM']['count']);
+        $this->assertEquals(75.0, $report['cross_distribution'][0]['counts']['TA-SM']['percentage']);
     }
 
     public function testItCalculatesDistributionByCohort()
@@ -43,6 +49,10 @@ class ProdiJenisTugasAkhirReportServiceTest extends TestCase
         $this->assertSame(4, $report['summary']['total']);
         $this->assertCount(2, $report['distribution']);
         $this->assertEquals(100.0, array_sum(array_column($report['distribution'], 'percentage')));
+        $this->assertSame('Tahun Ajaran', $report['cross_dimension_label']);
+        $this->assertCount(1, $report['cross_distribution']);
+        $this->assertSame('2025/2026', $report['cross_distribution'][0]['period']);
+        $this->assertSame(4, $report['cross_distribution'][0]['total']);
     }
 
     public function testVerificationTokenContainsOnlyReportMetadataAndRejectsTampering()

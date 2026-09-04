@@ -66,27 +66,26 @@ class ProdiJenisTugasAkhirReportService
             return $type['count'] > 0;
         })->sortByDesc('count')->values();
 
-        $comparison = collect($periodOptions)->map(function ($period) use ($rows, $periodKey, $typeColumns) {
-            $periodRows = $rows->filter(function ($row) use ($periodKey, $period) {
-                return (string) ($row[$periodKey] ?? '') === (string) $period;
-            });
-            $total = $periodRows->count();
-            $counts = [];
-
-            foreach ($typeColumns as $type) {
-                $count = $periodRows->where('jenis_code', $type['code'])->count();
-                $counts[$type['code']] = [
-                    'count' => $count,
-                    'percentage' => $total > 0 ? round(($count / $total) * 100, 2) : 0,
-                ];
-            }
-
-            return [
-                'period' => $period,
-                'total' => $total,
-                'counts' => $counts,
-            ];
-        })->values();
+        $comparison = $this->buildPeriodMatrix($rows, $periodKey, $periodOptions, $typeColumns);
+        $crossPeriodKey = $mode === 'angkatan' ? 'tahun_ajaran' : 'angkatan';
+        $crossMode = $mode === 'angkatan' ? 'tahun_ajaran' : 'angkatan';
+        $crossLabel = $mode === 'angkatan' ? 'Tahun Ajaran' : 'Angkatan';
+        $crossPeriodOptions = $this->sortPeriods(
+            $selectedRows->pluck($crossPeriodKey)->filter()->unique()->values()->all(),
+            $crossMode
+        );
+        $crossDistribution = $this->buildPeriodMatrix(
+            $selectedRows,
+            $crossPeriodKey,
+            $crossPeriodOptions,
+            $typeColumns
+        );
+        $crossTitle = $mode === 'angkatan'
+            ? 'Persebaran Jenis Tugas Akhir Menurut Tahun Ajaran untuk Angkatan ' . ($selectedPeriod ?: '-')
+            : 'Persebaran Jenis Tugas Akhir Menurut Angkatan pada Tahun Ajaran ' . ($selectedPeriod ?: '-');
+        $crossNote = $mode === 'angkatan'
+            ? 'Persentase setiap baris dihitung terhadap mahasiswa angkatan tersebut yang diuji pada tahun ajaran yang sama.'
+            : 'Persentase setiap baris dihitung terhadap mahasiswa yang diuji pada tahun ajaran terpilih dari angkatan yang sama.';
 
         $dominant = $distribution->first();
         $fallbackDateCount = $selectedRows->where('tanggal_source', 'tidak_diketahui')->count();
@@ -107,6 +106,10 @@ class ProdiJenisTugasAkhirReportService
             'type_columns' => $typeColumns->all(),
             'distribution' => $distribution->all(),
             'comparison' => $comparison->all(),
+            'cross_distribution' => $crossDistribution->all(),
+            'cross_dimension_label' => $crossLabel,
+            'cross_title' => $crossTitle,
+            'cross_note' => $crossNote,
             'rows' => $selectedRows->all(),
             'generated_at' => $generatedAt,
             'summary' => [
@@ -285,6 +288,31 @@ class ProdiJenisTugasAkhirReportService
         });
 
         return array_values($periods);
+    }
+
+    protected function buildPeriodMatrix($rows, $periodKey, array $periods, $typeColumns)
+    {
+        return collect($periods)->map(function ($period) use ($rows, $periodKey, $typeColumns) {
+            $periodRows = collect($rows)->filter(function ($row) use ($periodKey, $period) {
+                return (string) ($row[$periodKey] ?? '') === (string) $period;
+            });
+            $total = $periodRows->count();
+            $counts = [];
+
+            foreach ($typeColumns as $type) {
+                $count = $periodRows->where('jenis_code', $type['code'])->count();
+                $counts[$type['code']] = [
+                    'count' => $count,
+                    'percentage' => $total > 0 ? round(($count / $total) * 100, 2) : 0,
+                ];
+            }
+
+            return [
+                'period' => $period,
+                'total' => $total,
+                'counts' => $counts,
+            ];
+        })->values();
     }
 
     protected function buildReportHash(array $report)
