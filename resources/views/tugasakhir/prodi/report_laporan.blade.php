@@ -2,12 +2,16 @@
 @section('isi')
 <div class="page-content">
     <div class="container-fluid">
-        <h1 class="page-heading">Pusat Laporan <small>{{ $reportContext['label'] }}</small></h1>
+        <h1 class="page-heading">{{ $reportPageTitle }} <small>{{ $reportContext['label'] }}</small></h1>
 
         <ol class="breadcrumb default square rsaquo sm">
             <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
-            <li><a href="{{ url('prodi/report') }}">Report</a></li>
-            <li class="active">Pusat Laporan</li>
+            @if ($reportDashboardUrl)
+                <li><a href="{{ $reportDashboardUrl }}">Report</a></li>
+            @else
+                <li>Report</li>
+            @endif
+            <li class="active">{{ $reportPageTitle }}</li>
         </ol>
 
         @if (!empty($reportWarnings))
@@ -26,7 +30,7 @@
                     </p>
                 </div>
                 <div class="col-sm-4">
-                    <form method="get" action="{{ url('prodi/report/laporan') }}" class="form-inline text-right">
+                    <form method="get" action="{{ $reportActionUrl }}" class="form-inline text-right">
                         <label for="tahun-ajaran" class="sr-only">Tahun Ajaran</label>
                         <select id="tahun-ajaran" name="tahun_ajaran" class="form-control" onchange="this.form.submit()">
                             @forelse ($bimbinganReport['period_options'] as $period)
@@ -39,7 +43,7 @@
                                 </option>
                             @endforelse
                         </select>
-                        <a href="{{ url('prodi/report/laporan/excel') . '?tahun_ajaran=' . urlencode($bimbinganReport['selected_year']) }}"
+                        <a href="{{ $reportExcelUrl . '?tahun_ajaran=' . urlencode($bimbinganReport['selected_year']) }}"
                            class="btn btn-success" title="Download Excel">
                             <i class="fa fa-download"></i> Excel
                         </a>
@@ -119,7 +123,7 @@
 
             <p class="text-muted" style="margin: 15px 0 0;">
                 Distribusi dihitung dari SK pembimbing: Awal September-Februari dan Akhir Maret-Agustus.
-                Laporan menampilkan seluruh program studi untuk akun Prodi.
+                Laporan menampilkan Teknik Informatika dan Sistem Informasi secara terpisah pada setiap kolom.
             </p>
         </div>
     </div>

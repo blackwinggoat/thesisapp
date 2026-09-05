@@ -39,4 +39,23 @@ class WakilDekanJenisTugasAkhirReportTest extends TestCase
         $this->assertStringContainsString('Filter pada satu program studi tidak mengubah data program studi lainnya.', $view);
         $this->assertStringNotContainsString('Total gabungan', $view);
     }
+
+    public function testWakilDekanMenuExposesGuidanceDistributionReportAndExcel()
+    {
+        $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
+        $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/Prodi.php');
+        $sidebar = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/layouts/sidebarwakildekan.blade.php');
+        $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/report_laporan.blade.php');
+
+        $this->assertStringContainsString("/wakildekan/report/distribusi-bimbingan'", $routes);
+        $this->assertStringContainsString("/wakildekan/report/distribusi-bimbingan/excel'", $routes);
+        $this->assertStringContainsString("name('wakildekan.report_distribusi_bimbingan')", $routes);
+        $this->assertStringContainsString("name('wakildekan.report_distribusi_bimbingan_excel')", $routes);
+        $this->assertStringContainsString("route('wakildekan.report_distribusi_bimbingan')", $sidebar);
+        $this->assertStringContainsString('Distribusi Bimbingan', $sidebar);
+        $this->assertStringContainsString("optional(\$request->route())->getName()", $controller);
+        $this->assertStringContainsString("\$reportActionUrl", $view);
+        $this->assertStringContainsString("\$reportExcelUrl", $view);
+        $this->assertStringContainsString('Teknik Informatika dan Sistem Informasi secara terpisah', $view);
+    }
 }

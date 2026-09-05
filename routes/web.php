@@ -131,8 +131,8 @@ Route::group(['middleware' => 'kaprodi'], function () {
     //KA-PRODI
     Route::get('/prodi/dosen_pembimbing', 'Prodi@dosen_pembimbing');
     Route::get('/prodi/report', 'Prodi@report');
-    Route::get('/prodi/report/laporan', 'Prodi@report_laporan');
-    Route::get('/prodi/report/laporan/excel', 'Prodi@report_laporan_excel');
+    Route::get('/prodi/report/laporan', 'Prodi@report_laporan')->name('prodi.report_distribusi_bimbingan');
+    Route::get('/prodi/report/laporan/excel', 'Prodi@report_laporan_excel')->name('prodi.report_distribusi_bimbingan_excel');
     Route::get('/prodi/report/jenis-tugas-akhir', 'Prodi@report_jenis_tugas_akhir')->name('prodi.report_jenis_tugas_akhir');
     Route::get('/prodi/report/jenis-tugas-akhir/pdf', 'Prodi@report_jenis_tugas_akhir_pdf')->name('prodi.report_jenis_tugas_akhir_pdf');
     Route::get('/prodi/laporan_mahasiswa', 'Prodi@laporan_mahasiswa');
@@ -430,6 +430,10 @@ Route::group(['middleware' => 'wakil_dekan'], function () {
         ->name('wakildekan.report_jenis_tugas_akhir');
     Route::get('/wakildekan/report/jenis-tugas-akhir/pdf', 'WakilDekan@report_jenis_tugas_akhir_pdf')
         ->name('wakildekan.report_jenis_tugas_akhir_pdf');
+    Route::get('/wakildekan/report/distribusi-bimbingan', 'Prodi@report_laporan')
+        ->name('wakildekan.report_distribusi_bimbingan');
+    Route::get('/wakildekan/report/distribusi-bimbingan/excel', 'Prodi@report_laporan_excel')
+        ->name('wakildekan.report_distribusi_bimbingan_excel');
 
     Route::get('/wakildekan/detail_status_bimbingan_mahasiswa/{status}/', 'WakilDekan@detail_status_bimbingan_mahasiswa');
     Route::get('/wakildekan/detail_status_bimbingan_mahasiswa', 'WakilDekan@tampilDetailStatusBimbinganDenganFilterTanggal')

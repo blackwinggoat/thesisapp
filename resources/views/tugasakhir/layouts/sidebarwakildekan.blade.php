@@ -50,6 +50,7 @@
             </a>
             <ul class="submenu">
                 <li><a href="{{ route('wakildekan.report_jenis_tugas_akhir') }}">Persebaran Jenis TA</a></li>
+                <li><a href="{{ route('wakildekan.report_distribusi_bimbingan') }}">Distribusi Bimbingan</a></li>
             </ul>
         </li>
     </ul>

@@ -3836,6 +3836,15 @@ class Prodi extends Controller
     {
         $reportContext = $this->getReportContext();
         $reportContext['label'] = 'Semua Program Studi';
+        $isWakilDekanReport = optional($request->route())->getName() === 'wakildekan.report_distribusi_bimbingan';
+        $reportActionUrl = $isWakilDekanReport
+            ? route('wakildekan.report_distribusi_bimbingan')
+            : route('prodi.report_distribusi_bimbingan');
+        $reportExcelUrl = $isWakilDekanReport
+            ? route('wakildekan.report_distribusi_bimbingan_excel')
+            : route('prodi.report_distribusi_bimbingan_excel');
+        $reportDashboardUrl = $isWakilDekanReport ? null : url('prodi/report');
+        $reportPageTitle = $isWakilDekanReport ? 'Distribusi Bimbingan' : 'Pusat Laporan';
         $reportWarnings = [];
         $bimbinganReport = $this->safeReportSection(
             'distribusi_bimbingan_utama',
@@ -3852,7 +3861,11 @@ class Prodi extends Controller
         return view('tugasakhir.prodi.report_laporan', compact(
             'reportContext',
             'reportWarnings',
-            'bimbinganReport'
+            'bimbinganReport',
+            'reportActionUrl',
+            'reportExcelUrl',
+            'reportDashboardUrl',
+            'reportPageTitle'
         ));
     }
 

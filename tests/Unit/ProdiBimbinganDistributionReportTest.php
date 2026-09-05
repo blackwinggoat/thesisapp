@@ -23,6 +23,6 @@ class ProdiBimbinganDistributionReportTest extends TestCase
         $this->assertStringContainsString('Akhir', $view);
         $this->assertStringContainsString('total_mahasiswa_by_program', $controller);
         $this->assertStringContainsString('Total Penugasan Mahasiswa -', $view);
-        $this->assertStringContainsString('laporan/excel', $view);
+        $this->assertStringContainsString('$reportExcelUrl', $view);
     }
 }
