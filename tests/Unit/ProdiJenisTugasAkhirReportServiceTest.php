@@ -114,6 +114,34 @@ class ProdiJenisTugasAkhirReportServiceTest extends TestCase
         $this->assertSame(4, $charts['by_academic_year'][1]['total']);
     }
 
+    public function testAggregateIncludesTheSameFullTrendChartsForBothReportModes()
+    {
+        $service = new ProdiJenisTugasAkhirReportService();
+        $academicYearReport = $service->aggregate(
+            $this->rows(),
+            'Teknik Informatika',
+            'tahun_ajaran',
+            '2025/2026'
+        );
+        $cohortReport = $service->aggregate(
+            $this->rows(),
+            'Teknik Informatika',
+            'angkatan',
+            '2022'
+        );
+
+        $this->assertArrayHasKey('trend_charts', $academicYearReport);
+        $this->assertSame($academicYearReport['trend_charts'], $cohortReport['trend_charts']);
+        $this->assertSame(
+            ['2021', '2022'],
+            array_column($academicYearReport['trend_charts']['by_cohort'], 'period')
+        );
+        $this->assertSame(
+            ['2024/2025', '2025/2026'],
+            array_column($academicYearReport['trend_charts']['by_academic_year'], 'period')
+        );
+    }
+
     private function rows()
     {
         return [

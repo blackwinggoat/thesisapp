@@ -156,6 +156,7 @@ class ProdiJenisTugasAkhirReportService
             ],
         ];
         $report['report_hash'] = $this->buildReportHash($report);
+        $report['trend_charts'] = $this->aggregateTrendCharts($rows);
 
         return $report;
     }

@@ -36,6 +36,15 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringContainsString("\$report['cross_distribution']", $web);
         $this->assertStringContainsString("\$report['summary']['context_count']", $web);
         $this->assertStringContainsString("\$report['summary']['context_label']", $web);
+        $this->assertStringContainsString('jenis-ta-trend-angkatan', $web);
+        $this->assertStringContainsString('jenis-ta-trend-tahun-ajaran', $web);
+        $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr))', $web);
+        $this->assertStringContainsString("@json(\$report['trend_charts'])", $web);
+        $this->assertSame(2, substr_count($web, 'renderJenisTugasAkhirTrend('));
+        $this->assertLessThan(
+            strpos($web, '<div class="jenis-ta-summary">'),
+            strpos($web, '<div class="jenis-ta-trends">')
+        );
         $this->assertStringNotContainsString('Total lulusan seluruh periode', $web);
         $this->assertStringNotContainsString("\$report['summary']['total_all_periods']", $web);
         $this->assertStringNotContainsString('Daftar Mahasiswa Lulus', $web);

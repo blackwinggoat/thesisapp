@@ -10,6 +10,14 @@
     .jenis-ta-summary-item { background: #fff; border: 1px solid #d9e2ec; border-radius: 6px; min-height: 92px; padding: 15px; }
     .jenis-ta-summary-item .value { color: #102a43; display: block; font-size: 25px; font-weight: 700; line-height: 1.1; }
     .jenis-ta-summary-item .label-text { color: #52606d; display: block; font-size: 12px; margin-top: 7px; }
+    .jenis-ta-trends { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 18px 0; }
+    .jenis-ta-trend-panel { border: 1px solid #d9e2ec; border-radius: 6px; min-width: 0; padding: 15px; }
+    .jenis-ta-trend-panel h3 { color: #243b53; font-size: 15px; line-height: 1.35; margin: 0 0 6px; }
+    .jenis-ta-trend-note { color: #627d98; font-size: 12px; margin: 0 0 12px; min-height: 34px; }
+    .jenis-ta-trend-legend { min-height: 50px; }
+    .jenis-ta-trend-legend-item { display: inline-block; margin: 0 10px 7px 0; white-space: nowrap; }
+    .jenis-ta-trend-swatch { display: inline-block; height: 8px; margin-right: 4px; width: 18px; }
+    .jenis-ta-trend-chart { height: 330px; }
     .jenis-ta-section { border-top: 1px solid #d9e2ec; margin-top: 24px; padding-top: 20px; }
     .jenis-ta-section h3 { color: #243b53; font-size: 17px; margin: 0 0 6px; }
     .jenis-ta-section-note { color: #627d98; font-size: 12px; margin: 0 0 15px; }
@@ -31,6 +39,7 @@
     .jenis-ta-data-note { background: #fff8e6; border-left: 4px solid #b7791f; color: #674d00; margin-top: 16px; padding: 11px 13px; }
     @media (max-width: 991px) {
         .jenis-ta-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .jenis-ta-trends { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
         .jenis-ta-toolbar { align-items: stretch; display: block; }
@@ -103,6 +112,37 @@
 
                 <button type="submit" class="btn btn-primary"><i class="fa fa-filter"></i> Terapkan</button>
             </form>
+
+            <div class="jenis-ta-trends">
+                <section class="jenis-ta-trend-panel">
+                    <h3>Jumlah Lulusan per Jenis Tugas Akhir Berdasarkan Angkatan</h3>
+                    <p class="jenis-ta-trend-note">Perkembangan seluruh jenis tugas akhir pada setiap angkatan mahasiswa.</p>
+                    <div class="jenis-ta-trend-legend" aria-label="Legenda jenis tugas akhir berdasarkan angkatan">
+                        @foreach ($report['trend_charts']['series'] as $series)
+                            <span class="jenis-ta-trend-legend-item">
+                                <span class="jenis-ta-trend-swatch" style="background: {{ $series['color'] }};"></span>
+                                <strong>{{ $series['code'] }}</strong>
+                            </span>
+                        @endforeach
+                    </div>
+                    <div id="jenis-ta-trend-angkatan" class="jenis-ta-trend-chart" role="img"
+                         aria-label="Grafik jumlah lulusan per jenis tugas akhir berdasarkan angkatan"></div>
+                </section>
+                <section class="jenis-ta-trend-panel">
+                    <h3>Jumlah Lulusan per Jenis Tugas Akhir Berdasarkan Tahun Ajaran</h3>
+                    <p class="jenis-ta-trend-note">Perkembangan seluruh jenis tugas akhir pada setiap tahun ajaran kelulusan.</p>
+                    <div class="jenis-ta-trend-legend" aria-label="Legenda jenis tugas akhir berdasarkan tahun ajaran">
+                        @foreach ($report['trend_charts']['series'] as $series)
+                            <span class="jenis-ta-trend-legend-item">
+                                <span class="jenis-ta-trend-swatch" style="background: {{ $series['color'] }};"></span>
+                                <strong>{{ $series['code'] }}</strong>
+                            </span>
+                        @endforeach
+                    </div>
+                    <div id="jenis-ta-trend-tahun-ajaran" class="jenis-ta-trend-chart" role="img"
+                         aria-label="Grafik jumlah lulusan per jenis tugas akhir berdasarkan tahun ajaran"></div>
+                </section>
+            </div>
 
             <div class="jenis-ta-summary">
                 <div class="jenis-ta-summary-item">
@@ -216,4 +256,52 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('script')
+<script>
+    const jenisTugasAkhirTrendCharts = @json($report['trend_charts']);
+
+    const renderJenisTugasAkhirTrend = (elementId, data) => {
+        const series = jenisTugasAkhirTrendCharts.series || [];
+        const ykeys = series.map(item => item.key);
+        const hasData = Array.isArray(data) && data.some(item =>
+            ykeys.some(key => Number(item[key] || 0) > 0)
+        );
+        const element = document.getElementById(elementId);
+
+        if (!element) {
+            return;
+        }
+
+        if (!hasData) {
+            element.innerHTML = '<div class="text-center text-muted" style="padding-top: 130px;">Belum ada data lulusan berdasarkan jenis tugas akhir.</div>';
+            return;
+        }
+
+        Morris.Line({
+            element: elementId,
+            data: data,
+            xkey: 'period',
+            ykeys: ykeys,
+            labels: series.map(item => item.code),
+            lineColors: series.map(item => item.color),
+            pointFillColors: series.map(item => item.color),
+            parseTime: false,
+            smooth: false,
+            xLabelAngle: 35,
+            hideHover: 'auto',
+            resize: true
+        });
+    };
+
+    renderJenisTugasAkhirTrend(
+        'jenis-ta-trend-angkatan',
+        jenisTugasAkhirTrendCharts.by_cohort || []
+    );
+    renderJenisTugasAkhirTrend(
+        'jenis-ta-trend-tahun-ajaran',
+        jenisTugasAkhirTrendCharts.by_academic_year || []
+    );
+</script>
 @endsection
