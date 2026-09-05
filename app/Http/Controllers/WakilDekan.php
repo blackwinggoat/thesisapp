@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Helper;
+use App\Services\ProdiJenisTugasAkhirReportService;
+use App\Services\ReportTrendChartSvgRenderer;
+use Barryvdh\DomPDF\Facade as PDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Carbon;
@@ -117,5 +121,111 @@ class WakilDekan extends Controller
         } catch (Exception $exception) {
             return redirect::to('wakildekan/sk_ujian_ta')->with('status', 'error');
         }
+    }
+
+    public function report_jenis_tugas_akhir(Request $request)
+    {
+        $service = app(ProdiJenisTugasAkhirReportService::class);
+        $programStudies = $this->jenisTugasAkhirProgramStudies();
+        $reports = [];
+        $filterState = ['mode' => [], 'periode' => []];
+        $trendPayload = [];
+
+        foreach ($programStudies as $programCode => $scope) {
+            $report = $service->build(
+                $programCode,
+                $scope['program_studi'],
+                $request->input('mode.' . $programCode, 'tahun_ajaran'),
+                $request->input('periode.' . $programCode)
+            );
+
+            $reports[$programCode] = [
+                'scope' => $scope,
+                'report' => $report,
+            ];
+            $filterState['mode'][$programCode] = $report['mode'];
+            $filterState['periode'][$programCode] = $report['selected_period'];
+            $trendPayload[$programCode] = [
+                'charts' => $report['trend_charts'],
+                'active' => [
+                    'by_cohort' => $report['mode'] === 'angkatan' ? $report['selected_period'] : null,
+                    'by_academic_year' => $report['mode'] === 'tahun_ajaran' ? $report['selected_period'] : null,
+                ],
+            ];
+        }
+
+        return view('tugasakhir.wakildekan.report_jenis_tugas_akhir', compact(
+            'reports',
+            'filterState',
+            'trendPayload'
+        ));
+    }
+
+    public function report_jenis_tugas_akhir_pdf(Request $request)
+    {
+        $programStudies = $this->jenisTugasAkhirProgramStudies();
+        $programCode = (string) $request->input('program_studi');
+        if (!isset($programStudies[$programCode])) {
+            abort(404);
+        }
+
+        $scope = $programStudies[$programCode];
+        $service = app(ProdiJenisTugasAkhirReportService::class);
+        $chartRenderer = app(ReportTrendChartSvgRenderer::class);
+        $report = $service->build(
+            $programCode,
+            $scope['program_studi'],
+            $request->input('mode', 'tahun_ajaran'),
+            $request->input('periode')
+        );
+        $trendChartImages = [
+            'by_cohort' => $chartRenderer->render(
+                $report['trend_charts']['by_cohort'],
+                $report['trend_charts']['series'],
+                $report['mode'] === 'angkatan' ? $report['selected_period'] : null
+            ),
+            'by_academic_year' => $chartRenderer->render(
+                $report['trend_charts']['by_academic_year'],
+                $report['trend_charts']['series'],
+                $report['mode'] === 'tahun_ajaran' ? $report['selected_period'] : null
+            ),
+        ];
+        $kaprodi = Helper::getKaprodiByProdiAndTanggal($scope['program_studi'], Carbon::today());
+        $verificationToken = $service->buildVerificationToken($report);
+        $verificationUrl = route('verifikasi_report_jenis_tugas_akhir', ['token' => $verificationToken]);
+        $emailProgramStudi = $programCode === '130'
+            ? 's1.teknik.informatika@umi.ac.id'
+            : 's1.sistem.informasi@umi.ac.id';
+        $safePeriod = preg_replace('/[^0-9A-Za-z-]+/', '-', $report['selected_period']);
+        $filename = 'Laporan-Persebaran-Jenis-TA-'
+            . $programCode . '-'
+            . ($safePeriod ?: date('Ymd')) . '.pdf';
+
+        return PDF::loadView('tugasakhir.prodi.report_jenis_tugas_akhir_pdf', compact(
+            'scope',
+            'report',
+            'trendChartImages',
+            'kaprodi',
+            'verificationUrl',
+            'emailProgramStudi'
+        ))
+            ->setPaper('a4', 'landscape')
+            ->stream($filename);
+    }
+
+    protected function jenisTugasAkhirProgramStudies()
+    {
+        return [
+            '130' => [
+                'nim_prefix' => '130',
+                'program_studi' => 'Teknik Informatika',
+                'can_select_program' => false,
+            ],
+            '131' => [
+                'nim_prefix' => '131',
+                'program_studi' => 'Sistem Informasi',
+                'can_select_program' => false,
+            ],
+        ];
     }
 }

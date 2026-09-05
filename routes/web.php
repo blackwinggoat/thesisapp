@@ -426,6 +426,11 @@ Route::group(['middleware' => 'wakil_dekan'], function () {
     Route::get('/wakildekan/sk_ujian_ta', 'WakilDekan@sk_ujian_ta');
     Route::get('/wakildekan/appove_sk_ujian_ta/{id}', 'WakilDekan@approve_sk_ujian_ta');
 
+    Route::get('/wakildekan/report/jenis-tugas-akhir', 'WakilDekan@report_jenis_tugas_akhir')
+        ->name('wakildekan.report_jenis_tugas_akhir');
+    Route::get('/wakildekan/report/jenis-tugas-akhir/pdf', 'WakilDekan@report_jenis_tugas_akhir_pdf')
+        ->name('wakildekan.report_jenis_tugas_akhir_pdf');
+
     Route::get('/wakildekan/detail_status_bimbingan_mahasiswa/{status}/', 'WakilDekan@detail_status_bimbingan_mahasiswa');
     Route::get('/wakildekan/detail_status_bimbingan_mahasiswa', 'WakilDekan@tampilDetailStatusBimbinganDenganFilterTanggal')
         ->name('wakildekan.tampilDetailStatusBimbinganDenganFilterTanggal');

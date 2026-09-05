@@ -42,6 +42,16 @@
                 SK Ujian Meja
             </a>
         </li>
+        <li>
+            <a href="#fakelink">
+                <i class="fa fa-bar-chart-o icon-sidebar"></i>
+                <i class="fa fa-angle-right chevron-icon-sidebar"></i>
+                Report
+            </a>
+            <ul class="submenu">
+                <li><a href="{{ route('wakildekan.report_jenis_tugas_akhir') }}">Persebaran Jenis TA</a></li>
+            </ul>
+        </li>
     </ul>
 </div><!-- /.sidebar-left -->
 <!-- END SIDEBAR LEFT -->
