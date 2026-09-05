@@ -25,6 +25,7 @@ use App\TrtPengajuanDokumen;
 use App\TrtPenguji;
 use App\TrtSyaratUjian;
 use App\Services\ProdiJenisTugasAkhirReportService;
+use App\Services\ReportTrendChartSvgRenderer;
 use Barryvdh\DomPDF\Facade as PDF;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -3899,12 +3900,25 @@ class Prodi extends Controller
     {
         $scope = $this->getJenisTugasAkhirReportScope($request);
         $service = app(ProdiJenisTugasAkhirReportService::class);
+        $chartRenderer = app(ReportTrendChartSvgRenderer::class);
         $report = $service->build(
             $scope['nim_prefix'],
             $scope['program_studi'],
             $request->input('mode', 'tahun_ajaran'),
             $request->input('periode')
         );
+        $trendChartImages = [
+            'by_cohort' => $chartRenderer->render(
+                $report['trend_charts']['by_cohort'],
+                $report['trend_charts']['series'],
+                $report['mode'] === 'angkatan' ? $report['selected_period'] : null
+            ),
+            'by_academic_year' => $chartRenderer->render(
+                $report['trend_charts']['by_academic_year'],
+                $report['trend_charts']['series'],
+                $report['mode'] === 'tahun_ajaran' ? $report['selected_period'] : null
+            ),
+        ];
         $kaprodi = Helper::getKaprodiByProdiAndTanggal($scope['program_studi'], Carbon::today());
         $verificationToken = $service->buildVerificationToken($report);
         $verificationUrl = route('verifikasi_report_jenis_tugas_akhir', ['token' => $verificationToken]);
@@ -3919,6 +3933,7 @@ class Prodi extends Controller
         return PDF::loadView('tugasakhir.prodi.report_jenis_tugas_akhir_pdf', compact(
             'scope',
             'report',
+            'trendChartImages',
             'kaprodi',
             'verificationUrl',
             'emailProgramStudi'

@@ -23,6 +23,14 @@
         .summary { border-collapse: collapse; margin: 0 0 7px; width: 100%; }
         .summary td { border: 1px solid #aeb8c4; padding: 5px 8px; text-align: center; vertical-align: middle; width: 25%; }
         .summary strong { display: block; font-size: 13pt; line-height: 1; margin-bottom: 2px; }
+        .trend-legend { border: 1px solid #c9d2dc; border-bottom: 0; font-family: "DejaVu Sans", sans-serif; font-size: 6.8pt; padding: 3px 6px; text-align: center; }
+        .trend-legend-item { display: inline-block; margin: 0 8px 0 0; white-space: nowrap; }
+        .trend-swatch { display: inline-block; height: 5px; margin-right: 3px; width: 13px; }
+        .trend-grid { border-collapse: collapse; margin: 0 0 7px; table-layout: fixed; width: 100%; }
+        .trend-grid td { border: 1px solid #c9d2dc; padding: 4px 5px 3px; vertical-align: top; width: 50%; }
+        .trend-title { color: #243b53; font-family: "DejaVu Sans", sans-serif; font-size: 7.4pt; font-weight: bold; line-height: 1.2; margin-bottom: 2px; text-align: center; }
+        .trend-image { display: block; height: 96px; width: 100%; }
+        .trend-active-note { color: #92400e; font-family: "DejaVu Sans", sans-serif; font-size: 6.2pt; margin: 2px 0 0; text-align: center; }
         .section-title { background: #354052; color: #fff; font-size: 9pt; font-weight: bold; margin: 7px 0 0; padding: 4px 7px; }
         .section-note { color: #374151; font-size: 6.8pt; line-height: 1.2; padding: 3px 1px; }
         .comparison-page-break { page-break-before: always; }
@@ -96,6 +104,32 @@
         </tr>
     </table>
 
+    <div class="trend-legend">
+        @foreach ($report['trend_charts']['series'] as $series)
+            <span class="trend-legend-item">
+                <span class="trend-swatch" style="background: {{ $series['color'] }};"></span>{{ $series['code'] }}
+            </span>
+        @endforeach
+    </div>
+    <table class="trend-grid">
+        <tr>
+            <td>
+                <div class="trend-title">Jumlah Lulusan per Jenis TA Berdasarkan Angkatan</div>
+                <img class="trend-image" src="{{ $trendChartImages['by_cohort'] }}" alt="Grafik berdasarkan angkatan">
+                @if ($report['mode'] === 'angkatan')
+                    <div class="trend-active-note">Angkatan aktif: {{ $report['selected_period'] }}</div>
+                @endif
+            </td>
+            <td>
+                <div class="trend-title">Jumlah Lulusan per Jenis TA Berdasarkan Tahun Ajaran</div>
+                <img class="trend-image" src="{{ $trendChartImages['by_academic_year'] }}" alt="Grafik berdasarkan tahun ajaran">
+                @if ($report['mode'] === 'tahun_ajaran')
+                    <div class="trend-active-note">Tahun ajaran aktif: {{ $report['selected_period'] }}</div>
+                @endif
+            </td>
+        </tr>
+    </table>
+
     <div class="section-title">A. Distribusi Jenis Tugas Akhir</div>
     <table class="report-table">
         <thead>
@@ -123,7 +157,7 @@
         </tbody>
     </table>
 
-    <div class="section-title{{ count($report['cross_distribution']) > 10 ? ' comparison-page-break' : '' }}">B. {{ $report['cross_title'] }}</div>
+    <div class="section-title comparison-page-break">B. {{ $report['cross_title'] }}</div>
     <div class="section-note">{{ $report['cross_note'] }} Nilai pada setiap sel menunjukkan jumlah mahasiswa dan persentasenya.</div>
     <table class="report-table comparison-table">
         <thead>

@@ -17,7 +17,11 @@
     .jenis-ta-trend-legend { min-height: 50px; }
     .jenis-ta-trend-legend-item { display: inline-block; margin: 0 10px 7px 0; white-space: nowrap; }
     .jenis-ta-trend-swatch { display: inline-block; height: 8px; margin-right: 4px; width: 18px; }
-    .jenis-ta-trend-chart { height: 330px; }
+    .jenis-ta-trend-chart { height: 330px; position: relative; }
+    .jenis-ta-active-marker { border-left: 2px dashed #d97706; bottom: 51px; pointer-events: none; position: absolute; top: 19px; transform: translateX(-1px); z-index: 2; }
+    .jenis-ta-active-marker span { background: #d97706; border-radius: 3px; color: #fff; font-size: 10px; font-weight: 700; left: 0; line-height: 18px; padding: 0 6px; position: absolute; top: -14px; transform: translateX(-50%); white-space: nowrap; }
+    .jenis-ta-active-marker.is-start span { transform: translateX(-8%); }
+    .jenis-ta-active-marker.is-end span { transform: translateX(-92%); }
     .jenis-ta-section { border-top: 1px solid #d9e2ec; margin-top: 24px; padding-top: 20px; }
     .jenis-ta-section h3 { color: #243b53; font-size: 17px; margin: 0 0 6px; }
     .jenis-ta-section-note { color: #627d98; font-size: 12px; margin: 0 0 15px; }
@@ -261,8 +265,55 @@
 @section('script')
 <script>
     const jenisTugasAkhirTrendCharts = @json($report['trend_charts']);
+    const jenisTugasAkhirActiveSelection = @json([
+        'by_cohort' => $report['mode'] === 'angkatan' ? $report['selected_period'] : null,
+        'by_academic_year' => $report['mode'] === 'tahun_ajaran' ? $report['selected_period'] : null,
+    ]);
 
-    const renderJenisTugasAkhirTrend = (elementId, data) => {
+    const highlightJenisTugasAkhirTrend = (element, data, selectedPeriod) => {
+        if (!element || !selectedPeriod || !Array.isArray(data)) {
+            return;
+        }
+
+        const selectedIndex = data.findIndex(item => String(item.period) === String(selectedPeriod));
+        const svg = element.querySelector('svg');
+        if (selectedIndex < 0 || !svg) {
+            return;
+        }
+
+        const tick = Array.from(svg.querySelectorAll('text')).find(item =>
+            String(item.textContent || '').trim() === String(selectedPeriod)
+        );
+        const activeX = tick ? Number(tick.getAttribute('x')) : NaN;
+        if (!Number.isFinite(activeX)) {
+            return;
+        }
+
+        tick.setAttribute('fill', '#9a3412');
+        tick.setAttribute('font-weight', '700');
+        Array.from(svg.querySelectorAll('circle')).forEach(circle => {
+            if (Math.abs(Number(circle.getAttribute('cx')) - activeX) < 0.5) {
+                circle.setAttribute('r', '6');
+                circle.setAttribute('stroke', '#d97706');
+                circle.setAttribute('stroke-width', '3');
+            }
+        });
+
+        const marker = document.createElement('div');
+        marker.className = 'jenis-ta-active-marker';
+        if (selectedIndex === 0) {
+            marker.className += ' is-start';
+        } else if (selectedIndex === data.length - 1) {
+            marker.className += ' is-end';
+        }
+        marker.style.left = activeX + 'px';
+        marker.innerHTML = '<span>Aktif: ' + String(selectedPeriod).replace(/[&<>"']/g, character => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+        })[character]) + '</span>';
+        element.appendChild(marker);
+    };
+
+    const renderJenisTugasAkhirTrend = (elementId, data, selectedPeriod) => {
         const series = jenisTugasAkhirTrendCharts.series || [];
         const ykeys = series.map(item => item.key);
         const hasData = Array.isArray(data) && data.some(item =>
@@ -293,15 +344,18 @@
             hideHover: 'auto',
             resize: true
         });
+        highlightJenisTugasAkhirTrend(element, data, selectedPeriod);
     };
 
     renderJenisTugasAkhirTrend(
         'jenis-ta-trend-angkatan',
-        jenisTugasAkhirTrendCharts.by_cohort || []
+        jenisTugasAkhirTrendCharts.by_cohort || [],
+        jenisTugasAkhirActiveSelection.by_cohort
     );
     renderJenisTugasAkhirTrend(
         'jenis-ta-trend-tahun-ajaran',
-        jenisTugasAkhirTrendCharts.by_academic_year || []
+        jenisTugasAkhirTrendCharts.by_academic_year || [],
+        jenisTugasAkhirActiveSelection.by_academic_year
     );
 </script>
 @endsection

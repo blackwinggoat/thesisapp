@@ -40,6 +40,9 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringContainsString('jenis-ta-trend-tahun-ajaran', $web);
         $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr))', $web);
         $this->assertStringContainsString("@json(\$report['trend_charts'])", $web);
+        $this->assertStringContainsString('jenisTugasAkhirActiveSelection', $web);
+        $this->assertStringContainsString('highlightJenisTugasAkhirTrend', $web);
+        $this->assertStringContainsString('Aktif:', $web);
         $this->assertSame(2, substr_count($web, 'renderJenisTugasAkhirTrend('));
         $this->assertLessThan(
             strpos($web, '<div class="jenis-ta-summary">'),
@@ -54,6 +57,11 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $pdf);
         $this->assertStringContainsString("publicImageDataUri('images/branding/fikom-pdf.jpg')", $pdf);
         $this->assertStringContainsString('qrCodeDataUri($verificationUrl', $pdf);
+        $this->assertStringContainsString("\$trendChartImages['by_cohort']", $pdf);
+        $this->assertStringContainsString("\$trendChartImages['by_academic_year']", $pdf);
+        $this->assertStringContainsString('Angkatan aktif:', $pdf);
+        $this->assertStringContainsString('Tahun ajaran aktif:', $pdf);
+        $this->assertStringContainsString('class="trend-grid"', $pdf);
         $this->assertStringContainsString('Ketua Program Studi', $pdf);
         $this->assertStringNotContainsString('Daftar Mahasiswa Lulus', $pdf);
         $this->assertStringNotContainsString("\$row['nim']", $pdf);
