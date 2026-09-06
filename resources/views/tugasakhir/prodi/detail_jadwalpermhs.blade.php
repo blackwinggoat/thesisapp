@@ -8,7 +8,7 @@
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
                 <li><a href="{{ url('/') }}">Home</a></li>
-                <li class="active">Jadwal Ujian Per Mahasiswa</li>
+                <li class="active">Jadwal Ujian</li>
             </ol>
             <div class="the-box">
                 <div class="form-group">

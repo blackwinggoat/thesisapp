@@ -5,8 +5,8 @@
         $tipeUjian = isset($tipe_ujian) ? $tipe_ujian : 'ujianmeja';
         $namaTipeUjian = $tipeUjian == 'proposal' ? 'Proposal' : ($tipeUjian == 'seminarhasil' ? 'Seminar Hasil' : 'Ujian Meja');
         $pageTitle = $isRiwayat
-            ? 'Riwayat Jadwal ' . $namaTipeUjian . ' Per Mahasiswa'
-            : 'Daftar Jadwal ' . $namaTipeUjian . ' Per Mahasiswa';
+            ? 'Riwayat Jadwal Ujian ' . $namaTipeUjian
+            : 'Daftar Jadwal Ujian ' . $namaTipeUjian;
     @endphp
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">

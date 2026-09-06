@@ -124,18 +124,13 @@
             </a>
         </li>
         <li>
-            <a href="{{ url('prodi/jadwal')}}">
-                <i class="fa fa-calendar icon-sidebar"></i>
-                Jadwal Ujian
-            </a>
-        </li>
-        <li>
             <a href="#fakelink">
                 <i class="fa fa-calendar icon-sidebar"></i>
                 <i class="fa fa-angle-right chevron-icon-sidebar"></i>
-                Jadwal Ujian Per Mahasiswa
+                Jadwal Ujian
             </a>
             <ul class="submenu">
+                <li><a href="{{ url('prodi/jadwal')}}">Periode Ujian</a></li>
                 <li><a href="{{ url('prodi/jadwalpermhs/proposal')}}">Proposal</a></li>
                 <li><a href="{{ url('prodi/jadwalpermhs/ujianmeja')}}">Ujian Meja</a></li>
             </ul>
