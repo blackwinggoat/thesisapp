@@ -1,5 +1,6 @@
 @extends('tugasakhir.index')
 @section('isi')
+@include('tugasakhir.mhs.partials.exam_document_table_styles')
 <!-- BEGIN PAGE CONTENT -->
 <div class="page-content">
     <div class="container-fluid">
@@ -93,16 +94,16 @@
             <div class="table-responsive">
                 <form action="{{url("mhs/syarat_ujianpost")}}" onsubmit="return showPostModal(this)" method="post">
                     {{csrf_field()}}
-                    <table class="table table-striped table-hover" id="">
+                    <table class="table table-striped table-hover exam-requirements-table" id="">
                         <thead class="the-box dark full">
                             <tr>
-                                <th>No</th>
-                                <th>Nama Dokumen</th>
-                                <th>Link Dokumen</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                                <th>Catatan</th>
-                                <th>File</th>
+                                <th class="document-number-column document-compact-column">No</th>
+                                <th class="document-name-column">Nama Dokumen</th>
+                                <th class="document-link-column">Link Dokumen</th>
+                                <th class="document-status-column document-compact-column">Status</th>
+                                <th class="document-action-column document-compact-column">Aksi</th>
+                                <th class="document-note-column document-compact-column">Catatan</th>
+                                <th class="document-file-column document-compact-column">File</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -112,20 +113,18 @@
                             "C_NPM" => auth()->user()->name])->first()
                             @endphp
                             <tr class="odd gradeX">
-                                <td width="1%" align="center">{{++$key}}</td>
-                                <td>{{$value->nama_syarat}}</td>
-                                <td>
-                                    <div class="col-lg-5">
-                                        <input type="hidden" name="syarat_ujian_id[]"
-                                            value="{{$value->syarat_ujian_id}}" />
-                                        @if($key == 1)
-                                        <input type="hidden" name="sui" />
-                                        @endif
-                                        <input type="text" class="form-control bold-border" name="link[]"
-                                            value="{{empty($trtsyaratujian) ?"": $trtsyaratujian->link}}" />
-                                    </div>
+                                <td class="document-number-column document-compact-column">{{++$key}}</td>
+                                <td class="document-name-column">{{$value->nama_syarat}}</td>
+                                <td class="document-link-column">
+                                    <input type="hidden" name="syarat_ujian_id[]"
+                                        value="{{$value->syarat_ujian_id}}" />
+                                    @if($key == 1)
+                                    <input type="hidden" name="sui" />
+                                    @endif
+                                    <input type="text" class="form-control bold-border document-link-input" name="link[]"
+                                        value="{{empty($trtsyaratujian) ?"": $trtsyaratujian->link}}" />
                                 </td>
-                                <td>
+                                <td class="document-status-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
                                     @if($trtsyaratujian->status == "0")
                                     <span class="badge badge-danger">ditolak</span>
@@ -136,7 +135,7 @@
                                     @endif
                                     @endif
                                 </td>
-                                <td>
+                                <td class="document-action-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
                                     <button type="button" value="{{$key-1}}" onclick="showPostModal(this)"
                                         data-formaction="{{url("mhs/syarat_ujianpost")}}" data-target="#modalInfo"
@@ -152,14 +151,14 @@
                                             class="fa fa-save"></i></button>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="document-note-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
                                     <a class="btn btn-info" href="{{url('mhs/signup_proposal/catatan')}}/{{$trtsyaratujian->id}}"><i
                                             class="fa fa-newspaper-o"></i></a>
                                     @endif
                                     
                                 </td>
-                                <td>
+                                <td class="document-file-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
                                     <button type="button" onclick="showModal(this)"
                                         data-href="{{$trtsyaratujian->link}}" data-target="#modalDefault"
