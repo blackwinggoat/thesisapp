@@ -40,6 +40,20 @@
                     </div>
                     <br><br>
                     <div class="form-group">
+                        <label class="col-lg-2 control-label">Bidang Ilmu Peminatan</label>
+                        <div class="col-lg-5">
+                            <select class="form-control bold-border" name="bidang_ilmu_peminatan_id" required>
+                                <option value="">Pilih bidang ilmu peminatan</option>
+                                @foreach ($bidangIlmuPeminatan as $peminatan)
+                                <option value="{{ $peminatan->bidang_ilmu_peminatan_id }}" @if((string) old('bidang_ilmu_peminatan_id', $data[0]->bidang_ilmu_peminatan_id) === (string) $peminatan->bidang_ilmu_peminatan_id) selected @endif>
+                                    {{ $peminatan->nama_peminatan }}{{ (int) $peminatan->status_aktif === 0 ? ' (Tidak Aktif)' : '' }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <br><br>
+                    <div class="form-group">
                         <label class="col-lg-2 control-label">Link Kerangka Pikir</label>
                         <div class="col-lg-5">
                             <input type="url" class="form-control bold-border" name="kerangka" maxlength="255"

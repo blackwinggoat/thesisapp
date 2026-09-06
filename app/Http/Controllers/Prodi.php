@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helper;
 use App\Model\mst_bidangilmu;
+use App\Model\mst_bidang_ilmu_peminatan;
 use App\Model\mst_jenis_tugas_akhir;
 use App\Model\mst_pendaftaran;
 use App\Model\mst_pengumuman;
@@ -2789,6 +2790,192 @@ class Prodi extends Controller
         }
 
         return view('tugasakhir.prodi.master_jenis_tugas_akhir', compact('data', 'hasMahasiswaAvailability'));
+    }
+
+    public function master_bidang_ilmu_peminatan()
+    {
+        $scope = $this->getProdiScope();
+        if (!$scope['is_mapped']) {
+            abort(403, 'Akun Prodi belum dipetakan ke program studi.');
+        }
+
+        $query = DB::table('mst_bidang_ilmu_peminatan')->orderBy('kode_prodi')->orderBy('nama_peminatan');
+        if (!is_null($scope['nim_prefix'])) {
+            $query->where('kode_prodi', $scope['nim_prefix']);
+        }
+
+        $data = $query->get();
+        $usageCounts = DB::table('trt_topik')
+            ->whereNotNull('bidang_ilmu_peminatan_id')
+            ->select('bidang_ilmu_peminatan_id', DB::raw('COUNT(*) AS total'))
+            ->groupBy('bidang_ilmu_peminatan_id')
+            ->pluck('total', 'bidang_ilmu_peminatan_id');
+
+        foreach ($data as $peminatan) {
+            $peminatan->program_studi = $this->namaProgramStudiPeminatan($peminatan->kode_prodi);
+            $peminatan->jumlah_penggunaan = (int) ($usageCounts[$peminatan->bidang_ilmu_peminatan_id] ?? 0);
+        }
+
+        $isAdmin = (int) optional(auth()->user())->level === 1;
+
+        return view('tugasakhir.prodi.master_bidang_ilmu_peminatan', compact('data', 'scope', 'isAdmin'));
+    }
+
+    public function master_bidang_ilmu_peminatan_store(Request $request)
+    {
+        $scope = $this->getProdiScope();
+        if (!$scope['is_mapped']) {
+            abort(403, 'Akun Prodi belum dipetakan ke program studi.');
+        }
+
+        $kodeProdi = $this->kodeProdiPeminatanUntukWrite($request, $scope);
+        if ($kodeProdi === null) {
+            return redirect()->back()->withInput()->with('danger', 'Program studi wajib dipilih.');
+        }
+
+        $this->validate($request, [
+            'nama_peminatan' => 'required|max:150',
+            'status_aktif' => 'nullable|in:0,1',
+        ], [
+            'nama_peminatan.required' => 'Nama bidang ilmu peminatan wajib diisi.',
+        ]);
+
+        $namaPeminatan = trim((string) $request->nama_peminatan);
+        $duplicate = DB::table('mst_bidang_ilmu_peminatan')
+            ->where('kode_prodi', $kodeProdi)
+            ->where('nama_peminatan', $namaPeminatan)
+            ->exists();
+
+        if ($duplicate) {
+            return redirect()->back()->withInput()->with('danger', 'Bidang ilmu peminatan tersebut sudah tersedia pada program studi yang dipilih.');
+        }
+
+        mst_bidang_ilmu_peminatan::create([
+            'kode_prodi' => $kodeProdi,
+            'nama_peminatan' => $namaPeminatan,
+            'status_aktif' => (int) $request->input('status_aktif', 1),
+        ]);
+
+        return redirect::to('prodi/master/bidang_ilmu_peminatan')->with('success', 'Bidang ilmu peminatan berhasil ditambahkan.');
+    }
+
+    public function master_bidang_ilmu_peminatan_update(Request $request, $id)
+    {
+        $peminatan = $this->findBidangIlmuPeminatanDalamScope($id);
+        if (!$peminatan) {
+            return redirect::to('prodi/master/bidang_ilmu_peminatan')->with('danger', 'Bidang ilmu peminatan tidak ditemukan atau berada di luar program studi Anda.');
+        }
+
+        $this->validate($request, [
+            'nama_peminatan' => 'required|max:150',
+            'status_aktif' => 'nullable|in:0,1',
+        ], [
+            'nama_peminatan.required' => 'Nama bidang ilmu peminatan wajib diisi.',
+        ]);
+
+        $namaPeminatan = trim((string) $request->nama_peminatan);
+        $duplicate = DB::table('mst_bidang_ilmu_peminatan')
+            ->where('kode_prodi', $peminatan->kode_prodi)
+            ->where('nama_peminatan', $namaPeminatan)
+            ->where('bidang_ilmu_peminatan_id', '<>', $peminatan->bidang_ilmu_peminatan_id)
+            ->exists();
+
+        if ($duplicate) {
+            return redirect()->back()->withInput()->with('danger', 'Nama peminatan tersebut sudah digunakan pada program studi ini.');
+        }
+
+        DB::transaction(function () use ($peminatan, $namaPeminatan, $request) {
+            DB::table('mst_bidang_ilmu_peminatan')
+                ->where('bidang_ilmu_peminatan_id', $peminatan->bidang_ilmu_peminatan_id)
+                ->update([
+                    'nama_peminatan' => $namaPeminatan,
+                    'status_aktif' => (int) $request->input('status_aktif', $peminatan->status_aktif),
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+
+            DB::table('trt_topik')
+                ->where('bidang_ilmu_peminatan_id', $peminatan->bidang_ilmu_peminatan_id)
+                ->update(['bidang_ilmu_peminatan' => $namaPeminatan]);
+        });
+
+        return redirect::to('prodi/master/bidang_ilmu_peminatan')->with('success', 'Bidang ilmu peminatan berhasil diperbarui.');
+    }
+
+    public function master_bidang_ilmu_peminatan_availability(Request $request, $id)
+    {
+        $peminatan = $this->findBidangIlmuPeminatanDalamScope($id);
+        if (!$peminatan) {
+            return redirect::to('prodi/master/bidang_ilmu_peminatan')->with('danger', 'Bidang ilmu peminatan tidak ditemukan atau berada di luar program studi Anda.');
+        }
+
+        $this->validate($request, ['status_aktif' => 'required|in:0,1']);
+
+        DB::table('mst_bidang_ilmu_peminatan')
+            ->where('bidang_ilmu_peminatan_id', $peminatan->bidang_ilmu_peminatan_id)
+            ->update([
+                'status_aktif' => (int) $request->status_aktif,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+
+        $message = (int) $request->status_aktif === 1
+            ? 'Peminatan tersedia kembali pada formulir mahasiswa.'
+            : 'Peminatan disembunyikan dari pengajuan baru mahasiswa.';
+
+        return redirect::to('prodi/master/bidang_ilmu_peminatan')->with('success', $message);
+    }
+
+    public function master_bidang_ilmu_peminatan_delete($id)
+    {
+        $peminatan = $this->findBidangIlmuPeminatanDalamScope($id);
+        if (!$peminatan) {
+            return redirect::to('prodi/master/bidang_ilmu_peminatan')->with('danger', 'Bidang ilmu peminatan tidak ditemukan atau berada di luar program studi Anda.');
+        }
+
+        $isUsed = DB::table('trt_topik')
+            ->where('bidang_ilmu_peminatan_id', $peminatan->bidang_ilmu_peminatan_id)
+            ->exists();
+
+        if ($isUsed) {
+            return redirect::to('prodi/master/bidang_ilmu_peminatan')->with('danger', 'Peminatan sudah digunakan mahasiswa dan tidak dapat dihapus. Gunakan status Tidak Aktif.');
+        }
+
+        DB::table('mst_bidang_ilmu_peminatan')
+            ->where('bidang_ilmu_peminatan_id', $peminatan->bidang_ilmu_peminatan_id)
+            ->delete();
+
+        return redirect::to('prodi/master/bidang_ilmu_peminatan')->with('success', 'Bidang ilmu peminatan berhasil dihapus.');
+    }
+
+    private function kodeProdiPeminatanUntukWrite(Request $request, array $scope)
+    {
+        if (!is_null($scope['nim_prefix'])) {
+            return in_array($scope['nim_prefix'], ['130', '131'], true) ? $scope['nim_prefix'] : null;
+        }
+
+        $kodeProdi = (string) $request->input('kode_prodi');
+        return in_array($kodeProdi, ['130', '131'], true) ? $kodeProdi : null;
+    }
+
+    private function findBidangIlmuPeminatanDalamScope($id)
+    {
+        $scope = $this->getProdiScope();
+        if (!$scope['is_mapped']) {
+            return null;
+        }
+
+        $query = DB::table('mst_bidang_ilmu_peminatan')
+            ->where('bidang_ilmu_peminatan_id', (int) $id);
+
+        if (!is_null($scope['nim_prefix'])) {
+            $query->where('kode_prodi', $scope['nim_prefix']);
+        }
+
+        return $query->first();
+    }
+
+    private function namaProgramStudiPeminatan($kodeProdi)
+    {
+        return (string) $kodeProdi === '130' ? 'Teknik Informatika' : 'Sistem Informasi';
     }
 
     public function master_dosen()

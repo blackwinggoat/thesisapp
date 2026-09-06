@@ -628,7 +628,12 @@ class mhs extends Controller
         $jenisTugasAkhir = $this->jenisTugasAkhirMahasiswaQuery($data[0]->jenis_tugas_akhir_id ?? null)
             ->orderBy('kode_jenis_tugas_akhir')
             ->get();
-        return view("tugasakhir.mhs.ubah_judul", compact('data', 'jenisTugasAkhir'));
+        $bidangIlmuPeminatan = $this->bidangIlmuPeminatanMahasiswaQuery(
+            auth()->user()->name,
+            $data[0]->bidang_ilmu_peminatan_id ?? null
+        )->orderBy('nama_peminatan')->get();
+
+        return view("tugasakhir.mhs.ubah_judul", compact('data', 'jenisTugasAkhir', 'bidangIlmuPeminatan'));
     }
 
     public function judul_update(Request $request, $id)
@@ -647,6 +652,7 @@ class mhs extends Controller
         $this->validate($request, [
             'topik' => 'required|max:1000',
             'jenis_tugas_akhir_id' => 'required|integer',
+            'bidang_ilmu_peminatan_id' => 'required|integer',
             'kerangka' => 'nullable|string|max:255',
         ]);
 
@@ -664,10 +670,23 @@ class mhs extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($request, $id, $kerangkaUrl) {
+        $peminatan = $this->bidangIlmuPeminatanMahasiswaDapatDipilih(
+            $request->bidang_ilmu_peminatan_id,
+            auth()->user()->name,
+            $topik->bidang_ilmu_peminatan_id
+        );
+        if (!$peminatan) {
+            return redirect()->back()->withInput()->withErrors([
+                'bidang_ilmu_peminatan_id' => 'Bidang ilmu peminatan tidak tersedia untuk program studi Anda.',
+            ]);
+        }
+
+        DB::transaction(function () use ($request, $id, $kerangkaUrl, $peminatan) {
             $topikUpdate = [
                 'topik' => trim((string) $request->topik),
                 'jenis_tugas_akhir_id' => $request->jenis_tugas_akhir_id,
+                'bidang_ilmu_peminatan_id' => $peminatan->bidang_ilmu_peminatan_id,
+                'bidang_ilmu_peminatan' => $peminatan->nama_peminatan,
             ];
 
             if ($kerangkaUrl !== '') {
@@ -743,6 +762,9 @@ class mhs extends Controller
         $jenisTugasAkhir = $this->jenisTugasAkhirMahasiswaQuery()
             ->orderBy('kode_jenis_tugas_akhir')
             ->get();
+        $bidangIlmuPeminatan = $this->bidangIlmuPeminatanMahasiswaQuery($id)
+            ->orderBy('nama_peminatan')
+            ->get();
         $bidangilmuid = $topik
             ? RequestPembimbing::where([
                 'C_NPM' => $id,
@@ -757,7 +779,8 @@ class mhs extends Controller
             'cek',
             'topik',
             'bidangilmuid',
-            'jenisTugasAkhir'
+            'jenisTugasAkhir',
+            'bidangIlmuPeminatan'
         ));
     }
     public function pengajuan_topikdel($id)
@@ -792,6 +815,7 @@ class mhs extends Controller
         $this->validate($request, [
             'topik' => 'required|max:1000',
             'jenis_tugas_akhir_id' => 'required|integer',
+            'bidang_ilmu_peminatan_id' => 'required|integer',
             'bidang_ilmu' => 'required|array|min:1',
             'kerangka' => 'nullable|string|max:255',
         ]);
@@ -810,10 +834,22 @@ class mhs extends Controller
             ]);
         }
 
+
+        $peminatan = $this->bidangIlmuPeminatanMahasiswaDapatDipilih(
+            $request->bidang_ilmu_peminatan_id,
+            auth()->user()->name
+        );
+        if (!$peminatan) {
+            return redirect()->back()->withInput()->withErrors([
+                'bidang_ilmu_peminatan_id' => 'Bidang ilmu peminatan tidak tersedia untuk program studi Anda.',
+            ]);
+        }
+
         $datapost = $request->except(["bidang_ilmu"]);
         $datapost['status'] = 0;
         $datapost['user_id'] = $datapost['C_NPM'];
-        $datapost['bidang_ilmu_peminatan'] = $datapost['bidang_ilmu_peminatan'];
+        $datapost['bidang_ilmu_peminatan_id'] = $peminatan->bidang_ilmu_peminatan_id;
+        $datapost['bidang_ilmu_peminatan'] = $peminatan->nama_peminatan;
         $datapost['kerangka'] = $kerangkaUrl;
 
         $datapost["note"] = $datapost["note"];
@@ -862,6 +898,34 @@ class mhs extends Controller
         return $this->jenisTugasAkhirMahasiswaQuery($selectedJenisTugasAkhirId)
             ->where('jenis_tugas_akhir_id', (int) $jenisTugasAkhirId)
             ->exists();
+    }
+
+    private function bidangIlmuPeminatanMahasiswaQuery($nim, $selectedPeminatanId = null)
+    {
+        $kodeProdi = substr(trim((string) $nim), 0, 3);
+        $query = DB::table('mst_bidang_ilmu_peminatan');
+
+        if (!in_array($kodeProdi, ['130', '131'], true)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $query->where('kode_prodi', $kodeProdi)
+            ->where(function ($subQuery) use ($selectedPeminatanId) {
+                $subQuery->where('status_aktif', 1);
+
+                if ($selectedPeminatanId !== null) {
+                    $subQuery->orWhere('bidang_ilmu_peminatan_id', (int) $selectedPeminatanId);
+                }
+            });
+
+        return $query;
+    }
+
+    private function bidangIlmuPeminatanMahasiswaDapatDipilih($peminatanId, $nim, $selectedPeminatanId = null)
+    {
+        return $this->bidangIlmuPeminatanMahasiswaQuery($nim, $selectedPeminatanId)
+            ->where('bidang_ilmu_peminatan_id', (int) $peminatanId)
+            ->first();
     }
 
 

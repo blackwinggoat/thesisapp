@@ -67,6 +67,7 @@
             <ul class="submenu">
                 <li><a href="{{ url('prodi/master/dosen') }}">Dosen</a></li>
                 <li><a href="{{ url('prodi/master/jenis_tugas_akhir') }}">Jenis Tugas Akhir</a></li>
+                <li><a href="{{ url('prodi/master/bidang_ilmu_peminatan') }}">Bidang Ilmu Peminatan</a></li>
                 <li><a href="{{ url('prodi/scope_ta') }}">Bidang Ilmu TA</a></li>
             </ul>
         </li>

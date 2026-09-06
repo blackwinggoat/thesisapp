@@ -73,12 +73,17 @@
                     <div class="form-group">
                         <label class="col-lg-2 control-label">Bidang Ilmu Peminatan</label>
                         <div class="col-lg-5">
-                            <select class="form-control" name="bidang_ilmu_peminatan" id="bidang_ilmu_peminatan">
-                                <option value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</option>
-                                <option value="Jaringan Komputer">Jaringan Komputer</option>
-                                <option value="Industri">Industri</option>
-                                <option value="Lainnya">Lainnya</option>
+                            <select class="form-control" name="bidang_ilmu_peminatan_id" id="bidang_ilmu_peminatan_id" required>
+                                <option value="">Pilih bidang ilmu peminatan</option>
+                                @foreach ($bidangIlmuPeminatan as $peminatan)
+                                <option value="{{ $peminatan->bidang_ilmu_peminatan_id }}" @if((string) old('bidang_ilmu_peminatan_id') === (string) $peminatan->bidang_ilmu_peminatan_id) selected @endif>
+                                    {{ $peminatan->nama_peminatan }}
+                                </option>
+                                @endforeach
                             </select>
+                            @if ($bidangIlmuPeminatan->isEmpty())
+                                <small class="text-danger">Belum ada peminatan aktif untuk program studi Anda. Hubungi Program Studi.</small>
+                            @endif
                         </div>
                     </div>
                     <br><br>
