@@ -7,7 +7,34 @@
     }
 
     .exam-requirements-table .document-link-column {
-        width: 34%;
+        width: 35%;
+    }
+
+    .exam-requirements-table .document-number-column {
+        width: 4%;
+    }
+
+    .exam-requirements-table .document-name-column {
+        overflow-wrap: anywhere;
+        width: 31%;
+    }
+
+    .exam-requirements-table .document-status-column {
+        width: 8%;
+    }
+
+    .exam-requirements-table .document-action-column {
+        width: 10%;
+    }
+
+    .exam-requirements-table .document-note-column,
+    .exam-requirements-table .document-file-column {
+        width: 6%;
+    }
+
+    .exam-requirements-table .document-compact-column {
+        text-align: center;
+        white-space: nowrap;
     }
 
     .exam-requirements-table .document-link-input {
@@ -155,13 +182,13 @@
                     <table class="table table-striped table-hover exam-requirements-table" id="">
                         <thead class="the-box dark full">
                             <tr>
-                                <th>No</th>
-                                <th>Nama Dokumen</th>
+                                <th class="document-number-column document-compact-column">No</th>
+                                <th class="document-name-column">Nama Dokumen</th>
                                 <th class="document-link-column">Link Dokumen</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                                <th>Catatan</th>
-                                <th>File</th>
+                                <th class="document-status-column document-compact-column">Status</th>
+                                <th class="document-action-column document-compact-column">Aksi</th>
+                                <th class="document-note-column document-compact-column">Catatan</th>
+                                <th class="document-file-column document-compact-column">File</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -171,8 +198,8 @@
                             "C_NPM" => auth()->user()->name])->first()
                             @endphp
                             <tr class="odd gradeX">
-                                <td width="1%" align="center">{{++$key}}</td>
-                                <td>{{$value->nama_syarat}}</td>
+                                <td class="document-number-column document-compact-column">{{++$key}}</td>
+                                <td class="document-name-column">{{$value->nama_syarat}}</td>
                                 <td class="document-link-column">
                                     <input type="hidden" name="syarat_ujian_id[]"
                                         value="{{$value->syarat_ujian_id}}" />
@@ -182,7 +209,7 @@
                                     <input type="text" class="form-control bold-border document-link-input" name="link[]"
                                         value="{{empty($trtsyaratujian) ?"": $trtsyaratujian->link}}" />
                                 </td>
-                                <td>
+                                <td class="document-status-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
                                     @if($trtsyaratujian->status == "0")
                                     <span class="badge badge-danger">ditolak</span>
@@ -193,7 +220,7 @@
                                     @endif
                                     @endif
                                 </td>
-                                <td>
+                                <td class="document-action-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
                                     <button type="button" value="{{$key-1}}" onclick="showPostModal(this)"
                                         data-formaction="{{url("mhs/syarat_ujianpost")}}" data-target="#modalInfo"
@@ -208,7 +235,7 @@
                                         data-toggle="modal" class="btn btn-primary"><i class="fa fa-save"></i></button>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="document-note-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
                                     <a class="btn btn-info"
                                         href="{{url('mhs/signup_ujianmeja/catatan')}}/{{$trtsyaratujian->id}}"><i
@@ -216,7 +243,7 @@
                                     @endif
 
                                 </td>
-                                <td>
+                                <td class="document-file-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
                                     <button type="button" onclick="showModal(this)"
                                         data-href="{{$trtsyaratujian->link}}" data-target="#modalDefault"
