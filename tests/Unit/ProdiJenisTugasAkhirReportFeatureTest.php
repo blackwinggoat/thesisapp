@@ -19,6 +19,10 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringContainsString('public function report_jenis_tugas_akhir(', $controller);
         $this->assertStringContainsString('public function report_jenis_tugas_akhir_pdf(', $controller);
         $this->assertStringContainsString('getJenisTugasAkhirReportScope(', $controller);
+        $this->assertStringContainsString('reportJenisTugasAkhirSemuaProdi(', $controller);
+        $this->assertStringContainsString("optional(auth()->user())->level === 1", $controller);
+        $this->assertStringContainsString("'130' => [", $controller);
+        $this->assertStringContainsString("'131' => [", $controller);
         $this->assertStringContainsString('Persebaran Jenis TA', $prodiSidebar);
         $this->assertStringContainsString('Persebaran Jenis TA', $adminSidebar);
     }
@@ -28,6 +32,7 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $web = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/report_jenis_tugas_akhir.blade.php');
         $pdf = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/report_jenis_tugas_akhir_pdf.blade.php');
         $verification = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/verifikasi_report_jenis_tugas_akhir.blade.php');
+        $combined = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/wakildekan/report_jenis_tugas_akhir.blade.php');
 
         $this->assertStringContainsString('Tahun Ajaran', $web);
         $this->assertStringContainsString('Angkatan', $web);
@@ -76,6 +81,10 @@ class ProdiJenisTugasAkhirReportFeatureTest extends TestCase
         $this->assertStringNotContainsString("\$report['summary']['total_all_periods']", $pdf);
         $this->assertStringNotContainsString('Sidik laporan:', $pdf);
         $this->assertStringNotContainsString('class="footer"', $pdf);
+        $this->assertStringContainsString("\$reportAudienceLabel = \$reportAudienceLabel ?? 'Wakil Dekan 1'", $combined);
+        $this->assertStringContainsString('route($reportIndexRoute', $combined);
+        $this->assertStringContainsString('route($reportPdfRoute)', $combined);
+        $this->assertStringContainsString('@foreach ($reports as $programCode => $entry)', $combined);
         $this->assertSame(1, substr_count($pdf, '<table class="signature-wrap">'));
         $this->assertStringContainsString('<div class="signature-heading">', $pdf);
         $this->assertStringContainsString('<div class="signature-qr-box">', $pdf);

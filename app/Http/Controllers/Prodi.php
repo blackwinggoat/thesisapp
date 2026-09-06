@@ -3885,6 +3885,10 @@ class Prodi extends Controller
 
     public function report_jenis_tugas_akhir(Request $request)
     {
+        if ((int) optional(auth()->user())->level === 1) {
+            return $this->reportJenisTugasAkhirSemuaProdi($request);
+        }
+
         $scope = $this->getJenisTugasAkhirReportScope($request);
         $service = app(ProdiJenisTugasAkhirReportService::class);
         $reportWarnings = [];
@@ -3906,6 +3910,60 @@ class Prodi extends Controller
             'scope',
             'report',
             'reportWarnings'
+        ));
+    }
+
+    protected function reportJenisTugasAkhirSemuaProdi(Request $request)
+    {
+        $service = app(ProdiJenisTugasAkhirReportService::class);
+        $reports = [];
+        $filterState = ['mode' => [], 'periode' => []];
+        $trendPayload = [];
+        $reportWarnings = [];
+
+        foreach ($this->jenisTugasAkhirProgramStudies() as $programCode => $scope) {
+            $mode = $request->input('mode.' . $programCode, 'tahun_ajaran');
+            $report = $this->safeReportSection(
+                'persebaran_jenis_tugas_akhir_lulusan_' . $programCode,
+                function () use ($service, $programCode, $scope, $mode, $request) {
+                    return $service->build(
+                        $programCode,
+                        $scope['program_studi'],
+                        $mode,
+                        $request->input('periode.' . $programCode)
+                    );
+                },
+                $service->aggregate([], $scope['program_studi'], $mode),
+                $reportWarnings
+            );
+
+            $reports[$programCode] = [
+                'scope' => $scope,
+                'report' => $report,
+            ];
+            $filterState['mode'][$programCode] = $report['mode'];
+            $filterState['periode'][$programCode] = $report['selected_period'];
+            $trendPayload[$programCode] = [
+                'charts' => $report['trend_charts'],
+                'active' => [
+                    'by_cohort' => $report['mode'] === 'angkatan' ? $report['selected_period'] : null,
+                    'by_academic_year' => $report['mode'] === 'tahun_ajaran' ? $report['selected_period'] : null,
+                ],
+            ];
+        }
+
+        $reportAudienceLabel = 'Admin';
+        $reportIndexRoute = 'prodi.report_jenis_tugas_akhir';
+        $reportPdfRoute = 'prodi.report_jenis_tugas_akhir_pdf';
+
+        return view('tugasakhir.wakildekan.report_jenis_tugas_akhir', compact(
+            'reports',
+            'filterState',
+            'trendPayload',
+            'reportWarnings',
+            'reportAudienceLabel',
+            'reportIndexRoute',
+            'reportPdfRoute'
         ));
     }
 
@@ -3988,6 +4046,22 @@ class Prodi extends Controller
             'nim_prefix' => $nimPrefix,
             'program_studi' => $nimPrefix === '130' ? 'Teknik Informatika' : 'Sistem Informasi',
             'can_select_program' => true,
+        ];
+    }
+
+    protected function jenisTugasAkhirProgramStudies()
+    {
+        return [
+            '130' => [
+                'nim_prefix' => '130',
+                'program_studi' => 'Teknik Informatika',
+                'can_select_program' => false,
+            ],
+            '131' => [
+                'nim_prefix' => '131',
+                'program_studi' => 'Sistem Informasi',
+                'can_select_program' => false,
+            ],
         ];
     }
 

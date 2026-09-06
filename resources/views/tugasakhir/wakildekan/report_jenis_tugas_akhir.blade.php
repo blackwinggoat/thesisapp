@@ -1,5 +1,10 @@
 @extends('tugasakhir.index')
 @section('isi')
+@php
+    $reportAudienceLabel = $reportAudienceLabel ?? 'Wakil Dekan 1';
+    $reportIndexRoute = $reportIndexRoute ?? 'wakildekan.report_jenis_tugas_akhir';
+    $reportPdfRoute = $reportPdfRoute ?? 'wakildekan.report_jenis_tugas_akhir_pdf';
+@endphp
 <style>
     .wd-report-intro { color: #52606d; margin: -4px 0 18px; }
     .wd-program-report { border-top: 4px solid #16794a; margin-bottom: 24px; }
@@ -64,13 +69,17 @@
 
 <div class="page-content">
     <div class="container-fluid">
-        <h1 class="page-heading">Persebaran Jenis Tugas Akhir <small>Wakil Dekan 1</small></h1>
+        <h1 class="page-heading">Persebaran Jenis Tugas Akhir <small>{{ $reportAudienceLabel }}</small></h1>
         <ol class="breadcrumb default square rsaquo sm">
             <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
             <li>Report</li>
             <li class="active">Persebaran Jenis TA</li>
         </ol>
         <p class="wd-report-intro">Laporan Teknik Informatika dan Sistem Informasi ditampilkan secara terpisah. Filter pada satu program studi tidak mengubah data program studi lainnya.</p>
+
+        @if (!empty($reportWarnings))
+            <div class="alert alert-warning">Sebagian laporan belum dapat dimuat sempurna. Silakan periksa kembali konfigurasi database.</div>
+        @endif
 
         @foreach ($reports as $programCode => $entry)
             @php
@@ -88,7 +97,7 @@
                 <div class="wd-program-heading">
                     <h2><span class="wd-program-code">{{ $programCode }}</span>{{ $scope['program_studi'] }}</h2>
                     <a class="btn btn-danger"
-                       href="{{ route('wakildekan.report_jenis_tugas_akhir_pdf') . '?' . http_build_query(['mode' => $report['mode'], 'periode' => $report['selected_period'], 'program_studi' => $programCode]) }}"
+                       href="{{ route($reportPdfRoute) . '?' . http_build_query(['mode' => $report['mode'], 'periode' => $report['selected_period'], 'program_studi' => $programCode]) }}"
                        target="_blank" rel="noopener">
                         <i class="fa fa-file-pdf-o"></i> Generate PDF {{ $scope['program_studi'] }}
                     </a>
@@ -97,17 +106,17 @@
                 <div class="jenis-ta-toolbar">
                     <div class="btn-group" role="group" aria-label="Sudut pandang laporan {{ $scope['program_studi'] }}">
                         <a class="btn {{ $report['mode'] === 'tahun_ajaran' ? 'btn-primary' : 'btn-default' }}"
-                           href="{{ route('wakildekan.report_jenis_tugas_akhir', $tahunAjaranQuery) }}#program-{{ $programCode }}">
+                           href="{{ route($reportIndexRoute, $tahunAjaranQuery) }}#program-{{ $programCode }}">
                             <i class="fa fa-calendar"></i> Tahun Ajaran
                         </a>
                         <a class="btn {{ $report['mode'] === 'angkatan' ? 'btn-primary' : 'btn-default' }}"
-                           href="{{ route('wakildekan.report_jenis_tugas_akhir', $angkatanQuery) }}#program-{{ $programCode }}">
+                           href="{{ route($reportIndexRoute, $angkatanQuery) }}#program-{{ $programCode }}">
                             <i class="fa fa-users"></i> Angkatan
                         </a>
                     </div>
                 </div>
 
-                <form method="get" action="{{ route('wakildekan.report_jenis_tugas_akhir') }}#program-{{ $programCode }}" class="jenis-ta-filter">
+                <form method="get" action="{{ route($reportIndexRoute) }}#program-{{ $programCode }}" class="jenis-ta-filter">
                     @foreach ($reports as $otherCode => $otherEntry)
                         <input type="hidden" name="mode[{{ $otherCode }}]" value="{{ $otherEntry['report']['mode'] }}">
                         @if ($otherCode !== $programCode)
