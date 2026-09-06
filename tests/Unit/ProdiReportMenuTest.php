@@ -18,11 +18,13 @@ class ProdiReportMenuTest extends TestCase
         );
 
         $this->assertStringContainsString("url('prodi/report')", $sidebar);
-        $this->assertStringContainsString('Pusat Laporan', $sidebar);
+        $this->assertStringContainsString('Distribusi Bimbingan', $sidebar);
+        $this->assertStringNotContainsString('Pusat Laporan', $sidebar);
         $this->assertStringContainsString("Route::get('/prodi/report/laporan', 'Prodi@report_laporan')", $routes);
         $this->assertStringContainsString("Route::get('/prodi/report/laporan/excel', 'Prodi@report_laporan_excel')", $routes);
         $this->assertStringContainsString('public function report_laporan(', $controller);
         $this->assertStringContainsString('public function report_laporan_excel(', $controller);
+        $this->assertStringContainsString("\$reportPageTitle = 'Distribusi Bimbingan'", $controller);
         $this->assertStringContainsString('Distribusi Jumlah Bimbingan Utama', $view);
         $this->assertStringContainsString('Download Excel', $view);
         $this->assertStringContainsString('Persebaran Jenis TA', $sidebar);

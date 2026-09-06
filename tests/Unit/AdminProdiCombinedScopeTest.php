@@ -20,6 +20,8 @@ class AdminProdiCombinedScopeTest extends TestCase
         $this->assertStringContainsString('when(!is_null($statusProdi)', $controller);
         $this->assertStringContainsString('MENU PROGRAM STUDI (ADMIN)', $adminSidebar);
         $this->assertStringContainsString("url('prodi/report/laporan')", $adminSidebar);
+        $this->assertStringContainsString('Distribusi Bimbingan', $adminSidebar);
+        $this->assertStringNotContainsString('Pusat Laporan', $adminSidebar);
         $this->assertStringContainsString("url('prodi/master/dosen')", $adminSidebar);
         $this->assertStringContainsString("url('prodi/jadwalpermhs/proposal')", $adminSidebar);
         $this->assertStringContainsString("url('prodi/approve_hasilujian_proposal')", $adminSidebar);

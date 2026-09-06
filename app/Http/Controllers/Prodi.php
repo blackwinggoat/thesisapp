@@ -3844,7 +3844,7 @@ class Prodi extends Controller
             ? route('wakildekan.report_distribusi_bimbingan_excel')
             : route('prodi.report_distribusi_bimbingan_excel');
         $reportDashboardUrl = $isWakilDekanReport ? null : url('prodi/report');
-        $reportPageTitle = $isWakilDekanReport ? 'Distribusi Bimbingan' : 'Pusat Laporan';
+        $reportPageTitle = 'Distribusi Bimbingan';
         $reportWarnings = [];
         $bimbinganReport = $this->safeReportSection(
             'distribusi_bimbingan_utama',
