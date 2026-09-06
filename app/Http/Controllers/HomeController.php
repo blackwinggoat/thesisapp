@@ -33,32 +33,80 @@ class HomeController extends Controller
             'by_cohort' => [],
             'by_academic_year' => [],
         ];
+        $homeScopeLulusanPeriode = [];
+        $homeScopeLulusanBidang = [];
+        $homeStatusBimbinganProdi = (object) ['y' => '', 'PP' => 0, 'PUM' => 0, 'L' => 0];
+        $homeRataLamaBimbinganProdiPerAngkatan = [];
+        $homeDashboardScopeLabel = '';
 
         $user = auth()->user();
-        if ((int) ($user->level ?? 0) === 5) {
+        $userLevel = (int) ($user->level ?? 0);
+        if (in_array($userLevel, [2, 3, 5], true)) {
             $username = strtolower(trim((string) ($user->name ?? '')));
             $nimPrefix = null;
+            $scopeUsername = $username;
 
-            if (in_array($username, ['proditi', 'teknik informatika', 'ti'], true)) {
-                $nimPrefix = '130';
-            } elseif (in_array($username, ['prodinyalilis', 'prodisi', 'sistem informasi', 'si'], true)) {
-                $nimPrefix = '131';
-            }
-
-            if ($nimPrefix !== null) {
-                try {
-                    $jenisTugasAkhirTrendCharts = app(ProdiJenisTugasAkhirReportService::class)
-                        ->buildTrendCharts($nimPrefix);
-                } catch (\Throwable $e) {
-                    Log::warning('Grafik persebaran jenis TA pada Home gagal dimuat.', [
-                        'username' => $username,
-                        'message' => $e->getMessage(),
-                    ]);
+            if ($userLevel === 5) {
+                if (in_array($username, ['proditi', 'teknik informatika', 'ti'], true)) {
+                    $nimPrefix = '130';
+                    $homeDashboardScopeLabel = 'Teknik Informatika';
+                } elseif (in_array($username, ['prodinyalilis', 'prodisi', 'sistem informasi', 'si'], true)) {
+                    $nimPrefix = '131';
+                    $homeDashboardScopeLabel = 'Sistem Informasi';
                 }
+            } else {
+                $scopeUsername = '__all_programs__';
+                $homeDashboardScopeLabel = 'Semua Program Studi';
             }
+
+            try {
+                $service = app(ProdiJenisTugasAkhirReportService::class);
+                if ($userLevel === 5 && $nimPrefix !== null) {
+                    $jenisTugasAkhirTrendCharts = $service->buildTrendCharts($nimPrefix);
+                } elseif ($userLevel !== 5) {
+                    $jenisTugasAkhirTrendCharts = $service
+                        ->buildTrendChartsForPrograms(['130', '131']);
+                }
+
+                $homeScopeLulusanPeriode = $this->summarizeGraduatesByAcademicYear(
+                    $jenisTugasAkhirTrendCharts
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Grafik kelulusan pada Home gagal dimuat.', [
+                    'username' => $username,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+
+            $homeScopeLulusanBidang = helper::getScopeTaLulusanBidangChartByUsername($scopeUsername);
+            $homeStatusBimbinganProdi = helper::getStatusBimbinganSummaryProdiByUsername($scopeUsername);
+            $homeRataLamaBimbinganProdiPerAngkatan = helper::getRataLamaProsesBimbinganProdiPerAngkatanByUsername($scopeUsername);
         }
 
-        return view('/tugasakhir/layouts/content', compact('jenisTugasAkhirTrendCharts'));
+        return view('/tugasakhir/layouts/content', compact(
+            'jenisTugasAkhirTrendCharts',
+            'homeScopeLulusanPeriode',
+            'homeScopeLulusanBidang',
+            'homeStatusBimbinganProdi',
+            'homeRataLamaBimbinganProdiPerAngkatan',
+            'homeDashboardScopeLabel'
+        ));
+    }
+
+    protected function summarizeGraduatesByAcademicYear(array $trendCharts)
+    {
+        $seriesKeys = collect($trendCharts['series'] ?? [])->pluck('key')->filter()->values();
+
+        return collect($trendCharts['by_academic_year'] ?? [])->map(function ($row) use ($seriesKeys) {
+            $total = $seriesKeys->sum(function ($key) use ($row) {
+                return (int) ($row[$key] ?? 0);
+            });
+
+            return [
+                'y' => (string) ($row['period'] ?? '-'),
+                'total' => $total,
+            ];
+        })->values()->all();
     }
 
     public function surat_sk_pembimbing($nomor)

@@ -7,6 +7,14 @@ use PHPUnit\Framework\TestCase;
 
 class ProdiJenisTugasAkhirReportServiceTest extends TestCase
 {
+    public function testServiceProvidesFacultyWideTrendEntryPoint()
+    {
+        $this->assertTrue(method_exists(
+            ProdiJenisTugasAkhirReportService::class,
+            'buildTrendChartsForPrograms'
+        ));
+    }
+
     public function testItCalculatesDistributionByAcademicYear()
     {
         $report = (new ProdiJenisTugasAkhirReportService())->aggregate(

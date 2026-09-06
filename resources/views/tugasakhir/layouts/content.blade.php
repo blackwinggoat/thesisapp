@@ -18,9 +18,9 @@
                             <i class="fa fa-users icon-bg"></i>
                             <div class="tiles-inner text-center">
                                 <p>Persiapan Proposal</p>
-                                @if (Auth::user()->name == 'proditi')
+                                @if (in_array(strtolower(Auth::user()->name), ['proditi', 'teknik informatika', 'ti'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusTi(0, true)) }}</h1>
-                                @elseif (Auth::user()->name == 'prodisi')
+                                @elseif (in_array(strtolower(Auth::user()->name), ['prodisi', 'prodinyalilis', 'sistem informasi', 'si'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusSi(0, true)) }}</h1>
                                 @else
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatus(0, true)) }}</h1>
@@ -40,9 +40,9 @@
                             <i class="fa fa-users icon-bg"></i>
                             <div class="tiles-inner text-center">
                                 <p>Persiapan Ujian TA</p>
-                                @if (Auth::user()->name == 'proditi')
+                                @if (in_array(strtolower(Auth::user()->name), ['proditi', 'teknik informatika', 'ti'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusTi(2, true)) }}</h1>
-                                @elseif (Auth::user()->name == 'prodisi')
+                                @elseif (in_array(strtolower(Auth::user()->name), ['prodisi', 'prodinyalilis', 'sistem informasi', 'si'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusSi(2, true)) }}</h1>
                                 @else
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatus(2, true)) }}</h1>
@@ -62,9 +62,9 @@
                             <i class="fa fa-users icon-bg"></i>
                             <div class="tiles-inner text-center">
                                 <p>Lulusan</p>
-                                @if (Auth::user()->name == 'proditi')
+                                @if (in_array(strtolower(Auth::user()->name), ['proditi', 'teknik informatika', 'ti'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusTi(3, true)) }}</h1>
-                                @elseif (Auth::user()->name == 'prodisi')
+                                @elseif (in_array(strtolower(Auth::user()->name), ['prodisi', 'prodinyalilis', 'sistem informasi', 'si'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusSi(3, true)) }}</h1>
                                 @else
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatus(3, true)) }}</h1>
@@ -87,9 +87,9 @@
                             <i class="fa fa-users icon-bg"></i>
                             <div class="tiles-inner text-center">
                                 <p>Persiapan Proposal</p>
-                                @if (Auth::user()->name == 'proditi')
+                                @if (in_array(strtolower(Auth::user()->name), ['proditi', 'teknik informatika', 'ti'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusTi(0, false)) }}</h1>
-                                @elseif (Auth::user()->name == 'prodisi')
+                                @elseif (in_array(strtolower(Auth::user()->name), ['prodisi', 'prodinyalilis', 'sistem informasi', 'si'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusSi(0, false)) }}</h1>
                                 @else
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatus(0, false)) }}</h1>
@@ -109,9 +109,9 @@
                             <i class="fa fa-users icon-bg"></i>
                             <div class="tiles-inner text-center">
                                 <p>Persiapan Ujian TA</p>
-                                @if (Auth::user()->name == 'proditi')
+                                @if (in_array(strtolower(Auth::user()->name), ['proditi', 'teknik informatika', 'ti'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusTi(2, false)) }}</h1>
-                                @elseif (Auth::user()->name == 'prodisi')
+                                @elseif (in_array(strtolower(Auth::user()->name), ['prodisi', 'prodinyalilis', 'sistem informasi', 'si'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusSi(2, false)) }}</h1>
                                 @else
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatus(2, false)) }}</h1>
@@ -131,9 +131,9 @@
                             <i class="fa fa-users icon-bg"></i>
                             <div class="tiles-inner text-center">
                                 <p>Lulusan</p>
-                                @if (Auth::user()->name == 'proditi')
+                                @if (in_array(strtolower(Auth::user()->name), ['proditi', 'teknik informatika', 'ti'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusTi(3, false)) }}</h1>
-                                @elseif (Auth::user()->name == 'prodisi')
+                                @elseif (in_array(strtolower(Auth::user()->name), ['prodisi', 'prodinyalilis', 'sistem informasi', 'si'], true))
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatusSi(3, false)) }}</h1>
                                 @else
                                     <h1 class="bolded">{{ count(helper::getStatusBimbinganByStatus(3, false)) }}</h1>
@@ -149,86 +149,6 @@
                         </div><!-- /.the-box no-border -->
                     </div><!-- /.col-sm-3 -->
                 </div><!-- /.row -->
-                @php
-                    $homeScopeLulusanPeriode = helper::getScopeTaLulusanPeriodeChartByAuthUser();
-                    $homeScopeLulusanBidang = helper::getScopeTaLulusanBidangChartByAuthUser();
-                    $homeStatusBimbinganProdi = helper::getStatusBimbinganSummaryProdiByUsername(auth()->user()->name);
-                    $homeRataLamaBimbinganProdiPerAngkatan = helper::getRataLamaProsesBimbinganProdiPerAngkatanByUsername(auth()->user()->name);
-                    $homeScopeLulusanPeriode = is_array($homeScopeLulusanPeriode) ? $homeScopeLulusanPeriode : [];
-                    $homeScopeLulusanBidang = is_array($homeScopeLulusanBidang) ? $homeScopeLulusanBidang : [];
-                    $homeStatusBimbinganProdi = is_object($homeStatusBimbinganProdi) ? $homeStatusBimbinganProdi : (object) ['y' => '', 'PP' => 0, 'PUM' => 0, 'L' => 0];
-                    $homeRataLamaBimbinganProdiPerAngkatan = is_array($homeRataLamaBimbinganProdiPerAngkatan) ? $homeRataLamaBimbinganProdiPerAngkatan : [];
-                @endphp
-                <div class="row">
-                    <div class="col-sm-6">
-                        <div class="the-box">
-                            <h4 class="small-title">STATUS BIMBINGAN</h4>
-                            <div id="home-prodi-status-bimbingan" style="height: 280px;"></div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="the-box">
-                            <h4 class="small-title">RATA-RATA LAMA PROSES BIMBINGAN PER ANGKATAN (BULAN)</h4>
-                            <div id="home-prodi-lama-bimbingan-angkatan" style="height: 280px;"></div>
-                            <div style="margin-top: 10px; display: flex; gap: 16px; flex-wrap: wrap;">
-                                <div style="display:flex;align-items:center;gap:8px;">
-                                    <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#3BAFDA;"></span>
-                                    <strong>TI (bulan)</strong>
-                                </div>
-                                <div style="display:flex;align-items:center;gap:8px;">
-                                    <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#F6BB42;"></span>
-                                    <strong>SI (bulan)</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-6">
-                        <div class="the-box">
-                            <h4 class="small-title">GRAFIK JUMLAH LULUSAN PER TAHUN AJARAN</h4>
-                            <div id="home-prodi-lulusan-periode" style="height: 280px;"></div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="the-box">
-                            <h4 class="small-title">GRAFIK JUMLAH LULUSAN BERDASARKAN BIDANG ILMU</h4>
-                            <div id="home-prodi-lulusan-bidang" style="height: 280px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-6">
-                        <div class="the-box" style="min-height: 490px;">
-                            <h4 class="small-title">PERSEBARAN JENIS TUGAS AKHIR PER ANGKATAN</h4>
-                            <p class="text-muted" style="min-height: 38px;">Jumlah lulusan setiap jenis tugas akhir berdasarkan angkatan mahasiswa.</p>
-                            <div class="home-jenis-ta-legend" style="min-height: 54px;">
-                                @foreach (($jenisTugasAkhirTrendCharts['series'] ?? []) as $series)
-                                    <span style="display: inline-block; margin: 0 10px 7px 0; white-space: nowrap;">
-                                        <span style="background: {{ $series['color'] }}; display: inline-block; height: 8px; margin-right: 4px; width: 18px;"></span>
-                                        <strong>{{ $series['code'] }}</strong>
-                                    </span>
-                                @endforeach
-                            </div>
-                            <div id="home-prodi-jenis-ta-angkatan" style="height: 330px;"></div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="the-box" style="min-height: 490px;">
-                            <h4 class="small-title">PERSEBARAN JENIS TUGAS AKHIR PER TAHUN AJARAN</h4>
-                            <p class="text-muted" style="min-height: 38px;">Jumlah lulusan setiap jenis tugas akhir berdasarkan tahun ajaran kelulusan.</p>
-                            <div class="home-jenis-ta-legend" style="min-height: 54px;">
-                                @foreach (($jenisTugasAkhirTrendCharts['series'] ?? []) as $series)
-                                    <span style="display: inline-block; margin: 0 10px 7px 0; white-space: nowrap;">
-                                        <span style="background: {{ $series['color'] }}; display: inline-block; height: 8px; margin-right: 4px; width: 18px;"></span>
-                                        <strong>{{ $series['code'] }}</strong>
-                                    </span>
-                                @endforeach
-                            </div>
-                            <div id="home-prodi-jenis-ta-tahun-ajaran" style="height: 330px;"></div>
-                        </div>
-                    </div>
-                </div>
             @elseif(Auth::user()->level == 6)
                 @php
                     $semesterRange = helper::getCurrentSemesterDateRange();
@@ -532,6 +452,7 @@
                         </div><!-- /.the-box no-border -->
                     </div><!-- /.col-sm-3 -->
                 </div><!-- /.row -->
+                <h4>Semua Periode</h4>
                 <div class="row">
                     <div class="col-sm-4">
                         <div class="the-box no-border bg-success tiles-information">
@@ -582,6 +503,9 @@
                         </div><!-- /.the-box no-border -->
                     </div><!-- /.col-sm-3 -->
                 </div><!-- /.row -->
+            @endif
+            @if (in_array((int) Auth::user()->level, [2, 3, 5], true))
+                @include('tugasakhir.layouts.partials.home-prodi-dashboard-charts')
             @endif
             @if (Auth::user()->level == 8)
                 @php
@@ -1042,7 +966,7 @@
                     `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#777;text-align:center;padding:0 16px;">${text}</div>`;
             };
 
-            @if (Auth::user()->level == 5)
+            @if (in_array((int) Auth::user()->level, [2, 3, 5], true))
                 const homeScopeLulusanPeriode = @json($homeScopeLulusanPeriode);
                 const homeScopeLulusanBidang = @json($homeScopeLulusanBidang);
                 const homeStatusBimbinganProdi = @json($homeStatusBimbinganProdi);
@@ -1124,14 +1048,14 @@
 
                 if (document.getElementById('home-prodi-lulusan-periode')) {
                     if (homeScopeLulusanPeriode.length > 0) {
-                        Morris.Line({
+                        Morris.Bar({
                             element: 'home-prodi-lulusan-periode',
                             data: homeScopeLulusanPeriode,
                             xkey: 'y',
                             ykeys: ['total'],
                             labels: ['Jumlah Lulusan'],
-                            lineColors: ['#3BAFDA'],
-                            parseTime: false,
+                            barColors: ['#2563A8'],
+                            xLabelAngle: 35,
                             hideHover: 'auto',
                             resize: true
                         });

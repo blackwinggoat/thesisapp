@@ -28,6 +28,21 @@ class ProdiJenisTugasAkhirReportService
         return $this->aggregateTrendCharts($this->loadGraduatedStudents($nimPrefix));
     }
 
+    public function buildTrendChartsForPrograms(array $nimPrefixes)
+    {
+        $rows = collect();
+
+        foreach (array_unique($nimPrefixes) as $nimPrefix) {
+            if (!preg_match('/^\d{3}$/', (string) $nimPrefix)) {
+                continue;
+            }
+
+            $rows = $rows->concat($this->loadGraduatedStudents($nimPrefix));
+        }
+
+        return $this->aggregateTrendCharts($rows->unique('nim')->values());
+    }
+
     public function aggregateTrendCharts($rows)
     {
         $rows = collect($rows)->map(function ($row) {

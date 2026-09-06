@@ -2023,11 +2023,11 @@ class Helper
     {
         $username = strtolower(trim((string) ($username ?: auth()->user()->name ?? '')));
 
-        if ($username === 'proditi') {
+        if (in_array($username, ['proditi', 'akademikproditi', 'teknik informatika', 'ti'], true)) {
             return '130%';
         }
 
-        if ($username === 'prodisi') {
+        if (in_array($username, ['prodisi', 'prodinyalilis', 'akademikprodisi', 'sistem informasi', 'si'], true)) {
             return '131%';
         }
 
