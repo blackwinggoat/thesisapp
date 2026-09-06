@@ -1,5 +1,21 @@
 @extends('tugasakhir.index')
 @section('isi')
+<style>
+    .exam-requirements-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .exam-requirements-table .document-link-column {
+        width: 34%;
+    }
+
+    .exam-requirements-table .document-link-input {
+        box-sizing: border-box;
+        min-width: 0;
+        width: 100%;
+    }
+</style>
 <!-- BEGIN PAGE CONTENT -->
 <div class="page-content">
     <div class="container-fluid">
@@ -136,12 +152,12 @@
             <div class="table-responsive">
                 <form action="{{url("mhs/syarat_ujianpost")}}" onsubmit="return showPostModal(this)" method="post">
                     {{csrf_field()}}
-                    <table class="table table-striped table-hover" id="">
+                    <table class="table table-striped table-hover exam-requirements-table" id="">
                         <thead class="the-box dark full">
                             <tr>
                                 <th>No</th>
                                 <th>Nama Dokumen</th>
-                                <th>Link Dokumen</th>
+                                <th class="document-link-column">Link Dokumen</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                                 <th>Catatan</th>
@@ -157,16 +173,14 @@
                             <tr class="odd gradeX">
                                 <td width="1%" align="center">{{++$key}}</td>
                                 <td>{{$value->nama_syarat}}</td>
-                                <td>
-                                    <div class="col-lg-5">
-                                        <input type="hidden" name="syarat_ujian_id[]"
-                                            value="{{$value->syarat_ujian_id}}" />
-                                        @if($key == 1)
-                                        <input type="hidden" name="sui" />
-                                        @endif
-                                        <input type="text" class="form-control bold-border" name="link[]"
-                                            value="{{empty($trtsyaratujian) ?"": $trtsyaratujian->link}}" />
-                                    </div>
+                                <td class="document-link-column">
+                                    <input type="hidden" name="syarat_ujian_id[]"
+                                        value="{{$value->syarat_ujian_id}}" />
+                                    @if($key == 1)
+                                    <input type="hidden" name="sui" />
+                                    @endif
+                                    <input type="text" class="form-control bold-border document-link-input" name="link[]"
+                                        value="{{empty($trtsyaratujian) ?"": $trtsyaratujian->link}}" />
                                 </td>
                                 <td>
                                     @if(!empty($trtsyaratujian))
