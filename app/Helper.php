@@ -186,6 +186,40 @@ class Helper
         return $fileName;
     }
 
+    public static function isGoogleDriveUrl($value)
+    {
+        $value = trim((string) $value);
+
+        if (!filter_var($value, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        $parts = parse_url($value);
+        $scheme = strtolower($parts['scheme'] ?? '');
+        $host = strtolower($parts['host'] ?? '');
+
+        if (strpos($host, 'www.') === 0) {
+            $host = substr($host, 4);
+        }
+
+        return $scheme === 'https' && in_array($host, ['drive.google.com', 'docs.google.com'], true);
+    }
+
+    public static function getKerangkaPikirUrl($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (self::isGoogleDriveUrl($value)) {
+            return $value;
+        }
+
+        return asset('dokumen/' . basename($value));
+    }
+
     public static function storeAnnouncementImage($image)
     {
         $extension = strtolower($image->getClientOriginalExtension());

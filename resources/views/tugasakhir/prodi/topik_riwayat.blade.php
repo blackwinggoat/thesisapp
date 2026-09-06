@@ -85,14 +85,7 @@
                                     <td>{{ $value->topik }}</td>
                                     <td>{!! helper::jenisTugasAkhirBadge($value->jenis_tugas_akhir_id ?? null) !!}</td>
                                     <td>
-                                        @if ($value->kerangka)
-                                            <button class="btn btn-primary" onclick="showModal(this)"
-                                                data-href="{{ asset('dokumen/' . $value->kerangka) }}"
-                                                data-target="#modalPrimary" data-toggle="modal"><i class="fa fa-paperclip"></i>
-                                            </button>
-                                        @else
-                                            <span class="badge badge-danger">Mahasiswa tidak mengupload kerangka pikir</span>
-                                        @endif
+                                        @include('tugasakhir.components.kerangka-pikir-link', ['kerangka' => $value->kerangka])
                                     </td>
                                     <td>
                                         @if ($value->status == 0)
@@ -114,31 +107,4 @@
             </div><!-- /.the-box .default -->
         </div><!-- /.container-fluid -->
     </div>
-@endsection
-
-{{-- ModalSetUser --}}
-@section('modalPrimaryTitle')
-    Download
-@endsection
-@section('modalPrimaryBody')
-    Download kerangka pikir?
-@endsection
-@section('modalPrimaryFooter')
-    <button onclick="goOnNewTab(this)" class="btn btn-default">Download</button>
-@endsection
-
-@section('script')
-    <script>
-        let modal, modalId, link;
-        const showModal = e => {
-            link = e.getAttribute("data-href");
-            modalId = e.getAttribute("data-target");
-            modal = document.querySelector(modalId);
-        };
-
-        const goOnNewTab = () => {
-            modal.querySelector(".modal-backdrop").click();
-            window.open(link);
-        };
-    </script>
 @endsection

@@ -110,10 +110,7 @@
                                             @endforeach
                                         </th>
                                         <td>
-                                            <button type="button" class="btn btn-primary" onclick="showModal(this)"
-                                                data-href="{{ asset('dokumen/' . $value->kerangka) }}"
-                                                data-target="#modalInfo" data-toggle="modal"><i class="fa fa-paperclip"></i>
-                                            </button>
+                                            @include('tugasakhir.components.kerangka-pikir-link', ['kerangka' => $value->kerangka])
                                         </td>
                                         <td>
                                             @if ($value->status == 0)
@@ -170,17 +167,6 @@
 @endsection
 @section('modalDangerFooter')
     <button onclick="goOn(this)" class="btn btn-default">Tolak</button>
-@endsection
-
-{{-- ModalDownload --}}
-@section('modalInfoTitle')
-    Download
-@endsection
-@section('modalInfoBody')
-    Download kerangka pikir?
-@endsection
-@section('modalInfoFooter')
-    <button onclick="goOn(this)" class="btn btn-default">Download</button>
 @endsection
 
 {{-- ModalTerima --}}

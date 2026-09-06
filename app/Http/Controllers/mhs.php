@@ -647,7 +647,16 @@ class mhs extends Controller
         $this->validate($request, [
             'topik' => 'required|max:1000',
             'jenis_tugas_akhir_id' => 'required|integer',
+            'kerangka' => 'nullable|string|max:255',
         ]);
+
+        $kerangkaUrl = trim((string) $request->input('kerangka'));
+        $kerangkaInfo = $this->parseGoogleDriveFileLink($kerangkaUrl);
+        if ($kerangkaUrl !== '' && !$kerangkaInfo['valid']) {
+            return redirect()->back()->withInput()->withErrors([
+                'kerangka' => $kerangkaInfo['message'],
+            ]);
+        }
 
         if (!$this->jenisTugasAkhirMahasiswaDapatDipilih($request->jenis_tugas_akhir_id, $topik->jenis_tugas_akhir_id)) {
             return redirect()->back()->withInput()->withErrors([
@@ -655,13 +664,19 @@ class mhs extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($request, $id) {
+        DB::transaction(function () use ($request, $id, $kerangkaUrl) {
+            $topikUpdate = [
+                'topik' => trim((string) $request->topik),
+                'jenis_tugas_akhir_id' => $request->jenis_tugas_akhir_id,
+            ];
+
+            if ($kerangkaUrl !== '') {
+                $topikUpdate['kerangka'] = $kerangkaUrl;
+            }
+
             trt_topik::where("topik_id", $id)
                 ->where('C_NPM', auth()->user()->name)
-                ->update([
-                    'topik' => trim((string) $request->topik),
-                    'jenis_tugas_akhir_id' => $request->jenis_tugas_akhir_id,
-                ]);
+                ->update($topikUpdate);
 
             if (Schema::hasColumn('trt_bimbingan', 'topik_id')) {
                 DB::table('trt_bimbingan')
@@ -747,12 +762,23 @@ class mhs extends Controller
     }
     public function pengajuan_topikdel($id)
     {
-        $data = DB::table("trt_topik")->select("*")->where('topik_id', $id)->get();
-        $path = public_path("dokumen/" . $data[0]->kerangka);
-        if (strpos($path, ".")) {
-            unlink($path);
+        $topik = trt_topik::where('topik_id', $id)
+            ->where('C_NPM', auth()->user()->name)
+            ->first();
+
+        if (!$topik) {
+            return redirect::to('mhs/pengajuan_topik')->with('error', 'Data topik tidak ditemukan.');
         }
-        trt_topik::where('topik_id', $id)->delete();
+
+        $kerangka = trim((string) $topik->kerangka);
+        if ($kerangka !== '' && !helper::isGoogleDriveUrl($kerangka)) {
+            $legacyPath = public_path('dokumen/' . basename($kerangka));
+            if (is_file($legacyPath)) {
+                unlink($legacyPath);
+            }
+        }
+
+        $topik->delete();
         return redirect::to('mhs/pengajuan_topik');
     }
 
@@ -767,8 +793,16 @@ class mhs extends Controller
             'topik' => 'required|max:1000',
             'jenis_tugas_akhir_id' => 'required|integer',
             'bidang_ilmu' => 'required|array|min:1',
-            'kerangka' => 'nullable|file|mimes:pdf,xls,doc,docx,pptx,pps,jpeg,bmp,png,xlsx,zip,rar',
+            'kerangka' => 'nullable|string|max:255',
         ]);
+
+        $kerangkaUrl = trim((string) $request->input('kerangka'));
+        $kerangkaInfo = $this->parseGoogleDriveFileLink($kerangkaUrl);
+        if ($kerangkaUrl !== '' && !$kerangkaInfo['valid']) {
+            return redirect()->back()->withInput()->withErrors([
+                'kerangka' => $kerangkaInfo['message'],
+            ]);
+        }
 
         if (!$this->jenisTugasAkhirMahasiswaDapatDipilih($request->jenis_tugas_akhir_id)) {
             return redirect()->back()->withInput()->withErrors([
@@ -780,17 +814,7 @@ class mhs extends Controller
         $datapost['status'] = 0;
         $datapost['user_id'] = $datapost['C_NPM'];
         $datapost['bidang_ilmu_peminatan'] = $datapost['bidang_ilmu_peminatan'];
-        $file = isset($datapost['kerangka']) ? $datapost['kerangka'] : '';
-
-        if ($file) {
-            $uploadPath = public_path('dokumen');
-            if (!is_dir($uploadPath)) {
-                mkdir($uploadPath, 0775, true);
-            }
-            $datapost['kerangka'] = helper::uploadFile($file, $uploadPath . DIRECTORY_SEPARATOR, '');
-        } else {
-            $datapost['kerangka'] = '';
-        }
+        $datapost['kerangka'] = $kerangkaUrl;
 
         $datapost["note"] = $datapost["note"];
 
@@ -1763,6 +1787,7 @@ class mhs extends Controller
         }
 
         $parts = parse_url($url);
+        $scheme = strtolower($parts['scheme'] ?? '');
         $host = strtolower($parts['host'] ?? '');
         $path = $parts['path'] ?? '';
         $query = $parts['query'] ?? '';
@@ -1775,12 +1800,16 @@ class mhs extends Controller
             $host = 'docs.google.com';
         }
 
-        if (!in_array($host, ['drive.google.com', 'docs.google.com'])) {
+        if ($scheme !== 'https') {
+            return ['valid' => false, 'file_id' => null, 'message' => 'Link harus menggunakan HTTPS. Salin link langsung dari menu Share Google Drive.'];
+        }
+
+        if (!in_array($host, ['drive.google.com', 'docs.google.com'], true)) {
             return ['valid' => false, 'file_id' => null, 'message' => 'Link harus berasal dari Google Drive atau Google Docs.'];
         }
 
         if (strpos($path, '/folders/') !== false || strpos($path, '/drive/folders/') !== false) {
-            return ['valid' => false, 'file_id' => null, 'message' => 'Link folder Google Drive tidak diterima. Gunakan link file dokumen draft final.'];
+            return ['valid' => false, 'file_id' => null, 'message' => 'Link folder Google Drive tidak diterima. Gunakan link file dokumen.'];
         }
 
         if ($host === 'drive.google.com' && preg_match('#/file/d/([^/]+)#', $path, $matches)) {

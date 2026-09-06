@@ -48,36 +48,3 @@
         </div><!-- /.container-fluid -->
     </div>
 @endsection
-
-{{-- ModalSetUser --}}
-@section('modalPrimaryTitle')
-    Download
-@endsection
-@section('modalPrimaryBody')
-    Download kerangka pikir?
-@endsection
-@section('modalPrimaryFooter')
-    <button onclick="goOnNewTab(this)" class="btn btn-default">Download</button>
-@endsection
-
-@section('script')
-    <script>
-        let modal, modalId, modalFooter, link, form, formaction;
-        const showModal = e => {
-            link = e.getAttribute("data-href");
-            modalId = e.getAttribute("data-target");
-            modal = document.querySelector(modalId);
-            modalFooter = modal.querySelector(".modal-footer");
-        };
-
-        const goOn = e => {
-            modal.querySelector(".modal-backdrop").click();
-            window.location.href = link;
-        };
-
-        const goOnNewTab = () => {
-            modal.querySelector(".modal-backdrop").click();
-            window.open(link);
-        };
-    </script>
-@endsection

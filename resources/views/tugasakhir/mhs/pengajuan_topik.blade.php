@@ -39,7 +39,7 @@
             $trtbimbingan = \App\Model\trt_bimbingan::where("C_NPM", auth()->user()->name)->get();
             @endphp
             @if($trtbimbingan->isEmpty())
-            <form method="post" action="{{url('mhs/pengajuan_topik')}}" enctype="multipart/form-data">
+            <form method="post" action="{{url('mhs/pengajuan_topik')}}">
                 {{ csrf_field() }}
                 <fieldset>
                     <div class="form-group">
@@ -96,17 +96,12 @@
                     </div>
                     <br><br>
                     <div class="form-group">
-                        <label class="col-lg-2 control-label">Kerangka Pikir</label>
+                        <label class="col-lg-2 control-label">Link Kerangka Pikir</label>
                         <div class="col-lg-5">
-                            <div class="input-group">
-                                <span class="input-group-btn">
-                                    <span class="btn btn-default btn-file">
-                                        Browse&hellip; <input type="file" name="kerangka" class="bold-border"
-                                            accept=".pdf,.xls,.doc,.docx,.pptx,.pps,.jpeg,.bmp,.png,.xlsx,.zip,.rar">
-                                    </span>
-                                </span>
-                                <input type="text" class="form-control" readonly>
-                            </div>
+                            <input type="url" name="kerangka" class="form-control bold-border"
+                                maxlength="255" value="{{ old('kerangka') }}"
+                                placeholder="https://drive.google.com/file/d/.../view">
+                            <small class="text-muted">Gunakan link file Google Drive/Docs, bukan folder. Pastikan akses file dapat dilihat oleh penerima link.</small>
                         </div>
                     </div>
                     <br><br>
@@ -309,13 +304,7 @@
                                 <a class="btn btn-info" href="{{url('mhs/detail_note')}}/{{$value->topik_id}}"><i class="fa fa-newspaper-o"></i></a>    
                             </td>
                             <td>
-                                @if (!empty($value->kerangka))
-                                <button class="btn btn-primary" onclick="showModal(this)" data-target="#modalDefault"
-                                    data-toggle="modal" data-href="{{asset('dokumen/'.$value->kerangka)}}"
-                                    target="_blank"><i class="fa fa-paperclip"></i></button>
-                                @else
-                                <span class="text-muted">Tidak ada lampiran</span>
-                                @endif
+                                @include('tugasakhir.components.kerangka-pikir-link', ['kerangka' => $value->kerangka])
                             </td>
 
                             @if($value->status == 0)
@@ -372,17 +361,6 @@ Apakah Anda yakin ingin me-request pembimbing?
 @endsection
 @section("modalInfoFooter")
 <button onclick="submit(this)" id="tombol_request_dua" class="btn btn-default">Request</button>
-@endsection
-
-{{--ModalDownload--}}
-@section("modalDefaultTitle")
-Download Kerangka Pikir
-@endsection
-@section("modalDefaultBody")
-Apakah Anda yakin ingin men-download kerangka pikir?
-@endsection
-@section("modalDefaultFooter")
-<button onclick="goOnNewTab(this)" class="btn btn-primary">Download</button>
 @endsection
 
 {{--ModalHapus--}}
@@ -493,11 +471,6 @@ Apakah Anda yakin ingin menghapus data?
     const submit = () => {
         form = document.querySelector(`form[action="${formaction}"]`);
         form.submit();
-    };
-
-    const goOnNewTab = () => {
-        modal.querySelector(".modal-backdrop").click();
-        window.open(link);
     };
 
     (function () {

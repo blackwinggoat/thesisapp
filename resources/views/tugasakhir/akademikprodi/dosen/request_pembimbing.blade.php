@@ -54,7 +54,7 @@
                                         {{++$key}}. {{$mst_bidang_ilmu->bidang_ilmu}}<br>
                                     @endforeach
                                 </td>
-                                <td><button class="btn btn-primary" onclick="showModal(this)" data-target="#modalInfo" data-toggle="modal" data-href="{{asset('dokumen/'.$value->kerangka)}}"><i class="fa fa-paperclip"></i></button></td>
+                                <td>@include('tugasakhir.components.kerangka-pikir-link', ['kerangka' => $value->kerangka])</td>
                                 <td>
                                     <a class="btn btn-info" href="{{url('dsn/detail_note')}}/{{$value->topik_id}}"><i class="fa fa-newspaper-o"></i></a>    
                                 </td>
@@ -154,17 +154,6 @@
 @endsection
 @section("modalDangerFooter")
     <button onclick="goOn(this)" class="btn btn-default">Tolak</button>
-@endsection
-
-{{--ModalDownload--}}
-@section("modalInfoTitle")
-    Download Kerangka Pikir
-@endsection
-@section("modalInfoBody")
-    Apakah Anda yakin ingin men-download kerangka pikir?
-@endsection
-@section("modalInfoFooter")
-    <button onclick="goOn(this)" class="btn btn-default">Download</button>
 @endsection
 
 @section("script")

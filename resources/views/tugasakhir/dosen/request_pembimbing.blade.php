@@ -58,15 +58,7 @@
                                         @endforeach
                                     </td>
                                     <td>
-                                        @if ($value->kerangka == null)
-                                            <span class="label label-danger">Belum Ada</span>
-                                        @else
-                                            <button class="btn btn-primary" onclick="showModal(this)"
-                                                data-target="#modalInfo" data-toggle="modal"
-                                                data-href="{{ asset('dokumen/' . $value->kerangka) }}">
-                                                <i class="fa fa-paperclip"></i>
-                                            </button>
-                                        @endif
+                                        @include('tugasakhir.components.kerangka-pikir-link', ['kerangka' => $value->kerangka])
                                     </td>
                                     <td>
                                         <a class="btn btn-info"
@@ -205,17 +197,6 @@
 @endsection
 @section('modalDangerFooter')
     <button onclick="goOn(this)" class="btn btn-default">Tolak</button>
-@endsection
-
-{{-- ModalDownload --}}
-@section('modalInfoTitle')
-    Download Kerangka Pikir
-@endsection
-@section('modalInfoBody')
-    Apakah Anda yakin ingin men-download kerangka pikir?
-@endsection
-@section('modalInfoFooter')
-    <button onclick="goOn(this)" class="btn btn-default" data-href="">Download</button>
 @endsection
 
 @section('script')

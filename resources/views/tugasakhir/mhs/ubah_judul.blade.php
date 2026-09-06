@@ -11,7 +11,7 @@
         <ol class="breadcrumb default square rsaquo sm">
             <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
             <li><a href="{{ url('/') }}">Home</a></li>
-            <li class="active">Form Ubah Note</li>
+            <li class="active">Ubah Judul dan Kerangka Pikir</li>
         </ol>
         <!-- End breadcrumb -->
 
@@ -19,13 +19,33 @@
         <h3 class="page-heading">Form Ubah Judul</h3>
         <!-- BEGIN DATA TABLE -->
         <div class="the-box">
-            <form method="post" action="{{url('mhs/ubah_judul')}}/{{$data[0]->topik_id}}" enctype="multipart/form-data">
+            @if ($errors->any())
+                <div class="alert alert-danger" role="alert">
+                    <strong>Perubahan belum tersimpan.</strong>
+                    <ul style="margin-bottom: 0; padding-left: 20px;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <form method="post" action="{{url('mhs/ubah_judul')}}/{{$data[0]->topik_id}}">
                 {{ csrf_field() }}
                 <fieldset>
                     <div class="form-group">
                         <label class="col-lg-2 control-label">Judul Topik</label>
                         <div class="col-lg-5">
                             <input type="text" class="form-control bold-border" name="topik" value="{{$data[0]->topik}}"/>
+                        </div>
+                    </div>
+                    <br><br>
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label">Link Kerangka Pikir</label>
+                        <div class="col-lg-5">
+                            <input type="url" class="form-control bold-border" name="kerangka" maxlength="255"
+                                value="{{ old('kerangka', helper::isGoogleDriveUrl($data[0]->kerangka ?? '') ? $data[0]->kerangka : '') }}"
+                                placeholder="https://drive.google.com/file/d/.../view">
+                            <small class="text-muted">Gunakan link file Google Drive/Docs, bukan folder. Jika lampiran lama masih digunakan, kolom ini boleh dibiarkan kosong.</small>
                         </div>
                     </div>
                     <br><br>
