@@ -20,7 +20,9 @@ mkdir -p \
     "${DEPLOY_PATH}/app" \
     "${DEPLOY_PATH}/bootstrap/cache" \
     "${DEPLOY_PATH}/storage/app/public" \
+    "${DEPLOY_PATH}/storage/app/public/mahasiswa" \
     "${DEPLOY_PATH}/storage/framework" \
+    "${DEPLOY_PATH}/public/storage/mahasiswa" \
     "${DEPLOY_PATH}/public/gambar" \
     "${DEPLOY_PATH}/public/dokumen" \
     "${DEPLOY_PATH}/public/public/dokumen" \
@@ -66,6 +68,8 @@ printf 'user document\n' > "${DEPLOY_PATH}/public/dokumen/user-document.pdf"
 printf 'nested user document\n' > "${DEPLOY_PATH}/public/public/dokumen/nested-user-document.pdf"
 printf 'mobile user upload\n' > "${DEPLOY_PATH}/public/mobile/controller/simta/uploadedFiles/mobile-user-upload.pdf"
 printf 'runtime state\n' > "${DEPLOY_PATH}/storage/runtime.txt"
+printf 'profile photo\n' > "${DEPLOY_PATH}/storage/app/public/mahasiswa/profile.jpg"
+printf 'profile photo\n' > "${DEPLOY_PATH}/public/storage/mahasiswa/profile.jpg"
 printf 'server archive\n' > "${DEPLOY_PATH}/public/public_html.zip"
 
 for index in 1 2 3 4 5 6 7; do
@@ -134,6 +138,8 @@ assert_line 'runtime state' "${DEPLOY_PATH}/storage/runtime.txt"
 assert_line 'server archive' "${DEPLOY_PATH}/public/public_html.zip"
 assert_line "OFFICIAL_ASSET_PATH=${SHARED_PATH}/official-assets" "${DEPLOY_PATH}/.env"
 [[ -L "${DEPLOY_PATH}/public/storage" ]]
+assert_line 'profile photo' "${DEPLOY_PATH}/public/storage/mahasiswa/profile.jpg"
+assert_line 'profile photo' "${SHARED_PATH}"/public-storage-recovery-*/mahasiswa/profile.jpg
 php -r 'exit((fileperms($argv[1]) & 0777) === 0755 ? 0 : 1);' "${DEPLOY_PATH}/public/images"
 php -r 'exit((fileperms($argv[1]) & 0777) === 0755 ? 0 : 1);' "${DEPLOY_PATH}/public/images/icons"
 php -r 'exit((fileperms($argv[1]) & 0777) === 0644 ? 0 : 1);' "${DEPLOY_PATH}/public/images/icons/telegram.svg"

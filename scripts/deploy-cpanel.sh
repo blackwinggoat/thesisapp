@@ -49,8 +49,20 @@ fi
 grep -Fqx "OFFICIAL_ASSET_PATH=${OFFICIAL_PATH}" "${DEPLOY_PATH}/.env" \
     || fail 'Production .env does not point to persistent official assets.'
 
+PUBLIC_STORAGE_REPAIR=0
 if [[ -e "${DEPLOY_PATH}/public/storage" && ! -L "${DEPLOY_PATH}/public/storage" ]]; then
-    fail 'public/storage exists but is not a symbolic link.'
+    [[ -d "${DEPLOY_PATH}/public/storage" ]] \
+        || fail 'public/storage exists but is neither a directory nor a symbolic link.'
+    [[ -d "${DEPLOY_PATH}/storage/app/public" ]] \
+        || fail 'The canonical storage/app/public directory is missing.'
+
+    if ! diff -qr \
+        "${DEPLOY_PATH}/public/storage" \
+        "${DEPLOY_PATH}/storage/app/public" >/dev/null 2>&1; then
+        fail 'public/storage differs from storage/app/public; reconcile user uploads before deploying.'
+    fi
+
+    PUBLIC_STORAGE_REPAIR=1
 fi
 
 CURRENT_COMMIT=$(git -C "$APP_PATH" rev-parse HEAD)
@@ -135,6 +147,13 @@ TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
 BACKUP_PATH="${BACKUP_ROOT}/${TIMESTAMP}-${CURRENT_COMMIT}"
 BACKUP_MANIFEST="${BACKUP_ROOT}/${TIMESTAMP}-${CURRENT_COMMIT}.json"
 mkdir -p "$BACKUP_PATH"
+
+if [[ "$PUBLIC_STORAGE_REPAIR" -eq 1 ]]; then
+    STORAGE_RECOVERY_PATH="${SHARED_PATH}/public-storage-recovery-${TIMESTAMP}"
+    printf 'Archiving the verified duplicate public/storage directory to %s\n' "$STORAGE_RECOVERY_PATH"
+    mv "${DEPLOY_PATH}/public/storage" "$STORAGE_RECOVERY_PATH"
+    ln -s "${DEPLOY_PATH}/storage/app/public" "${DEPLOY_PATH}/public/storage"
+fi
 
 printf 'Preparing dependencies for %s\n' "$CURRENT_COMMIT"
 (
