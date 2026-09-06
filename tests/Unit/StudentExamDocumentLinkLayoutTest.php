@@ -21,7 +21,9 @@ class StudentExamDocumentLinkLayoutTest extends TestCase
         $this->assertStringContainsString('width: 8%;', $styles);
         $this->assertStringContainsString('width: 10%;', $styles);
         $this->assertStringContainsString('width: 6%;', $styles);
-        $this->assertStringContainsString('width: 100%;', $styles);
+        $this->assertStringContainsString('display: block;', $styles);
+        $this->assertStringContainsString('max-width: none;', $styles);
+        $this->assertStringContainsString('width: 100% !important;', $styles);
 
         foreach ($views as $view) {
             $this->assertStringContainsString("@include('tugasakhir.mhs.partials.exam_document_table_styles')", $view);

@@ -37,7 +37,9 @@
 
     .exam-requirements-table .document-link-input {
         box-sizing: border-box;
+        display: block;
+        max-width: none;
         min-width: 0;
-        width: 100%;
+        width: 100% !important;
     }
 </style>
