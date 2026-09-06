@@ -17,7 +17,25 @@
         <!-- End breadcrumb -->
 
         <!-- BEGIN DATA TABLE -->
-        <h3 class="page-heading">Daftar Periode Pendaftaran</h3>
+        <h3 class="page-heading">
+            Daftar Periode Pendaftaran
+            @if(!empty($studentProgramLabel))
+            <small><span class="label label-info">{{$studentProgramLabel}}</span></small>
+            @endif
+        </h3>
+        @if(empty($studentProgramLabel))
+        <div class="alert alert-danger">
+            Program studi akun mahasiswa belum dikenali. Silakan hubungi Program Studi.
+        </div>
+        @elseif(session('registration_status') == 'invalid_period')
+        <div class="alert alert-danger">
+            Periode pendaftaran tidak tersedia untuk program studi Anda.
+        </div>
+        @elseif(session('registration_status') == 'registration_error')
+        <div class="alert alert-danger">
+            Pendaftaran belum berhasil diproses. Silakan coba kembali.
+        </div>
+        @endif
         <form method="post" action="{{url('mhs/registrasi')}}" enctype="multipart/form-data">
             {{ csrf_field() }}
             <input type="hidden" name="tipe_ujian" value="0">
@@ -36,17 +54,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                            $mstsyaratujian = \App\Model\mst_syarat_ujian::where(["tipe_ujian" => 0])->count();
-                            $trtsyaratujian = \App\TrtSyaratUjian::where(["C_NPM" => auth()->user()->name, "status" =>
-                            1])->whereIn("syarat_ujian_id", \App\Model\mst_syarat_ujian::where(["tipe_ujian" =>
-                            0])->select("syarat_ujian_id"))->count();
-                            $trtreg =
-                            \App\Model\trt_reg::whereIn("bimbingan_id",\App\Model\trt_bimbingan::where("C_NPM",
-                            auth()->user()->name)->select("bimbingan_id"))->whereIn("pendaftaran_id",\App\Model\mst_pendaftaran::where("tipe_ujian",
-                            0)->select("pendaftaran_id"))->count();
-                            @endphp
-                            @foreach ($data as $key => $value)
+                            @forelse ($data as $key => $value)
                             <tr class="odd gradeX">
                                 <td width="1%" align="center">{{++$key}}</td>
                                 <td>{{$value->nama_periode}}</td>
@@ -66,7 +74,11 @@
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Belum ada periode pendaftaran yang tersedia.</td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div><!-- /.table-responsive -->
@@ -90,10 +102,23 @@
                 <p>Data Gagal Ditambahkan, Konten Masih Kosong!<i class="fa fa-smile-o"></i></p>
             </div>
         @endif
+        @if(session('document_status') == 'success')
+            <div class="alert alert-success alert-block square fade in alert-dismissable">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                {{session('document_message')}}
+            </div>
+        @endif
+        @if($errors->has('document_links'))
+            <div class="alert alert-danger alert-block square fade in alert-dismissable">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                {{$errors->first('document_links')}}
+            </div>
+        @endif
         <div class="the-box">
             <div class="table-responsive">
-                <form action="{{url("mhs/syarat_ujianpost")}}" onsubmit="return showPostModal(this)" method="post">
+                <form action="{{url("mhs/syarat_ujianpost_all")}}" method="post">
                     {{csrf_field()}}
+                    <input type="hidden" name="tipe_ujian" value="0">
                     <table class="table table-striped table-hover exam-requirements-table" id="">
                         <thead class="the-box dark full">
                             <tr>
@@ -108,21 +133,15 @@
                         </thead>
                         <tbody>
                             @foreach ($syarat as $key => $value)
-                            @php
-                            $trtsyaratujian = \App\TrtSyaratUjian::where(["syarat_ujian_id" => $value->syarat_ujian_id,
-                            "C_NPM" => auth()->user()->name])->first()
-                            @endphp
+                            @php $trtsyaratujian = $submittedRequirements->get($value->syarat_ujian_id); @endphp
                             <tr class="odd gradeX">
-                                <td class="document-number-column document-compact-column">{{++$key}}</td>
+                                <td class="document-number-column document-compact-column">{{$loop->iteration}}</td>
                                 <td class="document-name-column">{{$value->nama_syarat}}</td>
                                 <td class="document-link-column">
                                     <input type="hidden" name="syarat_ujian_id[]"
                                         value="{{$value->syarat_ujian_id}}" />
-                                    @if($key == 1)
-                                    <input type="hidden" name="sui" />
-                                    @endif
                                     <input type="text" class="form-control bold-border document-link-input" name="link[]"
-                                        value="{{empty($trtsyaratujian) ?"": $trtsyaratujian->link}}" />
+                                        value="{{old('link.'.$key, empty($trtsyaratujian) ? '' : $trtsyaratujian->link)}}" />
                                 </td>
                                 <td class="document-status-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
@@ -137,18 +156,13 @@
                                 </td>
                                 <td class="document-action-column document-compact-column">
                                     @if(!empty($trtsyaratujian))
-                                    <button type="button" value="{{$key-1}}" onclick="showPostModal(this)"
-                                        data-formaction="{{url("mhs/syarat_ujianpost")}}" data-target="#modalInfo"
-                                        data-toggle="modal" class="btn btn-info"><i class="fa fa-edit"></i></button>
                                     <button type="button" onclick="showModal(this)"
                                         data-href="{{ url("mhs/syarat_ujiandel/0/$value->syarat_ujian_id")}}"
-                                        data-target="#modalDanger" data-toggle="modal" class="btn btn-danger"><i
+                                        data-target="#modalDanger" data-toggle="modal" class="btn btn-danger"
+                                        title="Hapus link"><i
                                             class="fa fa-trash"></i></button>
                                     @else
-                                    <button id="tombol_satu" type="button" value="{{$key-1}}"
-                                        onclick="showPostModal(this)" data-formaction="{{url("mhs/syarat_ujianpost")}}"
-                                        data-target="#modalPrimary" data-toggle="modal" class="btn btn-primary"><i
-                                            class="fa fa-save"></i></button>
+                                    <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td class="document-note-column document-compact-column">
@@ -170,13 +184,17 @@
                             @endforeach
                         </tbody>
                     </table>
-                    <span>*Gunakan http/https untuk link dokumen</span>
+                    <div class="exam-document-save-toolbar">
+                        <span>*Gunakan http/https untuk link dokumen</span>
+                        <button type="submit" class="btn btn-primary btn-perspective">
+                            <i class="fa fa-save"></i> Simpan Semua Persyaratan
+                        </button>
+                    </div>
                 </form>
             </div><!-- /.table-responsive -->
             <div style="display: flex">
                 @php
-                $trtsyaratujianx = \App\TrtSyaratUjian::where("C_NPM",auth()->user()->name)->whereIn("syarat_ujian_id",
-                \App\Model\mst_syarat_ujian::where("tipe_ujian",0)->select("syarat_ujian_id"))->count();
+                $trtsyaratujianx = $submittedRequirements->count();
                 $trtpengajuandokumen = \App\TrtPengajuanDokumen::where(["C_NPM" => auth()->user()->name, "type" =>
                 0])->count();
                 @endphp
@@ -234,30 +252,6 @@ Apakah Anda yakin ingin mengajukan dokumen?
 <button onclick="goOn(this)" class="btn btn-default">Ajukan</button>
 @endsection
 
-{{--ModalSimpan--}}
-@section("modalPrimaryTitle")
-Simpan
-@endsection
-@section("modalPrimaryBody")
-Apakah Anda yakin ingin menyimpan data?
-<br>
-<span id="status" class="badge badge-danger"></span>
-@endsection
-@section("modalPrimaryFooter")
-<button onclick="submit(this)" class="btn btn-default">Simpan</button>
-@endsection
-
-{{--ModalUbah--}}
-@section("modalInfoTitle")
-Ubah
-@endsection
-@section("modalInfoBody")
-Apakah Anda yakin ingin mengubah data?
-@endsection
-@section("modalInfoFooter")
-<button onclick="submit(this)" class="btn btn-default">Ubah</button>
-@endsection
-
 {{--ModalDownload--}}
 @section("modalDefaultTitle")
 Download Lampiran
@@ -304,14 +298,7 @@ Apakah Anda yakin ingin menghapus data?
         //     $("#tombol_dua").removeAttr("disabled");
         // }
     });
-    let modal, modalId, modalFooter, link, form, formaction, sui;
-    const showPostModal = e => {
-        formaction = e.getAttribute("data-formaction");
-        modalId = e.getAttribute("data-target");
-        modal = document.querySelector(modalId);
-        modalFooter = modal.querySelector(".modal-footer");
-        sui = e.value
-    };
+    let modal, modalId, modalFooter, link;
 
     const showModal = e => {
         link = e.getAttribute("data-href");
@@ -330,10 +317,5 @@ Apakah Anda yakin ingin menghapus data?
         window.open(link);
     };
 
-    const submit = () => {
-        form = document.querySelector(`form[action="${formaction}"]`);
-        form.querySelector("input[name=sui]").value = sui;
-        form.submit();
-    };
 </script>
 @endsection

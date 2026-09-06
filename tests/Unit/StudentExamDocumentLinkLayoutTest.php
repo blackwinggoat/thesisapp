@@ -15,11 +15,11 @@ class StudentExamDocumentLinkLayoutTest extends TestCase
         ];
 
         $this->assertStringContainsString('table-layout: fixed;', $styles);
-        $this->assertStringContainsString('width: 35%;', $styles);
+        $this->assertStringContainsString('width: 37%;', $styles);
         $this->assertStringContainsString('width: 4%;', $styles);
-        $this->assertStringContainsString('width: 31%;', $styles);
+        $this->assertStringContainsString('width: 32%;', $styles);
         $this->assertStringContainsString('width: 8%;', $styles);
-        $this->assertStringContainsString('width: 10%;', $styles);
+        $this->assertStringContainsString('width: 7%;', $styles);
         $this->assertStringContainsString('width: 6%;', $styles);
         $this->assertStringContainsString('display: block;', $styles);
         $this->assertStringContainsString('max-width: none;', $styles);
@@ -33,6 +33,7 @@ class StudentExamDocumentLinkLayoutTest extends TestCase
             $this->assertStringContainsString('document-name-column', $view);
             $this->assertStringContainsString('document-action-column document-compact-column', $view);
             $this->assertStringContainsString('document-link-input', $view);
+            $this->assertStringContainsString('exam-document-save-toolbar', $view);
             $this->assertStringNotContainsString('<div class="col-lg-5">', $view);
         }
     }

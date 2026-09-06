@@ -5,7 +5,7 @@
     }
 
     .exam-requirements-table .document-link-column {
-        width: 35%;
+        width: 37%;
     }
 
     .exam-requirements-table .document-number-column {
@@ -14,7 +14,7 @@
 
     .exam-requirements-table .document-name-column {
         overflow-wrap: anywhere;
-        width: 31%;
+        width: 32%;
     }
 
     .exam-requirements-table .document-status-column {
@@ -22,7 +22,7 @@
     }
 
     .exam-requirements-table .document-action-column {
-        width: 10%;
+        width: 7%;
     }
 
     .exam-requirements-table .document-note-column,
@@ -41,5 +41,24 @@
         max-width: none;
         min-width: 0;
         width: 100% !important;
+    }
+
+    .exam-document-save-toolbar {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+    }
+
+    @media (max-width: 767px) {
+        .exam-document-save-toolbar {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .exam-document-save-toolbar .btn {
+            margin-top: 10px;
+            width: 100%;
+        }
     }
 </style>

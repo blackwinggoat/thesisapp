@@ -34,6 +34,50 @@ use Exception;
 class mhs extends Controller
 {
 
+    private function getStudentProgramScope($nim)
+    {
+        $programCode = DB::table('t_mst_mahasiswa')
+            ->where('C_NPM', $nim)
+            ->value('C_KODE_PRODI');
+
+        $programs = [
+            '55201' => ['status_prodi' => 1, 'label' => 'Teknik Informatika'],
+            '57201' => ['status_prodi' => 2, 'label' => 'Sistem Informasi'],
+        ];
+
+        if (isset($programs[(string) $programCode])) {
+            return $programs[(string) $programCode];
+        }
+
+        // Data lama yang belum memiliki kode program studi tetap dibatasi lewat pola NIM resmi.
+        if (empty($programCode)) {
+            $nimPrefix = substr((string) $nim, 0, 3);
+            if ($nimPrefix === '130') {
+                return $programs['55201'];
+            }
+            if ($nimPrefix === '131') {
+                return $programs['57201'];
+            }
+        }
+
+        return ['status_prodi' => null, 'label' => null];
+    }
+
+    private function getStudentExamRequirements($nim, $requirements)
+    {
+        $requirementIds = $requirements->pluck('syarat_ujian_id')->all();
+        if (empty($requirementIds)) {
+            return collect();
+        }
+
+        return TrtSyaratUjian::where('C_NPM', $nim)
+            ->whereIn('syarat_ujian_id', $requirementIds)
+            ->orderBy('id', 'desc')
+            ->get()
+            ->unique('syarat_ujian_id')
+            ->keyBy('syarat_ujian_id');
+    }
+
     public function back_to_prodi(Request $request)
     {
         $sourceUserId = $request->session()->get('login_as_source_user_id');
@@ -1071,58 +1115,43 @@ class mhs extends Controller
 
     public function signup_proposal()
     {
-        if (substr(Auth::user()->name, 0, 3) == '130') {
-            $data = DB::table('mst_pendaftaran')
-                ->select('*')
-                ->Where(['status_ujian' => 0, 'tipe_ujian' => 0, 'status_prodi' => 1])
-                ->get();
+        $nim = auth()->user()->name;
+        $studentProgram = $this->getStudentProgramScope($nim);
+        $studentProgramLabel = $studentProgram['label'];
 
-            $syarat = DB::table('mst_syarat_ujian')
-                ->select('*')
-                ->where('tipe_ujian', 0)
-                ->get();
+        $data = DB::table('mst_pendaftaran')
+            ->select('*')
+            ->where('status_ujian', 0)
+            ->where('tipe_ujian', 0)
+            ->when(!is_null($studentProgram['status_prodi']), function ($query) use ($studentProgram) {
+                $query->where('status_prodi', $studentProgram['status_prodi']);
+            }, function ($query) {
+                $query->whereRaw('1 = 0');
+            })
+            ->orderBy('tgl_start')
+            ->get();
 
+        $syarat = DB::table('mst_syarat_ujian')
+            ->select('*')
+            ->where('tipe_ujian', 0)
+            ->orderBy('syarat_ujian_id')
+            ->get();
+        $submittedRequirements = $this->getStudentExamRequirements($nim, $syarat);
+        $mstsyaratujian = $syarat->count();
+        $trtsyaratujian = $submittedRequirements->where('status', 1)->count();
+        $trtreg = trt_reg::whereIn('bimbingan_id', trt_bimbingan::where('C_NPM', $nim)->select('bimbingan_id'))
+            ->whereIn('pendaftaran_id', mst_pendaftaran::where('tipe_ujian', 0)->select('pendaftaran_id'))
+            ->count();
 
-            $mstsyaratujian = \App\Model\mst_syarat_ujian::where(["tipe_ujian" => 0])->count();
-            $trtsyaratujian = \App\TrtSyaratUjian::where(["C_NPM" => auth()->user()->name, "status" =>
-            1])->whereIn("syarat_ujian_id", \App\Model\mst_syarat_ujian::where(["tipe_ujian" =>
-            0])->select("syarat_ujian_id"))->count();
-            $trtreg =
-                \App\Model\trt_reg::whereIn("bimbingan_id", \App\Model\trt_bimbingan::where(
-                    "C_NPM",
-                    auth()->user()->name
-                )->select("bimbingan_id"))->whereIn("pendaftaran_id", \App\Model\mst_pendaftaran::where(
-                    "tipe_ujian",
-                    0
-                )->select("pendaftaran_id"))->count();
-        } else {
-            $data = DB::table('mst_pendaftaran')
-                ->select('*')
-                ->Where(['status_ujian' => 0, 'tipe_ujian' => 0, 'status_prodi' => 2])
-                ->get();
-
-
-            $syarat = DB::table('mst_syarat_ujian')
-                ->select('*')
-                ->where('tipe_ujian', 0)
-                ->get();
-
-
-            $mstsyaratujian = \App\Model\mst_syarat_ujian::where(["tipe_ujian" => 0])->count();
-            $trtsyaratujian = \App\TrtSyaratUjian::where(["C_NPM" => auth()->user()->name, "status" =>
-            1])->whereIn("syarat_ujian_id", \App\Model\mst_syarat_ujian::where(["tipe_ujian" =>
-            0])->select("syarat_ujian_id"))->count();
-            $trtreg =
-                \App\Model\trt_reg::whereIn("bimbingan_id", \App\Model\trt_bimbingan::where(
-                    "C_NPM",
-                    auth()->user()->name
-                )->select("bimbingan_id"))->whereIn("pendaftaran_id", \App\Model\mst_pendaftaran::where(
-                    "tipe_ujian",
-                    0
-                )->select("pendaftaran_id"))->count();
-        }
-
-        return view('tugasakhir.mhs.signup_proposal', compact('data', 'syarat', 'mstsyaratujian', 'trtsyaratujian', 'trtreg'));
+        return view('tugasakhir.mhs.signup_proposal', compact(
+            'data',
+            'syarat',
+            'submittedRequirements',
+            'mstsyaratujian',
+            'trtsyaratujian',
+            'trtreg',
+            'studentProgramLabel'
+        ));
     }
 
     public function signup_seminarhasil()
@@ -1143,6 +1172,8 @@ class mhs extends Controller
     {
         $nim = auth()->user()->name;
         $ujianMejaTypes = [2, 3];
+        $studentProgram = $this->getStudentProgramScope($nim);
+        $studentProgramLabel = $studentProgram['label'];
 
         $data = DB::table('mst_pendaftaran')
             ->select('*')
@@ -1153,11 +1184,21 @@ class mhs extends Controller
                     $query->where('status_ujian', 0);
                 }
             })
+            ->when(!is_null($studentProgram['status_prodi']), function ($query) use ($studentProgram) {
+                $query->where('status_prodi', $studentProgram['status_prodi']);
+            }, function ($query) {
+                $query->whereRaw('1 = 0');
+            })
+            ->orderBy('tgl_start')
             ->get();
         $syarat = DB::table('mst_syarat_ujian')
             ->select('*')
             ->where('tipe_ujian', 2)
+            ->orderBy('syarat_ujian_id')
             ->get();
+        $submittedRequirements = $this->getStudentExamRequirements($nim, $syarat);
+        $mstsyaratujian = $syarat->count();
+        $trtsyaratujian = $submittedRequirements->where('status', 1)->count();
 
         $registeredPeriodIds = mst_pendaftaran::whereIn('tipe_ujian', $ujianMejaTypes)->select('pendaftaran_id');
         $registeredBimbinganIds = trt_bimbingan::where('C_NPM', $nim)->select('bimbingan_id');
@@ -1176,7 +1217,16 @@ class mhs extends Controller
                 ->exists();
         }
 
-        return view('tugasakhir.mhs.signup_ujianmeja', compact('data', 'syarat', 'currentRegistration', 'currentRegistrationScheduled'));
+        return view('tugasakhir.mhs.signup_ujianmeja', compact(
+            'data',
+            'syarat',
+            'submittedRequirements',
+            'mstsyaratujian',
+            'trtsyaratujian',
+            'currentRegistration',
+            'currentRegistrationScheduled',
+            'studentProgramLabel'
+        ));
     }
 
     public function batalkan_registrasi_ujianmeja($pendaftaran_id)
@@ -1229,18 +1279,39 @@ class mhs extends Controller
 
     public function registrasi(Request $request)
     {
+        $examType = (int) $request->input('tipe_ujian');
+        $redirectPath = $examType === 0 ? 'mhs/signup_proposal' : 'mhs/signup_ujianmeja';
+
         try {
             $datapost = $request->all();
-            $mstsyaratujian = \App\Model\mst_syarat_ujian::where(["tipe_ujian" => $request->tipe_ujian])->count();
-            $trtsyaratujian = \App\TrtSyaratUjian::where(["C_NPM" => auth()->user()->name, "status" => 1])->whereIn("syarat_ujian_id", \App\Model\mst_syarat_ujian::where(["tipe_ujian" => $request->tipe_ujian])->select("syarat_ujian_id"))->count();
-            $registrationPeriodTypes = ((int) $request->tipe_ujian === 2) ? [2, 3] : [(int) $request->tipe_ujian];
+            if (!in_array($examType, [0, 2], true)) {
+                return redirect($redirectPath)->with('registration_status', 'invalid_period');
+            }
+
+            $nim = auth()->user()->name;
+            $studentProgram = $this->getStudentProgramScope($nim);
+            if (is_null($studentProgram['status_prodi'])) {
+                return redirect($redirectPath)->with('registration_status', 'program_unmapped');
+            }
+
+            $registrationPeriodTypes = $examType === 2 ? [2, 3] : [0];
+            $registrationPeriod = mst_pendaftaran::where('pendaftaran_id', $request->input('pendaftaran_id'))
+                ->where('status_prodi', $studentProgram['status_prodi'])
+                ->whereIn('tipe_ujian', $registrationPeriodTypes)
+                ->where('status_ujian', 0)
+                ->first();
+            if (empty($registrationPeriod)) {
+                return redirect($redirectPath)->with('registration_status', 'invalid_period');
+            }
+
+            $mstsyaratujian = \App\Model\mst_syarat_ujian::where('tipe_ujian', $examType)->count();
+            $trtsyaratujian = \App\TrtSyaratUjian::where(['C_NPM' => $nim, 'status' => 1])
+                ->whereIn('syarat_ujian_id', \App\Model\mst_syarat_ujian::where('tipe_ujian', $examType)->select('syarat_ujian_id'))
+                ->distinct()
+                ->count('syarat_ujian_id');
             $trtreg = \App\Model\trt_reg::whereIn("bimbingan_id", \App\Model\trt_bimbingan::where("C_NPM", auth()->user()->name)->select("bimbingan_id"))->whereIn("pendaftaran_id", \App\Model\mst_pendaftaran::whereIn("tipe_ujian", $registrationPeriodTypes)->select("pendaftaran_id"))->count();
 
-
-            $data_jml = DB::table('mst_pendaftaran')
-                ->select('jml_peserta', 'kuota')
-                ->where('pendaftaran_id', $datapost['pendaftaran_id'])
-                ->first();
+            $data_jml = $registrationPeriod;
 
             if ($data_jml->jml_peserta < $data_jml->kuota && empty($trtreg) && !empty($mstsyaratujian) && $trtsyaratujian == $mstsyaratujian) :
                 $data = DB::table('trt_bimbingan')
@@ -1315,7 +1386,7 @@ class mhs extends Controller
             endif;
             return redirect('mhs/riwayat_ujian/' . $datapost["C_NPM"]);
         } catch (Exception $e) {
-            return redirect('mhs/signup_ujianmeja');
+            return redirect($redirectPath)->with('registration_status', 'registration_error');
         }
     }
 
@@ -1404,28 +1475,88 @@ class mhs extends Controller
 
     public function syarat_ujianpost_all(Request $request)
     {
-        return $request;
-        $datanotnull = 0;
+        $examType = (int) $request->input('tipe_ujian');
+        $requirementIds = $request->input('syarat_ujian_id', []);
+        $links = $request->input('link', []);
 
-        for ($i = 0; $i < count($request->link); $i++) {
-            if ($request->link[$i] != null) {
-                $datanotnull = $datanotnull + 1;
+        if (!in_array($examType, [0, 2], true) || !is_array($requirementIds) || !is_array($links)
+            || count($requirementIds) !== count($links)) {
+            return redirect()->back()->withInput()->withErrors([
+                'document_links' => 'Data persyaratan ujian tidak valid. Muat ulang halaman lalu coba kembali.',
+            ]);
+        }
+
+        $allowedRequirementIds = DB::table('mst_syarat_ujian')
+            ->where('tipe_ujian', $examType)
+            ->pluck('syarat_ujian_id')
+            ->map(function ($id) {
+                return (string) $id;
+            })
+            ->all();
+        $normalizedLinks = [];
+
+        foreach ($requirementIds as $index => $requirementId) {
+            $requirementId = (string) $requirementId;
+            if (!in_array($requirementId, $allowedRequirementIds, true)) {
+                return redirect()->back()->withInput()->withErrors([
+                    'document_links' => 'Terdapat persyaratan yang tidak sesuai dengan jenis ujian.',
+                ]);
             }
+
+            $link = trim((string) $links[$index]);
+            if ($link === '') {
+                continue;
+            }
+
+            if (!preg_match('/^https?:\/\//i', $link) || filter_var($link, FILTER_VALIDATE_URL) === false) {
+                return redirect()->back()->withInput()->withErrors([
+                    'document_links' => 'Link pada baris ' . ($index + 1) . ' harus berupa URL http/https yang valid.',
+                ]);
+            }
+
+            $normalizedLinks[$requirementId] = $link;
         }
 
-        for ($i = 0; $i < $datanotnull; $i++) {
-            TrtSyaratUjian::updateOrCreate(
-                [
-                    "C_NPM" => auth()->user()->name,
-                    "syarat_ujian_id" => $request->syarat_ujian_id[$i],
-                    "status" => 2
-                ],
-                [
-                    "link" => $request->link[$i]
-                ]
-            );
+        if (empty($normalizedLinks)) {
+            return redirect()->back()->withInput()->withErrors([
+                'document_links' => 'Isi minimal satu link dokumen sebelum menyimpan.',
+            ]);
         }
-        return redirect()->back();
+
+        $nim = auth()->user()->name;
+        DB::transaction(function () use ($normalizedLinks, $nim) {
+            foreach ($normalizedLinks as $requirementId => $link) {
+                $existing = TrtSyaratUjian::where([
+                    'C_NPM' => $nim,
+                    'syarat_ujian_id' => $requirementId,
+                ])->orderBy('id', 'desc')->first();
+
+                if (empty($existing)) {
+                    TrtSyaratUjian::create([
+                        'C_NPM' => $nim,
+                        'syarat_ujian_id' => $requirementId,
+                        'link' => $link,
+                        'status' => 2,
+                    ]);
+                    continue;
+                }
+
+                $linkChanged = trim((string) $existing->link) !== $link;
+                if ($linkChanged || (int) $existing->status === 0) {
+                    TrtSyaratUjian::where([
+                        'C_NPM' => $nim,
+                        'syarat_ujian_id' => $requirementId,
+                    ])->update([
+                        'link' => $link,
+                        'status' => 2,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->back()
+            ->with('document_status', 'success')
+            ->with('document_message', count($normalizedLinks) . ' link persyaratan berhasil disimpan.');
     }
 
     public function syarat_ujiandel($type, $id)
