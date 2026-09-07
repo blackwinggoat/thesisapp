@@ -30,4 +30,20 @@ class StudentExamPeriodProgramScopeTest extends TestCase
             $this->assertStringContainsString('Belum ada periode pendaftaran yang tersedia.', $view);
         }
     }
+
+    public function testProposalAndFinalExamShareSafePeriodCancellationFlow()
+    {
+        $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/mhs.php');
+        $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
+        $statusPartial = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/mhs/partials/exam_registration_status.blade.php');
+
+        $this->assertStringContainsString('private function getStudentRegistrationContext', $controller);
+        $this->assertStringContainsString("->where('period.status_prodi', \$studentProgram['status_prodi'])", $controller);
+        $this->assertStringContainsString("->where('trt_jadwal_ujian.pendaftaran_id', \$pendaftaranId)", $controller);
+        $this->assertStringContainsString("Route::post('/mhs/registrasi/batalkan'", $routes);
+        $this->assertStringNotContainsString("Route::get('/mhs/signup_ujianmeja/batalkan/", $routes);
+        $this->assertStringContainsString("action=\"{{url('mhs/registrasi/batalkan')}}\"", $statusPartial);
+        $this->assertStringContainsString('Keluar dari Periode', $statusPartial);
+        $this->assertStringContainsString('Jadwal sudah ditetapkan', $statusPartial);
+    }
 }

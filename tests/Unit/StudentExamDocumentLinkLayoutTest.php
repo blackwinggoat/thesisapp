@@ -28,7 +28,7 @@ class StudentExamDocumentLinkLayoutTest extends TestCase
         foreach ($views as $view) {
             $this->assertStringContainsString("@include('tugasakhir.mhs.partials.exam_document_table_styles')", $view);
             $this->assertStringContainsString('class="table table-striped table-hover exam-requirements-table"', $view);
-            $this->assertStringContainsString('class="document-link-column">Link Dokumen</th>', $view);
+            $this->assertStringContainsString('class="document-link-column">Dokumen / Keterangan</th>', $view);
             $this->assertStringContainsString('document-number-column document-compact-column', $view);
             $this->assertStringContainsString('document-name-column', $view);
             $this->assertStringContainsString('document-action-column document-compact-column', $view);

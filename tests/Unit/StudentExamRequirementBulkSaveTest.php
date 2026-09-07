@@ -29,8 +29,23 @@ class StudentExamRequirementBulkSaveTest extends TestCase
         $this->assertStringNotContainsString('return $request;', $controller);
         $this->assertStringContainsString("->where('tipe_ujian', \$examType)", $controller);
         $this->assertStringContainsString("in_array(\$requirementId, \$allowedRequirementIds, true)", $controller);
-        $this->assertStringContainsString("preg_match('/^https?:\\/\\//i', \$link)", $controller);
+        $this->assertStringNotContainsString("filter_var(\$link, FILTER_VALIDATE_URL)", $controller);
+        $this->assertStringContainsString("'document_links' => 'Isi minimal satu data dokumen sebelum menyimpan.'", $controller);
         $this->assertStringContainsString('DB::transaction(function () use ($normalizedLinks, $nim)', $controller);
         $this->assertStringContainsString("(int) \$existing->status === 0", $controller);
+    }
+
+    public function testBothViewsAcceptLinksOrDocumentNotes()
+    {
+        $views = [
+            file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/mhs/signup_proposal.blade.php'),
+            file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/mhs/signup_ujianmeja.blade.php'),
+        ];
+
+        foreach ($views as $view) {
+            $this->assertStringContainsString('Dokumen / Keterangan', $view);
+            $this->assertStringContainsString('Masukkan tautan atau keterangan dokumen', $view);
+            $this->assertStringNotContainsString('*Gunakan http/https untuk link dokumen', $view);
+        }
     }
 }

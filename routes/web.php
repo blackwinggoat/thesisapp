@@ -606,7 +606,6 @@ Route::group(['middleware' => 'mhs'], function () {
     Route::get('/mhs/signup_proposal', 'mhs@signup_proposal');
     Route::get('/mhs/signup_seminarhasil', 'mhs@signup_seminarhasil');
     Route::get('/mhs/signup_ujianmeja', 'mhs@signup_ujianmeja');
-    Route::get('/mhs/signup_ujianmeja/batalkan/{pendaftaran_id}', 'mhs@batalkan_registrasi_ujianmeja');
     Route::get('/mhs/download', 'mhs@download');
     Route::get("/mhs/usulan_tmp/pembimbing/getstatus/{index}/{id}", "mhs@getPembimbingStatus");
     Route::get('/mhs/syarat_ujiandel/{type}/{id}', 'mhs@syarat_ujiandel');
@@ -620,6 +619,7 @@ Route::group(['middleware' => 'mhs'], function () {
     Route::post('/mhs/draft_final', 'mhs@draft_final_post');
     Route::post('/mhs/kelengkapan_kontak', 'mhs@kelengkapan_kontak_post');
     Route::post('/mhs/registrasi', 'mhs@registrasi');
+    Route::post('/mhs/registrasi/batalkan', 'mhs@batalkan_registrasi');
     Route::post('/mhs/pesanpost', 'mhs@pesanpost');
     Route::post('/mhs/usulan_tmp', 'mhs@usulan_tmp');
     Route::post('/mhs/syarat_ujianpost', 'mhs@syarat_ujianpost');

@@ -23,48 +23,10 @@
             <small><span class="label label-info">{{$studentProgramLabel}}</span></small>
             @endif
         </h3>
-        @if(empty($studentProgramLabel))
-        <div class="alert alert-danger">
-            Program studi akun mahasiswa belum dikenali. Silakan hubungi Program Studi.
-        </div>
-        @elseif(session('registration_status') == 'invalid_period')
-        <div class="alert alert-danger">
-            Periode pendaftaran tidak tersedia untuk program studi Anda.
-        </div>
-        @elseif(session('registration_status') == 'program_unmapped')
-        <div class="alert alert-danger">
-            Program studi akun mahasiswa belum dikenali. Silakan hubungi Program Studi.
-        </div>
-        @elseif(session('registration_status') == 'registration_error')
-        <div class="alert alert-danger">
-            Pendaftaran belum berhasil diproses. Silakan coba kembali.
-        </div>
-        @endif
-        @if (session('registration_status') == 'cancel_success')
-        <div class="alert alert-success alert-block square fade in alert-dismissable">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <p><strong>Status!</strong></p>
-            <p>Pendaftaran ujian meja berhasil dibatalkan.</p>
-        </div>
-        @elseif(session('registration_status') == 'cancel_scheduled')
-        <div class="alert alert-warning alert-block square fade in alert-dismissable">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <p><strong>Status!</strong></p>
-            <p>Pendaftaran tidak dapat dibatalkan karena jadwal ujian sudah dibuat.</p>
-        </div>
-        @elseif(session('registration_status') == 'cancel_not_found')
-        <div class="alert alert-warning alert-block square fade in alert-dismissable">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <p><strong>Status!</strong></p>
-            <p>Data pendaftaran ujian meja tidak ditemukan.</p>
-        </div>
-        @elseif(session('registration_status') == 'cancel_error')
-        <div class="alert alert-danger alert-block square fade in alert-dismissable">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <p><strong>Status!</strong></p>
-            <p>Pendaftaran gagal dibatalkan. Silakan coba kembali.</p>
-        </div>
-        @endif
+        @include('tugasakhir.mhs.partials.exam_registration_status', [
+            'examType' => 2,
+            'examLabel' => 'Ujian Meja'
+        ])
         <form method="post" action="{{url('mhs/registrasi')}}" enctype="multipart/form-data">
             {{ csrf_field() }}
             <input type="hidden" name="tipe_ujian" value="2">
@@ -102,18 +64,6 @@
                                             <button class="btn btn-success btn-perspective" type="button" disabled>
                                                 <i class="fa fa-check"></i> Terdaftar
                                             </button>
-                                            @if(!$currentRegistrationScheduled)
-                                            <button type="button" class="btn btn-danger btn-perspective"
-                                                onclick="showModal(this)" data-target="#modalCancelRegistration"
-                                                data-toggle="modal"
-                                                data-href="{{url('mhs/signup_ujianmeja/batalkan/'.$value->pendaftaran_id)}}">
-                                                Batalkan
-                                            </button>
-                                            @else
-                                            <button class="btn btn-default btn-perspective" type="button" disabled>
-                                                Sudah Dijadwalkan
-                                            </button>
-                                            @endif
                                         @elseif(!empty($registeredPeriodId))
                                             <span class="text-muted">-</span>
                                         @elseif($mstsyaratujian == $trtsyaratujian && !empty($mstsyaratujian) &&
@@ -177,7 +127,7 @@
                             <tr>
                                 <th class="document-number-column document-compact-column">No</th>
                                 <th class="document-name-column">Nama Dokumen</th>
-                                <th class="document-link-column">Link Dokumen</th>
+                                <th class="document-link-column">Dokumen / Keterangan</th>
                                 <th class="document-status-column document-compact-column">Status</th>
                                 <th class="document-action-column document-compact-column">Aksi</th>
                                 <th class="document-note-column document-compact-column">Catatan</th>
@@ -194,6 +144,7 @@
                                     <input type="hidden" name="syarat_ujian_id[]"
                                         value="{{$value->syarat_ujian_id}}" />
                                     <input type="text" class="form-control bold-border document-link-input" name="link[]"
+                                        placeholder="Masukkan tautan atau keterangan dokumen"
                                         value="{{old('link.'.$key, empty($trtsyaratujian) ? '' : $trtsyaratujian->link)}}" />
                                 </td>
                                 <td class="document-status-column document-compact-column">
@@ -227,11 +178,17 @@
 
                                 </td>
                                 <td class="document-file-column document-compact-column">
-                                    @if(!empty($trtsyaratujian))
+                                    @php
+                                    $documentUrl = empty($trtsyaratujian) ? '' : trim((string) $trtsyaratujian->link);
+                                    $hasDocumentUrl = preg_match('/^https?:\/\//i', $documentUrl) && filter_var($documentUrl, FILTER_VALIDATE_URL);
+                                    @endphp
+                                    @if($hasDocumentUrl)
                                     <button type="button" onclick="showModal(this)"
-                                        data-href="{{$trtsyaratujian->link}}" data-target="#modalDefault"
+                                        data-href="{{$documentUrl}}" data-target="#modalDefault"
                                         data-toggle="modal" class="btn bg-dark" style="color: #fff"><i
                                             class="fa fa-paperclip"></i></button>
+                                    @else
+                                    <span class="text-muted">-</span>
                                     @endif
                                 </td>
                             </tr>
@@ -239,7 +196,7 @@
                         </tbody>
                     </table>
                     <div class="exam-document-save-toolbar">
-                        <span>*Gunakan http/https untuk link dokumen</span>
+                        <span>Isi tautan atau keterangan dokumen sesuai persyaratan.</span>
                         <button type="submit" class="btn btn-primary btn-perspective">
                             <i class="fa fa-save"></i> Simpan Semua Persyaratan
                         </button>
@@ -287,23 +244,6 @@
         </div><!-- /.modal-content .modal-no-shadow .modal-no-border .the-box .info .full -->
     </div><!-- /.modal-dialog -->
 </div><!-- /#InfoModalColor -->
-
-<div class="modal fade" id="modalCancelRegistration" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content modal-no-shadow modal-no-border bg-danger">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Batalkan Pendaftaran</h4>
-            </div>
-            <div class="modal-body">
-                Apakah Anda yakin ingin keluar dari periode ujian meja ini?
-            </div>
-            <div class="modal-footer">
-                <button onclick="goOn(this)" class="btn btn-default">Batalkan Pendaftaran</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 @endsection
 

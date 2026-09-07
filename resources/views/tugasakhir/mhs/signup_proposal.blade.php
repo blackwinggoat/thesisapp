@@ -23,19 +23,10 @@
             <small><span class="label label-info">{{$studentProgramLabel}}</span></small>
             @endif
         </h3>
-        @if(empty($studentProgramLabel))
-        <div class="alert alert-danger">
-            Program studi akun mahasiswa belum dikenali. Silakan hubungi Program Studi.
-        </div>
-        @elseif(session('registration_status') == 'invalid_period')
-        <div class="alert alert-danger">
-            Periode pendaftaran tidak tersedia untuk program studi Anda.
-        </div>
-        @elseif(session('registration_status') == 'registration_error')
-        <div class="alert alert-danger">
-            Pendaftaran belum berhasil diproses. Silakan coba kembali.
-        </div>
-        @endif
+        @include('tugasakhir.mhs.partials.exam_registration_status', [
+            'examType' => 0,
+            'examLabel' => 'Ujian Proposal'
+        ])
         <form method="post" action="{{url('mhs/registrasi')}}" enctype="multipart/form-data">
             {{ csrf_field() }}
             <input type="hidden" name="tipe_ujian" value="0">
@@ -54,7 +45,13 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                            $registeredPeriodId = !empty($currentRegistration) ? $currentRegistration->pendaftaran_id : null;
+                            @endphp
                             @forelse ($data as $key => $value)
+                            @php
+                            $isRegisteredPeriod = !empty($registeredPeriodId) && (string) $registeredPeriodId === (string) $value->pendaftaran_id;
+                            @endphp
                             <tr class="odd gradeX">
                                 <td width="1%" align="center">{{++$key}}</td>
                                 <td>{{$value->nama_periode}}</td>
@@ -63,8 +60,14 @@
                                 <td>{{$value->jml_peserta}}</td>
                                 <td>
                                     <div class="btn-group">
-                                        @if($mstsyaratujian == $trtsyaratujian && !empty($mstsyaratujian) &&
-                                        $value->jml_peserta < $value->kuota && empty($trtreg))
+                                        @if($isRegisteredPeriod)
+                                            <button class="btn btn-success btn-perspective" type="button" disabled>
+                                                <i class="fa fa-check"></i> Terdaftar
+                                            </button>
+                                        @elseif(!empty($registeredPeriodId))
+                                            <span class="text-muted">-</span>
+                                        @elseif($mstsyaratujian == $trtsyaratujian && !empty($mstsyaratujian) &&
+                                        $value->jml_peserta < $value->kuota)
                                             <button class="btn btn-primary btn-perspective" type="submit"
                                                 name="pendaftaran_id" value="{{$value->pendaftaran_id}}">Daftar</button>
                                             @else
@@ -124,7 +127,7 @@
                             <tr>
                                 <th class="document-number-column document-compact-column">No</th>
                                 <th class="document-name-column">Nama Dokumen</th>
-                                <th class="document-link-column">Link Dokumen</th>
+                                <th class="document-link-column">Dokumen / Keterangan</th>
                                 <th class="document-status-column document-compact-column">Status</th>
                                 <th class="document-action-column document-compact-column">Aksi</th>
                                 <th class="document-note-column document-compact-column">Catatan</th>
@@ -141,6 +144,7 @@
                                     <input type="hidden" name="syarat_ujian_id[]"
                                         value="{{$value->syarat_ujian_id}}" />
                                     <input type="text" class="form-control bold-border document-link-input" name="link[]"
+                                        placeholder="Masukkan tautan atau keterangan dokumen"
                                         value="{{old('link.'.$key, empty($trtsyaratujian) ? '' : $trtsyaratujian->link)}}" />
                                 </td>
                                 <td class="document-status-column document-compact-column">
@@ -173,11 +177,17 @@
                                     
                                 </td>
                                 <td class="document-file-column document-compact-column">
-                                    @if(!empty($trtsyaratujian))
+                                    @php
+                                    $documentUrl = empty($trtsyaratujian) ? '' : trim((string) $trtsyaratujian->link);
+                                    $hasDocumentUrl = preg_match('/^https?:\/\//i', $documentUrl) && filter_var($documentUrl, FILTER_VALIDATE_URL);
+                                    @endphp
+                                    @if($hasDocumentUrl)
                                     <button type="button" onclick="showModal(this)"
-                                        data-href="{{$trtsyaratujian->link}}" data-target="#modalDefault"
+                                        data-href="{{$documentUrl}}" data-target="#modalDefault"
                                         data-toggle="modal" class="btn bg-dark" style="color: #fff"><i
                                             class="fa fa-paperclip"></i></button>
+                                    @else
+                                    <span class="text-muted">-</span>
                                     @endif
                                 </td>
                             </tr>
@@ -185,7 +195,7 @@
                         </tbody>
                     </table>
                     <div class="exam-document-save-toolbar">
-                        <span>*Gunakan http/https untuk link dokumen</span>
+                        <span>Isi tautan atau keterangan dokumen sesuai persyaratan.</span>
                         <button type="submit" class="btn btn-primary btn-perspective">
                             <i class="fa fa-save"></i> Simpan Semua Persyaratan
                         </button>

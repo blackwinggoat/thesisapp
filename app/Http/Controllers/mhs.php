@@ -78,6 +78,46 @@ class mhs extends Controller
             ->keyBy('syarat_ujian_id');
     }
 
+    private function getStudentRegistrationContext($nim, $examType, array $studentProgram)
+    {
+        if (is_null($studentProgram['status_prodi'])) {
+            return [null, false];
+        }
+
+        $periodTypes = $examType === 2 ? [2, 3] : [0];
+        $registration = DB::table('trt_reg as registration')
+            ->join('mst_pendaftaran as period', 'period.pendaftaran_id', '=', 'registration.pendaftaran_id')
+            ->where('registration.C_NPM', $nim)
+            ->where('registration.status', $examType)
+            ->whereIn('period.tipe_ujian', $periodTypes)
+            ->where('period.status_prodi', $studentProgram['status_prodi'])
+            ->select(
+                'registration.*',
+                'period.nama_periode',
+                'period.tgl_start',
+                'period.tgl_end',
+                'period.status_prodi'
+            )
+            ->orderBy('registration.reg_id', 'desc')
+            ->first();
+
+        if (empty($registration)) {
+            return [null, false];
+        }
+
+        $scheduled = TrtJadwalUjianPerMhs::join(
+            'trt_jadwal_ujian',
+            'trt_jadwal_ujian.id',
+            '=',
+            'trt_jadwal_ujian_per_mhs.jadwal_ujian'
+        )
+            ->where('trt_jadwal_ujian_per_mhs.C_NPM', $nim)
+            ->where('trt_jadwal_ujian.pendaftaran_id', $registration->pendaftaran_id)
+            ->exists();
+
+        return [$registration, $scheduled];
+    }
+
     public function back_to_prodi(Request $request)
     {
         $sourceUserId = $request->session()->get('login_as_source_user_id');
@@ -1139,9 +1179,11 @@ class mhs extends Controller
         $submittedRequirements = $this->getStudentExamRequirements($nim, $syarat);
         $mstsyaratujian = $syarat->count();
         $trtsyaratujian = $submittedRequirements->where('status', 1)->count();
-        $trtreg = trt_reg::whereIn('bimbingan_id', trt_bimbingan::where('C_NPM', $nim)->select('bimbingan_id'))
-            ->whereIn('pendaftaran_id', mst_pendaftaran::where('tipe_ujian', 0)->select('pendaftaran_id'))
-            ->count();
+        list($currentRegistration, $currentRegistrationScheduled) = $this->getStudentRegistrationContext(
+            $nim,
+            0,
+            $studentProgram
+        );
 
         return view('tugasakhir.mhs.signup_proposal', compact(
             'data',
@@ -1149,7 +1191,8 @@ class mhs extends Controller
             'submittedRequirements',
             'mstsyaratujian',
             'trtsyaratujian',
-            'trtreg',
+            'currentRegistration',
+            'currentRegistrationScheduled',
             'studentProgramLabel'
         ));
     }
@@ -1200,22 +1243,11 @@ class mhs extends Controller
         $mstsyaratujian = $syarat->count();
         $trtsyaratujian = $submittedRequirements->where('status', 1)->count();
 
-        $registeredPeriodIds = mst_pendaftaran::whereIn('tipe_ujian', $ujianMejaTypes)->select('pendaftaran_id');
-        $registeredBimbinganIds = trt_bimbingan::where('C_NPM', $nim)->select('bimbingan_id');
-        $currentRegistration = trt_reg::where('C_NPM', $nim)
-            ->where('status', 2)
-            ->whereIn('bimbingan_id', $registeredBimbinganIds)
-            ->whereIn('pendaftaran_id', $registeredPeriodIds)
-            ->orderBy('reg_id', 'desc')
-            ->first();
-
-        $currentRegistrationScheduled = false;
-        if (!empty($currentRegistration)) {
-            $currentRegistrationScheduled = TrtJadwalUjianPerMhs::join('trt_jadwal_ujian', 'trt_jadwal_ujian.id', '=', 'trt_jadwal_ujian_per_mhs.jadwal_ujian')
-                ->where('trt_jadwal_ujian_per_mhs.C_NPM', $nim)
-                ->where('trt_jadwal_ujian.pendaftaran_id', $currentRegistration->pendaftaran_id)
-                ->exists();
-        }
+        list($currentRegistration, $currentRegistrationScheduled) = $this->getStudentRegistrationContext(
+            $nim,
+            2,
+            $studentProgram
+        );
 
         return view('tugasakhir.mhs.signup_ujianmeja', compact(
             'data',
@@ -1229,51 +1261,72 @@ class mhs extends Controller
         ));
     }
 
-    public function batalkan_registrasi_ujianmeja($pendaftaran_id)
+    public function batalkan_registrasi(Request $request)
     {
+        $examType = (int) $request->input('tipe_ujian');
+        $redirectPath = $examType === 0 ? 'mhs/signup_proposal' : 'mhs/signup_ujianmeja';
+
+        if (!in_array($examType, [0, 2], true)) {
+            return redirect($redirectPath)->with('registration_status', 'cancel_not_found');
+        }
+
         try {
             $nim = auth()->user()->name;
-            $pendaftaran = mst_pendaftaran::where('pendaftaran_id', $pendaftaran_id)
-                ->whereIn('tipe_ujian', [2, 3])
+            $studentProgram = $this->getStudentProgramScope($nim);
+            if (is_null($studentProgram['status_prodi'])) {
+                return redirect($redirectPath)->with('registration_status', 'program_unmapped');
+            }
+
+            $periodTypes = $examType === 2 ? [2, 3] : [0];
+            $pendaftaranId = $request->input('pendaftaran_id');
+            $pendaftaran = mst_pendaftaran::where('pendaftaran_id', $pendaftaranId)
+                ->where('status_prodi', $studentProgram['status_prodi'])
+                ->whereIn('tipe_ujian', $periodTypes)
                 ->first();
 
             if (empty($pendaftaran)) {
-                return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_not_found');
+                return redirect($redirectPath)->with('registration_status', 'cancel_not_found');
             }
 
-            $scheduled = TrtJadwalUjianPerMhs::join('trt_jadwal_ujian', 'trt_jadwal_ujian.id', '=', 'trt_jadwal_ujian_per_mhs.jadwal_ujian')
-                ->where('trt_jadwal_ujian_per_mhs.C_NPM', $nim)
-                ->where('trt_jadwal_ujian.pendaftaran_id', $pendaftaran_id)
-                ->exists();
+            $cancellationStatus = DB::transaction(function () use ($nim, $examType, $pendaftaranId) {
+                $scheduled = TrtJadwalUjianPerMhs::join(
+                    'trt_jadwal_ujian',
+                    'trt_jadwal_ujian.id',
+                    '=',
+                    'trt_jadwal_ujian_per_mhs.jadwal_ujian'
+                )
+                    ->where('trt_jadwal_ujian_per_mhs.C_NPM', $nim)
+                    ->where('trt_jadwal_ujian.pendaftaran_id', $pendaftaranId)
+                    ->exists();
 
-            if ($scheduled) {
-                return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_scheduled');
-            }
+                if ($scheduled) {
+                    return 'cancel_scheduled';
+                }
 
-            $registration = trt_reg::where('C_NPM', $nim)
-                ->where('pendaftaran_id', $pendaftaran_id)
-                ->where('status', 2)
-                ->first();
+                $registration = trt_reg::where('C_NPM', $nim)
+                    ->where('pendaftaran_id', $pendaftaranId)
+                    ->where('status', $examType)
+                    ->lockForUpdate()
+                    ->first();
 
-            if (empty($registration)) {
-                return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_not_found');
-            }
+                if (empty($registration)) {
+                    return 'cancel_not_found';
+                }
 
-            DB::transaction(function () use ($registration, $pendaftaran, $nim, $pendaftaran_id) {
                 $registration->delete();
-
-                mst_pendaftaran::where('pendaftaran_id', $pendaftaran_id)->update([
-                    'jml_peserta' => max(0, ((int) $pendaftaran->jml_peserta) - 1),
-                ]);
-
+                mst_pendaftaran::where('pendaftaran_id', $pendaftaranId)
+                    ->where('jml_peserta', '>', 0)
+                    ->decrement('jml_peserta');
                 TrtPenguji::where('C_NPM', $nim)
-                    ->where('tipe_ujian', 2)
+                    ->where('tipe_ujian', $examType)
                     ->delete();
+
+                return 'cancel_success';
             });
 
-            return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_success');
+            return redirect($redirectPath)->with('registration_status', $cancellationStatus);
         } catch (Exception $e) {
-            return redirect('mhs/signup_ujianmeja')->with('registration_status', 'cancel_error');
+            return redirect($redirectPath)->with('registration_status', 'cancel_error');
         }
     }
 
@@ -1508,18 +1561,12 @@ class mhs extends Controller
                 continue;
             }
 
-            if (!preg_match('/^https?:\/\//i', $link) || filter_var($link, FILTER_VALIDATE_URL) === false) {
-                return redirect()->back()->withInput()->withErrors([
-                    'document_links' => 'Link pada baris ' . ($index + 1) . ' harus berupa URL http/https yang valid.',
-                ]);
-            }
-
             $normalizedLinks[$requirementId] = $link;
         }
 
         if (empty($normalizedLinks)) {
             return redirect()->back()->withInput()->withErrors([
-                'document_links' => 'Isi minimal satu link dokumen sebelum menyimpan.',
+                'document_links' => 'Isi minimal satu data dokumen sebelum menyimpan.',
             ]);
         }
 
@@ -1556,7 +1603,7 @@ class mhs extends Controller
 
         return redirect()->back()
             ->with('document_status', 'success')
-            ->with('document_message', count($normalizedLinks) . ' link persyaratan berhasil disimpan.');
+            ->with('document_message', count($normalizedLinks) . ' data persyaratan berhasil disimpan.');
     }
 
     public function syarat_ujiandel($type, $id)
