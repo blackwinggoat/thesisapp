@@ -32,6 +32,7 @@ class MasterPembayaranJenisTugasAkhirTest extends TestCase
             $table->increments('id_honorarium');
             $table->string('name');
             $table->boolean('untuk_mahasiswa_eksekutif')->default(0);
+            $table->string('cakupan_ujian', 20)->nullable();
             $table->decimal('ketua_sidang', 12, 2);
             $table->decimal('pembimbing_utama', 12, 2);
             $table->decimal('pembimbing_pendamping', 12, 2);
@@ -95,6 +96,7 @@ class MasterPembayaranJenisTugasAkhirTest extends TestCase
                 ->all()
         );
         $this->assertSame(0, (int) DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->value('untuk_mahasiswa_eksekutif'));
+        $this->assertSame('proposal', DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->value('cakupan_ujian'));
     }
 
     public function testEditingPaymentTypeReplacesOnlyItsFinalProjectTypeMappings()
@@ -131,12 +133,14 @@ class MasterPembayaranJenisTugasAkhirTest extends TestCase
                 'id_honorarium' => $idHonorarium,
                 'jenis_tugas_akhir_ids' => [$jenisIds[2]],
                 'untuk_mahasiswa_eksekutif' => 1,
+                'cakupan_ujian' => 'ujian_meja',
             ]
         )));
 
         $this->assertSame(302, $response->getStatusCode());
         $this->assertSame('Ujian Meja Revisi', DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->value('name'));
         $this->assertSame(1, (int) DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->value('untuk_mahasiswa_eksekutif'));
+        $this->assertSame('ujian_meja', DB::table('mst_pembayaran_honorarium')->where('id_honorarium', $idHonorarium)->value('cakupan_ujian'));
         $this->assertSame(
             [$jenisIds[2]],
             DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir')
@@ -149,10 +153,29 @@ class MasterPembayaranJenisTugasAkhirTest extends TestCase
         );
     }
 
+    public function testInvalidExamScopeIsRejectedWithoutCreatingPaymentMaster()
+    {
+        $jenisTugasAkhirId = (int) DB::table('mst_jenis_tugas_akhir')
+            ->value('jenis_tugas_akhir_id');
+        $payload = array_merge($this->paymentPayload('Tipe Tidak Valid'), [
+            'cakupan_ujian' => 'semua_tanpa_batas',
+            'jenis_tugas_akhir_ids' => [$jenisTugasAkhirId],
+        ]);
+
+        $response = (new KeuanganFakultas)->master_pembayaran_store(
+            Request::create('/master_pembayaran/add', 'POST', $payload)
+        );
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('danger', session('status'));
+        $this->assertSame(0, DB::table('mst_pembayaran_honorarium')->count());
+    }
+
     private function paymentPayload($name)
     {
         return [
             'name' => $name,
+            'cakupan_ujian' => 'proposal',
             'ketua_sidang' => 100000,
             'pembimbing_utama' => 100000,
             'pembimbing_pendamping' => 100000,

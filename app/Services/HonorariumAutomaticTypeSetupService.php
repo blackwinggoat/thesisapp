@@ -6,6 +6,10 @@ use Illuminate\Support\Collection;
 
 class HonorariumAutomaticTypeSetupService
 {
+    const SCOPE_PROPOSAL = 'proposal';
+    const SCOPE_FINAL_EXAM = 'ujian_meja';
+    const SCOPE_COMBINED = 'gabungan';
+
     const STATUS_READY = 'ready';
     const STATUS_CONFIGURED = 'configured';
     const STATUS_PROTECTED = 'protected';
@@ -69,6 +73,26 @@ class HonorariumAutomaticTypeSetupService
 
     public function expectedPaymentName($examType, $finalProjectTypeCode, $executive)
     {
+        $scope = $this->expectedPaymentScope($examType, $finalProjectTypeCode);
+        if ($scope === null) {
+            return null;
+        }
+
+        if ($scope === self::SCOPE_COMBINED) {
+            $name = 'Non Skripsi [proposal + Ujian Meja]';
+        } elseif ($scope === self::SCOPE_PROPOSAL) {
+            $name = 'Proposal';
+        } elseif ($scope === self::SCOPE_FINAL_EXAM) {
+            $name = 'Ujian Meja';
+        } else {
+            return null;
+        }
+
+        return $executive ? $name . ' Eksekutif' : $name;
+    }
+
+    public function expectedPaymentScope($examType, $finalProjectTypeCode)
+    {
         $examType = $this->normalizeExamType($examType);
         $finalProjectTypeCode = strtoupper(trim((string) $finalProjectTypeCode));
         if ($examType === null || $finalProjectTypeCode === '') {
@@ -76,16 +100,25 @@ class HonorariumAutomaticTypeSetupService
         }
 
         if (strpos($finalProjectTypeCode, 'NS-') === 0) {
-            $name = 'Non Skripsi [proposal + Ujian Meja]';
-        } elseif ($examType === 0) {
-            $name = 'Proposal';
-        } elseif ($examType === 2) {
-            $name = 'Ujian Meja';
-        } else {
-            return null;
+            return self::SCOPE_COMBINED;
         }
 
-        return $executive ? $name . ' Eksekutif' : $name;
+        if ($examType === 0) {
+            return self::SCOPE_PROPOSAL;
+        }
+
+        return $examType === 2 ? self::SCOPE_FINAL_EXAM : null;
+    }
+
+    public function paymentScopeLabel($scope)
+    {
+        $labels = [
+            self::SCOPE_PROPOSAL => 'Proposal saja',
+            self::SCOPE_FINAL_EXAM => 'Ujian Meja saja',
+            self::SCOPE_COMBINED => 'Gabungan Proposal dan Ujian Meja',
+        ];
+
+        return isset($labels[$scope]) ? $labels[$scope] : 'Belum diatur';
     }
 
     public function needsTypeAssignment($honorarium)
@@ -137,28 +170,31 @@ class HonorariumAutomaticTypeSetupService
             );
         }
 
-        $expectedName = $this->expectedPaymentName(
+        $expectedScope = $this->expectedPaymentScope(
             $examType,
-            $finalProjectType->kode_jenis_tugas_akhir,
-            $executive
+            $finalProjectType->kode_jenis_tugas_akhir
         );
+        $expectedLabel = $this->paymentScopeLabel($expectedScope);
 
         if (strpos(strtoupper(trim((string) $finalProjectType->kode_jenis_tugas_akhir)), 'NS-') === 0
             && $hasCombinedConflict) {
             return $this->result(
                 self::STATUS_COMBINED_CONFLICT,
                 'Non-Skripsi memiliki record Proposal dan Ujian Akhir; tentukan satu pembayaran gabungan secara manual.',
-                $expectedName
+                $expectedLabel,
+                null,
+                $expectedScope
             );
         }
 
         $finalProjectTypeId = (int) $finalProjectType->jenis_tugas_akhir_id;
-        $matchingMasters = $masterPayments->filter(function ($master) use ($expectedName, $executive, $finalProjectTypeId) {
+        $matchingMasters = $masterPayments->filter(function ($master) use ($expectedScope, $executive, $finalProjectTypeId) {
             $typeIds = collect((array) $master->jenis_tugas_akhir_ids)->map(function ($id) {
                 return (int) $id;
             });
 
-            return $this->normalizeName($master->name) === $this->normalizeName($expectedName)
+            return isset($master->cakupan_ujian)
+                && trim((string) $master->cakupan_ujian) === $expectedScope
                 && (int) $master->untuk_mahasiswa_eksekutif === ($executive ? 1 : 0)
                 && $typeIds->contains($finalProjectTypeId);
         })->values();
@@ -166,8 +202,10 @@ class HonorariumAutomaticTypeSetupService
         if ($matchingMasters->isEmpty()) {
             return $this->result(
                 self::STATUS_MASTER_MISSING,
-                'Master pembayaran belum sesuai dengan jenis ujian, kelas, dan Jenis TA.',
-                $expectedName
+                'Master pembayaran belum sesuai dengan cakupan ujian, kelas, dan Jenis TA.',
+                $expectedLabel,
+                null,
+                $expectedScope
             );
         }
 
@@ -175,25 +213,31 @@ class HonorariumAutomaticTypeSetupService
             return $this->result(
                 self::STATUS_MASTER_AMBIGUOUS,
                 'Lebih dari satu master pembayaran cocok; rapikan master terlebih dahulu.',
-                $expectedName
+                $expectedLabel,
+                null,
+                $expectedScope
             );
         }
+
+        $matchingMaster = $matchingMasters->first();
 
         return $this->result(
             self::STATUS_READY,
             'Siap diterapkan otomatis.',
-            $expectedName,
-            (int) $matchingMasters->first()->id_honorarium
+            $matchingMaster->name,
+            (int) $matchingMaster->id_honorarium,
+            $expectedScope
         );
     }
 
-    protected function result($status, $message, $expectedName = null, $masterPaymentId = null)
+    protected function result($status, $message, $expectedName = null, $masterPaymentId = null, $expectedScope = null)
     {
         return [
             'status' => $status,
             'message' => $message,
             'expected_payment_name' => $expectedName,
             'master_payment_id' => $masterPaymentId,
+            'expected_payment_scope' => $expectedScope,
         ];
     }
 
@@ -207,11 +251,6 @@ class HonorariumAutomaticTypeSetupService
         }
 
         return null;
-    }
-
-    protected function normalizeName($name)
-    {
-        return strtolower(trim(preg_replace('/\s+/', ' ', (string) $name)));
     }
 
     protected function roles()

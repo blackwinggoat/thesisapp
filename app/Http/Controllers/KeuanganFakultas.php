@@ -50,10 +50,12 @@ class KeuanganFakultas extends Controller
     {
         try {
             $jenisTugasAkhirIds = $this->validasiJenisTugasAkhirPembayaran($request);
+            $cakupanUjian = $this->validasiCakupanUjianPembayaran($request);
 
-            DB::transaction(function () use ($request, $jenisTugasAkhirIds) {
+            DB::transaction(function () use ($request, $jenisTugasAkhirIds, $cakupanUjian) {
                 $dataPembayaran = [
                     'name' => $request->input('name'),
+                    'cakupan_ujian' => $cakupanUjian,
                     'ketua_sidang' => $request->input('ketua_sidang'),
                     'pembimbing_utama' => $request->input('pembimbing_utama'),
                     'pembimbing_pendamping' => $request->input('pembimbing_pendamping'),
@@ -120,10 +122,12 @@ class KeuanganFakultas extends Controller
             }
 
             $jenisTugasAkhirIds = $this->validasiJenisTugasAkhirPembayaran($request);
+            $cakupanUjian = $this->validasiCakupanUjianPembayaran($request);
 
-            DB::transaction(function () use ($request, $idHonorarium, $jenisTugasAkhirIds) {
+            DB::transaction(function () use ($request, $idHonorarium, $jenisTugasAkhirIds, $cakupanUjian) {
                 $dataPembayaran = [
                     'name' => $request->input('name'),
+                    'cakupan_ujian' => $cakupanUjian,
                     'ketua_sidang' => $request->input('ketua_sidang'),
                     'pembimbing_utama' => $request->input('pembimbing_utama'),
                     'pembimbing_pendamping' => $request->input('pembimbing_pendamping'),
@@ -265,6 +269,11 @@ class KeuanganFakultas extends Controller
         return Schema::hasColumn('mst_pembayaran_honorarium', 'untuk_mahasiswa_eksekutif');
     }
 
+    protected function kolomCakupanUjianPembayaranTersedia()
+    {
+        return Schema::hasColumn('mst_pembayaran_honorarium', 'cakupan_ujian');
+    }
+
     protected function tabelMahasiswaEksekutifTersedia()
     {
         return Schema::hasTable('trt_mahasiswa_eksekutif');
@@ -293,6 +302,22 @@ class KeuanganFakultas extends Controller
             ->all();
     }
 
+    protected function validasiCakupanUjianPembayaran(Request $request)
+    {
+        if (!$this->kolomCakupanUjianPembayaranTersedia()) {
+            throw new \RuntimeException('Pengaturan cakupan ujian belum tersedia. Jalankan pembaruan database terlebih dahulu.');
+        }
+
+        $this->validate($request, [
+            'cakupan_ujian' => 'required|in:proposal,ujian_meja,gabungan',
+        ], [
+            'cakupan_ujian.required' => 'Pilih cakupan ujian untuk tipe pembayaran.',
+            'cakupan_ujian.in' => 'Cakupan ujian yang dipilih tidak valid.',
+        ]);
+
+        return trim((string) $request->input('cakupan_ujian'));
+    }
+
     protected function sinkronkanJenisTugasAkhirPembayaran($idHonorarium, array $jenisTugasAkhirIds)
     {
         DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir')
@@ -318,6 +343,7 @@ class KeuanganFakultas extends Controller
         $data = DB::table('mst_pembayaran_honorarium')
             ->orderBy('name')
             ->get();
+        $kolomCakupanUjianTersedia = $this->kolomCakupanUjianPembayaranTersedia();
 
         $jenisTugasAkhirByPembayaran = collect();
         if ($this->tabelJenisTugasAkhirPembayaranTersedia() && $data->isNotEmpty()) {
@@ -330,9 +356,12 @@ class KeuanganFakultas extends Controller
                 ->groupBy('id_honorarium');
         }
 
-        return $data->map(function ($pembayaran) use ($jenisTugasAkhirByPembayaran) {
+        return $data->map(function ($pembayaran) use ($jenisTugasAkhirByPembayaran, $kolomCakupanUjianTersedia) {
             if (!$this->kolomKelasPembayaranTersedia()) {
                 $pembayaran->untuk_mahasiswa_eksekutif = 0;
+            }
+            if (!$kolomCakupanUjianTersedia) {
+                $pembayaran->cakupan_ujian = null;
             }
             $pembayaran->jenis_tugas_akhir = $jenisTugasAkhirByPembayaran->get($pembayaran->id_honorarium, collect());
             $pembayaran->jenis_tugas_akhir_ids = $pembayaran->jenis_tugas_akhir
@@ -378,14 +407,13 @@ class KeuanganFakultas extends Controller
     protected function pembayaranBerlakuUntukJenisTugasAkhir($idHonorarium, $jenisTugasAkhirId)
     {
         if (!$this->tabelJenisTugasAkhirPembayaranTersedia() || !$jenisTugasAkhirId) {
-            return true;
+            return false;
         }
 
-        $relasi = DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir')
-            ->where('id_honorarium', $idHonorarium);
-
-        return !$relasi->exists()
-            || $relasi->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)->exists();
+        return DB::table('mst_pembayaran_honorarium_jenis_tugas_akhir')
+            ->where('id_honorarium', $idHonorarium)
+            ->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)
+            ->exists();
     }
 
     protected function mahasiswaEksekutifByNim(array $nims)
@@ -447,6 +475,21 @@ class KeuanganFakultas extends Controller
         }
 
         return (int) $masterPayment->untuk_mahasiswa_eksekutif === ($mahasiswaEksekutif ? 1 : 0);
+    }
+
+    protected function pembayaranBerlakuUntukTahapUjian($masterPayment, $examType, $kodeJenisTugasAkhir)
+    {
+        if (!$this->kolomCakupanUjianPembayaranTersedia() || !isset($masterPayment->cakupan_ujian)) {
+            return false;
+        }
+
+        $cakupanDiharapkan = $this->honorariumAutomaticTypeService()->expectedPaymentScope(
+            $examType,
+            $kodeJenisTugasAkhir
+        );
+
+        return $cakupanDiharapkan !== null
+            && trim((string) $masterPayment->cakupan_ujian) === $cakupanDiharapkan;
     }
 
     protected function kolomKehadiranPembimbingTersedia()
@@ -1593,9 +1636,13 @@ class KeuanganFakultas extends Controller
                     })
                     ->filter()
                     ->all();
-                $mahasiswaEksekutif = $this->mahasiswaEksekutifByNim(
-                    DB::table('trt_honorium')->whereIn('id', $honorariumIds)->pluck('C_NPM')->all()
-                );
+                $honorariumNims = DB::table('trt_honorium')
+                    ->whereIn('id', $honorariumIds)
+                    ->pluck('C_NPM')
+                    ->unique()
+                    ->all();
+                $mahasiswaEksekutif = $this->mahasiswaEksekutifByNim($honorariumNims);
+                $jenisTugasAkhirByNim = $this->jenisTugasAkhirHonorariumByNim($honorariumNims);
 
                 foreach ((array) $request->honorariums as $honorariumData) {
                     $id = isset($honorariumData['id']) ? (int) $honorariumData['id'] : 0;
@@ -1640,9 +1687,10 @@ class KeuanganFakultas extends Controller
                     if (!$masterPayment) {
                         throw new \RuntimeException('Tipe honorarium yang dipilih tidak ditemukan pada master pembayaran.');
                     }
+                    $jenisTugasAkhir = $jenisTugasAkhirByNim->get($existingHonorarium->C_NPM);
                     if (!$this->pembayaranBerlakuUntukJenisTugasAkhir(
                         $masterPayment->id_honorarium,
-                        $this->jenisTugasAkhirHonorarium($existingHonorarium->C_NPM)
+                        $jenisTugasAkhir ? $jenisTugasAkhir->jenis_tugas_akhir_id : null
                     )) {
                         throw new \RuntimeException('Tipe honorarium yang dipilih tidak berlaku untuk jenis tugas akhir mahasiswa ini.');
                     }
@@ -1651,6 +1699,13 @@ class KeuanganFakultas extends Controller
                         $mahasiswaEksekutif->has($existingHonorarium->C_NPM)
                     )) {
                         throw new \RuntimeException('Tipe honorarium yang dipilih tidak berlaku untuk kelas mahasiswa ini.');
+                    }
+                    if (!$this->pembayaranBerlakuUntukTahapUjian(
+                        $masterPayment,
+                        $existingHonorarium->exam_type,
+                        $jenisTugasAkhir ? $jenisTugasAkhir->kode_jenis_tugas_akhir : null
+                    )) {
+                        throw new \RuntimeException('Tipe honorarium yang dipilih tidak berlaku untuk tahap ujian mahasiswa ini.');
                     }
 
                     DB::table('trt_honorium')

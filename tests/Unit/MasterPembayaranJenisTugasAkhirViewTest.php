@@ -13,6 +13,7 @@ class MasterPembayaranJenisTugasAkhirViewTest extends TestCase
         $detailView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium_detail.blade.php');
         $migration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_21_100000_create_master_pembayaran_honorarium_jenis_tugas_akhir_table.php');
         $kelasMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_21_110000_add_eksekutif_to_mst_pembayaran_honorarium_table.php');
+        $cakupanMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_09_08_070000_add_exam_scope_to_honorarium_payment_master.php');
 
         $this->assertStringContainsString('masterPembayaranDenganJenisTugasAkhir', $controller);
         $this->assertStringContainsString('pembayaranBerlakuUntukJenisTugasAkhir', $controller);
@@ -21,10 +22,19 @@ class MasterPembayaranJenisTugasAkhirViewTest extends TestCase
         $this->assertStringContainsString('Jenis Tugas Akhir yang Berlaku', $view);
         $this->assertStringContainsString('jenis_tugas_akhir_ids[]', $view);
         $this->assertStringContainsString('untuk_mahasiswa_eksekutif', $view);
+        $this->assertStringContainsString('Cakupan Ujian', $view);
+        $this->assertStringContainsString('name="cakupan_ujian"', $view);
+        $this->assertStringContainsString('Khusus Proposal saja', $view);
+        $this->assertStringContainsString('Khusus Ujian Meja saja', $view);
+        $this->assertStringContainsString('Gabungan Proposal dan Ujian Meja', $view);
+        $this->assertStringContainsString('pembayaranBerlakuUntukTahapUjian', $controller);
+        $this->assertStringContainsString("'cakupan_ujian' => 'required|in:proposal,ujian_meja,gabungan'", $controller);
         $this->assertStringContainsString('jenis_tugas_akhir_ids', $detailView);
         $this->assertStringContainsString('id_pembayaran', $detailView);
         $this->assertStringContainsString('mst_pembayaran_honorarium_jenis_tugas_akhir', $migration);
         $this->assertStringContainsString('mst_pembayaran_honorarium_jenis_ta_unique', $migration);
         $this->assertStringContainsString("boolean('untuk_mahasiswa_eksekutif')->default(0)", $kelasMigration);
+        $this->assertStringContainsString("string('cakupan_ujian', 20)", $cakupanMigration);
+        $this->assertStringContainsString("'cakupan_ujian' => 'gabungan'", $cakupanMigration);
     }
 }

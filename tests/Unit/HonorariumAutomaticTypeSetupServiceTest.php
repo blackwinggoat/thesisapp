@@ -13,13 +13,14 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect([$this->honorarium(1, 0)]),
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
-            collect([$this->master(100, 'Proposal', false, [10])]),
+            collect([$this->master(100, 'Honor Proposal Reguler', false, [10], 'proposal')]),
             collect()
         );
 
         $this->assertTrue($plan['can_apply']);
         $this->assertSame(1, $plan['ready_count']);
-        $this->assertSame('Proposal', $plan['rows']->get(1)['expected_payment_name']);
+        $this->assertSame('Honor Proposal Reguler', $plan['rows']->get(1)['expected_payment_name']);
+        $this->assertSame('proposal', $plan['rows']->get(1)['expected_payment_scope']);
         $this->assertSame(100, $plan['rows']->get(1)['master_payment_id']);
     }
 
@@ -29,7 +30,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect([$this->honorarium(1, 2)]),
             collect(['1301' => $this->finalProjectType(11, 'TA-SK')]),
             collect(['1301' => 0]),
-            collect([$this->master(101, 'Ujian Meja Eksekutif', true, [11])]),
+            collect([$this->master(101, 'Ujian Meja Eksekutif', true, [11], 'ujian_meja')]),
             collect()
         );
 
@@ -43,7 +44,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect([$this->honorarium(1, 0)]),
             collect(['1301' => $this->finalProjectType(20, 'NS-KT')]),
             collect(),
-            collect([$this->master(200, 'Non Skripsi [proposal + Ujian Meja]', false, [20])]),
+            collect([$this->master(200, 'Non Skripsi [proposal + Ujian Meja]', false, [20], 'gabungan')]),
             collect(['1301' => 0])
         );
 
@@ -61,7 +62,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect([$this->honorarium(1, null)]),
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
-            collect([$this->master(100, 'Proposal', false, [10])]),
+            collect([$this->master(100, 'Proposal', false, [10], 'proposal')]),
             collect()
         );
 
@@ -77,7 +78,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect([$this->honorarium(1, 0)]),
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
-            collect([$this->master(100, 'Proposal', false, [])]),
+            collect([$this->master(100, 'Proposal', false, [], 'proposal')]),
             collect()
         );
 
@@ -94,8 +95,8 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
             collect([
-                $this->master(100, 'Proposal', false, [10]),
-                $this->master(101, 'Proposal', false, [11]),
+                $this->master(100, 'Proposal A', false, [10], 'proposal'),
+                $this->master(101, 'Proposal B', false, [11], 'proposal'),
             ]),
             collect()
         );
@@ -111,8 +112,8 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
             collect([
-                $this->master(100, 'Proposal', false, [10]),
-                $this->master(101, 'Proposal', false, [10]),
+                $this->master(100, 'Proposal A', false, [10], 'proposal'),
+                $this->master(101, 'Proposal B', false, [10], 'proposal'),
             ]),
             collect()
         );
@@ -133,13 +134,30 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             ]),
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
-            collect([$this->master(100, 'Proposal', false, [10])]),
+            collect([$this->master(100, 'Proposal', false, [10], 'proposal')]),
             collect()
         );
 
         $this->assertSame(1, $plan['ready_count']);
         $this->assertSame(1, $plan['blocking_count']);
         $this->assertFalse($plan['can_apply']);
+    }
+
+    public function testMasterWithWrongExamScopeDoesNotMatchEvenWhenItsNameLooksCorrect()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 0)]),
+            collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
+            collect(),
+            collect([$this->master(100, 'Proposal', false, [10], 'ujian_meja')]),
+            collect()
+        );
+
+        $this->assertFalse($plan['can_apply']);
+        $this->assertSame(
+            HonorariumAutomaticTypeSetupService::STATUS_MASTER_MISSING,
+            $plan['rows']->get(1)['status']
+        );
     }
 
     private function service()
@@ -177,12 +195,13 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
         ];
     }
 
-    private function master($id, $name, $executive, array $finalProjectTypeIds)
+    private function master($id, $name, $executive, array $finalProjectTypeIds, $scope)
     {
         return (object) [
             'id_honorarium' => $id,
             'name' => $name,
             'untuk_mahasiswa_eksekutif' => $executive ? 1 : 0,
+            'cakupan_ujian' => $scope,
             'jenis_tugas_akhir_ids' => $finalProjectTypeIds,
         ];
     }

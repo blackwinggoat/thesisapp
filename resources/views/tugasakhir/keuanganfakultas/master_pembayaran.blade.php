@@ -39,6 +39,7 @@
                                 <th>No</th>
                                 <th>Name</th>
                                 <th>Kelas</th>
+                                <th>Cakupan Ujian</th>
                                 <th>Jenis Tugas Akhir</th>
                                 <th>KS</th>
                                 <th>PU</th>
@@ -59,6 +60,17 @@
                                             <span class="label label-primary">Eksekutif</span>
                                         @else
                                             <span class="label label-default">Reguler</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($p->cakupan_ujian === 'proposal')
+                                            <span class="label label-info">Proposal saja</span>
+                                        @elseif ($p->cakupan_ujian === 'ujian_meja')
+                                            <span class="label label-primary">Ujian Meja saja</span>
+                                        @elseif ($p->cakupan_ujian === 'gabungan')
+                                            <span class="label label-success">Proposal + Ujian Meja</span>
+                                        @else
+                                            <span class="label label-warning">Belum diatur</span>
                                         @endif
                                     </td>
                                     <td>
@@ -84,6 +96,7 @@
                                             data-pp="{{ $p->pembimbing_pendamping }}" data-p1="{{ $p->penguji_1 }}"
                                             data-p2="{{ $p->penguji_2 }}" data-p3="{{ $p->penguji_3 }}"
                                             data-eksekutif="{{ $p->untuk_mahasiswa_eksekutif ? 1 : 0 }}"
+                                            data-cakupan="{{ $p->cakupan_ujian }}"
                                             data-jenis-ids="{{ implode(',', $p->jenis_tugas_akhir_ids) }}">
                                             <i class="fa fa-pencil"></i>
                                         </button>
@@ -136,6 +149,16 @@
                                 Untuk mahasiswa kelas Eksekutif
                             </label>
                             <p class="help-block">Tidak dicentang berarti pembayaran untuk mahasiswa kelas Reguler.</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_cakupan_ujian">Cakupan Ujian</label>
+                            <select class="form-control edit-cakupan-ujian" id="edit_cakupan_ujian"
+                                name="cakupan_ujian" required>
+                                <option value="proposal">Khusus Proposal saja</option>
+                                <option value="ujian_meja">Khusus Ujian Meja saja</option>
+                                <option value="gabungan">Gabungan Proposal dan Ujian Meja</option>
+                            </select>
+                            <p class="help-block">Menentukan tahap ujian yang boleh menggunakan nominal pembayaran ini.</p>
                         </div>
                         <div class="form-group">
                             <label>Jenis Tugas Akhir yang Berlaku</label>
@@ -211,6 +234,16 @@
                             <p class="help-block">Tidak dicentang berarti pembayaran untuk mahasiswa kelas Reguler.</p>
                         </div>
                         <div class="form-group">
+                            <label for="cakupan_ujian">Cakupan Ujian</label>
+                            <select class="form-control" id="cakupan_ujian" name="cakupan_ujian" required>
+                                <option value="" selected disabled>Pilih cakupan ujian</option>
+                                <option value="proposal">Khusus Proposal saja</option>
+                                <option value="ujian_meja">Khusus Ujian Meja saja</option>
+                                <option value="gabungan">Gabungan Proposal dan Ujian Meja</option>
+                            </select>
+                            <p class="help-block">Menentukan tahap ujian yang boleh menggunakan nominal pembayaran ini.</p>
+                        </div>
+                        <div class="form-group">
                             <label>Jenis Tugas Akhir yang Berlaku</label>
                             <p class="help-block">Pilih minimal satu jenis tugas akhir.</p>
                             <div class="row">
@@ -279,6 +312,7 @@
             var p2 = button.data('p2')
             var p3 = button.data('p3')
             var eksekutif = Number(button.data('eksekutif')) === 1
+            var cakupan = String(button.data('cakupan') || '')
             var jenisIds = String(button.data('jenis-ids') || '').split(',').filter(Boolean).map(String)
 
             var modal = $(this)
@@ -292,6 +326,7 @@
             modal.find('#edit_p2').val(p2)
             modal.find('#edit_p3').val(p3)
             modal.find('.edit-untuk-mahasiswa-eksekutif').prop('checked', eksekutif)
+            modal.find('.edit-cakupan-ujian').val(cakupan)
             modal.find('.edit-jenis-tugas-akhir').each(function() {
                 $(this).prop('checked', jenisIds.indexOf(String($(this).val())) !== -1)
             })
