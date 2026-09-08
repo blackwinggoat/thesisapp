@@ -113,9 +113,9 @@ class HonorariumAutomaticTypeSetupService
     public function paymentScopeLabel($scope)
     {
         $labels = [
-            self::SCOPE_PROPOSAL => 'Proposal saja',
-            self::SCOPE_FINAL_EXAM => 'Ujian Meja saja',
-            self::SCOPE_COMBINED => 'Gabungan Proposal dan Ujian Meja',
+            self::SCOPE_PROPOSAL => 'Proposal',
+            self::SCOPE_FINAL_EXAM => 'Ujian Meja',
+            self::SCOPE_COMBINED => 'Proposal + Ujian Meja',
         ];
 
         return isset($labels[$scope]) ? $labels[$scope] : 'Belum diatur';

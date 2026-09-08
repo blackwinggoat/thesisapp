@@ -64,9 +64,9 @@
                                     </td>
                                     <td>
                                         @if ($p->cakupan_ujian === 'proposal')
-                                            <span class="label label-info">Proposal saja</span>
+                                            <span class="label label-info">Proposal</span>
                                         @elseif ($p->cakupan_ujian === 'ujian_meja')
-                                            <span class="label label-primary">Ujian Meja saja</span>
+                                            <span class="label label-primary">Ujian Meja</span>
                                         @elseif ($p->cakupan_ujian === 'gabungan')
                                             <span class="label label-success">Proposal + Ujian Meja</span>
                                         @else
@@ -154,9 +154,9 @@
                             <label for="edit_cakupan_ujian">Cakupan Ujian</label>
                             <select class="form-control edit-cakupan-ujian" id="edit_cakupan_ujian"
                                 name="cakupan_ujian" required>
-                                <option value="proposal">Khusus Proposal saja</option>
-                                <option value="ujian_meja">Khusus Ujian Meja saja</option>
-                                <option value="gabungan">Gabungan Proposal dan Ujian Meja</option>
+                                <option value="proposal">Proposal</option>
+                                <option value="ujian_meja">Ujian Meja</option>
+                                <option value="gabungan">Proposal + Ujian Meja</option>
                             </select>
                             <p class="help-block">Menentukan tahap ujian yang boleh menggunakan nominal pembayaran ini.</p>
                         </div>
@@ -237,9 +237,9 @@
                             <label for="cakupan_ujian">Cakupan Ujian</label>
                             <select class="form-control" id="cakupan_ujian" name="cakupan_ujian" required>
                                 <option value="" selected disabled>Pilih cakupan ujian</option>
-                                <option value="proposal">Khusus Proposal saja</option>
-                                <option value="ujian_meja">Khusus Ujian Meja saja</option>
-                                <option value="gabungan">Gabungan Proposal dan Ujian Meja</option>
+                                <option value="proposal">Proposal</option>
+                                <option value="ujian_meja">Ujian Meja</option>
+                                <option value="gabungan">Proposal + Ujian Meja</option>
                             </select>
                             <p class="help-block">Menentukan tahap ujian yang boleh menggunakan nominal pembayaran ini.</p>
                         </div>

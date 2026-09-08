@@ -24,9 +24,11 @@ class MasterPembayaranJenisTugasAkhirViewTest extends TestCase
         $this->assertStringContainsString('untuk_mahasiswa_eksekutif', $view);
         $this->assertStringContainsString('Cakupan Ujian', $view);
         $this->assertStringContainsString('name="cakupan_ujian"', $view);
-        $this->assertStringContainsString('Khusus Proposal saja', $view);
-        $this->assertStringContainsString('Khusus Ujian Meja saja', $view);
-        $this->assertStringContainsString('Gabungan Proposal dan Ujian Meja', $view);
+        $this->assertStringContainsString('<option value="proposal">Proposal</option>', $view);
+        $this->assertStringContainsString('<option value="ujian_meja">Ujian Meja</option>', $view);
+        $this->assertStringContainsString('<option value="gabungan">Proposal + Ujian Meja</option>', $view);
+        $this->assertStringNotContainsString('Proposal saja', $view);
+        $this->assertStringNotContainsString('Ujian Meja saja', $view);
         $this->assertStringContainsString('pembayaranBerlakuUntukTahapUjian', $controller);
         $this->assertStringContainsString("'cakupan_ujian' => 'required|in:proposal,ujian_meja,gabungan'", $controller);
         $this->assertStringContainsString('jenis_tugas_akhir_ids', $detailView);
