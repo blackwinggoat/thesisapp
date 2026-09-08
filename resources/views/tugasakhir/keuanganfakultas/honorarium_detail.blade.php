@@ -100,40 +100,161 @@
             padding-right: 6px;
         }
 
-        .automatic-setup-rules {
-            margin-bottom: 18px;
-            padding: 14px 16px;
-            border-left: 4px solid #2563eb;
-            background: #f8fafc;
+        .honorarium-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin: 10px 0 16px;
         }
 
-        .automatic-setup-rules h4 {
-            margin: 0 0 10px;
-            font-size: 16px;
+        .honorarium-page-title {
+            margin: 0;
+            font-size: 21px;
+            line-height: 1.3;
         }
 
-        .automatic-setup-rules table {
-            margin: 10px 0;
+        .honorarium-page-date {
+            display: block;
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .honorarium-setup-panel {
+            margin-bottom: 16px;
+            padding: 2px 0 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .honorarium-setup-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .honorarium-setup-overview {
+            min-width: 0;
+        }
+
+        .honorarium-setup-title {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .honorarium-setup-title h4 {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.35;
+        }
+
+        .automatic-setup-help-toggle {
+            padding: 1px 5px;
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .automatic-setup-help-toggle:hover,
+        .automatic-setup-help-toggle:focus {
+            text-decoration: none;
+        }
+
+        .setup-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .setup-summary-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-height: 25px;
+            padding: 3px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
             background: #fff;
+            color: #475569;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .setup-summary-item strong {
+            color: #0f172a;
+            font-size: 13px;
+        }
+
+        .setup-summary-item.is-ready {
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .setup-summary-item.is-blocked {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .honorarium-setup-actions,
+        .honorarium-page-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .honorarium-setup-actions form,
+        .honorarium-page-actions form {
+            margin: 0;
+        }
+
+        .automatic-setup-rules {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-left: 3px solid #60a5fa;
+            background: #f8fafc;
+            color: #334155;
             font-size: 12px;
         }
 
-        .automatic-setup-rules .setup-summary {
-            margin-top: 8px;
+        .automatic-setup-rules ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 18px;
+            margin: 0 0 7px;
+            padding-left: 18px;
         }
 
-        .automatic-setup-rules .setup-summary .label {
-            display: inline-block;
-            margin: 3px 5px 0 0;
-            padding: 6px 8px;
-            font-size: 11px;
+        .automatic-setup-rules p {
+            margin: 0;
         }
 
         .automatic-setup-status {
-            display: block;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
             margin-top: 5px;
             font-size: 11px;
             line-height: 1.35;
+        }
+
+        .automatic-setup-target,
+        .automatic-setup-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .automatic-setup-state {
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: #f1f5f9;
         }
 
         .automatic-setup-status.is-ready {
@@ -146,6 +267,91 @@
 
         .automatic-setup-status.is-skipped {
             color: #64748b;
+        }
+
+        .automatic-setup-block-reason {
+            display: block;
+            margin-top: 4px;
+            color: #b91c1c;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .honorarium-role-legend {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .honorarium-role-legend .btn-link {
+            padding: 0;
+            font-size: 11px;
+            text-decoration: none;
+        }
+
+        .honorarium-role-legend-content {
+            margin-top: 7px;
+            line-height: 1.7;
+        }
+
+        #honorarium-detail-table th,
+        #honorarium-detail-table td {
+            vertical-align: middle;
+        }
+
+        #honorarium-detail-table_wrapper .dataTables_filter {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            float: none !important;
+            clear: both;
+            margin: 0 0 12px;
+            text-align: left;
+        }
+
+        #honorarium-detail-table_wrapper .dataTables_filter label {
+            display: block;
+            width: 260px;
+            margin: 0;
+        }
+
+        #honorarium-detail-table_wrapper .dataTables_filter input {
+            width: 260px;
+            max-width: 100%;
+            height: 34px;
+            margin-left: 0;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 767px) {
+            .honorarium-page-header,
+            .honorarium-setup-main {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .honorarium-page-header .btn,
+            .honorarium-setup-actions,
+            .honorarium-setup-actions form,
+            .honorarium-setup-actions .btn {
+                width: 100%;
+            }
+
+            .honorarium-setup-actions {
+                align-items: stretch;
+            }
+
+            #honorarium-detail-table_wrapper .dataTables_filter input {
+                width: 100%;
+            }
+
+            #honorarium-detail-table_wrapper .dataTables_filter label {
+                width: 100%;
+            }
         }
     </style>
     <!-- BEGIN PAGE CONTENT -->
@@ -172,100 +378,83 @@
             @endif
 
             <!-- BEGIN DATA TABLE -->
-            <div class="clearfix">
-                <h3 class="page-heading pull-left">{{ $isAkademikHonorarium ? 'Penetapan Honorarium' : 'Honorarium' }} Tanggal {{ $date }}</h3>
-                <a href="{{ route($homeRoute) }}" class="btn btn-default pull-right" style="margin-top: 20px;">
-                    <i class="fa fa-arrow-left"></i> Kembali ke Daftar Tanggal
+            <div class="honorarium-page-header">
+                <div>
+                    <h3 class="honorarium-page-title">{{ $isAkademikHonorarium ? 'Penetapan Honorarium' : 'Honorarium' }}</h3>
+                    <span class="honorarium-page-date"><i class="fa fa-calendar"></i> {{ date('d/m/Y', strtotime($date)) }}</span>
+                </div>
+                <a href="{{ route($homeRoute) }}" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Daftar Tanggal
                 </a>
             </div>
             <div class="the-box">
                 @if ($isAkademikHonorarium && $automaticTypeSetupPlan)
                     @php
-                        $setupSummary = $automaticTypeSetupPlan['summary'];
                         $setupCanApply = $automaticTypeSetupPlan['can_apply'];
                     @endphp
-                    <div class="automatic-setup-rules">
-                        <h4><i class="fa fa-shield"></i> Pemeriksaan Setup Tipe Ujian Otomatis</h4>
-                        <p style="margin-bottom: 6px;">
-                            Sistem membaca <strong>sumber ujian</strong>, <strong>SK Proposal</strong>,
-                            <strong>Jenis TA</strong>, dan <strong>kelas mahasiswa</strong>. Nominal selalu
-                            diambil dari Master Pembayaran, tanpa AI.
-                        </p>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-condensed">
-                                <thead>
-                                    <tr>
-                                        <th>Jenis TA</th>
-                                        <th>Sumber Ujian</th>
-                                        <th>Status SK Proposal</th>
-                                        <th>Tipe Pembayaran</th>
-                                        <th>Kelas</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Semua jenis</td>
-                                        <td>Proposal</td>
-                                        <td>Ada / belum ada</td>
-                                        <td>Proposal</td>
-                                        <td rowspan="3">Reguler atau Eksekutif mengikuti data kelas mahasiswa</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Semua jenis</td>
-                                        <td>Ujian Akhir</td>
-                                        <td>Sudah ada</td>
-                                        <td>Ujian Meja</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Semua jenis</td>
-                                        <td>Ujian Akhir</td>
-                                        <td>Belum ada</td>
-                                        <td>Proposal + Ujian Meja</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div class="honorarium-setup-panel">
+                        <div class="honorarium-setup-main">
+                            <div class="honorarium-setup-overview">
+                                <div class="honorarium-setup-title">
+                                    <h4><i class="fa fa-magic"></i> Setup Otomatis</h4>
+                                    <button type="button" class="btn btn-link btn-xs automatic-setup-help-toggle collapsed"
+                                        data-toggle="collapse" data-target="#automatic-setup-help"
+                                        aria-expanded="false" aria-controls="automatic-setup-help" title="Lihat aturan setup">
+                                        <i class="fa fa-info-circle"></i> Aturan
+                                    </button>
+                                </div>
+                                <div class="setup-summary" aria-label="Ringkasan pemeriksaan setup">
+                                    <span class="setup-summary-item is-ready">
+                                        <i class="fa fa-check-circle"></i><strong>{{ $automaticTypeSetupPlan['ready_count'] }}</strong> Siap
+                                    </span>
+                                    <span class="setup-summary-item">
+                                        <i class="fa fa-lock"></i><strong>{{ $automaticTypeSetupPlan['skipped_count'] }}</strong> Sudah diatur
+                                    </span>
+                                    <span class="setup-summary-item {{ $automaticTypeSetupPlan['blocking_count'] > 0 ? 'is-blocked' : '' }}">
+                                        <i class="fa {{ $automaticTypeSetupPlan['blocking_count'] > 0 ? 'fa-exclamation-circle' : 'fa-check-circle' }}"></i>
+                                        <strong>{{ $automaticTypeSetupPlan['blocking_count'] }}</strong> Perlu cek
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="honorarium-setup-actions">
+                                <form action="{{ route('honorarium_penetapan_setup_type_ujian_otomatis', $date) }}" method="POST"
+                                    onsubmit="return confirm('Terapkan tipe dan nominal honorarium untuk {{ $automaticTypeSetupPlan['ready_count'] ?? 0 }} data? Proses hanya berjalan jika seluruh data tanggal ini lolos pemeriksaan.');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-warning btn-sm"
+                                        {{ empty($setupCanApply) ? 'disabled' : '' }}
+                                        title="{{ empty($setupCanApply) ? 'Perbaiki data penghambat atau tidak ada data yang perlu disetup.' : 'Terapkan hasil pemeriksaan otomatis.' }}">
+                                        <i class="fa fa-magic"></i> Terapkan Otomatis
+                                    </button>
+                                </form>
+                                <form action="{{ route('honorarium_penetapan_reset_type', $date) }}" method="POST"
+                                    onsubmit="return confirm('Reset semua tipe dan nominal honorarium pada tanggal ini? Data yang sudah lunas tidak akan diubah.');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Reset tipe honorarium">
+                                        <i class="fa fa-undo"></i> Reset
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                        <p style="margin-bottom: 0;">
-                            <strong>Pengaman:</strong> bila satu data bermasalah, seluruh setup tanggal ini dibatalkan.
-                            Data yang sudah ditetapkan atau sudah dibayar tidak diubah. Bila pembayaran gabungan akan
-                            diterapkan tetapi record honorarium Proposal juga ditemukan, proses dihentikan agar Proposal tidak dibayar dua kali.
-                        </p>
-                        <div class="setup-summary">
-                            <span class="label label-success">Siap diterapkan: {{ $automaticTypeSetupPlan['ready_count'] }}</span>
-                            <span class="label label-default">Sudah diatur/dilindungi: {{ $automaticTypeSetupPlan['skipped_count'] }}</span>
-                            <span class="label {{ $automaticTypeSetupPlan['blocking_count'] > 0 ? 'label-danger' : 'label-success' }}">
-                                Perlu diperbaiki: {{ $automaticTypeSetupPlan['blocking_count'] }}
-                            </span>
+                        <div id="automatic-setup-help" class="collapse automatic-setup-rules">
+                            <ul>
+                                <li><strong>Proposal</strong> menjadi Proposal.</li>
+                                <li><strong>Ujian Akhir + SK Proposal</strong> menjadi Ujian Meja.</li>
+                                <li><strong>Ujian Akhir tanpa SK Proposal</strong> menjadi Proposal + Ujian Meja.</li>
+                            </ul>
+                            <p><i class="fa fa-shield"></i> Setup berhenti bila ada data bermasalah atau risiko Proposal ganda; data yang sudah diatur atau dibayar tidak diubah.</p>
                         </div>
                     </div>
                 @endif
-                <div style="margin-bottom: 20px; text-align: right;">
-                    @if ($isAkademikHonorarium)
-                        <form action="{{ route('honorarium_penetapan_setup_type_ujian_otomatis', $date) }}" method="POST" style="display: inline;"
-                            onsubmit="return confirm('Terapkan tipe dan nominal honorarium untuk {{ $automaticTypeSetupPlan['ready_count'] ?? 0 }} data? Proses hanya berjalan jika seluruh data tanggal ini lolos pemeriksaan.');">
-                            @csrf
-                            <button type="submit" class="btn btn-warning"
-                                {{ empty($setupCanApply) ? 'disabled' : '' }}
-                                title="{{ empty($setupCanApply) ? 'Perbaiki data penghambat atau tidak ada data yang perlu disetup.' : 'Terapkan hasil pemeriksaan otomatis.' }}">
-                                <i class="fa fa-magic"></i> Setup Tipe Ujian Otomatis
-                            </button>
-                        </form>
-                        <form action="{{ route('honorarium_penetapan_reset_type', $date) }}" method="POST" style="display: inline;"
-                            onsubmit="return confirm('Reset semua tipe dan nominal honorarium pada tanggal ini? Data yang sudah lunas tidak akan diubah.');">
-                            @csrf
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fa fa-undo"></i> Reset Type
-                            </button>
-                        </form>
-                    @else
-                        <form action="{{ route('honorarium_available_all', $date) }}" method="POST" style="display: inline;"
+                @if (!$isAkademikHonorarium)
+                    <div class="honorarium-page-actions" style="margin-bottom: 20px;">
+                        <form action="{{ route('honorarium_available_all', $date) }}" method="POST"
                             onsubmit="return confirm('Set semua honorarium pada tanggal ini menjadi Available? Data tanpa tipe atau yang sudah lunas akan dilewati.');">
                             @csrf
                             <button type="submit" class="btn btn-success">
                                 <i class="fa fa-check-circle"></i> Available Semua
                             </button>
                         </form>
-                        <form action="{{ route('honorarium_unavailable_all', $date) }}" method="POST" style="display: inline;"
+                        <form action="{{ route('honorarium_unavailable_all', $date) }}" method="POST"
                             onsubmit="return confirm('Set semua honorarium pada tanggal ini menjadi Unavailable? Data yang sudah lunas tidak akan diubah.');">
                             @csrf
                             <button type="submit" class="btn btn-default">
@@ -275,8 +464,8 @@
                         <a href="{{ route('honorarium_history') }}" type="button" class="btn btn-primary">
                             <i class="fa fa-history"></i> History
                         </a>
-                    @endif
-                </div>
+                    </div>
+                @endif
 
                 @if (!$isAkademikHonorarium)
                     @php
@@ -299,8 +488,8 @@
                             <thead class="the-box dark full">
                                 <tr>
                                     <th>No</th>
-                                    <th class="honorarium-nim-column">Nim</th>
-                                    <th>Student Name</th>
+                                    <th class="honorarium-nim-column">NIM</th>
+                                    <th>Nama Mahasiswa</th>
                                     <th>Jenis TA</th>
                                     @if ($isAkademikHonorarium)
                                         <th>Kehadiran Pembimbing</th>
@@ -311,13 +500,13 @@
                                     @if (!$isAkademikHonorarium)
                                         <th>Available</th>
                                     @endif
-                                    <th class="honorarium-type-column">Type</th>
+                                    <th class="honorarium-type-column">Tipe Honor</th>
                                     @if ($isAkademikHonorarium)
                                         <th>Nomor SK Ujian</th>
                                     @else
                                         <th>Total Honor</th>
                                     @endif
-                                    <th>Status</th>
+                                    <th>Detail</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -449,7 +638,7 @@
                                                     {{ $sudahAdaPembayaran ? 'disabled' : '' }}>
 
                                                     @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
-                                                        <option value="unset" data-total-honor="0">Unset</option>
+                                                        <option value="unset" data-total-honor="0">Belum ditetapkan</option>
                                                         @foreach ($dataMasterHonorarium as $masterHonorarium)
                                                             @if ($masterPembayaranBerlaku($masterHonorarium))
                                                                 <option value="{{ $masterHonorarium->id_honorarium }}" data-total-honor="{{ $hitungTotalMaster($masterHonorarium) }}">
@@ -480,12 +669,27 @@
                                                             ? 'is-ready'
                                                             : (in_array($rowSetupPlan['status'], ['configured', 'protected'], true) ? 'is-skipped' : 'is-blocked');
                                                     @endphp
-                                                    <span class="automatic-setup-status {{ $rowSetupStatusClass }}">
+                                                    @php
+                                                        $rowSetupStatusLabel = $rowSetupPlan['status'] === 'ready'
+                                                            ? 'Siap'
+                                                            : ($rowSetupPlan['status'] === 'protected'
+                                                                ? 'Dilindungi'
+                                                                : ($rowSetupPlan['status'] === 'configured' ? 'Sudah diatur' : 'Perlu cek'));
+                                                        $rowSetupStatusIcon = $rowSetupPlan['status'] === 'ready'
+                                                            ? 'fa-check-circle'
+                                                            : ($rowSetupPlan['status'] === 'protected'
+                                                                ? 'fa-lock'
+                                                                : ($rowSetupPlan['status'] === 'configured' ? 'fa-check-circle' : 'fa-exclamation-circle'));
+                                                    @endphp
+                                                    <div class="automatic-setup-status {{ $rowSetupStatusClass }}" title="{{ $rowSetupPlan['message'] }}">
                                                         @if ($rowSetupPlan['expected_payment_name'])
-                                                            <strong>Otomatis: {{ $rowSetupPlan['expected_payment_name'] }}</strong><br>
+                                                            <span class="automatic-setup-target"><i class="fa fa-magic"></i> {{ $rowSetupPlan['expected_payment_name'] }}</span>
                                                         @endif
-                                                        {{ $rowSetupPlan['message'] }}
-                                                    </span>
+                                                        <span class="automatic-setup-state"><i class="fa {{ $rowSetupStatusIcon }}"></i> {{ $rowSetupStatusLabel }}</span>
+                                                    </div>
+                                                    @if ($rowSetupStatusClass === 'is-blocked')
+                                                        <small class="automatic-setup-block-reason">{{ $rowSetupPlan['message'] }}</small>
+                                                    @endif
                                                 @endif
                                             @else
                                                 @if ($tipeBelumDitetapkan)
@@ -539,6 +743,7 @@
                                             @endphp
                                             <button type="button" class="btn btn-primary btn-sm view-honorarium-btn"
                                                 data-toggle="modal" data-target="#statusModal"
+                                                title="Lihat rincian honorarium" aria-label="Lihat rincian honorarium"
                                                 data-honorarium-id="{{ $honorarium->id }}"
                                                 data-ks="{{ helper::getDeskripsi($honorarium->KS) }}"
                                                 data-pu="{{ helper::getDeskripsi($honorarium->PU) }}"
@@ -564,7 +769,7 @@
                                                 data-p1-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P1']) ? $honorTersesuaikan['P1'] : $honorarium->P1_H) }}"
                                                 data-p2-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P2']) ? $honorTersesuaikan['P2'] : $honorarium->P2_H) }}"
                                                 data-p3-h="{{ helper::formatRupiah(isset($honorTersesuaikan['P3']) ? $honorTersesuaikan['P3'] : $honorarium->P3_H) }}">
-                                                <i class="fa fa-info-circle"></i> View
+                                                <i class="fa fa-info-circle"></i><span class="sr-only">Lihat rincian</span>
                                             </button>
                                         </td>
                                         <input type="hidden" name="honorariums[{{ $loop->index }}][id]"
@@ -576,19 +781,21 @@
                     </div><!-- /.table-responsive -->
                     @if ($isAkademikHonorarium)
                         <div style="text-align: right; margin-top: 20px;">
-                            <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Save</button>
+                            <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Simpan Tipe</button>
                         </div>
                     @endif
                 </form>
-                <div>
-                    <small>
-                        <p>KS = Ketua Sidang</p>
-                        <p>PU = Pembimbing Utama</p>
-                        <p>PP = Pembimbing Pendamping</p>
-                        <p>P1 = Penguji I</p>
-                        <p>P2 = Penguji II</p>
-                        <p>P3 = Penguji III</p>
-                    </small>
+                <div class="honorarium-role-legend">
+                    <button type="button" class="btn btn-link btn-xs collapsed" data-toggle="collapse"
+                        data-target="#honorarium-role-help" aria-expanded="false" aria-controls="honorarium-role-help">
+                        <i class="fa fa-info-circle"></i> Singkatan peran
+                    </button>
+                    <div id="honorarium-role-help" class="collapse honorarium-role-legend-content">
+                        <strong>KS</strong> Ketua Sidang &nbsp;·&nbsp;
+                        <strong>PU</strong> Pembimbing Utama &nbsp;·&nbsp;
+                        <strong>PP</strong> Pembimbing Pendamping &nbsp;·&nbsp;
+                        <strong>P1/P2/P3</strong> Penguji I/II/III
+                    </div>
                 </div>
             </div><!-- /.the-box .default -->
             <!-- END DATA TABLE -->
@@ -601,7 +808,7 @@
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="statusModalLabel">Honorarium Status</h5>
+                    <h5 class="modal-title" id="statusModalLabel">Rincian Honorarium</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -611,8 +818,8 @@
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
-                                    <th>Role</th>
-                                    <th>Name</th>
+                                    <th>Peran</th>
+                                    <th>Nama</th>
                                     <th>Honor Awal</th>
                                     <th>Perubahan</th>
                                     <th>Honor Akhir</th>
@@ -665,12 +872,11 @@
                         </table>
                     </div>
                     <div class="alert alert-info square" style="margin-bottom: 0;">
-                        <strong>Perubahan honor</strong> dihitung dari sanksi kehadiran pembimbing yang berlaku pada tanggal ujian.
-                        Nilai minus berarti pengurangan, nilai plus berarti tambahan.
+                        Honor awal ditambah atau dikurangi penyesuaian kehadiran untuk menghasilkan honor akhir.
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -688,7 +894,11 @@
             var datatable = $(tableSelector).DataTable({
                 paging: false,
                 info: false,
-                lengthChange: false
+                lengthChange: false,
+                language: {
+                    search: '',
+                    searchPlaceholder: 'Cari NIM atau nama'
+                }
             });
 
             function formatRupiah(value) {
