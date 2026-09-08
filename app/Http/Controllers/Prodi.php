@@ -4254,6 +4254,7 @@ class Prodi extends Controller
 
     protected function getBimbinganDistributionReport($nimLike, $selectedAcademicYear = null)
     {
+        $currentAcademicYear = Helper::getSemesterAkademik(Carbon::today())->tahun_akademik;
         $periodDates = DB::table('mst_sk_pembimbing as sk')
             ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'sk.bimbingan_id')
             ->where('tb.C_NPM', 'LIKE', $nimLike)
@@ -4270,13 +4271,13 @@ class Prodi extends Controller
                 }
             })
             ->filter()
+            ->push($currentAcademicYear)
             ->unique()
             ->sortByDesc(function ($value) {
                 return (int) substr($value, 0, 4);
             })
             ->values();
 
-        $currentAcademicYear = Helper::getSemesterAkademik(Carbon::today())->tahun_akademik;
         $selectedAcademicYear = preg_match('/^\d{4}\/\d{4}$/', (string) $selectedAcademicYear)
             ? $selectedAcademicYear
             : null;

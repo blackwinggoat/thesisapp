@@ -1,5 +1,24 @@
 @extends('tugasakhir.index')
 @section('isi')
+<style>
+    .distribution-guidance-table > thead > tr > th {
+        background-color: #245c63 !important;
+        border-color: #19474d !important;
+        color: #fff !important;
+    }
+
+    .distribution-guidance-table > thead > tr:nth-child(2) > th {
+        background-color: #347780 !important;
+    }
+
+    .distribution-guidance-table > tbody > tr > td {
+        background-color: #fff;
+    }
+
+    .distribution-guidance-table > tbody > tr:nth-child(even) > td {
+        background-color: #f4f7f7;
+    }
+</style>
 <div class="page-content">
     <div class="container-fluid">
         <h1 class="page-heading">{{ $reportPageTitle }} <small>{{ $reportContext['label'] }}</small></h1>
@@ -79,7 +98,7 @@
             </p>
 
             <div class="table-responsive" style="margin-top: 20px;">
-                <table class="table table-bordered table-striped table-hover" style="min-width: 720px;">
+                <table class="table table-bordered table-hover distribution-guidance-table" style="min-width: 720px;">
                     <thead>
                         <tr>
                             <th rowspan="2" class="text-center" style="vertical-align: middle;">No</th>
