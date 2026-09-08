@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helper;
+use App\Services\HonorariumAutomaticTypeSetupService;
 use Barryvdh\DomPDF\Facade as PDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -545,7 +546,9 @@ class KeuanganFakultas extends Controller
                 DB::raw($this->honorariumTotalSql('honorarium') . ' as total_honor')
             )
             ->orderBy('honorarium.C_NPM')
-            ->get();
+            ->get()
+            ->unique('id')
+            ->values();
 
         if ($data->isEmpty()) {
             return redirect()->route($honorariumMode === 'akademik' ? 'honorarium_penetapan_home' : 'honorarium_home')->with([
@@ -582,11 +585,22 @@ class KeuanganFakultas extends Controller
             $honorarium->jumlah_sanksi_pembimbing = $jumlahSanksiPembimbing;
         }
 
+        $automaticTypeSetupPlan = null;
+        if ($honorariumMode === 'akademik') {
+            $automaticTypeSetupPlan = $this->buildHonorariumAutomaticTypeSetupPlan(
+                $data,
+                $jenisTugasAkhirByNim,
+                $mahasiswaEksekutif,
+                $dataMasterHonorarium
+            );
+        }
+
         return view('tugasakhir.keuanganfakultas.honorarium_detail', compact(
             'data',
             'dataMasterHonorarium',
             'date',
-            'honorariumMode'
+            'honorariumMode',
+            'automaticTypeSetupPlan'
         ));
     }
 
@@ -996,70 +1010,80 @@ class KeuanganFakultas extends Controller
                 $data = $this->honorariumDenganJadwalQuery()
                     ->whereDate('jadwal.tgl_ujian', $date)
                     ->select('honorarium.*')
+                    ->orderBy('honorarium.id')
                     ->lockForUpdate()
-                    ->get();
+                    ->get()
+                    ->unique('id')
+                    ->values();
+
+                if ($data->isEmpty()) {
+                    throw new \RuntimeException('Tidak ada data honorarium aktif pada tanggal ini.');
+                }
 
                 $jenisTugasAkhirByNim = $this->jenisTugasAkhirHonorariumByNim($data->pluck('C_NPM')->all());
                 $mahasiswaEksekutif = $this->mahasiswaEksekutifByNim($data->pluck('C_NPM')->all());
-                $masterByAturan = $this->masterPembayaranDenganJenisTugasAkhir()
-                    ->groupBy(function ($master) {
-                        return $master->name . '|' . (int) $master->untuk_mahasiswa_eksekutif;
-                    });
-                $hasil = ['diterapkan' => 0, 'manual' => 0, 'tidak_lengkap' => 0, 'tidak_ditemukan' => 0];
+                $masterPayments = $this->masterPembayaranDenganJenisTugasAkhir();
+                $plan = $this->buildHonorariumAutomaticTypeSetupPlan(
+                    $data,
+                    $jenisTugasAkhirByNim,
+                    $mahasiswaEksekutif,
+                    $masterPayments
+                );
 
-                foreach ($data as $honorarium) {
-                    if ($this->honorariumHasPaidRole($honorarium) || !$this->honorariumNeedsTypeAssignment($honorarium)) {
-                        $hasil['manual']++;
+                if ($plan['blocking_count'] > 0 || $plan['ready_count'] === 0) {
+                    return ['plan' => $plan, 'diterapkan' => 0];
+                }
+
+                $honorariumById = $data->keyBy('id');
+                $masterPaymentById = $masterPayments->keyBy('id_honorarium');
+                $diterapkan = 0;
+                foreach ($plan['rows'] as $honorariumId => $rowPlan) {
+                    if ($rowPlan['status'] !== HonorariumAutomaticTypeSetupService::STATUS_READY) {
                         continue;
                     }
 
-                    $jenisTugasAkhir = $jenisTugasAkhirByNim->get($honorarium->C_NPM);
-                    if (!$jenisTugasAkhir || empty($jenisTugasAkhir->kode_jenis_tugas_akhir)) {
-                        $hasil['tidak_lengkap']++;
-                        continue;
-                    }
-
-                    $namaPembayaran = $this->namaPembayaranOtomatis(
-                        (int) $honorarium->exam_type,
-                        $jenisTugasAkhir->kode_jenis_tugas_akhir,
-                        $mahasiswaEksekutif->has($honorarium->C_NPM)
-                    );
-                    if (!$namaPembayaran) {
-                        $hasil['tidak_lengkap']++;
-                        continue;
-                    }
-
-                    $masterPembayaran = $masterByAturan->get(
-                        $namaPembayaran . '|' . ($mahasiswaEksekutif->has($honorarium->C_NPM) ? 1 : 0),
-                        collect()
-                    );
-                    if ($masterPembayaran->count() !== 1) {
-                        $hasil['tidak_ditemukan']++;
-                        continue;
-                    }
-
-                    $masterPembayaran = $masterPembayaran->first();
-                    if (!empty($masterPembayaran->jenis_tugas_akhir_ids)
-                        && !in_array((int) $jenisTugasAkhir->jenis_tugas_akhir_id, $masterPembayaran->jenis_tugas_akhir_ids)) {
-                        $hasil['tidak_ditemukan']++;
-                        continue;
+                    $honorarium = $honorariumById->get($honorariumId);
+                    $masterPayment = $masterPaymentById->get($rowPlan['master_payment_id']);
+                    if (!$honorarium || !$masterPayment) {
+                        throw new \RuntimeException('Data berubah saat proses setup. Tidak ada perubahan yang disimpan.');
                     }
 
                     DB::table('trt_honorium')
-                        ->where('id', $honorarium->id)
-                        ->update($this->honorariumPaymentPayload($honorarium, $masterPembayaran));
-                    $hasil['diterapkan']++;
+                        ->where('id', $honorariumId)
+                        ->update($this->honorariumPaymentPayload($honorarium, $masterPayment));
+                    $diterapkan++;
                 }
 
-                return $hasil;
+                return ['plan' => $plan, 'diterapkan' => $diterapkan];
             });
+
+            $plan = $hasil['plan'];
+            if ($plan['blocking_count'] > 0) {
+                return redirect()->back()->with([
+                    'status' => 'warning',
+                    'message' => 'Setup dibatalkan: ditemukan ' . $plan['blocking_count']
+                        . ' data yang perlu diperbaiki atau ditetapkan manual. Tidak ada data pada tanggal ini yang diubah. '
+                        . $this->ringkasanHambatanSetupHonorarium($plan['summary']),
+                ]);
+            }
+
+            if ($plan['ready_count'] === 0) {
+                return redirect()->back()->with([
+                    'status' => 'info',
+                    'message' => 'Tidak ada data yang perlu disetup. Semua data sudah ditetapkan atau dilindungi karena sudah dibayar.',
+                ]);
+            }
 
             return redirect()->back()->with([
                 'status' => 'success',
-                'message' => 'Setup otomatis selesai: ' . $hasil['diterapkan'] . ' diterapkan, '
-                    . $hasil['manual'] . ' tidak diubah karena sudah diatur/lunas, '
-                    . $hasil['tidak_lengkap'] . ' data belum lengkap, '
-                    . $hasil['tidak_ditemukan'] . ' master pembayaran belum sesuai.',
+                'message' => 'Setup otomatis selesai: ' . $hasil['diterapkan']
+                    . ' data diterapkan, ' . $plan['skipped_count']
+                    . ' data yang sudah diatur/dibayar tidak diubah.',
+            ]);
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with([
+                'status' => 'warning',
+                'message' => $e->getMessage(),
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with([
@@ -1178,17 +1202,66 @@ class KeuanganFakultas extends Controller
 
     protected function namaPembayaranOtomatis($examType, $kodeJenisTugasAkhir, $mahasiswaEksekutif)
     {
-        if (strpos((string) $kodeJenisTugasAkhir, 'NS-') === 0) {
-            $nama = 'Non Skripsi [proposal + Ujian Meja]';
-        } elseif ((int) $examType === 0) {
-            $nama = 'Proposal';
-        } elseif ((int) $examType === 2) {
-            $nama = 'Ujian Meja';
-        } else {
-            return null;
+        return $this->honorariumAutomaticTypeService()->expectedPaymentName(
+            $examType,
+            $kodeJenisTugasAkhir,
+            $mahasiswaEksekutif
+        );
+    }
+
+    protected function honorariumAutomaticTypeService()
+    {
+        return new HonorariumAutomaticTypeSetupService;
+    }
+
+    protected function buildHonorariumAutomaticTypeSetupPlan(
+        $honorariums,
+        $finalProjectTypesByNim,
+        $executiveStudents,
+        $masterPayments
+    ) {
+        return $this->honorariumAutomaticTypeService()->buildPlan(
+            collect($honorariums),
+            collect($finalProjectTypesByNim),
+            collect($executiveStudents),
+            collect($masterPayments),
+            $this->honorariumCombinedConflictByNim(collect($honorariums)->pluck('C_NPM')->all())
+        );
+    }
+
+    protected function honorariumCombinedConflictByNim(array $nims)
+    {
+        $nims = array_values(array_unique(array_filter($nims)));
+        if (empty($nims)) {
+            return collect();
         }
 
-        return $mahasiswaEksekutif ? $nama . ' Eksekutif' : $nama;
+        return DB::table('trt_honorium')
+            ->whereIn('C_NPM', $nims)
+            ->whereIn('exam_type', [0, 2])
+            ->groupBy('C_NPM')
+            ->havingRaw('COUNT(DISTINCT exam_type) > 1')
+            ->pluck('C_NPM')
+            ->flip();
+    }
+
+    protected function ringkasanHambatanSetupHonorarium(array $summary)
+    {
+        $labels = [
+            HonorariumAutomaticTypeSetupService::STATUS_MISSING_FINAL_PROJECT_TYPE => 'Jenis TA belum ada',
+            HonorariumAutomaticTypeSetupService::STATUS_INVALID_EXAM_TYPE => 'sumber ujian tidak valid',
+            HonorariumAutomaticTypeSetupService::STATUS_COMBINED_CONFLICT => 'Non-Skripsi ganda',
+            HonorariumAutomaticTypeSetupService::STATUS_MASTER_MISSING => 'master tidak cocok',
+            HonorariumAutomaticTypeSetupService::STATUS_MASTER_AMBIGUOUS => 'master ganda',
+        ];
+        $details = [];
+        foreach ($labels as $status => $label) {
+            if (!empty($summary[$status])) {
+                $details[] = $label . ': ' . $summary[$status];
+            }
+        }
+
+        return empty($details) ? '' : 'Rincian: ' . implode(', ', $details) . '.';
     }
 
     protected function honorariumBelumLunasQuery()
@@ -1399,18 +1472,12 @@ class KeuanganFakultas extends Controller
 
     protected function honorariumNeedsTypeAssignment($honorarium)
     {
-        return empty($honorarium->tipe_ujian) || in_array((string) $honorarium->tipe_ujian, ['0', '2'], true);
+        return $this->honorariumAutomaticTypeService()->needsTypeAssignment($honorarium);
     }
 
     protected function honorariumHasPaidRole($honorarium)
     {
-        foreach ($this->honorariumRoles() as $role => $definition) {
-            if (trim((string) $honorarium->{$role}) !== '' && (int) $honorarium->{$definition['status']} === 3) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->honorariumAutomaticTypeService()->hasPaidRole($honorarium);
     }
 
     protected function honorariumStatusPayload($honorarium, $status)

@@ -13,12 +13,14 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium_detail.blade.php');
         $migration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_21_130000_mark_named_executive_honorarium_payments.php');
         $attendanceMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_22_020000_add_pembimbing_attendance_to_trt_honorium_table.php');
+        $classificationMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_09_08_060000_backfill_honorarium_master_final_project_types.php');
 
         $this->assertStringContainsString('honorarium_setup_type_ujian_otomatis', $controller);
-        $this->assertStringContainsString('namaPembayaranOtomatis', $controller);
-        $this->assertStringContainsString("strpos((string) \$kodeJenisTugasAkhir, 'NS-') === 0", $controller);
-        $this->assertStringContainsString("(int) \$examType === 0", $controller);
-        $this->assertStringContainsString("(int) \$examType === 2", $controller);
+        $this->assertStringContainsString('HonorariumAutomaticTypeSetupService', $controller);
+        $this->assertStringContainsString('buildHonorariumAutomaticTypeSetupPlan', $controller);
+        $this->assertStringContainsString("\$plan['blocking_count'] > 0", $controller);
+        $this->assertStringContainsString('Tidak ada data pada tanggal ini yang diubah', $controller);
+        $this->assertStringContainsString('honorariumCombinedConflictByNim', $controller);
         $this->assertStringContainsString('honorariumHasPaidRole($honorarium)', $controller);
         $this->assertStringContainsString('honorarium_reset_type', $controller);
         $this->assertStringContainsString('honorarium_available_all', $controller);
@@ -37,8 +39,14 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('Available Semua', $view);
         $this->assertStringContainsString('Unavailable Semua', $view);
         $this->assertStringContainsString('kode_jenis_tugas_akhir', $view);
+        $this->assertStringContainsString('Pemeriksaan Setup Tipe Ujian Otomatis', $view);
+        $this->assertStringContainsString('bila satu data bermasalah, seluruh setup tanggal ini dibatalkan', $view);
+        $this->assertStringContainsString('Record Non-Skripsi ganda harus ditetapkan manual', $view);
+        $this->assertStringContainsString('automatic-setup-status', $view);
         $this->assertStringContainsString('Proposal Eksekutif', $migration);
         $this->assertStringContainsString('Ujian Meja Eksekutif', $migration);
+        $this->assertStringContainsString("'type_prefix' => 'TA-'", $classificationMigration);
+        $this->assertStringContainsString("'type_prefix' => 'NS-'", $classificationMigration);
         $this->assertStringContainsString('pembimbing_utama_hadir', $attendanceMigration);
         $this->assertStringContainsString('pembimbing_pendamping_hadir', $attendanceMigration);
     }

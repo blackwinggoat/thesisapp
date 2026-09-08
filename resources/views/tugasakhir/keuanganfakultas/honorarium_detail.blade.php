@@ -99,6 +99,54 @@
             padding-left: 6px;
             padding-right: 6px;
         }
+
+        .automatic-setup-rules {
+            margin-bottom: 18px;
+            padding: 14px 16px;
+            border-left: 4px solid #2563eb;
+            background: #f8fafc;
+        }
+
+        .automatic-setup-rules h4 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+
+        .automatic-setup-rules table {
+            margin: 10px 0;
+            background: #fff;
+            font-size: 12px;
+        }
+
+        .automatic-setup-rules .setup-summary {
+            margin-top: 8px;
+        }
+
+        .automatic-setup-rules .setup-summary .label {
+            display: inline-block;
+            margin: 3px 5px 0 0;
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+
+        .automatic-setup-status {
+            display: block;
+            margin-top: 5px;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .automatic-setup-status.is-ready {
+            color: #15803d;
+        }
+
+        .automatic-setup-status.is-blocked {
+            color: #b91c1c;
+        }
+
+        .automatic-setup-status.is-skipped {
+            color: #64748b;
+        }
     </style>
     <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
@@ -131,12 +179,68 @@
                 </a>
             </div>
             <div class="the-box">
+                @if ($isAkademikHonorarium && $automaticTypeSetupPlan)
+                    @php
+                        $setupSummary = $automaticTypeSetupPlan['summary'];
+                        $setupCanApply = $automaticTypeSetupPlan['can_apply'];
+                    @endphp
+                    <div class="automatic-setup-rules">
+                        <h4><i class="fa fa-shield"></i> Pemeriksaan Setup Tipe Ujian Otomatis</h4>
+                        <p style="margin-bottom: 6px;">
+                            Sistem membaca <strong>sumber ujian</strong>, <strong>Jenis TA</strong>, dan
+                            <strong>kelas mahasiswa</strong>. Nominal selalu diambil dari Master Pembayaran, tanpa AI.
+                        </p>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>Jenis TA</th>
+                                        <th>Sumber Ujian</th>
+                                        <th>Tipe Pembayaran</th>
+                                        <th>Kelas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>TA-*</td>
+                                        <td>Proposal</td>
+                                        <td>Proposal</td>
+                                        <td rowspan="3">Reguler atau Eksekutif mengikuti data kelas mahasiswa</td>
+                                    </tr>
+                                    <tr>
+                                        <td>TA-*</td>
+                                        <td>Ujian Akhir</td>
+                                        <td>Ujian Meja</td>
+                                    </tr>
+                                    <tr>
+                                        <td>NS-*</td>
+                                        <td>Proposal / Ujian Akhir</td>
+                                        <td>Non Skripsi [proposal + Ujian Meja]</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p style="margin-bottom: 0;">
+                            <strong>Pengaman:</strong> bila satu data bermasalah, seluruh setup tanggal ini dibatalkan.
+                            Data yang sudah ditetapkan atau sudah dibayar tidak diubah. Record Non-Skripsi ganda harus ditetapkan manual agar pembayaran gabungan tidak terhitung dua kali.
+                        </p>
+                        <div class="setup-summary">
+                            <span class="label label-success">Siap diterapkan: {{ $automaticTypeSetupPlan['ready_count'] }}</span>
+                            <span class="label label-default">Sudah diatur/dilindungi: {{ $automaticTypeSetupPlan['skipped_count'] }}</span>
+                            <span class="label {{ $automaticTypeSetupPlan['blocking_count'] > 0 ? 'label-danger' : 'label-success' }}">
+                                Perlu diperbaiki: {{ $automaticTypeSetupPlan['blocking_count'] }}
+                            </span>
+                        </div>
+                    </div>
+                @endif
                 <div style="margin-bottom: 20px; text-align: right;">
                     @if ($isAkademikHonorarium)
                         <form action="{{ route('honorarium_penetapan_setup_type_ujian_otomatis', $date) }}" method="POST" style="display: inline;"
-                            onsubmit="return confirm('Terapkan tipe dan nominal honorarium otomatis untuk data yang belum diatur pada tanggal ini? Data yang sudah diatur atau sudah lunas tidak akan diubah.');">
+                            onsubmit="return confirm('Terapkan tipe dan nominal honorarium untuk {{ $automaticTypeSetupPlan['ready_count'] ?? 0 }} data? Proses hanya berjalan jika seluruh data tanggal ini lolos pemeriksaan.');">
                             @csrf
-                            <button type="submit" class="btn btn-warning">
+                            <button type="submit" class="btn btn-warning"
+                                {{ empty($setupCanApply) ? 'disabled' : '' }}
+                                title="{{ empty($setupCanApply) ? 'Perbaiki data penghambat atau tidak ada data yang perlu disetup.' : 'Terapkan hasil pemeriksaan otomatis.' }}">
                                 <i class="fa fa-magic"></i> Setup Tipe Ujian Otomatis
                             </button>
                         </form>
@@ -246,6 +350,9 @@
                                         };
                                         $adaPembimbingUtama = trim((string) $honorarium->PU) !== '';
                                         $adaPembimbingPendamping = trim((string) $honorarium->PP) !== '';
+                                        $rowSetupPlan = $isAkademikHonorarium && $automaticTypeSetupPlan
+                                            ? $automaticTypeSetupPlan['rows']->get((int) $honorarium->id)
+                                            : null;
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
@@ -357,6 +464,19 @@
                                                         @endforeach
                                                     @endif
                                                 </select>
+                                                @if ($rowSetupPlan)
+                                                    @php
+                                                        $rowSetupStatusClass = $rowSetupPlan['status'] === 'ready'
+                                                            ? 'is-ready'
+                                                            : (in_array($rowSetupPlan['status'], ['configured', 'protected'], true) ? 'is-skipped' : 'is-blocked');
+                                                    @endphp
+                                                    <span class="automatic-setup-status {{ $rowSetupStatusClass }}">
+                                                        @if ($rowSetupPlan['expected_payment_name'])
+                                                            <strong>Otomatis: {{ $rowSetupPlan['expected_payment_name'] }}</strong><br>
+                                                        @endif
+                                                        {{ $rowSetupPlan['message'] }}
+                                                    </span>
+                                                @endif
                                             @else
                                                 @if ($tipeBelumDitetapkan)
                                                     <span class="label label-warning">Belum ditetapkan</span>

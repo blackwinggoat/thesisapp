@@ -1,0 +1,189 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Services\HonorariumAutomaticTypeSetupService;
+use PHPUnit\Framework\TestCase;
+
+class HonorariumAutomaticTypeSetupServiceTest extends TestCase
+{
+    public function testRegularProposalIsMappedByExamTypeClassAndFinalProjectType()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 0)]),
+            collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
+            collect(),
+            collect([$this->master(100, 'Proposal', false, [10])]),
+            collect()
+        );
+
+        $this->assertTrue($plan['can_apply']);
+        $this->assertSame(1, $plan['ready_count']);
+        $this->assertSame('Proposal', $plan['rows']->get(1)['expected_payment_name']);
+        $this->assertSame(100, $plan['rows']->get(1)['master_payment_id']);
+    }
+
+    public function testExecutiveFinalExamUsesExecutiveFinalExamMaster()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 2)]),
+            collect(['1301' => $this->finalProjectType(11, 'TA-SK')]),
+            collect(['1301' => 0]),
+            collect([$this->master(101, 'Ujian Meja Eksekutif', true, [11])]),
+            collect()
+        );
+
+        $this->assertTrue($plan['can_apply']);
+        $this->assertSame('Ujian Meja Eksekutif', $plan['rows']->get(1)['expected_payment_name']);
+    }
+
+    public function testNonSkripsiWithProposalAndFinalExamRecordsIsBlocked()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 0)]),
+            collect(['1301' => $this->finalProjectType(20, 'NS-KT')]),
+            collect(),
+            collect([$this->master(200, 'Non Skripsi [proposal + Ujian Meja]', false, [20])]),
+            collect(['1301' => 0])
+        );
+
+        $this->assertFalse($plan['can_apply']);
+        $this->assertSame(1, $plan['blocking_count']);
+        $this->assertSame(
+            HonorariumAutomaticTypeSetupService::STATUS_COMBINED_CONFLICT,
+            $plan['rows']->get(1)['status']
+        );
+    }
+
+    public function testInvalidExamTypeIsNotSilentlyTreatedAsProposal()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, null)]),
+            collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
+            collect(),
+            collect([$this->master(100, 'Proposal', false, [10])]),
+            collect()
+        );
+
+        $this->assertSame(
+            HonorariumAutomaticTypeSetupService::STATUS_INVALID_EXAM_TYPE,
+            $plan['rows']->get(1)['status']
+        );
+    }
+
+    public function testMasterMustExplicitlySupportTheFinalProjectType()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 0)]),
+            collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
+            collect(),
+            collect([$this->master(100, 'Proposal', false, [])]),
+            collect()
+        );
+
+        $this->assertSame(
+            HonorariumAutomaticTypeSetupService::STATUS_MASTER_MISSING,
+            $plan['rows']->get(1)['status']
+        );
+    }
+
+    public function testOnlyTheMasterLinkedToTheSelectedFinalProjectTypeMatches()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 0)]),
+            collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
+            collect(),
+            collect([
+                $this->master(100, 'Proposal', false, [10]),
+                $this->master(101, 'Proposal', false, [11]),
+            ]),
+            collect()
+        );
+
+        $this->assertTrue($plan['can_apply']);
+        $this->assertSame(100, $plan['rows']->get(1)['master_payment_id']);
+    }
+
+    public function testDuplicateMatchingMastersBlockTheWholePlan()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 0)]),
+            collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
+            collect(),
+            collect([
+                $this->master(100, 'Proposal', false, [10]),
+                $this->master(101, 'Proposal', false, [10]),
+            ]),
+            collect()
+        );
+
+        $this->assertFalse($plan['can_apply']);
+        $this->assertSame(
+            HonorariumAutomaticTypeSetupService::STATUS_MASTER_AMBIGUOUS,
+            $plan['rows']->get(1)['status']
+        );
+    }
+
+    public function testOneBlockingRowPreventsApplyingOtherwiseReadyRows()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([
+                $this->honorarium(1, 0, '1301'),
+                $this->honorarium(2, 0, '1302'),
+            ]),
+            collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
+            collect(),
+            collect([$this->master(100, 'Proposal', false, [10])]),
+            collect()
+        );
+
+        $this->assertSame(1, $plan['ready_count']);
+        $this->assertSame(1, $plan['blocking_count']);
+        $this->assertFalse($plan['can_apply']);
+    }
+
+    private function service()
+    {
+        return new HonorariumAutomaticTypeSetupService;
+    }
+
+    private function honorarium($id, $examType, $nim = '1301')
+    {
+        return (object) [
+            'id' => $id,
+            'C_NPM' => $nim,
+            'exam_type' => $examType,
+            'tipe_ujian' => '0',
+            'KS' => 'D1',
+            'KS_Stat' => 0,
+            'PU' => 'D2',
+            'PU_Stat' => 0,
+            'PP' => 'D3',
+            'PP_Stat' => 0,
+            'P1' => 'D4',
+            'P1_Stat' => 0,
+            'P2' => 'D5',
+            'P2_Stat' => 0,
+            'P3' => '',
+            'P3_Stat' => 0,
+        ];
+    }
+
+    private function finalProjectType($id, $code)
+    {
+        return (object) [
+            'jenis_tugas_akhir_id' => $id,
+            'kode_jenis_tugas_akhir' => $code,
+        ];
+    }
+
+    private function master($id, $name, $executive, array $finalProjectTypeIds)
+    {
+        return (object) [
+            'id_honorarium' => $id,
+            'name' => $name,
+            'untuk_mahasiswa_eksekutif' => $executive ? 1 : 0,
+            'jenis_tugas_akhir_ids' => $finalProjectTypeIds,
+        ];
+    }
+}
