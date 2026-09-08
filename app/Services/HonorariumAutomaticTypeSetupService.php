@@ -24,6 +24,7 @@ class HonorariumAutomaticTypeSetupService
         Collection $finalProjectTypesByNim,
         Collection $executiveStudents,
         Collection $masterPayments,
+        Collection $studentsWithProposalDecree,
         Collection $combinedConflicts
     ) {
         $summary = [
@@ -44,6 +45,7 @@ class HonorariumAutomaticTypeSetupService
                 $finalProjectTypesByNim->get($honorarium->C_NPM),
                 $executiveStudents->has($honorarium->C_NPM),
                 $masterPayments,
+                $studentsWithProposalDecree->has($honorarium->C_NPM),
                 $combinedConflicts->has($honorarium->C_NPM)
             );
             $rows->put((int) $honorarium->id, $evaluation);
@@ -71,15 +73,15 @@ class HonorariumAutomaticTypeSetupService
         ];
     }
 
-    public function expectedPaymentName($examType, $finalProjectTypeCode, $executive)
+    public function expectedPaymentName($examType, $hasProposalDecree, $executive)
     {
-        $scope = $this->expectedPaymentScope($examType, $finalProjectTypeCode);
+        $scope = $this->expectedPaymentScope($examType, $hasProposalDecree);
         if ($scope === null) {
             return null;
         }
 
         if ($scope === self::SCOPE_COMBINED) {
-            $name = 'Non Skripsi [proposal + Ujian Meja]';
+            $name = 'Proposal + Ujian Meja';
         } elseif ($scope === self::SCOPE_PROPOSAL) {
             $name = 'Proposal';
         } elseif ($scope === self::SCOPE_FINAL_EXAM) {
@@ -91,23 +93,22 @@ class HonorariumAutomaticTypeSetupService
         return $executive ? $name . ' Eksekutif' : $name;
     }
 
-    public function expectedPaymentScope($examType, $finalProjectTypeCode)
+    public function expectedPaymentScope($examType, $hasProposalDecree)
     {
         $examType = $this->normalizeExamType($examType);
-        $finalProjectTypeCode = strtoupper(trim((string) $finalProjectTypeCode));
-        if ($examType === null || $finalProjectTypeCode === '') {
+        if ($examType === null) {
             return null;
-        }
-
-        if (strpos($finalProjectTypeCode, 'NS-') === 0) {
-            return self::SCOPE_COMBINED;
         }
 
         if ($examType === 0) {
             return self::SCOPE_PROPOSAL;
         }
 
-        return $examType === 2 ? self::SCOPE_FINAL_EXAM : null;
+        if ($examType === 2) {
+            return $hasProposalDecree ? self::SCOPE_FINAL_EXAM : self::SCOPE_COMBINED;
+        }
+
+        return null;
     }
 
     public function paymentScopeLabel($scope)
@@ -139,7 +140,14 @@ class HonorariumAutomaticTypeSetupService
         return false;
     }
 
-    protected function evaluate($honorarium, $finalProjectType, $executive, Collection $masterPayments, $hasCombinedConflict)
+    protected function evaluate(
+        $honorarium,
+        $finalProjectType,
+        $executive,
+        Collection $masterPayments,
+        $hasProposalDecree,
+        $hasCombinedConflict
+    )
     {
         if ($this->hasPaidRole($honorarium)) {
             return $this->result(
@@ -172,15 +180,14 @@ class HonorariumAutomaticTypeSetupService
 
         $expectedScope = $this->expectedPaymentScope(
             $examType,
-            $finalProjectType->kode_jenis_tugas_akhir
+            $hasProposalDecree
         );
         $expectedLabel = $this->paymentScopeLabel($expectedScope);
 
-        if (strpos(strtoupper(trim((string) $finalProjectType->kode_jenis_tugas_akhir)), 'NS-') === 0
-            && $hasCombinedConflict) {
+        if ($expectedScope === self::SCOPE_COMBINED && $hasCombinedConflict) {
             return $this->result(
                 self::STATUS_COMBINED_CONFLICT,
-                'Non-Skripsi memiliki record Proposal dan Ujian Akhir; tentukan satu pembayaran gabungan secara manual.',
+                'Ujian Akhir tidak memiliki SK Proposal, tetapi record honorarium Proposal juga ditemukan. Periksa data agar pembayaran Proposal tidak dihitung dua kali.',
                 $expectedLabel,
                 null,
                 $expectedScope

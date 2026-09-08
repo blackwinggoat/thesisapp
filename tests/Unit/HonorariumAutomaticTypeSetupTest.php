@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 class HonorariumAutomaticTypeSetupTest extends TestCase
 {
-    public function testAutomaticTypeSetupUsesExamClassAndFinalProjectTypeWithoutAi()
+    public function testAutomaticTypeSetupUsesExamProposalDecreeClassAndFinalProjectTypeWithoutAi()
     {
         $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/KeuanganFakultas.php');
         $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
@@ -14,6 +14,7 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $migration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_21_130000_mark_named_executive_honorarium_payments.php');
         $attendanceMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_22_020000_add_pembimbing_attendance_to_trt_honorium_table.php');
         $classificationMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_09_08_060000_backfill_honorarium_master_final_project_types.php');
+        $proposalDecreeMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_09_09_010000_align_honorarium_scope_with_proposal_decree.php');
 
         $this->assertStringContainsString('honorarium_setup_type_ujian_otomatis', $controller);
         $this->assertStringContainsString('HonorariumAutomaticTypeSetupService', $controller);
@@ -21,6 +22,7 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString("\$plan['blocking_count'] > 0", $controller);
         $this->assertStringContainsString('Tidak ada data pada tanggal ini yang diubah', $controller);
         $this->assertStringContainsString('honorariumCombinedConflictByNim', $controller);
+        $this->assertStringContainsString('mahasiswaDenganSkProposalByNim', $controller);
         $this->assertStringContainsString('honorariumHasPaidRole($honorarium)', $controller);
         $this->assertStringContainsString('honorarium_reset_type', $controller);
         $this->assertStringContainsString('honorarium_available_all', $controller);
@@ -41,12 +43,18 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('kode_jenis_tugas_akhir', $view);
         $this->assertStringContainsString('Pemeriksaan Setup Tipe Ujian Otomatis', $view);
         $this->assertStringContainsString('bila satu data bermasalah, seluruh setup tanggal ini dibatalkan', $view);
-        $this->assertStringContainsString('Record Non-Skripsi ganda harus ditetapkan manual', $view);
+        $this->assertStringContainsString('<th>Status SK Proposal</th>', $view);
+        $this->assertStringContainsString('Proposal + Ujian Meja', $view);
+        $this->assertStringContainsString('$honorarium->memiliki_sk_proposal', $view);
+        $this->assertStringContainsString('agar Proposal tidak dibayar dua kali', $view);
         $this->assertStringContainsString('automatic-setup-status', $view);
         $this->assertStringContainsString('Proposal Eksekutif', $migration);
         $this->assertStringContainsString('Ujian Meja Eksekutif', $migration);
         $this->assertStringContainsString("'type_prefix' => 'TA-'", $classificationMigration);
         $this->assertStringContainsString("'type_prefix' => 'NS-'", $classificationMigration);
+        $this->assertStringContainsString("'additional_type_prefix' => 'NS-'", $proposalDecreeMigration);
+        $this->assertStringContainsString("'additional_type_prefix' => 'TA-'", $proposalDecreeMigration);
+        $this->assertStringContainsString("'Proposal + Ujian Meja'", $proposalDecreeMigration);
         $this->assertStringContainsString('pembimbing_utama_hadir', $attendanceMigration);
         $this->assertStringContainsString('pembimbing_pendamping_hadir', $attendanceMigration);
     }
@@ -108,15 +116,15 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('Penetapan tipe honorarium dilakukan oleh Akademik Prodi.', $controller);
     }
 
-    public function testAutomaticPaymentNameFollowsExamFinalProjectAndClassRules()
+    public function testAutomaticPaymentNameFollowsExamProposalDecreeAndClassRules()
     {
         $controller = new \App\Http\Controllers\KeuanganFakultas;
         $method = new \ReflectionMethod($controller, 'namaPembayaranOtomatis');
         $method->setAccessible(true);
 
-        $this->assertSame('Proposal', $method->invoke($controller, 0, 'TA-SM', false));
-        $this->assertSame('Ujian Meja', $method->invoke($controller, 2, 'TA-SK', false));
-        $this->assertSame('Non Skripsi [proposal + Ujian Meja]', $method->invoke($controller, 0, 'NS-KT', false));
-        $this->assertSame('Non Skripsi [proposal + Ujian Meja] Eksekutif', $method->invoke($controller, 2, 'NS-AI', true));
+        $this->assertSame('Proposal', $method->invoke($controller, 0, false, false));
+        $this->assertSame('Ujian Meja', $method->invoke($controller, 2, true, false));
+        $this->assertSame('Proposal + Ujian Meja', $method->invoke($controller, 2, false, false));
+        $this->assertSame('Proposal + Ujian Meja Eksekutif', $method->invoke($controller, 2, false, true));
     }
 }

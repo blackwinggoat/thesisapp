@@ -187,8 +187,9 @@
                     <div class="automatic-setup-rules">
                         <h4><i class="fa fa-shield"></i> Pemeriksaan Setup Tipe Ujian Otomatis</h4>
                         <p style="margin-bottom: 6px;">
-                            Sistem membaca <strong>sumber ujian</strong>, <strong>Jenis TA</strong>, dan
-                            <strong>kelas mahasiswa</strong>. Nominal selalu diambil dari Master Pembayaran, tanpa AI.
+                            Sistem membaca <strong>sumber ujian</strong>, <strong>SK Proposal</strong>,
+                            <strong>Jenis TA</strong>, dan <strong>kelas mahasiswa</strong>. Nominal selalu
+                            diambil dari Master Pembayaran, tanpa AI.
                         </p>
                         <div class="table-responsive">
                             <table class="table table-bordered table-condensed">
@@ -196,33 +197,38 @@
                                     <tr>
                                         <th>Jenis TA</th>
                                         <th>Sumber Ujian</th>
+                                        <th>Status SK Proposal</th>
                                         <th>Tipe Pembayaran</th>
                                         <th>Kelas</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>TA-*</td>
+                                        <td>Semua jenis</td>
                                         <td>Proposal</td>
+                                        <td>Ada / belum ada</td>
                                         <td>Proposal</td>
                                         <td rowspan="3">Reguler atau Eksekutif mengikuti data kelas mahasiswa</td>
                                     </tr>
                                     <tr>
-                                        <td>TA-*</td>
+                                        <td>Semua jenis</td>
                                         <td>Ujian Akhir</td>
+                                        <td>Sudah ada</td>
                                         <td>Ujian Meja</td>
                                     </tr>
                                     <tr>
-                                        <td>NS-*</td>
-                                        <td>Proposal / Ujian Akhir</td>
-                                        <td>Non Skripsi [proposal + Ujian Meja]</td>
+                                        <td>Semua jenis</td>
+                                        <td>Ujian Akhir</td>
+                                        <td>Belum ada</td>
+                                        <td>Proposal + Ujian Meja</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p style="margin-bottom: 0;">
                             <strong>Pengaman:</strong> bila satu data bermasalah, seluruh setup tanggal ini dibatalkan.
-                            Data yang sudah ditetapkan atau sudah dibayar tidak diubah. Record Non-Skripsi ganda harus ditetapkan manual agar pembayaran gabungan tidak terhitung dua kali.
+                            Data yang sudah ditetapkan atau sudah dibayar tidak diubah. Bila pembayaran gabungan akan
+                            diterapkan tetapi record honorarium Proposal juga ditemukan, proses dihentikan agar Proposal tidak dibayar dua kali.
                         </p>
                         <div class="setup-summary">
                             <span class="label label-success">Siap diterapkan: {{ $automaticTypeSetupPlan['ready_count'] }}</span>
@@ -353,12 +359,12 @@
                                         $rowSetupPlan = $isAkademikHonorarium && $automaticTypeSetupPlan
                                             ? $automaticTypeSetupPlan['rows']->get((int) $honorarium->id)
                                             : null;
-                                        if (strpos(strtoupper((string) $honorarium->kode_jenis_tugas_akhir), 'NS-') === 0) {
-                                            $cakupanPembayaranDiharapkan = 'gabungan';
-                                        } elseif ((int) $honorarium->exam_type === 0) {
+                                        if ((int) $honorarium->exam_type === 0) {
                                             $cakupanPembayaranDiharapkan = 'proposal';
                                         } elseif ((int) $honorarium->exam_type === 2) {
-                                            $cakupanPembayaranDiharapkan = 'ujian_meja';
+                                            $cakupanPembayaranDiharapkan = $honorarium->memiliki_sk_proposal
+                                                ? 'ujian_meja'
+                                                : 'gabungan';
                                         } else {
                                             $cakupanPembayaranDiharapkan = null;
                                         }

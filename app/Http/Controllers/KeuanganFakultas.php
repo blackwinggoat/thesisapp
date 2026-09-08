@@ -468,6 +468,23 @@ class KeuanganFakultas extends Controller
         });
     }
 
+    protected function mahasiswaDenganSkProposalByNim(array $nims)
+    {
+        $nims = array_values(array_unique(array_filter($nims)));
+        if (empty($nims)) {
+            return collect();
+        }
+
+        return DB::table('trt_penguji')
+            ->whereIn('C_NPM', $nims)
+            ->where('tipe_ujian', 0)
+            ->whereNotNull('nomor_sk')
+            ->whereRaw("TRIM(nomor_sk) <> ''")
+            ->pluck('C_NPM')
+            ->unique()
+            ->flip();
+    }
+
     protected function pembayaranBerlakuUntukKelasMahasiswa($masterPayment, $mahasiswaEksekutif)
     {
         if (!$this->kolomKelasPembayaranTersedia()) {
@@ -477,7 +494,7 @@ class KeuanganFakultas extends Controller
         return (int) $masterPayment->untuk_mahasiswa_eksekutif === ($mahasiswaEksekutif ? 1 : 0);
     }
 
-    protected function pembayaranBerlakuUntukTahapUjian($masterPayment, $examType, $kodeJenisTugasAkhir)
+    protected function pembayaranBerlakuUntukTahapUjian($masterPayment, $examType, $memilikiSkProposal)
     {
         if (!$this->kolomCakupanUjianPembayaranTersedia() || !isset($masterPayment->cakupan_ujian)) {
             return false;
@@ -485,7 +502,7 @@ class KeuanganFakultas extends Controller
 
         $cakupanDiharapkan = $this->honorariumAutomaticTypeService()->expectedPaymentScope(
             $examType,
-            $kodeJenisTugasAkhir
+            $memilikiSkProposal
         );
 
         return $cakupanDiharapkan !== null
@@ -604,6 +621,7 @@ class KeuanganFakultas extends Controller
         $jenisTugasAkhirByNim = $this->jenisTugasAkhirHonorariumByNim($data->pluck('C_NPM')->all());
         $mahasiswaEksekutif = $this->mahasiswaEksekutifByNim($data->pluck('C_NPM')->all());
         $nomorSkUjianByNim = $this->nomorSkUjianHonorariumByNim($data->pluck('C_NPM')->all());
+        $mahasiswaDenganSkProposal = $this->mahasiswaDenganSkProposalByNim($data->pluck('C_NPM')->all());
         $kolomKehadiranPembimbingTersedia = $this->kolomKehadiranPembimbingTersedia();
         $jumlahSanksiPembimbing = $this->jumlahSanksiPembayaranPadaTanggal($date);
         foreach ($data as $honorarium) {
@@ -614,6 +632,7 @@ class KeuanganFakultas extends Controller
             $honorarium->mahasiswa_eksekutif = $mahasiswaEksekutif->has($honorarium->C_NPM);
             $honorarium->nomor_sk_proposal = $nomorSkUjian ? $nomorSkUjian->nomor_sk_proposal : null;
             $honorarium->nomor_sk_ujian_akhir = $nomorSkUjian ? $nomorSkUjian->nomor_sk_ujian_akhir : null;
+            $honorarium->memiliki_sk_proposal = $mahasiswaDenganSkProposal->has($honorarium->C_NPM);
             $honorarium->pembimbing_utama_hadir = $kolomKehadiranPembimbingTersedia
                 ? (int) $honorarium->pembimbing_utama_hadir === 1
                 : true;
@@ -634,7 +653,8 @@ class KeuanganFakultas extends Controller
                 $data,
                 $jenisTugasAkhirByNim,
                 $mahasiswaEksekutif,
-                $dataMasterHonorarium
+                $dataMasterHonorarium,
+                $mahasiswaDenganSkProposal
             );
         }
 
@@ -1065,12 +1085,14 @@ class KeuanganFakultas extends Controller
 
                 $jenisTugasAkhirByNim = $this->jenisTugasAkhirHonorariumByNim($data->pluck('C_NPM')->all());
                 $mahasiswaEksekutif = $this->mahasiswaEksekutifByNim($data->pluck('C_NPM')->all());
+                $mahasiswaDenganSkProposal = $this->mahasiswaDenganSkProposalByNim($data->pluck('C_NPM')->all());
                 $masterPayments = $this->masterPembayaranDenganJenisTugasAkhir();
                 $plan = $this->buildHonorariumAutomaticTypeSetupPlan(
                     $data,
                     $jenisTugasAkhirByNim,
                     $mahasiswaEksekutif,
-                    $masterPayments
+                    $masterPayments,
+                    $mahasiswaDenganSkProposal
                 );
 
                 if ($plan['blocking_count'] > 0 || $plan['ready_count'] === 0) {
@@ -1243,11 +1265,11 @@ class KeuanganFakultas extends Controller
         }
     }
 
-    protected function namaPembayaranOtomatis($examType, $kodeJenisTugasAkhir, $mahasiswaEksekutif)
+    protected function namaPembayaranOtomatis($examType, $memilikiSkProposal, $mahasiswaEksekutif)
     {
         return $this->honorariumAutomaticTypeService()->expectedPaymentName(
             $examType,
-            $kodeJenisTugasAkhir,
+            $memilikiSkProposal,
             $mahasiswaEksekutif
         );
     }
@@ -1261,13 +1283,15 @@ class KeuanganFakultas extends Controller
         $honorariums,
         $finalProjectTypesByNim,
         $executiveStudents,
-        $masterPayments
+        $masterPayments,
+        $studentsWithProposalDecree
     ) {
         return $this->honorariumAutomaticTypeService()->buildPlan(
             collect($honorariums),
             collect($finalProjectTypesByNim),
             collect($executiveStudents),
             collect($masterPayments),
+            collect($studentsWithProposalDecree),
             $this->honorariumCombinedConflictByNim(collect($honorariums)->pluck('C_NPM')->all())
         );
     }
@@ -1643,6 +1667,7 @@ class KeuanganFakultas extends Controller
                     ->all();
                 $mahasiswaEksekutif = $this->mahasiswaEksekutifByNim($honorariumNims);
                 $jenisTugasAkhirByNim = $this->jenisTugasAkhirHonorariumByNim($honorariumNims);
+                $mahasiswaDenganSkProposal = $this->mahasiswaDenganSkProposalByNim($honorariumNims);
 
                 foreach ((array) $request->honorariums as $honorariumData) {
                     $id = isset($honorariumData['id']) ? (int) $honorariumData['id'] : 0;
@@ -1703,7 +1728,7 @@ class KeuanganFakultas extends Controller
                     if (!$this->pembayaranBerlakuUntukTahapUjian(
                         $masterPayment,
                         $existingHonorarium->exam_type,
-                        $jenisTugasAkhir ? $jenisTugasAkhir->kode_jenis_tugas_akhir : null
+                        $mahasiswaDenganSkProposal->has($existingHonorarium->C_NPM)
                     )) {
                         throw new \RuntimeException('Tipe honorarium yang dipilih tidak berlaku untuk tahap ujian mahasiswa ini.');
                     }

@@ -14,6 +14,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
             collect([$this->master(100, 'Honor Proposal Reguler', false, [10], 'proposal')]),
+            collect(),
             collect()
         );
 
@@ -31,6 +32,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect(['1301' => $this->finalProjectType(11, 'TA-SK')]),
             collect(['1301' => 0]),
             collect([$this->master(101, 'Ujian Meja Eksekutif', true, [11], 'ujian_meja')]),
+            collect(['1301' => true]),
             collect()
         );
 
@@ -38,13 +40,62 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
         $this->assertSame('Ujian Meja Eksekutif', $plan['rows']->get(1)['expected_payment_name']);
     }
 
-    public function testNonSkripsiWithProposalAndFinalExamRecordsIsBlocked()
+    public function testTaFinalExamWithoutProposalDecreeUsesCombinedPayment()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 2)]),
+            collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
+            collect(),
+            collect([$this->master(102, 'Proposal + Ujian Meja', false, [10], 'gabungan')]),
+            collect(),
+            collect()
+        );
+
+        $this->assertTrue($plan['can_apply']);
+        $this->assertSame('gabungan', $plan['rows']->get(1)['expected_payment_scope']);
+        $this->assertSame(102, $plan['rows']->get(1)['master_payment_id']);
+    }
+
+    public function testNonSkripsiFinalExamWithProposalDecreeUsesFinalExamPayment()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 2)]),
+            collect(['1301' => $this->finalProjectType(20, 'NS-KT')]),
+            collect(),
+            collect([$this->master(103, 'Ujian Meja', false, [20], 'ujian_meja')]),
+            collect(['1301' => true]),
+            collect()
+        );
+
+        $this->assertTrue($plan['can_apply']);
+        $this->assertSame('ujian_meja', $plan['rows']->get(1)['expected_payment_scope']);
+        $this->assertSame(103, $plan['rows']->get(1)['master_payment_id']);
+    }
+
+    public function testProposalExamUsesProposalPaymentRegardlessOfFinalProjectCode()
     {
         $plan = $this->service()->buildPlan(
             collect([$this->honorarium(1, 0)]),
-            collect(['1301' => $this->finalProjectType(20, 'NS-KT')]),
+            collect(['1301' => $this->finalProjectType(20, 'NS-AI')]),
             collect(),
-            collect([$this->master(200, 'Non Skripsi [proposal + Ujian Meja]', false, [20], 'gabungan')]),
+            collect([$this->master(104, 'Proposal', false, [20], 'proposal')]),
+            collect(['1301' => true]),
+            collect()
+        );
+
+        $this->assertTrue($plan['can_apply']);
+        $this->assertSame('proposal', $plan['rows']->get(1)['expected_payment_scope']);
+        $this->assertSame(104, $plan['rows']->get(1)['master_payment_id']);
+    }
+
+    public function testFinalExamWithoutProposalDecreeAndSeparateProposalHonorariumIsBlocked()
+    {
+        $plan = $this->service()->buildPlan(
+            collect([$this->honorarium(1, 2)]),
+            collect(['1301' => $this->finalProjectType(20, 'TA-SM')]),
+            collect(),
+            collect([$this->master(200, 'Proposal + Ujian Meja', false, [20], 'gabungan')]),
+            collect(),
             collect(['1301' => 0])
         );
 
@@ -63,6 +114,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
             collect([$this->master(100, 'Proposal', false, [10], 'proposal')]),
+            collect(),
             collect()
         );
 
@@ -79,6 +131,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
             collect([$this->master(100, 'Proposal', false, [], 'proposal')]),
+            collect(),
             collect()
         );
 
@@ -98,6 +151,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
                 $this->master(100, 'Proposal A', false, [10], 'proposal'),
                 $this->master(101, 'Proposal B', false, [11], 'proposal'),
             ]),
+            collect(),
             collect()
         );
 
@@ -115,6 +169,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
                 $this->master(100, 'Proposal A', false, [10], 'proposal'),
                 $this->master(101, 'Proposal B', false, [10], 'proposal'),
             ]),
+            collect(),
             collect()
         );
 
@@ -135,6 +190,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
             collect([$this->master(100, 'Proposal', false, [10], 'proposal')]),
+            collect(),
             collect()
         );
 
@@ -150,6 +206,7 @@ class HonorariumAutomaticTypeSetupServiceTest extends TestCase
             collect(['1301' => $this->finalProjectType(10, 'TA-SM')]),
             collect(),
             collect([$this->master(100, 'Proposal', false, [10], 'ujian_meja')]),
+            collect(),
             collect()
         );
 
