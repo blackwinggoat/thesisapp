@@ -66,8 +66,13 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('honorarium_update_date_availability', $keuangan);
         $this->assertStringContainsString("Route::post('/tanggal/{date}/availability'", $routes);
         $this->assertStringContainsString("->name('honorarium_update_date_availability')", $routes);
+        $this->assertStringContainsString("Route::post('/availability-selected'", $routes);
+        $this->assertStringContainsString('honorarium_update_selected_availability', $keuangan);
+        $this->assertStringContainsString('ubahKetersediaanHonorariumTanggalTerpilih', $keuangan);
         $this->assertStringContainsString('Ketersediaan Dana', $listView);
         $this->assertStringContainsString('honorarium-date-availability-toggle', $listView);
+        $this->assertStringContainsString('selected-dates-availability-toggle', $listView);
+        $this->assertStringContainsString('Dana Belum Tersedia', $listView);
         $this->assertStringContainsString('data-current-state', $listView);
         $this->assertStringContainsString("toggle.bootstrapToggle(checked ? 'on' : 'off', true);", $listView);
         $this->assertStringContainsString("toggle.bootstrapToggle('enable');", $listView);

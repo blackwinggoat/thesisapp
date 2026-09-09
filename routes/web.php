@@ -686,6 +686,7 @@ Route::group(['middleware' => 'keuangan_fakultas'], function () {
         Route::get('/', 'KeuanganFakultas@honorarium_home')->name('honorarium_home');
         Route::post('/available_post_yes', 'KeuanganFakultas@honorarium_available_post_yes')->name('honorarium_available_post_yes');
         Route::post('/available_post_no', 'KeuanganFakultas@honorarium_available_post_no')->name('honorarium_available_post_no');
+        Route::post('/availability-selected', 'KeuanganFakultas@honorarium_update_selected_availability')->name('honorarium_update_selected_availability');
         Route::post('/tanggal/{date}/availability', 'KeuanganFakultas@honorarium_update_date_availability')->name('honorarium_update_date_availability');
         Route::post('/tanggal/{date}/available-all', 'KeuanganFakultas@honorarium_available_all')->name('honorarium_available_all');
         Route::post('/tanggal/{date}/unavailable-all', 'KeuanganFakultas@honorarium_unavailable_all')->name('honorarium_unavailable_all');

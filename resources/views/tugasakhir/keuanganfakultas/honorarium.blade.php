@@ -26,6 +26,11 @@
         .honorarium-availability-state.is-locked {
             color: #b45309;
         }
+
+        .honorarium-selected-availability-toggle {
+            float: left;
+            margin-left: 8px;
+        }
     </style>
     <div class="page-content">
         <div class="container-fluid">
@@ -75,6 +80,17 @@
                                 style="margin-left: 8px;" disabled>
                                 <i class="fa fa-file-pdf-o"></i> Download PDF Terpilih
                             </button>
+                            <input type="checkbox"
+                                id="selected-dates-availability-toggle"
+                                data-toggle="toggle"
+                                data-width="174"
+                                data-on="Dana Tersedia"
+                                data-off="Dana Belum Tersedia"
+                                data-onstyle="success"
+                                data-offstyle="warning"
+                                data-style="honorarium-selected-availability-toggle"
+                                data-current-state="0"
+                                disabled>
                             <span class="text-muted pull-left" id="honorarium-selected-count" style="margin: 8px 0 0 10px;">0 tanggal dipilih</span>
                         </div>
                     @endif
@@ -205,6 +221,7 @@
             }
 
             $('.honorarium-date-availability-toggle').bootstrapToggle();
+            $('#selected-dates-availability-toggle').bootstrapToggle();
             $(document).off('change.honorariumDateAvailability', '.honorarium-date-availability-toggle')
                 .on('change.honorariumDateAvailability', '.honorarium-date-availability-toggle', function() {
                     var toggle = $(this);
@@ -279,10 +296,27 @@
             function updateSelectedDates() {
                 var selected = $('.honorarium-date-checkbox:checked').length;
                 var total = $('.honorarium-date-checkbox').length;
+                var bulkToggle = $('#selected-dates-availability-toggle');
 
                 $('#honorarium-selected-count').text(selected + ' tanggal dipilih');
                 $('#download-honorarium-pdf').prop('disabled', selected === 0);
                 $('#mark-honorarium-paid').prop('disabled', selected === 0);
+                bulkToggle.bootstrapToggle('enable');
+                if (selected === 0) {
+                    bulkToggle.attr('data-current-state', '0');
+                    syncAvailabilityToggle(bulkToggle, false);
+                    bulkToggle.bootstrapToggle('disable');
+                } else {
+                    var seluruhTanggalTersedia = true;
+                    $('.honorarium-date-checkbox:checked').each(function() {
+                        var rowToggle = $(this).closest('tr').find('.honorarium-date-availability-toggle');
+                        if (parseInt(rowToggle.attr('data-current-state'), 10) !== 1) {
+                            seluruhTanggalTersedia = false;
+                        }
+                    });
+                    bulkToggle.attr('data-current-state', seluruhTanggalTersedia ? '1' : '0');
+                    syncAvailabilityToggle(bulkToggle, seluruhTanggalTersedia);
+                }
                 $('#select-all-honorarium-dates')
                     .prop('checked', total > 0 && selected === total)
                     .prop('indeterminate', selected > 0 && selected < total);
@@ -294,6 +328,85 @@
                     $('.honorarium-date-checkbox').prop('checked', $(this).prop('checked'));
                     updateSelectedDates();
                 });
+                $('#selected-dates-availability-toggle').off('change.honorariumSelectedAvailability')
+                    .on('change.honorariumSelectedAvailability', function() {
+                        var bulkToggle = $(this);
+                        var previousState = parseInt(bulkToggle.attr('data-current-state'), 10) === 1;
+                        var requestedState = bulkToggle.prop('checked');
+                        var selectedRows = $('.honorarium-date-checkbox:checked').closest('tr');
+                        var selectedDates = $('.honorarium-date-checkbox:checked').map(function() {
+                            return $(this).val();
+                        }).get();
+
+                        syncAvailabilityToggle(bulkToggle, previousState);
+                        if (selectedDates.length === 0) {
+                            updateSelectedDates();
+                            return;
+                        }
+
+                        if (requestedState && selectedRows.find('.honorarium-date-availability-toggle').filter(function() {
+                            return (parseInt($(this).data('needs-type'), 10) || 0) > 0;
+                        }).length > 0) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Tipe honor belum lengkap',
+                                text: 'Tetapkan seluruh tipe honorarium pada tanggal yang dipilih sebelum dana dibuat tersedia.'
+                            });
+                            return;
+                        }
+
+                        Swal.fire({
+                            icon: 'question',
+                            title: 'Ubah seluruh dana terpilih?',
+                            text: selectedDates.length + ' tanggal yang dipilih akan menjadi ' +
+                                (requestedState ? 'Tersedia.' : 'Belum tersedia.'),
+                            showCancelButton: true,
+                            confirmButtonColor: requestedState ? '#16a34a' : '#d97706',
+                            confirmButtonText: 'Ya, ubah',
+                            cancelButtonText: 'Batal'
+                        }).then(function(result) {
+                            if (!result.value) {
+                                return;
+                            }
+
+                            bulkToggle.bootstrapToggle('disable');
+                            $.ajax({
+                                url: "{{ route('honorarium_update_selected_availability') }}",
+                                type: 'POST',
+                                data: {
+                                    _token: '{{ csrf_token() }}',
+                                    available: requestedState ? 1 : 0,
+                                    tanggal: selectedDates
+                                },
+                                success: function(response) {
+                                    selectedRows.each(function() {
+                                        var rowToggle = $(this).find('.honorarium-date-availability-toggle');
+                                        rowToggle.attr('data-current-state', response.available ? '1' : '0');
+                                        syncAvailabilityToggle(rowToggle, !!response.available);
+                                        $(this).find('.honorarium-availability-state')
+                                            .toggleClass('is-available', !!response.available)
+                                            .text(response.available ? 'Seluruh data tersedia' : 'Seluruh data belum tersedia');
+                                    });
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil',
+                                        text: response.message
+                                    });
+                                },
+                                error: function(xhr) {
+                                    var response = xhr.responseJSON || {};
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Tidak dapat diubah',
+                                        text: response.message || 'Ketersediaan dana terpilih gagal diubah.'
+                                    });
+                                },
+                                complete: function() {
+                                    updateSelectedDates();
+                                }
+                            });
+                        });
+                    });
                 $('#honorarium-date-form').on('submit', function(event) {
                     if ($('.honorarium-date-checkbox:checked').length === 0) {
                         event.preventDefault();

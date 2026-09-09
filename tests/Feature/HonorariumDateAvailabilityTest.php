@@ -118,6 +118,44 @@ class HonorariumDateAvailabilityTest extends TestCase
         $this->assertSame(3, (int) DB::table('trt_honorium')->where('id', 7)->value('PU_Stat'));
     }
 
+    public function testSelectedDateSwitchChangesEverySelectedDateButNotOtherDates()
+    {
+        $this->insertHonorarium(8, 'student-selected-a', '2026-09-05', 50, 500, 'KS');
+        $this->insertHonorarium(9, 'student-selected-b', '2026-09-06', 60, 600, 'PU');
+        $this->insertHonorarium(10, 'student-not-selected', '2026-09-07', 70, 700, 'KS');
+
+        $response = (new KeuanganFakultas)->honorarium_update_selected_availability(
+            Request::create('/honorarium/availability-selected', 'POST', [
+                'available' => 1,
+                'tanggal' => ['2026-09-05', '2026-09-06'],
+            ])
+        );
+
+        $payload = json_decode($response->getContent(), true);
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame(2, $payload['updated_date_count']);
+        $this->assertSame(1, (int) DB::table('trt_honorium')->where('id', 8)->value('KS_Stat'));
+        $this->assertSame(1, (int) DB::table('trt_honorium')->where('id', 9)->value('PU_Stat'));
+        $this->assertSame(0, (int) DB::table('trt_honorium')->where('id', 10)->value('KS_Stat'));
+    }
+
+    public function testSelectedDateSwitchRollsBackAllDatesWhenOneTypeIsMissing()
+    {
+        $this->insertHonorarium(11, 'student-batch-ready', '2026-09-08', 80, 800, 'KS');
+        $this->insertHonorarium(12, 'student-batch-unset', '2026-09-09', 90, 900, 'PU', '2');
+
+        $response = (new KeuanganFakultas)->honorarium_update_selected_availability(
+            Request::create('/honorarium/availability-selected', 'POST', [
+                'available' => 1,
+                'tanggal' => ['2026-09-08', '2026-09-09'],
+            ])
+        );
+
+        $this->assertSame(422, $response->getStatusCode());
+        $this->assertSame(0, (int) DB::table('trt_honorium')->where('id', 11)->value('KS_Stat'));
+        $this->assertSame(0, (int) DB::table('trt_honorium')->where('id', 12)->value('PU_Stat'));
+    }
+
     protected function insertHonorarium($id, $nim, $date, $scheduleId, $periodId, $role, $paymentType = 'Ujian Meja')
     {
         if (!DB::table('mst_pendaftaran')->where('pendaftaran_id', $periodId)->exists()) {
