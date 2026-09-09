@@ -592,7 +592,14 @@ class Prodi extends Controller
         $peserta = DB::table('trt_reg as rg')
             ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
             ->join('mst_pendaftaran as mp', 'mp.pendaftaran_id', '=', 'rg.pendaftaran_id')
-            ->select('rg.reg_id', 'tb.bimbingan_id')
+            ->select(
+                'rg.reg_id',
+                'rg.pendaftaran_id',
+                'tb.bimbingan_id',
+                'tb.C_NPM',
+                'tb.pembimbing_I_id',
+                'tb.pembimbing_II_id'
+            )
             ->where('rg.status', $tipeUjian)
             ->where('tb.status_bimbingan', $statusSaatIni)
             ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
@@ -613,18 +620,18 @@ class Prodi extends Controller
             )
             ->get();
 
-        $bimbinganIds = [];
+        $pesertaLengkap = collect();
         $totalBelumLengkap = 0;
         foreach ($peserta as $rowPeserta) {
             if (Helper::isPenilaianLengkapByRegId($rowPeserta->reg_id)) {
-                $bimbinganIds[] = $rowPeserta->bimbingan_id;
+                $pesertaLengkap->push($rowPeserta);
             } else {
                 $totalBelumLengkap++;
             }
         }
-        $bimbinganIds = array_values(array_unique($bimbinganIds));
+        $pesertaLengkap = $pesertaLengkap->unique('bimbingan_id')->values();
 
-        if (empty($bimbinganIds)) {
+        if ($pesertaLengkap->isEmpty()) {
             return redirect()->back()->with([
                 'status' => 'warning',
                 'total' => 0,
@@ -633,21 +640,59 @@ class Prodi extends Controller
         }
 
         try {
-            $total = DB::table('trt_bimbingan')
-                ->where('status_bimbingan', $statusSaatIni)
-                ->whereIn('bimbingan_id', $bimbinganIds)
-                ->update(['status_bimbingan' => $statusTujuan]);
+            $total = DB::transaction(function () use ($pesertaLengkap, $tipeUjian, $statusSaatIni, $statusTujuan) {
+                $updated = 0;
+
+                foreach ($pesertaLengkap as $rowPeserta) {
+                    $penguji = DB::table('trt_penguji')
+                        ->select('ketua_sidang_id', 'penguji_I_id', 'penguji_II_id', 'penguji_III_id')
+                        ->where('C_NPM', $rowPeserta->C_NPM)
+                        ->where('tipe_ujian', $tipeUjian)
+                        ->orderBy('id', 'desc')
+                        ->first();
+
+                    if (!$penguji) {
+                        throw new RuntimeException(
+                            'Tim ujian untuk mahasiswa ' . $rowPeserta->C_NPM . ' belum lengkap.'
+                        );
+                    }
+
+                    $this->createHonorariumForConfirmedExam(
+                        $rowPeserta->bimbingan_id,
+                        $rowPeserta->C_NPM,
+                        $rowPeserta->pendaftaran_id,
+                        $tipeUjian,
+                        $rowPeserta,
+                        $penguji
+                    );
+
+                    $updated += DB::table('trt_bimbingan')
+                        ->where('bimbingan_id', $rowPeserta->bimbingan_id)
+                        ->where('status_bimbingan', $statusSaatIni)
+                        ->update(['status_bimbingan' => $statusTujuan]);
+                }
+
+                return $updated;
+            });
 
             return redirect()->back()->with([
                 'status' => 'success',
                 'total' => $total,
                 'total_belum_lengkap' => $totalBelumLengkap,
             ]);
-        } catch (\Exception $th) {
+        } catch (\Throwable $th) {
+            Log::error('Konfirmasi semua hasil ujian dibatalkan.', [
+                'message' => $th->getMessage(),
+                'tipe_ujian' => $tipeUjian,
+            ]);
+
             return redirect()->back()->with([
                 'status' => 'error',
                 'total' => 0,
                 'total_belum_lengkap' => $totalBelumLengkap,
+                'message' => $th instanceof RuntimeException
+                    ? $th->getMessage()
+                    : 'Konfirmasi hasil ujian tidak dapat diselesaikan.',
             ]);
         }
     }

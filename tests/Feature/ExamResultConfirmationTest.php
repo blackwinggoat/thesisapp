@@ -41,10 +41,17 @@ class ExamResultConfirmationTest extends TestCase
             $table->integer('bimbingan_id');
             $table->integer('pendaftaran_id');
             $table->integer('status');
+            $table->string('C_NPM');
         });
         Schema::create('trt_jadwal_ujian', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('pendaftaran_id');
+            $table->date('tgl_ujian');
+        });
+        Schema::create('trt_jadwal_ujian_per_mhs', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('jadwal_ujian');
+            $table->string('C_NPM');
         });
         Schema::create('trt_penguji', function (Blueprint $table) {
             $table->increments('id');
@@ -65,6 +72,20 @@ class ExamResultConfirmationTest extends TestCase
             $table->decimal('nilai_4', 5, 2)->nullable();
             $table->decimal('nilai_5', 5, 2)->nullable();
         });
+        Schema::create('trt_honorium', function (Blueprint $table) {
+            $table->increments('id');
+            $table->date('date')->nullable();
+            $table->string('C_NPM');
+            $table->string('source_key')->nullable()->unique();
+            $table->integer('exam_type')->nullable();
+            $table->integer('jadwal_ujian_id')->nullable();
+            $table->string('tipe_ujian')->nullable();
+            foreach (['KS', 'PU', 'PP', 'P1', 'P2', 'P3'] as $role) {
+                $table->string($role)->nullable();
+                $table->decimal($role . '_H', 15, 2)->default(0);
+                $table->integer($role . '_Stat')->default(0);
+            }
+        });
 
         Auth::guard()->setUser(new GenericUser(['id' => 1, 'name' => 'proditi']));
     }
@@ -84,6 +105,7 @@ class ExamResultConfirmationTest extends TestCase
             'bimbingan_id' => 5,
             'pendaftaran_id' => 105,
             'status' => 0,
+            'C_NPM' => 'MHS5',
         ]);
 
         $response = (new Prodi())->approve_hasilujian_proposal_all_post();
@@ -95,6 +117,12 @@ class ExamResultConfirmationTest extends TestCase
         $this->assertSame(0, $this->statusBimbingan(5));
         $this->assertSame(0, $this->statusBimbingan(6));
         $this->assertSame(0, $this->statusBimbingan(7));
+        $this->assertDatabaseHas('trt_honorium', [
+            'C_NPM' => 'MHS1',
+            'exam_type' => 0,
+            'jadwal_ujian_id' => 1,
+        ]);
+        $this->assertDatabaseMissing('trt_honorium', ['C_NPM' => 'MHS2']);
         $this->assertSame('success', $response->getSession()->get('status'));
         $this->assertSame(1, $response->getSession()->get('total'));
         $this->assertSame(2, $response->getSession()->get('total_belum_lengkap'));
@@ -120,6 +148,12 @@ class ExamResultConfirmationTest extends TestCase
         $this->assertSame(3, $this->statusBimbingan(11));
         $this->assertSame(2, $this->statusBimbingan(12));
         $this->assertSame(2, $this->statusBimbingan(13));
+        $this->assertDatabaseHas('trt_honorium', [
+            'C_NPM' => 'TA1',
+            'exam_type' => 2,
+            'jadwal_ujian_id' => 1,
+        ]);
+        $this->assertDatabaseMissing('trt_honorium', ['C_NPM' => 'TA2']);
         $this->assertSame(1, $response->getSession()->get('total'));
         $this->assertSame(1, $response->getSession()->get('total_belum_lengkap'));
     }
@@ -220,6 +254,31 @@ class ExamResultConfirmationTest extends TestCase
         $this->assertSame(0, (int) $historyData->sum('total_penilaian_tidak_lengkap'));
     }
 
+    public function testBackfillRestoresConfirmedScheduledExamWithoutExistingHonorarium()
+    {
+        $this->addCandidate(51, 601, 'TA-BACKFILL', 3, 2, 1, ['P51', 'U51', 'K51']);
+
+        require_once __DIR__ . '/../../database/migrations/2026_09_09_040000_backfill_confirmed_honorarium_for_2026_08_31.php';
+        (new \BackfillConfirmedHonorariumFor20260831)->up();
+
+        $this->assertDatabaseHas('trt_honorium', [
+            'C_NPM' => 'TA-BACKFILL',
+            'exam_type' => 2,
+            'jadwal_ujian_id' => 1,
+            'date' => '2026-08-31',
+        ]);
+        $this->assertDatabaseHas('trt_honorium_confirmation_backfill_audit', [
+            'C_NPM' => 'TA-BACKFILL',
+            'registration_id' => 601,
+            'guidance_id' => 51,
+            'schedule_id' => 1,
+            'reason' => 'bulk_confirmation_missing_honorarium',
+        ]);
+
+        (new \BackfillConfirmedHonorariumFor20260831)->up();
+        $this->assertSame(1, DB::table('trt_honorium')->where('C_NPM', 'TA-BACKFILL')->count());
+    }
+
     private function addCandidate($bimbinganId, $regId, $nim, $statusBimbingan, $tipeUjian, $statusProdi, array $filledAssessors, $tipePendaftaran = null, $scheduled = true)
     {
         DB::table('mst_pendaftaran')->insert([
@@ -239,9 +298,17 @@ class ExamResultConfirmationTest extends TestCase
             'bimbingan_id' => $bimbinganId,
             'pendaftaran_id' => $regId,
             'status' => $tipeUjian,
+            'C_NPM' => $nim,
         ]);
         if ($scheduled) {
-            DB::table('trt_jadwal_ujian')->insert(['pendaftaran_id' => $regId]);
+            $scheduleId = DB::table('trt_jadwal_ujian')->insertGetId([
+                'pendaftaran_id' => $regId,
+                'tgl_ujian' => '2026-08-31',
+            ]);
+            DB::table('trt_jadwal_ujian_per_mhs')->insert([
+                'jadwal_ujian' => $scheduleId,
+                'C_NPM' => $nim,
+            ]);
         }
         DB::table('trt_penguji')->insert([
             'C_NPM' => $nim,
