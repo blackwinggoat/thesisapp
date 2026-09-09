@@ -35,6 +35,7 @@ class JenisTugasAkhirBackfillTest extends TestCase
             $table->increments('jenis_tugas_akhir_id');
             $table->string('kode_jenis_tugas_akhir')->unique();
             $table->string('deskripsi');
+            $table->decimal('nilai_maksimal', 5, 2)->default(100);
             $table->boolean('tersedia_untuk_mahasiswa')->default(1);
             $table->timestamps();
         });
@@ -247,6 +248,7 @@ class JenisTugasAkhirBackfillTest extends TestCase
         $request = Request::create('/prodi/master/jenis_tugas_akhir/' . $jenisTugasAkhirId . '/update', 'POST', [
             'kode_jenis_tugas_akhir' => 'TA-SM-REV',
             'deskripsi' => 'Tugas Akhir Skripsi Mandiri Revisi',
+            'nilai_maksimal' => 92.5,
             'tersedia_untuk_mahasiswa' => 0,
         ]);
 
@@ -255,6 +257,7 @@ class JenisTugasAkhirBackfillTest extends TestCase
         $this->assertSame(302, $response->getStatusCode());
         $this->assertSame('TA-SM-REV', DB::table('mst_jenis_tugas_akhir')->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)->value('kode_jenis_tugas_akhir'));
         $this->assertSame('Tugas Akhir Skripsi Mandiri Revisi', DB::table('mst_jenis_tugas_akhir')->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)->value('deskripsi'));
+        $this->assertSame(92.5, (float) DB::table('mst_jenis_tugas_akhir')->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)->value('nilai_maksimal'));
         $this->assertSame(0, (int) DB::table('mst_jenis_tugas_akhir')->where('jenis_tugas_akhir_id', $jenisTugasAkhirId)->value('tersedia_untuk_mahasiswa'));
         $this->assertSame($jenisTugasAkhirId, DB::table('trt_bimbingan')->where('C_NPM', '13020229999')->value('jenis_tugas_akhir_id'));
     }

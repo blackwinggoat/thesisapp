@@ -2858,6 +2858,7 @@ class Prodi extends Controller
     public function master_jenis_tugas_akhir()
     {
         $hasMahasiswaAvailability = Schema::hasColumn('mst_jenis_tugas_akhir', 'tersedia_untuk_mahasiswa');
+        $hasNilaiMaksimal = Schema::hasColumn('mst_jenis_tugas_akhir', 'nilai_maksimal');
         $data = DB::table('mst_jenis_tugas_akhir')
             ->select('*')
             ->orderBy('kode_jenis_tugas_akhir')
@@ -2869,7 +2870,17 @@ class Prodi extends Controller
             });
         }
 
-        return view('tugasakhir.prodi.master_jenis_tugas_akhir', compact('data', 'hasMahasiswaAvailability'));
+        if (!$hasNilaiMaksimal) {
+            $data->each(function ($jenis) {
+                $jenis->nilai_maksimal = 100;
+            });
+        }
+
+        return view('tugasakhir.prodi.master_jenis_tugas_akhir', compact(
+            'data',
+            'hasMahasiswaAvailability',
+            'hasNilaiMaksimal'
+        ));
     }
 
     public function master_bidang_ilmu_peminatan()
@@ -3167,10 +3178,15 @@ class Prodi extends Controller
         $this->validate($request, [
             'kode_jenis_tugas_akhir' => 'required|max:50|unique:mst_jenis_tugas_akhir,kode_jenis_tugas_akhir',
             'deskripsi' => 'required|max:255',
+            'nilai_maksimal' => 'required|numeric|min:1|max:100',
         ], [
             'kode_jenis_tugas_akhir.required' => 'Kode jenis tugas akhir wajib diisi.',
             'kode_jenis_tugas_akhir.unique' => 'Kode jenis tugas akhir sudah digunakan.',
             'deskripsi.required' => 'Deskripsi wajib diisi.',
+            'nilai_maksimal.required' => 'Nilai maksimal wajib diisi.',
+            'nilai_maksimal.numeric' => 'Nilai maksimal harus berupa angka.',
+            'nilai_maksimal.min' => 'Nilai maksimal paling rendah adalah 1.',
+            'nilai_maksimal.max' => 'Nilai maksimal tidak boleh lebih dari 100.',
         ]);
 
         try {
@@ -3178,6 +3194,10 @@ class Prodi extends Controller
                 'kode_jenis_tugas_akhir' => trim($request->kode_jenis_tugas_akhir),
                 'deskripsi' => trim($request->deskripsi),
             ];
+
+            if (Schema::hasColumn('mst_jenis_tugas_akhir', 'nilai_maksimal')) {
+                $payload['nilai_maksimal'] = round((float) $request->nilai_maksimal, 2);
+            }
 
             if (Schema::hasColumn('mst_jenis_tugas_akhir', 'tersedia_untuk_mahasiswa')) {
                 $payload['tersedia_untuk_mahasiswa'] = (int) $request->input('tersedia_untuk_mahasiswa', 1);
@@ -3204,17 +3224,26 @@ class Prodi extends Controller
         $this->validate($request, [
             'kode_jenis_tugas_akhir' => 'required|max:50|unique:mst_jenis_tugas_akhir,kode_jenis_tugas_akhir,' . $id . ',jenis_tugas_akhir_id',
             'deskripsi' => 'required|max:255',
+            'nilai_maksimal' => 'required|numeric|min:1|max:100',
             'tersedia_untuk_mahasiswa' => 'nullable|in:0,1',
         ], [
             'kode_jenis_tugas_akhir.required' => 'Kode jenis tugas akhir wajib diisi.',
             'kode_jenis_tugas_akhir.unique' => 'Kode jenis tugas akhir sudah digunakan.',
             'deskripsi.required' => 'Deskripsi wajib diisi.',
+            'nilai_maksimal.required' => 'Nilai maksimal wajib diisi.',
+            'nilai_maksimal.numeric' => 'Nilai maksimal harus berupa angka.',
+            'nilai_maksimal.min' => 'Nilai maksimal paling rendah adalah 1.',
+            'nilai_maksimal.max' => 'Nilai maksimal tidak boleh lebih dari 100.',
         ]);
 
         $payload = [
             'kode_jenis_tugas_akhir' => trim((string) $request->kode_jenis_tugas_akhir),
             'deskripsi' => trim((string) $request->deskripsi),
         ];
+
+        if (Schema::hasColumn('mst_jenis_tugas_akhir', 'nilai_maksimal')) {
+            $payload['nilai_maksimal'] = round((float) $request->nilai_maksimal, 2);
+        }
 
         if (Schema::hasColumn('mst_jenis_tugas_akhir', 'tersedia_untuk_mahasiswa')) {
             $payload['tersedia_untuk_mahasiswa'] = (int) $request->input('tersedia_untuk_mahasiswa', 1);

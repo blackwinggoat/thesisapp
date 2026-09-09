@@ -44,6 +44,17 @@
                         <br><br>
 
                         <div class="form-group">
+                            <label class="col-lg-2 control-label">Nilai Maksimal</label>
+                            <div class="col-lg-5">
+                                <input type="number" class="form-control bold-border" name="nilai_maksimal"
+                                    value="{{ old('nilai_maksimal', 100) }}" min="1" max="100" step="0.01" required />
+                                <p class="help-block">Batas nilai akhir tertinggi untuk jenis tugas akhir ini.</p>
+                            </div>
+                        </div>
+
+                        <br><br>
+
+                        <div class="form-group">
                             <label class="col-lg-2 control-label">Deskripsi</label>
                             <div class="col-lg-5">
                                 <input type="text" class="form-control bold-border" name="deskripsi"
@@ -86,6 +97,7 @@
                                 <th>No</th>
                                 <th>Kode Jenis Tugas Akhir</th>
                                 <th>Deskripsi</th>
+                                <th>Nilai Maksimal</th>
                                 <th>Tersedia bagi Mahasiswa</th>
                                 <th>Aksi</th>
                             </tr>
@@ -96,6 +108,9 @@
                                     <td width="1%" align="center">{{ ++$key }}</td>
                                     <td>{{ $value->kode_jenis_tugas_akhir }}</td>
                                     <td>{{ $value->deskripsi }}</td>
+                                    <td>
+                                        <strong>{{ rtrim(rtrim(number_format((float) ($value->nilai_maksimal ?? 100), 2, ',', '.'), '0'), ',') }}</strong>
+                                    </td>
                                     <td>
                                         @if (($value->tersedia_untuk_mahasiswa ?? 1) == 1)
                                             <span class="label label-success">Tersedia</span>
@@ -113,6 +128,7 @@
                                             data-id="{{ $value->jenis_tugas_akhir_id }}"
                                             data-kode="{{ $value->kode_jenis_tugas_akhir }}"
                                             data-deskripsi="{{ $value->deskripsi }}"
+                                            data-nilai-maksimal="{{ $value->nilai_maksimal ?? 100 }}"
                                             data-tersedia="{{ $value->tersedia_untuk_mahasiswa ?? 1 }}"
                                             onclick="showEditJenisTugasAkhir(this)">
                                             <i class="fa fa-pencil"></i>
@@ -135,7 +151,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center">Belum ada data jenis tugas akhir.</td>
+                                    <td colspan="6" class="text-center">Belum ada data jenis tugas akhir.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -163,6 +179,11 @@
                                 <div class="form-group">
                                     <label for="edit_deskripsi">Deskripsi</label>
                                     <input type="text" id="edit_deskripsi" name="deskripsi" class="form-control" maxlength="255" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_nilai_maksimal">Nilai Maksimal</label>
+                                    <input type="number" id="edit_nilai_maksimal" name="nilai_maksimal" class="form-control" min="1" max="100" step="0.01" required>
+                                    <p class="help-block">Batas nilai akhir tertinggi untuk jenis tugas akhir ini.</p>
                                 </div>
                                 @if ($hasMahasiswaAvailability)
                                     <div class="form-group">
@@ -239,6 +260,7 @@
             formEdit.setAttribute('action', `{{ url('prodi/master/jenis_tugas_akhir') }}/${id}/update`);
             document.getElementById('edit_kode_jenis_tugas_akhir').value = button.getAttribute('data-kode') || '';
             document.getElementById('edit_deskripsi').value = button.getAttribute('data-deskripsi') || '';
+            document.getElementById('edit_nilai_maksimal').value = button.getAttribute('data-nilai-maksimal') || '100';
 
             const availability = document.getElementById('edit_tersedia_untuk_mahasiswa');
             if (availability) {
