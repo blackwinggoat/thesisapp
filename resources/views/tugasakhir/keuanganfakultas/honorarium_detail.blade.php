@@ -905,6 +905,45 @@
                 return 'Rp ' + Math.round(value || 0).toLocaleString('id-ID');
             }
 
+            function formatPenyesuaianHonor(value) {
+                value = parseFloat(value) || 0;
+                if (value > 0) {
+                    return '+' + formatRupiah(value);
+                }
+                if (value < 0) {
+                    return '-' + formatRupiah(Math.abs(value));
+                }
+
+                return formatRupiah(0);
+            }
+
+            function updateRincianHonorarium(honorariumId, detail) {
+                if (!detail) {
+                    return;
+                }
+
+                var button = $('.view-honorarium-btn[data-honorarium-id="' + honorariumId + '"]');
+                var roles = ['KS', 'PU', 'PP', 'P1', 'P2', 'P3'];
+
+                roles.forEach(function(role) {
+                    var key = role.toLowerCase();
+                    var base = detail.base_amounts && detail.base_amounts[role];
+                    var adjustment = detail.adjustments && detail.adjustments[role];
+                    var amount = detail.amounts && detail.amounts[role];
+
+                    button.data(key + '-base', formatRupiah(base));
+                    button.data(key + '-adj', formatPenyesuaianHonor(adjustment));
+                    button.data(key + '-h', formatRupiah(amount));
+                });
+
+                var totalBaris = button.closest('tr').find('.honorarium-row-total');
+                if (totalBaris.length && detail.total_honor !== undefined) {
+                    totalBaris.attr('data-total-honor', detail.total_honor)
+                        .text(formatRupiah(detail.total_honor));
+                    updateTotalHonorariumTanggal();
+                }
+            }
+
             function updateTotalHonorariumTanggal() {
                 var total = 0;
                 $('.honorarium-row-total').each(function() {
@@ -938,9 +977,11 @@
                             _token: '{{ csrf_token() }}',
                             id: checkbox.data('honorarium-id'),
                             role: checkbox.data('role'),
-                            hadir: checkbox.prop('checked') ? 1 : 0
+                            hadir: checkbox.prop('checked') ? 1 : 0,
+                            date: '{{ $date }}'
                         },
                         success: function(response) {
+                            updateRincianHonorarium(checkbox.data('honorarium-id'), response.detail);
                             status.addClass('text-success').text('Tersimpan');
                             setTimeout(function() {
                                 status.text('').removeClass('text-success');

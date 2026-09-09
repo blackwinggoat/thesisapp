@@ -639,10 +639,10 @@ class KeuanganFakultas extends Controller
             $honorarium->pembimbing_pendamping_hadir = $kolomKehadiranPembimbingTersedia
                 ? (int) $honorarium->pembimbing_pendamping_hadir === 1
                 : true;
-            $penyesuaianHonor = $this->penyesuaianHonorPembimbing($honorarium, $jumlahSanksiPembimbing);
-            $honorarium->honor_tersesuaikan = $penyesuaianHonor['amounts'];
-            $honorarium->catatan_honor_tersesuaikan = $penyesuaianHonor['notes'];
-            $honorarium->total_honor_tersesuaikan = array_sum($penyesuaianHonor['amounts']);
+            $rincianHonor = $this->rincianHonorariumSetelahKehadiran($honorarium, $jumlahSanksiPembimbing);
+            $honorarium->honor_tersesuaikan = $rincianHonor['amounts'];
+            $honorarium->catatan_honor_tersesuaikan = $rincianHonor['notes'];
+            $honorarium->total_honor_tersesuaikan = $rincianHonor['total_honor'];
             $honorarium->total_penyesuaian_honor = $honorarium->total_honor_tersesuaikan - (float) $honorarium->total_honor;
             $honorarium->jumlah_sanksi_pembimbing = $jumlahSanksiPembimbing;
         }
@@ -1475,6 +1475,25 @@ class KeuanganFakultas extends Controller
         ];
     }
 
+    protected function rincianHonorariumSetelahKehadiran($honorarium, $jumlahSanksi)
+    {
+        $rincian = $this->penyesuaianHonorPembimbing($honorarium, $jumlahSanksi);
+        $penyesuaian = [];
+
+        foreach ($this->honorariumRoles() as $role => $definition) {
+            $penyesuaian[$role] = (float) $rincian['amounts'][$role]
+                - (float) $rincian['base_amounts'][$role];
+        }
+
+        return [
+            'base_amounts' => $rincian['base_amounts'],
+            'adjustments' => $penyesuaian,
+            'amounts' => $rincian['amounts'],
+            'notes' => $rincian['notes'],
+            'total_honor' => array_sum($rincian['amounts']),
+        ];
+    }
+
     protected function honorariumTotalSql($tableAlias = 'honorarium', $hanyaBelumLunas = false)
     {
         $nominalPerPeran = [];
@@ -1765,19 +1784,23 @@ class KeuanganFakultas extends Controller
         $id = (int) $request->input('id');
         $role = $request->input('role');
         $hadir = $request->input('hadir') ? 1 : 0;
+        $date = trim((string) $request->input('date'));
         $kolomYangDiizinkan = [
             'pembimbing_utama_hadir',
             'pembimbing_pendamping_hadir',
         ];
 
-        if ($id < 1 || !in_array($role, $kolomYangDiizinkan, true)) {
+        if ($id < 1
+            || !in_array($role, $kolomYangDiizinkan, true)
+            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)
+        ) {
             return response()->json([
                 'message' => 'Data kehadiran pembimbing tidak valid.',
             ], 422);
         }
 
         try {
-            DB::transaction(function () use ($id, $role, $hadir) {
+            $rincianHonor = DB::transaction(function () use ($id, $role, $hadir, $date) {
                 $honorarium = DB::table('trt_honorium')->where('id', $id)->lockForUpdate()->first();
                 if (!$honorarium) {
                     throw new \RuntimeException('Data honorarium tidak ditemukan.');
@@ -1787,11 +1810,27 @@ class KeuanganFakultas extends Controller
                     throw new \RuntimeException('Kehadiran pembimbing pada honorarium yang sudah Lunas tidak dapat diubah.');
                 }
 
+                $terhubungKeTanggal = $this->honorariumDenganJadwalQuery()
+                    ->where('honorarium.id', $id)
+                    ->whereDate('jadwal.tgl_ujian', $date)
+                    ->exists();
+                if (!$terhubungKeTanggal) {
+                    throw new \RuntimeException('Data honorarium tidak terhubung dengan tanggal ujian yang sedang dibuka.');
+                }
+
                 DB::table('trt_honorium')->where('id', $id)->update([$role => $hadir]);
+
+                $honorarium->{$role} = $hadir;
+
+                return $this->rincianHonorariumSetelahKehadiran(
+                    $honorarium,
+                    $this->jumlahSanksiPembayaranPadaTanggal($date)
+                );
             });
 
             return response()->json([
                 'message' => 'Kehadiran pembimbing berhasil disimpan.',
+                'detail' => $rincianHonor,
             ], 200);
         } catch (\RuntimeException $e) {
             return response()->json([
