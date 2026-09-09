@@ -121,7 +121,7 @@ try_api_call() {
                 --retry-max-time 75 \
                 --connect-timeout 7 \
                 --max-time 20 \
-                --fail-with-body \
+                --fail \
                 --silent \
                 --show-error \
                 "${CPANEL_HOST}/execute/${endpoint}" \
