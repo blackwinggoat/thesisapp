@@ -32,6 +32,11 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('Rincian Jenis Ujian', $pdfView);
         $this->assertStringContainsString('Rekap Penerimaan Dosen', $pdfView);
         $this->assertStringContainsString('Honorarium Diterima', $pdfView);
+        $this->assertStringContainsString('Tipe Ujian', $pdfView);
+        $this->assertStringContainsString('Paraf', $pdfView);
+        $this->assertStringNotContainsString('<th class="lecturer-assignment">Penugasan</th>', $pdfView);
+        $this->assertStringContainsString("->setPaper('a4', 'portrait')", $controller);
+        $this->assertStringContainsString('class="btn btn-danger" id="download-honorarium-daily-recap"', $listView);
         $this->assertStringContainsString('Wakil Dekan II Bidang Keuangan dan SDM', $pdfView);
         $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $pdfView);
         $this->assertStringContainsString("publicImageDataUri('images/branding/fikom-pdf.jpg')", $pdfView);
@@ -61,9 +66,14 @@ class HonorariumDailyRecapPdfTest extends TestCase
             'D3' => 'Dosen Tiga',
         ]);
 
-        $reports = $method->invoke($controller, $rows, $names, collect([
-            '2026-08-19' => 50000,
-        ]));
+        $signature = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=');
+        $reports = $method->invoke(
+            $controller,
+            $rows,
+            $names,
+            collect(['2026-08-19' => 50000]),
+            collect(['D1' => $signature])
+        );
         $report = $reports->first();
 
         $this->assertCount(1, $reports);
@@ -77,6 +87,8 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertSame(1, $proposal->student_count);
         $this->assertSame(3, $proposal->assignment_count);
         $this->assertSame(500000.0, $proposal->total_honor);
+        $this->assertSame('Proposal', $proposal->exam_name);
+        $this->assertSame('Proposal', $proposal->type_name);
 
         $dosenSatu = $report->lecturers->firstWhere('code', 'D1');
         $dosenDua = $report->lecturers->firstWhere('code', 'D2');
@@ -86,6 +98,8 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertSame(250000.0, $dosenTiga->total_honor);
         $this->assertStringContainsString('Ketua Sidang (1)', $dosenSatu->roles);
         $this->assertStringContainsString('Penguji I (1)', $dosenSatu->roles);
+        $this->assertStringStartsWith('data:image/png;base64,', $dosenSatu->signature_data_uri);
+        $this->assertSame('', $dosenDua->signature_data_uri);
     }
 
     public function testVerificationTokenProtectsMetadataWithoutPublishingAmounts()
@@ -154,6 +168,7 @@ class HonorariumDailyRecapPdfTest extends TestCase
             'id' => crc32($nim . $type),
             'C_NPM' => $nim,
             'tanggal_ujian' => '2026-08-19',
+            'exam_type' => $type === 'Proposal' ? 0 : 2,
             'tipe_ujian' => $type,
             'pembimbing_utama_hadir' => $puPresent,
             'pembimbing_pendamping_hadir' => $ppPresent,

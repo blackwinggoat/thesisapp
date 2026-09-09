@@ -962,6 +962,16 @@ class KeuanganFakultas extends Controller
                 $namaDosen->put($code, $resolvedName !== '' ? $resolvedName : $code);
             }
         }
+        $tandaTanganDosen = collect();
+        if (!$kodeDosen->isEmpty() && Schema::hasTable('mst_tanda_tangan')) {
+            $tandaTanganDosen = DB::table('mst_tanda_tangan')
+                ->whereIn('C_KODE_DOSEN', $kodeDosen->all())
+                ->whereNotNull('tanda_tangan')
+                ->get(['C_KODE_DOSEN', 'tanda_tangan'])
+                ->mapWithKeys(function ($tandaTangan) {
+                    return [trim((string) $tandaTangan->C_KODE_DOSEN) => $tandaTangan->tanda_tangan];
+                });
+        }
 
         $jumlahPenyesuaianByTanggal = $tanggalTerpilih->mapWithKeys(function ($tanggal) {
             return [$tanggal => $this->jumlahSanksiPembayaranPadaTanggal($tanggal)];
@@ -969,7 +979,8 @@ class KeuanganFakultas extends Controller
         $reports = $this->buildHonorariumDailyRecapReports(
             $honorariums,
             $namaDosen,
-            $jumlahPenyesuaianByTanggal
+            $jumlahPenyesuaianByTanggal,
+            $tandaTanganDosen
         );
         if ($reports->isEmpty()) {
             return redirect()->route('honorarium_home')->with([
@@ -1011,7 +1022,7 @@ class KeuanganFakultas extends Controller
             'reports',
             'wakilDekanDua',
             'generatedAt'
-        ))->setPaper('a4', 'landscape');
+        ))->setPaper('a4', 'portrait');
 
         return $pdf->download($namaFile);
     }
@@ -1047,10 +1058,16 @@ class KeuanganFakultas extends Controller
         ];
     }
 
-    protected function buildHonorariumDailyRecapReports($honorariums, $namaDosen, $jumlahPenyesuaianByTanggal)
+    protected function buildHonorariumDailyRecapReports(
+        $honorariums,
+        $namaDosen,
+        $jumlahPenyesuaianByTanggal,
+        $tandaTanganDosen = null
+    )
     {
         $reports = collect();
         $roles = $this->honorariumReportRoles();
+        $tandaTanganDosen = collect($tandaTanganDosen ?: []);
 
         foreach ($honorariums as $honorarium) {
             $tanggal = substr((string) $honorarium->tanggal_ujian, 0, 10);
@@ -1075,22 +1092,27 @@ class KeuanganFakultas extends Controller
             $report = $reports->get($tanggal);
             $nim = trim((string) $honorarium->C_NPM);
             $typeName = trim((string) $honorarium->tipe_ujian) ?: 'Belum ditetapkan';
+            $examType = (string) ($honorarium->exam_type ?? '');
+            $examName = $examType === '0' ? 'Proposal' : ($examType === '2' ? 'Ujian Meja' : '-');
+            $typeKey = $examType . '|' . $typeName;
             $penyesuaianHonor = $this->penyesuaianHonorPembimbing(
                 $honorarium,
                 (float) $jumlahPenyesuaianByTanggal->get($tanggal, 0)
             );
 
             $report->student_nims[$nim] = true;
-            if (!$report->exam_types->has($typeName)) {
-                $report->exam_types->put($typeName, (object) [
+            if (!$report->exam_types->has($typeKey)) {
+                $report->exam_types->put($typeKey, (object) [
                     'name' => $typeName,
+                    'exam_name' => $examName,
+                    'type_name' => $typeName,
                     'student_nims' => [],
                     'student_count' => 0,
                     'assignment_count' => 0,
                     'total_honor' => 0,
                 ]);
             }
-            $typeReport = $report->exam_types->get($typeName);
+            $typeReport = $report->exam_types->get($typeKey);
             $typeReport->student_nims[$nim] = true;
 
             foreach ($roles as $role => $definition) {
@@ -1115,6 +1137,7 @@ class KeuanganFakultas extends Controller
                         'student_count' => 0,
                         'assignment_count' => 0,
                         'total_honor' => 0,
+                        'signature_data_uri' => Helper::binaryImageDataUri($tandaTanganDosen->get($code, '')),
                     ]);
                 }
 
@@ -1138,7 +1161,7 @@ class KeuanganFakultas extends Controller
 
                 return $type;
             })->sortBy(function ($type) {
-                return strtolower($type->name);
+                return strtolower($type->exam_name . '|' . $type->type_name);
             })->values();
             $report->lecturers = $report->lecturers->map(function ($lecturer) {
                 $lecturer->student_count = count($lecturer->student_nims);
@@ -1150,7 +1173,7 @@ class KeuanganFakultas extends Controller
             })->sortBy(function ($lecturer) {
                 return strtolower($lecturer->name . '|' . $lecturer->code);
             })->values();
-            $report->exam_type_count = $report->exam_types->count();
+            $report->exam_type_count = $report->exam_types->pluck('exam_name')->unique()->count();
             $report->lecturer_count = $report->lecturers->count();
 
             return $report;

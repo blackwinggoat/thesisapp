@@ -95,7 +95,7 @@
                                 formaction="{{ route('honorarium_tanda_terima_pdf') }}" formtarget="_blank" disabled>
                                 <i class="fa fa-file-pdf-o"></i> Tanda Terima Dosen
                             </button>
-                            <button type="submit" class="btn btn-primary" id="download-honorarium-daily-recap"
+                            <button type="submit" class="btn btn-danger" id="download-honorarium-daily-recap"
                                 formaction="{{ route('honorarium_rekap_harian_pdf') }}" formtarget="_blank" disabled>
                                 <i class="fa fa-file-pdf-o"></i> Rekap Honorarium Harian
                             </button>

@@ -405,6 +405,21 @@ class Helper
         return 'data:' . $mime . ';base64,' . base64_encode($imageData);
     }
 
+    public static function binaryImageDataUri($imageData)
+    {
+        if (!is_string($imageData) || $imageData === '') {
+            return '';
+        }
+
+        $imageInfo = @getimagesizefromstring($imageData);
+        $mime = isset($imageInfo['mime']) ? strtolower((string) $imageInfo['mime']) : '';
+        if (!in_array($mime, ['image/png', 'image/jpeg', 'image/gif'], true)) {
+            return '';
+        }
+
+        return 'data:' . $mime . ';base64,' . base64_encode($imageData);
+    }
+
     public static function deleteManagedOfficialImage($fileName)
     {
         if (!self::isManagedOfficialImage($fileName)) {
