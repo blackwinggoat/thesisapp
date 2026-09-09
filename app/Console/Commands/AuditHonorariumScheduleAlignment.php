@@ -64,10 +64,20 @@ class AuditHonorariumScheduleAlignment extends Command
             })
             ->count();
         $sourcePeriodMismatch = $this->sourcePeriodMismatchCount();
+        $alignmentAuditRows = Schema::hasTable('trt_honorium_schedule_alignment_audit')
+            ? DB::table('trt_honorium_schedule_alignment_audit')->count()
+            : 0;
+        $alignedDateChanges = Schema::hasTable('trt_honorium_schedule_alignment_audit')
+            ? DB::table('trt_honorium_schedule_alignment_audit')
+                ->whereRaw('tanggal_sebelum <> tanggal_jadwal')
+                ->count()
+            : 0;
 
         $result = [
             'total_honorarium' => $total,
             'valid_schedule_links' => $valid,
+            'alignment_audit_rows' => $alignmentAuditRows,
+            'aligned_date_changes' => $alignedDateChanges,
             'unlinked_or_unverifiable' => $total - $valid,
             'outstanding_honorarium' => $outstanding,
             'outstanding_displayed' => $validOutstanding,
