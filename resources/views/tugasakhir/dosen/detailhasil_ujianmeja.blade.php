@@ -29,7 +29,9 @@
                 <div class="the-box">
                     <fieldset>
                         <form action="{{url('dsn/detailhasil_ujianmejapost/')}}" method="post"
-                            enctype="multipart/form-data">
+                            enctype="multipart/form-data"
+                            data-maximum-score="{{ $batasNilai->nilai_maksimal }}"
+                            data-final-project-type="{{ $batasNilai->kode_jenis_tugas_akhir }}">
                             {{ csrf_field() }}
                             <input type="hidden" name="reg_id" value="{{$data[0]->reg_id}}">
                             <div class="form-group">
@@ -56,6 +58,8 @@
                                 </div>
                             </div>
                             <br><br>
+                            @include('tugasakhir.dosen.partials.assessment_maximum_score_notice')
+                            <br>
                             <div class="form-group">
                                 <label class="col-lg-4 control-label">Sikap/Presentasi</label>
                                 <div class="col-lg-8">
@@ -449,6 +453,8 @@
                 var $scoreFields = $assessmentForm.find('input.assessment-score-value');
                 var $sliderControls = $assessmentForm.find('.assessment-score-slider__control');
                 var initialAssessmentState = $assessmentForm.serialize();
+                var maximumScore = Number($assessmentForm.attr('data-maximum-score')) || 100;
+                var finalProjectType = $assessmentForm.attr('data-final-project-type') || 'Tugas Akhir';
 
                 function scores() {
                     return $scoreFields.map(function () {
@@ -478,9 +484,27 @@
                     }, 0);
                     var complete = isComplete();
                     var displayedTotal = total % 1 === 0 ? total.toFixed(0) : total.toFixed(1);
+                    var displayedMaximum = maximumScore % 1 === 0 ? maximumScore.toFixed(0) : maximumScore.toFixed(1);
+                    var exceedsMaximum = total > maximumScore;
 
-                    $('#total_nilai_final').text(displayedTotal);
+                    $('#total_nilai_final')
+                        .text(displayedTotal)
+                        .toggleClass('badge-danger', exceedsMaximum)
+                        .toggleClass('badge-info', !exceedsMaximum);
                     $('#index_nilai_final').html('<h4 class="badge badge-primary">' + grade(total, complete) + '</h4>');
+                    $('#assessment-score-limit-warning')
+                        .toggle(exceedsMaximum)
+                        .text(exceedsMaximum
+                            ? 'Total nilai ' + displayedTotal + ' melebihi batas maksimal ' + finalProjectType + ', yaitu ' + displayedMaximum + '. Turunkan nilai sebelum menyimpan.'
+                            : '');
+                    $('#tombol_satu').prop('disabled', exceedsMaximum);
+
+                    return {
+                        complete: complete,
+                        exceedsMaximum: exceedsMaximum,
+                        displayedTotal: displayedTotal,
+                        displayedMaximum: displayedMaximum
+                    };
                 }
 
                 function displayScore(value) {
@@ -549,8 +573,14 @@
                 updateAssessmentSummary();
 
                 $('#tombol_satu').on('click', function () {
-                    updateAssessmentSummary();
-                    if (isComplete()) {
+                    var summary = updateAssessmentSummary();
+                    if (summary.exceedsMaximum) {
+                        $('#tombol_dua').attr('disabled', 'disabled');
+                        $('#status').text('Total nilai melebihi batas maksimal ' + finalProjectType + '.');
+                        return;
+                    }
+
+                    if (summary.complete) {
                         $('#status').text('');
                         $('#tombol_dua').removeAttr('disabled');
                         return;

@@ -538,6 +538,61 @@ class dosen extends Controller
         return true;
     }
 
+    private function assessmentMaximumScore($regid)
+    {
+        $default = (object) [
+            'kode_jenis_tugas_akhir' => 'Tugas Akhir',
+            'nilai_maksimal' => 100.0,
+        ];
+
+        if (!Schema::hasTable('mst_jenis_tugas_akhir')
+            || !Schema::hasColumn('mst_jenis_tugas_akhir', 'nilai_maksimal')
+            || !Schema::hasColumn('trt_bimbingan', 'jenis_tugas_akhir_id')) {
+            return $default;
+        }
+
+        $maximumScore = DB::table('trt_reg as rg')
+            ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'rg.bimbingan_id')
+            ->leftJoin('mst_jenis_tugas_akhir as jenis', 'jenis.jenis_tugas_akhir_id', '=', 'tb.jenis_tugas_akhir_id')
+            ->where('rg.reg_id', $regid)
+            ->select('jenis.kode_jenis_tugas_akhir', 'jenis.nilai_maksimal')
+            ->first();
+
+        if (!$maximumScore || $maximumScore->nilai_maksimal === null) {
+            return $default;
+        }
+
+        $maximumScore->kode_jenis_tugas_akhir = trim((string) $maximumScore->kode_jenis_tugas_akhir) ?: 'Tugas Akhir';
+        $maximumScore->nilai_maksimal = (float) $maximumScore->nilai_maksimal;
+
+        return $maximumScore;
+    }
+
+    private function assessmentMaximumScoreError(Request $request)
+    {
+        $maximumScore = $this->assessmentMaximumScore($request->reg_id);
+        $total = collect(['nilai_1', 'nilai_2', 'nilai_3', 'nilai_4', 'nilai_5'])
+            ->sum(function ($field) use ($request) {
+                return (float) str_replace(',', '.', trim((string) $request->input($field, 0)));
+            });
+
+        if ($total <= $maximumScore->nilai_maksimal) {
+            return null;
+        }
+
+        return sprintf(
+            'Total nilai %s melebihi batas maksimal %s, yaitu %s. Sesuaikan nilai sebelum menyimpan.',
+            $this->formatAssessmentScore($total),
+            $maximumScore->kode_jenis_tugas_akhir,
+            $this->formatAssessmentScore($maximumScore->nilai_maksimal)
+        );
+    }
+
+    private function formatAssessmentScore($score)
+    {
+        return rtrim(rtrim(number_format((float) $score, 2, '.', ''), '0'), '.');
+    }
+
     // Detail Halaman Hasil Ujian
     public function detailhasil_proposal($regid)
     {
@@ -549,7 +604,9 @@ class dosen extends Controller
         }
         $nilai = $this->assessmentScores($data_hasil);
 
-        return view('tugasakhir.dosen.detailhasil_proposal', compact('data', 'nilai', 'kodeDosen'));
+        $batasNilai = $this->assessmentMaximumScore($regid);
+
+        return view('tugasakhir.dosen.detailhasil_proposal', compact('data', 'nilai', 'kodeDosen', 'batasNilai'));
     }
     // Akhir Detail Halaman Hasil Ujian
 
@@ -576,6 +633,10 @@ class dosen extends Controller
             'nilai_5' => [15, 20],
         ])) {
             return redirect()->back()->with('error', 'Lengkapi semua komponen nilai sesuai rentang penilaian sebelum menyimpan.');
+        }
+
+        if ($maximumScoreError = $this->assessmentMaximumScoreError($request)) {
+            return redirect()->back()->with('error', $maximumScoreError);
         }
 
         try {
@@ -860,7 +921,9 @@ class dosen extends Controller
         }
         $nilai = $this->assessmentScores($data_hasil);
 
-        return view('tugasakhir.dosen.detailhasil_ujianmeja', compact('data', 'nilai', 'kodeDosen'));
+        $batasNilai = $this->assessmentMaximumScore($regid);
+
+        return view('tugasakhir.dosen.detailhasil_ujianmeja', compact('data', 'nilai', 'kodeDosen', 'batasNilai'));
     }
     // Akhir Detail Halaman Hasil Ujian
 
@@ -887,6 +950,10 @@ class dosen extends Controller
             'nilai_5' => [20, 25],
         ])) {
             return redirect()->back()->with('error', 'Lengkapi semua komponen nilai sesuai rentang penilaian sebelum menyimpan.');
+        }
+
+        if ($maximumScoreError = $this->assessmentMaximumScoreError($request)) {
+            return redirect()->back()->with('error', $maximumScoreError);
         }
 
         try {

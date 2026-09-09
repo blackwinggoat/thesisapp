@@ -36,10 +36,18 @@ class AssessmentFormExperienceTest extends TestCase
 
     public function testAssessmentFormsRefreshScoresAndProtectUnsavedChanges()
     {
+        $notice = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/dosen/partials/assessment_maximum_score_notice.blade.php');
+
+        $this->assertStringContainsString('Nilai maksimal', $notice);
+        $this->assertStringContainsString('assessment-score-limit-warning', $notice);
+
         foreach (['detailhasil_ujianmeja', 'detailhasil_proposal'] as $viewName) {
             $view = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/dosen/' . $viewName . '.blade.php');
 
             $this->assertStringContainsString("on('change', updateAssessmentSummary)", $view);
+            $this->assertStringContainsString('data-maximum-score=', $view);
+            $this->assertStringContainsString('total > maximumScore', $view);
+            $this->assertStringContainsString("$('#tombol_satu').prop('disabled', exceedsMaximum)", $view);
             $this->assertStringContainsString('Lengkapi semua komponen nilai sebelum mengirim penilaian.', $view);
             $this->assertStringContainsString('Nilai atau saran yang diubah belum disimpan. Keluar tanpa menyimpan?', $view);
             $this->assertStringContainsString("window.addEventListener('beforeunload'", $view);

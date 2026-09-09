@@ -36,6 +36,7 @@ class DosenAssessmentInitialScoreTest extends TestCase
         Schema::create('trt_bimbingan', function (Blueprint $table) {
             $table->integer('bimbingan_id')->primary();
             $table->string('C_NPM');
+            $table->integer('jenis_tugas_akhir_id')->nullable();
         });
         Schema::create('trt_reg', function (Blueprint $table) {
             $table->integer('reg_id')->primary();
@@ -51,7 +52,18 @@ class DosenAssessmentInitialScoreTest extends TestCase
             $table->decimal('nilai_4', 5, 2)->nullable();
             $table->decimal('nilai_5', 5, 2)->nullable();
             $table->text('saran')->nullable();
+            $table->timestamps();
         });
+        Schema::create('mst_jenis_tugas_akhir', function (Blueprint $table) {
+            $table->increments('jenis_tugas_akhir_id');
+            $table->string('kode_jenis_tugas_akhir')->unique();
+            $table->decimal('nilai_maksimal', 5, 2)->default(100);
+        });
+
+        DB::table('mst_jenis_tugas_akhir')->insert([
+            ['jenis_tugas_akhir_id' => 1, 'kode_jenis_tugas_akhir' => 'TA-SM', 'nilai_maksimal' => 100],
+            ['jenis_tugas_akhir_id' => 2, 'kode_jenis_tugas_akhir' => 'NS-KT', 'nilai_maksimal' => 80],
+        ]);
 
         DB::table('mig_t_mst_dosen')->insert([
             'C_KODE_DOSEN' => 'DOSEN-01',
@@ -65,6 +77,7 @@ class DosenAssessmentInitialScoreTest extends TestCase
         DB::table('trt_bimbingan')->insert([
             'bimbingan_id' => 10,
             'C_NPM' => '13020230001',
+            'jenis_tugas_akhir_id' => 1,
         ]);
         DB::table('trt_reg')->insert([
             'reg_id' => 20,
@@ -120,6 +133,19 @@ class DosenAssessmentInitialScoreTest extends TestCase
         $this->assertSame('12', $view->getData()['nilai']['nilai_1']);
         $this->assertSame('18', $view->getData()['nilai']['nilai_5']);
         $this->assertSame('Perbaiki daftar pustaka.', $view->getData()['nilai']['saran']);
+    }
+
+    public function testAssessmentFormsUseMaximumScoreFromFinalProjectTypeMaster()
+    {
+        DB::table('trt_bimbingan')->where('bimbingan_id', 10)->update(['jenis_tugas_akhir_id' => 2]);
+
+        $proposalView = (new dosen())->detailhasil_proposal(20);
+        $taView = (new dosen())->detailhasil_ujianmeja(20);
+
+        foreach ([$proposalView, $taView] as $view) {
+            $this->assertSame('NS-KT', $view->getData()['batasNilai']->kode_jenis_tugas_akhir);
+            $this->assertSame(80.0, $view->getData()['batasNilai']->nilai_maksimal);
+        }
     }
 
     public function testEmptyProposalAssessmentShowsUnfilledSliderState()
@@ -185,5 +211,85 @@ class DosenAssessmentInitialScoreTest extends TestCase
         $this->assertSame('20', $savedScores->nilai_3);
         $this->assertSame('18', $savedScores->nilai_4);
         $this->assertSame('18', $savedScores->nilai_5);
+    }
+
+    public function testAssessmentAboveFinalProjectMaximumIsRejectedWithoutChangingSavedScores()
+    {
+        DB::table('trt_bimbingan')->where('bimbingan_id', 10)->update(['jenis_tugas_akhir_id' => 2]);
+
+        $controller = new dosen();
+        $proposalResponse = $controller->detailhasil_proposalpost(new Request([
+            'reg_id' => 20,
+            'nilai_1' => 12,
+            'nilai_2' => 22,
+            'nilai_3' => 20,
+            'nilai_4' => 18,
+            'nilai_5' => 18,
+        ]));
+        $taResponse = $controller->detailhasil_ujianmejapost(new Request([
+            'reg_id' => 20,
+            'nilai_1' => 10,
+            'nilai_2' => 15,
+            'nilai_3' => 20,
+            'nilai_4' => 25,
+            'nilai_5' => 20,
+        ]));
+
+        $expected = 'Total nilai 90 melebihi batas maksimal NS-KT, yaitu 80. Sesuaikan nilai sebelum menyimpan.';
+        $savedScores = DB::table('trt_hasil')
+            ->where('reg_id', 20)
+            ->where('nidn', 'DOSEN-01')
+            ->first(['nilai_1', 'nilai_2', 'nilai_3', 'nilai_4', 'nilai_5']);
+
+        $this->assertSame($expected, $proposalResponse->getSession()->get('error'));
+        $this->assertSame($expected, $taResponse->getSession()->get('error'));
+        $this->assertSame('12', $savedScores->nilai_1);
+        $this->assertSame('22', $savedScores->nilai_2);
+        $this->assertSame('20', $savedScores->nilai_3);
+        $this->assertSame('18', $savedScores->nilai_4);
+        $this->assertSame('18', $savedScores->nilai_5);
+    }
+
+    public function testAssessmentAtFinalProjectMaximumCanBeSaved()
+    {
+        DB::table('trt_bimbingan')->where('bimbingan_id', 10)->update(['jenis_tugas_akhir_id' => 2]);
+
+        $controller = new dosen();
+        $proposalResponse = $controller->detailhasil_proposalpost(new Request([
+            'reg_id' => 20,
+            'nilai_1' => 10,
+            'nilai_2' => 20,
+            'nilai_3' => 15,
+            'nilai_4' => 15,
+            'nilai_5' => 20,
+        ]));
+        $proposalTotal = collect(DB::table('trt_hasil')
+            ->where('reg_id', 20)
+            ->where('nidn', 'DOSEN-01')
+            ->first(['nilai_1', 'nilai_2', 'nilai_3', 'nilai_4', 'nilai_5']))
+            ->sum(function ($score) {
+                return (float) $score;
+            });
+        $taResponse = $controller->detailhasil_ujianmejapost(new Request([
+            'reg_id' => 20,
+            'nilai_1' => 6,
+            'nilai_2' => 10,
+            'nilai_3' => 15,
+            'nilai_4' => 24,
+            'nilai_5' => 25,
+        ]));
+
+        $taTotal = collect(DB::table('trt_hasil')
+            ->where('reg_id', 20)
+            ->where('nidn', 'DOSEN-01')
+            ->first(['nilai_1', 'nilai_2', 'nilai_3', 'nilai_4', 'nilai_5']))
+            ->sum(function ($score) {
+                return (float) $score;
+            });
+
+        $this->assertSame(302, $proposalResponse->getStatusCode());
+        $this->assertSame(302, $taResponse->getStatusCode());
+        $this->assertSame(80.0, $proposalTotal);
+        $this->assertSame(80.0, $taTotal);
     }
 }
