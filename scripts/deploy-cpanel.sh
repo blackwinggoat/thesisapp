@@ -211,6 +211,7 @@ set +e
     "$PHP_BIN" artisan route:clear
     "$PHP_BIN" artisan view:clear
     run_approved_migrations
+    "$PHP_BIN" artisan thesis:audit-honorarium-schedules --strict
 
     if [[ "$WAS_DOWN" -eq 0 ]]; then
         "$PHP_BIN" artisan up --no-interaction < /dev/null

@@ -10,16 +10,20 @@ class HonorariumFinancialSafetyTest extends TestCase
     {
         $migration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_21_070000_add_source_key_to_trt_honorium_table.php');
         $examTypeMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_08_21_083000_add_exam_type_to_trt_honorium_table.php');
+        $scheduleMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_09_09_020000_align_honorarium_with_exact_exam_schedule.php');
         $prodi = file_get_contents(__DIR__ . '/../../app/Http/Controllers/Prodi.php');
 
         $this->assertStringContainsString('$table->string(\'source_key\', 120)->nullable()->unique()', $migration);
         $this->assertStringContainsString('$table->unsignedTinyInteger(\'exam_type\')->nullable()->index()', $examTypeMigration);
+        $this->assertStringContainsString('$table->unsignedInteger(\'jadwal_ujian_id\')->nullable()->index()', $scheduleMigration);
+        $this->assertStringContainsString('trt_honorium_schedule_alignment_audit', $scheduleMigration);
         $this->assertStringContainsString("tipe_ujian IN ('0', '2')", $examTypeMigration);
         $this->assertStringContainsString('createHonorariumForConfirmedExam', $prodi);
         $this->assertStringContainsString('->where(\'jadwal.pendaftaran_id\', $pendaftaranId)', $prodi);
         $this->assertStringContainsString('\'source_key\' => $sourceKey', $prodi);
         $this->assertStringContainsString('\'exam_type\' => (int) $tipeUjian', $prodi);
-        $this->assertStringContainsString('\'date\' => Carbon::parse($tanggalUjian)->toDateString()', $prodi);
+        $this->assertStringContainsString('\'jadwal_ujian_id\' => (int) $jadwalUjian->id', $prodi);
+        $this->assertStringContainsString('\'date\' => Carbon::parse($jadwalUjian->tgl_ujian)->toDateString()', $prodi);
     }
 
     public function testFinancialChangesAreLockedAndPaidRecordsAreProtected()
@@ -41,11 +45,11 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('honorariumDenganJadwalQuery', $keuangan);
         $this->assertStringContainsString('jadwal.tgl_ujian as date', $keuangan);
         $this->assertStringContainsString('honorariumBelumTerhubungJadwalQuery', $keuangan);
-        $this->assertStringContainsString("->join('trt_reg as registrasi'", $keuangan);
-        $this->assertStringContainsString("->join('trt_jadwal_ujian as jadwal'", $keuangan);
-        $this->assertStringContainsString("->join('trt_jadwal_ujian_per_mhs as peserta'", $keuangan);
-        $this->assertStringContainsString("->on('jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id')", $keuangan);
-        $this->assertStringContainsString("->on('peserta.jadwal_ujian', '=', 'jadwal.id')", $keuangan);
+        $this->assertStringContainsString("->join('trt_jadwal_ujian as jadwal', 'jadwal.id', '=', 'honorarium.jadwal_ujian_id')", $keuangan);
+        $this->assertStringContainsString('honorariumMemilikiPesertaJadwal', $keuangan);
+        $this->assertStringContainsString('honorariumMemilikiRegistrasiJadwal', $keuangan);
+        $this->assertStringContainsString('peserta.jadwal_ujian = jadwal.id', $keuangan);
+        $this->assertStringContainsString('registrasi.pendaftaran_id = jadwal.pendaftaran_id', $keuangan);
         $this->assertStringNotContainsString("->leftJoin('trt_jadwal_ujian_per_mhs as peserta'", $keuangan);
         $this->assertStringContainsString("Tidak ada honorarium aktif dengan jadwal ujian pada tanggal", $keuangan);
         $this->assertStringContainsString("return '(' . implode(' OR ', \$conditions) . ')';", $keuangan);

@@ -1830,15 +1830,17 @@ class dosen extends Controller
         ];
 
         $scheduleDateSql = '(SELECT ju.tgl_ujian'
-            . ' FROM trt_reg AS rg'
-            . ' INNER JOIN trt_jadwal_ujian_per_mhs AS jpm ON jpm.C_NPM = rg.C_NPM'
-            . ' INNER JOIN trt_jadwal_ujian AS ju ON ju.id = jpm.jadwal_ujian'
-            . ' AND ju.pendaftaran_id = rg.pendaftaran_id'
-            . ' WHERE rg.C_NPM = honorarium.C_NPM'
-            . ' AND rg.status = honorarium.exam_type'
+            . ' FROM trt_jadwal_ujian AS ju'
+            . ' WHERE ju.id = honorarium.jadwal_ujian_id'
             . ' AND ju.tgl_ujian IS NOT NULL'
             . " AND CAST(ju.tgl_ujian AS CHAR) <> '0000-00-00'"
-            . ' ORDER BY ju.tgl_ujian DESC, ju.id DESC LIMIT 1)';
+            . ' AND EXISTS (SELECT 1 FROM trt_jadwal_ujian_per_mhs AS jpm'
+            . ' WHERE jpm.jadwal_ujian = ju.id AND jpm.C_NPM = honorarium.C_NPM)'
+            . ' AND EXISTS (SELECT 1 FROM trt_reg AS rg'
+            . ' WHERE rg.C_NPM = honorarium.C_NPM'
+            . ' AND rg.status = honorarium.exam_type'
+            . ' AND rg.pendaftaran_id = ju.pendaftaran_id)'
+            . ' LIMIT 1)';
 
         $records = DB::table('trt_honorium as honorarium')
             ->where(function ($query) use ($kodeDosen) {

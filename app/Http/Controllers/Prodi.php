@@ -672,14 +672,16 @@ class Prodi extends Controller
             return;
         }
 
-        $tanggalUjian = DB::table('trt_jadwal_ujian as jadwal')
+        $jadwalUjian = DB::table('trt_jadwal_ujian as jadwal')
             ->join('trt_jadwal_ujian_per_mhs as peserta', 'peserta.jadwal_ujian', '=', 'jadwal.id')
             ->where('jadwal.pendaftaran_id', $pendaftaranId)
             ->where('peserta.C_NPM', $nim)
             ->orderBy('jadwal.tgl_ujian', 'desc')
-            ->value('jadwal.tgl_ujian');
+            ->orderBy('jadwal.id', 'desc')
+            ->select('jadwal.id', 'jadwal.tgl_ujian')
+            ->first();
 
-        if (!$tanggalUjian) {
+        if (!$jadwalUjian) {
             throw new RuntimeException('Jadwal ujian mahasiswa belum ditemukan. Honorarium tidak dibuat agar tanggal pembayaran tidak keliru.');
         }
 
@@ -693,10 +695,11 @@ class Prodi extends Controller
         ];
 
         $payload = [
-            'date' => Carbon::parse($tanggalUjian)->toDateString(),
+            'date' => Carbon::parse($jadwalUjian->tgl_ujian)->toDateString(),
             'C_NPM' => $nim,
             'source_key' => $sourceKey,
             'exam_type' => (int) $tipeUjian,
+            'jadwal_ujian_id' => (int) $jadwalUjian->id,
             'tipe_ujian' => (string) $tipeUjian,
         ];
 

@@ -1340,30 +1340,43 @@ class KeuanganFakultas extends Controller
     {
         return DB::table('trt_honorium as honorarium')
             ->whereRaw($this->honorariumOutstandingSql())
-            ->join('trt_reg as registrasi', function ($join) {
-                $join->on('registrasi.C_NPM', '=', 'honorarium.C_NPM')
-                    ->on('registrasi.status', '=', 'honorarium.exam_type');
-            })
-            ->join('trt_jadwal_ujian as jadwal', 'jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id')
-            ->join('trt_jadwal_ujian_per_mhs as peserta', function ($join) {
-                $join->on('peserta.C_NPM', '=', 'honorarium.C_NPM')
-                    ->on('peserta.jadwal_ujian', '=', 'jadwal.id');
-            });
+            ->join('trt_jadwal_ujian as jadwal', 'jadwal.id', '=', 'honorarium.jadwal_ujian_id')
+            ->where($this->honorariumMemilikiPesertaJadwal())
+            ->where($this->honorariumMemilikiRegistrasiJadwal());
     }
 
     protected function honorariumLunasDenganJadwalQuery()
     {
         return DB::table('trt_honorium as honorarium')
             ->whereRaw($this->honorariumFullyPaidSql())
-            ->join('trt_reg as registrasi', function ($join) {
-                $join->on('registrasi.C_NPM', '=', 'honorarium.C_NPM')
-                    ->on('registrasi.status', '=', 'honorarium.exam_type');
-            })
-            ->join('trt_jadwal_ujian as jadwal', 'jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id')
-            ->join('trt_jadwal_ujian_per_mhs as peserta', function ($join) {
-                $join->on('peserta.C_NPM', '=', 'honorarium.C_NPM')
-                    ->on('peserta.jadwal_ujian', '=', 'jadwal.id');
+            ->join('trt_jadwal_ujian as jadwal', 'jadwal.id', '=', 'honorarium.jadwal_ujian_id')
+            ->where($this->honorariumMemilikiPesertaJadwal())
+            ->where($this->honorariumMemilikiRegistrasiJadwal());
+    }
+
+    protected function honorariumMemilikiPesertaJadwal()
+    {
+        return function ($query) {
+            $query->whereExists(function ($participant) {
+                $participant->select(DB::raw(1))
+                    ->from('trt_jadwal_ujian_per_mhs as peserta')
+                    ->whereRaw('peserta.C_NPM = honorarium.C_NPM')
+                    ->whereRaw('peserta.jadwal_ujian = jadwal.id');
             });
+        };
+    }
+
+    protected function honorariumMemilikiRegistrasiJadwal()
+    {
+        return function ($query) {
+            $query->whereExists(function ($registration) {
+                $registration->select(DB::raw(1))
+                    ->from('trt_reg as registrasi')
+                    ->whereRaw('registrasi.C_NPM = honorarium.C_NPM')
+                    ->whereRaw('registrasi.status = honorarium.exam_type')
+                    ->whereRaw('registrasi.pendaftaran_id = jadwal.pendaftaran_id');
+            });
+        };
     }
 
     protected function honorariumTanggalEfektifSql()
@@ -1378,16 +1391,23 @@ class KeuanganFakultas extends Controller
             ->whereRaw($this->honorariumOutstandingSql())
             ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
-                    ->from('trt_reg as registrasi')
-                    ->join('trt_jadwal_ujian_per_mhs as peserta', 'peserta.C_NPM', '=', 'registrasi.C_NPM')
-                    ->join('trt_jadwal_ujian as jadwal', function ($join) {
-                        $join->on('jadwal.id', '=', 'peserta.jadwal_ujian')
-                            ->on('jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id');
-                    })
-                    ->whereRaw('registrasi.C_NPM = honorarium.C_NPM')
-                    ->whereRaw('registrasi.status = honorarium.exam_type')
+                    ->from('trt_jadwal_ujian as jadwal')
+                    ->whereRaw('jadwal.id = honorarium.jadwal_ujian_id')
                     ->whereNotNull('jadwal.tgl_ujian')
-                    ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'");
+                    ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
+                    ->whereExists(function ($participant) {
+                        $participant->select(DB::raw(1))
+                            ->from('trt_jadwal_ujian_per_mhs as peserta')
+                            ->whereRaw('peserta.C_NPM = honorarium.C_NPM')
+                            ->whereRaw('peserta.jadwal_ujian = jadwal.id');
+                    })
+                    ->whereExists(function ($registration) {
+                        $registration->select(DB::raw(1))
+                            ->from('trt_reg as registrasi')
+                            ->whereRaw('registrasi.C_NPM = honorarium.C_NPM')
+                            ->whereRaw('registrasi.status = honorarium.exam_type')
+                            ->whereRaw('registrasi.pendaftaran_id = jadwal.pendaftaran_id');
+                    });
             });
     }
 

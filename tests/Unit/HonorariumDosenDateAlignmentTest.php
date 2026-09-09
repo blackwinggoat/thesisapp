@@ -13,6 +13,7 @@ class HonorariumDosenDateAlignmentTest extends TestCase
 
         $this->assertStringContainsString('schedule_date', $controller);
         $this->assertStringContainsString('ju.tgl_ujian', $controller);
+        $this->assertStringContainsString('ju.id = honorarium.jadwal_ujian_id', $controller);
         $this->assertStringContainsString('rg.status = honorarium.exam_type', $controller);
         $this->assertStringContainsString('honorarium_date', $controller);
         $this->assertStringContainsString('has_schedule', $controller);
