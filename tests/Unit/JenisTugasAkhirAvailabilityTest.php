@@ -30,5 +30,11 @@ class JenisTugasAkhirAvailabilityTest extends TestCase
         $this->assertStringContainsString('Nilai Maksimal', $masterView);
         $this->assertStringContainsString('name="nilai_maksimal"', $masterView);
         $this->assertStringContainsString('showEditJenisTugasAkhir', $masterView);
+        $this->assertStringContainsString('class="the-box jenis-ta-form-box"', $masterView);
+        $this->assertStringContainsString('class="jenis-ta-form-body"', $masterView);
+        $this->assertStringContainsString('class="jenis-ta-switch"', $masterView);
+        $this->assertStringContainsString('<span class="input-group-addon">poin</span>', $masterView);
+        $this->assertStringContainsString("$(modalId).modal('show')", $masterView);
+        $this->assertStringNotContainsString('<br><br>', $masterView);
     }
 }
