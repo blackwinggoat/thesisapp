@@ -11,6 +11,7 @@ REMOTE_PATH="${FIXTURE_ROOT}/remote.git"
 BIN_PATH="${FIXTURE_ROOT}/bin"
 CURL_LOG="${FIXTURE_ROOT}/curl.log"
 POLL_COUNT="${FIXTURE_ROOT}/poll-count"
+RETRIEVE_COUNT="${FIXTURE_ROOT}/retrieve-count"
 
 mkdir -p "${WORK_PATH}/scripts" "$BIN_PATH"
 cp "${PROJECT_ROOT}/scripts/deploy-production.sh" "${WORK_PATH}/scripts/deploy-production.sh"
@@ -57,6 +58,14 @@ case "$*" in
         printf '{"status":1,"data":[{"deploy_id":12,"repository_state":{"identifier":"%s"},"timestamps":{"succeeded":1}}],"errors":null}\n' "$TEST_SHA"
         ;;
     *'/execute/VersionControl/retrieve'*)
+        retrieve_count=0
+        [[ ! -f "$TEST_RETRIEVE_COUNT" ]] || retrieve_count=$(cat "$TEST_RETRIEVE_COUNT")
+        retrieve_count=$((retrieve_count + 1))
+        printf '%s\n' "$retrieve_count" > "$TEST_RETRIEVE_COUNT"
+        if [[ "$retrieve_count" -eq 1 ]]; then
+            printf '<html><head><META HTTP-EQUIV="refresh" CONTENT="2"></head></html>\n'
+            exit 0
+        fi
         printf '{"status":1,"data":[{"repository_root":"/home/thesisapp/repositories/thesisapp","last_update":{"identifier":"%s"},"last_deployment":{"repository_state":{"identifier":"%s"},"timestamps":{"succeeded":1}}}],"errors":null}\n' "$TEST_SHA" "$TEST_SHA"
         ;;
     *)
@@ -68,6 +77,7 @@ chmod +x "${BIN_PATH}/curl"
 
 export TEST_CURL_LOG="$CURL_LOG"
 export TEST_POLL_COUNT="$POLL_COUNT"
+export TEST_RETRIEVE_COUNT="$RETRIEVE_COUNT"
 export TEST_SHA
 export THESISAPPS_CPANEL_API_TOKEN=dummy_cpanel_token_1234567890
 export PATH="${BIN_PATH}:${PATH}"

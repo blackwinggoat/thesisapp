@@ -146,9 +146,20 @@ try_api_call() {
 }
 
 api_call() {
-    if try_api_call "$@"; then
-        return
-    fi
+    local attempt
+    local status
+
+    for attempt in 1 2 3 4 5 6; do
+        if try_api_call "$@"; then
+            return
+        else
+            status=$?
+        fi
+
+        [[ "$status" -ne 2 ]] || fail "$API_ERROR"
+        [[ "$attempt" -lt 6 ]] || break
+        sleep 2
+    done
 
     fail "$API_ERROR"
 }
