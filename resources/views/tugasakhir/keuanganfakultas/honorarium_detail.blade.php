@@ -365,7 +365,7 @@
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
                 <li><a href="{{ url('/') }}">Home</a></li>
-                <li><a href="{{ route($homeRoute) }}">{{ $isAkademikHonorarium ? 'Penetapan Honorarium' : 'Honorarium' }}</a></li>
+                <li><a href="{{ route($homeRoute) }}">{{ $isAkademikHonorarium ? 'Verifikasi Honorarium' : 'Honorarium' }}</a></li>
                 <li class="active">{{ $date }}</li>
             </ol>
             <!-- End breadcrumb -->
@@ -380,7 +380,7 @@
             <!-- BEGIN DATA TABLE -->
             <div class="honorarium-page-header">
                 <div>
-                    <h3 class="honorarium-page-title">{{ $isAkademikHonorarium ? 'Penetapan Honorarium' : 'Honorarium' }}</h3>
+                    <h3 class="honorarium-page-title">{{ $isAkademikHonorarium ? 'Verifikasi Honorarium' : 'Honorarium' }}</h3>
                     <span class="honorarium-page-date"><i class="fa fa-calendar"></i> {{ date('d/m/Y', strtotime($date)) }}</span>
                 </div>
                 <a href="{{ route($homeRoute) }}" class="btn btn-default">

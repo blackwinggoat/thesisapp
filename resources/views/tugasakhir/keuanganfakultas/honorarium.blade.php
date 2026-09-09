@@ -13,7 +13,7 @@
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
                 <li><a href="{{ url('/') }}">Home</a></li>
-                <li class="active">{{ $isAkademikHonorarium ? 'Penetapan Honorarium' : 'Honorarium' }}</li>
+                <li class="active">{{ $isAkademikHonorarium ? 'Verifikasi Honorarium' : 'Honorarium' }}</li>
             </ol>
 
             @if (session('status'))
@@ -25,7 +25,7 @@
 
             <div class="clearfix">
                 <h3 class="page-heading pull-left">
-                    {{ $isAkademikHonorarium ? 'Penetapan Tipe Honorarium per Tanggal Ujian' : 'Manajemen Honorarium per Tanggal Ujian' }}
+                    {{ $isAkademikHonorarium ? 'Verifikasi Honorarium per Tanggal Ujian' : 'Manajemen Honorarium per Tanggal Ujian' }}
                 </h3>
                 @if (!$isAkademikHonorarium)
                     <a href="{{ route('honorarium_history') }}" class="btn btn-primary pull-right" style="margin-top: 20px;">

@@ -19,7 +19,7 @@ class KeuanganHonorariumDateGroupingTest extends TestCase
         $this->assertStringContainsString("Route::get('/tanggal/{date}'", $routes);
         $this->assertStringContainsString('Manajemen Honorarium per Tanggal Ujian', $summary);
         $this->assertStringContainsString('Kelola Mahasiswa', $summary);
-        $this->assertStringContainsString("{{ \$isAkademikHonorarium ? 'Penetapan Honorarium' : 'Honorarium' }}", $detail);
+        $this->assertStringContainsString("{{ \$isAkademikHonorarium ? 'Verifikasi Honorarium' : 'Honorarium' }}", $detail);
         $this->assertStringContainsString("{{ date('d/m/Y', strtotime(\$date)) }}", $detail);
         $this->assertStringContainsString('@foreach ($data as $honorarium)', $detail);
     }

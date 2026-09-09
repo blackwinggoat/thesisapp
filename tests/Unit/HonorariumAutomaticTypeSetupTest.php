@@ -75,9 +75,9 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString('renderHonorariumDetailTanggal', $controller);
         $this->assertStringContainsString("'honorariumMode' => \$honorariumMode", $controller);
         $this->assertStringContainsString("Route::group(['prefix' => 'fakultas/honorarium']", $routes);
-        $this->assertStringContainsString('Penetapan Honorarium', $sidebar);
+        $this->assertStringContainsString('Verifikasi Honorarium', $sidebar);
         $this->assertStringContainsString('$isAkademikHonorarium', $summary);
-        $this->assertStringContainsString("{{ \$isAkademikHonorarium ? 'Penetapan Tipe Honorarium per Tanggal Ujian' : 'Manajemen Honorarium per Tanggal Ujian' }}", $summary);
+        $this->assertStringContainsString("{{ \$isAkademikHonorarium ? 'Verifikasi Honorarium per Tanggal Ujian' : 'Manajemen Honorarium per Tanggal Ujian' }}", $summary);
         $this->assertStringContainsString("@if (!\$isAkademikHonorarium)", $summary);
         $this->assertStringContainsString('Type Mahasiswa', $summary);
         $this->assertStringContainsString('total_reguler', $summary);
@@ -116,7 +116,7 @@ class HonorariumAutomaticTypeSetupTest extends TestCase
         $this->assertStringContainsString("{{ \$honorarium->mahasiswa_eksekutif ? 'Eksekutif' : 'Reguler' }}", $detail);
         $this->assertStringContainsString('@else', $detail);
         $this->assertStringContainsString('<strong>{{ $honorarium->tipe_ujian }}</strong>', $detail);
-        $this->assertStringContainsString('Penetapan tipe honorarium dilakukan oleh Akademik Prodi.', $controller);
+        $this->assertStringContainsString('Verifikasi tipe dan kehadiran pembimbing dilakukan oleh Akademik Prodi.', $controller);
     }
 
     public function testAutomaticPaymentNameFollowsExamProposalDecreeAndClassRules()

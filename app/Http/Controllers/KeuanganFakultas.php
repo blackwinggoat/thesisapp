@@ -1665,7 +1665,7 @@ class KeuanganFakultas extends Controller
         if (auth()->check() && (int) auth()->user()->level === 9) {
             return redirect()->back()->with([
                 'status' => 'danger',
-                'message' => 'Penetapan tipe honorarium dilakukan oleh Akademik Prodi.',
+                'message' => 'Verifikasi tipe dan kehadiran pembimbing dilakukan oleh Akademik Prodi.',
             ]);
         }
 

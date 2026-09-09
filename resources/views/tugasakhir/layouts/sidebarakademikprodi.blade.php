@@ -66,7 +66,7 @@
         <li>
             <a href="{{ route('honorarium_penetapan_home') }}">
                 <i class="fa fa-tags icon-sidebar"></i>
-                Penetapan Honorarium
+                Verifikasi Honorarium
             </a>
         </li>
         <li>
