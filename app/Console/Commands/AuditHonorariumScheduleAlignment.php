@@ -21,6 +21,7 @@ class AuditHonorariumScheduleAlignment extends Command
             'trt_reg',
             'trt_jadwal_ujian',
             'trt_jadwal_ujian_per_mhs',
+            'mst_pendaftaran',
         ];
         foreach ($requiredTables as $table) {
             if (!Schema::hasTable($table)) {
@@ -64,6 +65,11 @@ class AuditHonorariumScheduleAlignment extends Command
             })
             ->count();
         $sourcePeriodMismatch = $this->sourcePeriodMismatchCount();
+        $schedulePeriodTypeMismatch = DB::table('trt_honorium as honorarium')
+            ->join('trt_jadwal_ujian as jadwal', 'jadwal.id', '=', 'honorarium.jadwal_ujian_id')
+            ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
+            ->whereRaw('periode.tipe_ujian <> honorarium.exam_type')
+            ->count();
         $alignmentAuditRows = Schema::hasTable('trt_honorium_schedule_alignment_audit')
             ? DB::table('trt_honorium_schedule_alignment_audit')->count()
             : 0;
@@ -85,6 +91,7 @@ class AuditHonorariumScheduleAlignment extends Command
             'invalid_schedule_links' => $invalid,
             'stored_date_mismatches' => $dateMismatch,
             'source_period_mismatches' => $sourcePeriodMismatch,
+            'schedule_period_type_mismatches' => $schedulePeriodTypeMismatch,
         ];
 
         if ($this->option('json')) {
@@ -95,7 +102,10 @@ class AuditHonorariumScheduleAlignment extends Command
             })->values()->all());
         }
 
-        $failed = $invalid > 0 || $dateMismatch > 0 || $sourcePeriodMismatch > 0;
+        $failed = $invalid > 0
+            || $dateMismatch > 0
+            || $sourcePeriodMismatch > 0
+            || $schedulePeriodTypeMismatch > 0;
         if ($failed) {
             $this->error('Audit failed: a linked honorarium record is not aligned with its exact exam schedule.');
 
@@ -118,6 +128,12 @@ class AuditHonorariumScheduleAlignment extends Command
                 ->whereRaw('jadwal_validasi.id = ' . $alias . '.jadwal_ujian_id')
                 ->whereNotNull('jadwal_validasi.tgl_ujian')
                 ->whereRaw("CAST(jadwal_validasi.tgl_ujian AS CHAR) <> '0000-00-00'")
+                ->whereExists(function ($period) use ($alias) {
+                    $period->select(DB::raw(1))
+                        ->from('mst_pendaftaran as periode_validasi')
+                        ->whereRaw('periode_validasi.pendaftaran_id = jadwal_validasi.pendaftaran_id')
+                        ->whereRaw('periode_validasi.tipe_ujian = ' . $alias . '.exam_type');
+                })
                 ->whereExists(function ($participant) use ($alias) {
                     $participant->select(DB::raw(1))
                         ->from('trt_jadwal_ujian_per_mhs as peserta_validasi')

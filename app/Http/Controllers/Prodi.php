@@ -674,8 +674,10 @@ class Prodi extends Controller
 
         $jadwalUjian = DB::table('trt_jadwal_ujian as jadwal')
             ->join('trt_jadwal_ujian_per_mhs as peserta', 'peserta.jadwal_ujian', '=', 'jadwal.id')
+            ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
             ->where('jadwal.pendaftaran_id', $pendaftaranId)
             ->where('peserta.C_NPM', $nim)
+            ->where('periode.tipe_ujian', $tipeUjian)
             ->orderBy('jadwal.tgl_ujian', 'desc')
             ->orderBy('jadwal.id', 'desc')
             ->select('jadwal.id', 'jadwal.tgl_ujian')
@@ -4672,32 +4674,116 @@ class Prodi extends Controller
 
     public function ubah_periode_pendaftaran(Request $request)
     {
-
         try {
-            for ($i = 0; $i < count($request->C_NPM); $i++) {
-                DB::table('trt_reg')->where('C_NPM', $request->C_NPM[$i])->update([
-                    "pendaftaran_id" => $request->pindah_periode[$i],
-                ]);
+            $registrationIds = array_values((array) $request->input('reg_id', []));
+            $studentIds = array_values((array) $request->input('C_NPM', []));
+            $sourcePeriodIds = array_values((array) $request->input('pendaftaran_asal', []));
+            $targetPeriodIds = array_values((array) $request->input('pindah_periode', []));
+            $examType = (int) $request->input('tipe_ujian', -1);
+            $rowCount = count($registrationIds);
+
+            if (!in_array($examType, [0, 2], true)
+                || $rowCount < 1
+                || count($studentIds) !== $rowCount
+                || count($sourcePeriodIds) !== $rowCount
+                || count($targetPeriodIds) !== $rowCount
+            ) {
+                throw new RuntimeException('Data pemindahan periode tidak lengkap atau tidak valid.');
             }
 
+            $touchedPeriodIds = DB::transaction(function () use (
+                $registrationIds,
+                $studentIds,
+                $sourcePeriodIds,
+                $targetPeriodIds,
+                $examType,
+                $rowCount
+            ) {
+                $touched = [];
+                $allowedStatusProdi = auth()->check()
+                    ? $this->getProdiScope()['status_prodi']
+                    : null;
 
-            foreach (helper::getPeriodePendaftaranByStatusUjian($request->status_ujian, $request->tipe_ujian) as $item) {
-                $data_pendaftar = DB::table('trt_reg')
-                    ->select('*')
-                    ->where('pendaftaran_id', $item->pendaftaran_id)
-                    ->get();
+                for ($i = 0; $i < $rowCount; $i++) {
+                    $registrationId = (int) $registrationIds[$i];
+                    $studentId = trim((string) $studentIds[$i]);
+                    $sourcePeriodId = (int) $sourcePeriodIds[$i];
+                    $targetPeriodId = (int) $targetPeriodIds[$i];
 
-                DB::table('mst_pendaftaran')->where('pendaftaran_id', $item->pendaftaran_id)->update([
-                    "jml_peserta" => count($data_pendaftar),
-                ]);
-            }
+                    if ($registrationId < 1 || $studentId === '' || $sourcePeriodId < 1 || $targetPeriodId < 1) {
+                        throw new RuntimeException('Salah satu data peserta tidak valid.');
+                    }
 
-            return redirect()->back();
-        } catch (Exception $e) {
-            return $e;
+                    $periods = DB::table('mst_pendaftaran')
+                        ->whereIn('pendaftaran_id', array_values(array_unique([$sourcePeriodId, $targetPeriodId])))
+                        ->lockForUpdate()
+                        ->get()
+                        ->keyBy('pendaftaran_id');
+                    $sourcePeriod = $periods->get($sourcePeriodId);
+                    $targetPeriod = $periods->get($targetPeriodId);
+
+                    if (!$sourcePeriod || !$targetPeriod
+                        || (int) $sourcePeriod->tipe_ujian !== $examType
+                        || (int) $targetPeriod->tipe_ujian !== $examType
+                        || (int) $sourcePeriod->status_prodi !== (int) $targetPeriod->status_prodi
+                        || (!is_null($allowedStatusProdi) && (int) $sourcePeriod->status_prodi !== (int) $allowedStatusProdi)
+                    ) {
+                        throw new RuntimeException('Periode tujuan harus berasal dari program studi dan jenis ujian yang sama.');
+                    }
+
+                    $registration = DB::table('trt_reg')
+                        ->where('reg_id', $registrationId)
+                        ->where('C_NPM', $studentId)
+                        ->where('pendaftaran_id', $sourcePeriodId)
+                        ->where('status', $examType)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$registration) {
+                        throw new RuntimeException('Pendaftaran peserta telah berubah. Muat ulang halaman sebelum mencoba kembali.');
+                    }
+
+                    if ($sourcePeriodId !== $targetPeriodId) {
+                        DB::table('trt_reg')
+                            ->where('reg_id', $registrationId)
+                            ->where('pendaftaran_id', $sourcePeriodId)
+                            ->update(['pendaftaran_id' => $targetPeriodId]);
+                    }
+
+                    $touched[$sourcePeriodId] = true;
+                    $touched[$targetPeriodId] = true;
+                }
+
+                foreach (array_keys($touched) as $periodId) {
+                    DB::table('mst_pendaftaran')
+                        ->where('pendaftaran_id', $periodId)
+                        ->update([
+                            'jml_peserta' => DB::table('trt_reg')
+                                ->where('pendaftaran_id', $periodId)
+                                ->count(),
+                        ]);
+                }
+
+                return array_keys($touched);
+            });
+
+            return redirect()->back()->with([
+                'status' => 'success',
+                'message' => count($touchedPeriodIds) . ' periode berhasil diperbarui tanpa mengubah riwayat ujian lain.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Pemindahan periode pendaftaran ditolak.', [
+                'message' => $e->getMessage(),
+                'user_id' => auth()->check() ? auth()->id() : null,
+            ]);
+
+            return redirect()->back()->with([
+                'status' => 'error',
+                'message' => $e instanceof RuntimeException
+                    ? $e->getMessage()
+                    : 'Periode peserta tidak dapat diubah. Silakan coba kembali.',
+            ]);
         }
-
-        return $request;
     }
 
     public function jadwalPerMhs($tipe_ujian)

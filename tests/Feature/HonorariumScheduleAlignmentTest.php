@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\KeuanganFakultas;
+use App\Http\Controllers\Prodi;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -40,6 +42,13 @@ class HonorariumScheduleAlignmentTest extends TestCase
             $table->integer('pendaftaran_id')->index();
             $table->integer('status')->nullable();
             $table->string('C_NPM', 20);
+        });
+        Schema::create('mst_pendaftaran', function (Blueprint $table) {
+            $table->increments('pendaftaran_id');
+            $table->integer('tipe_ujian');
+            $table->integer('status_prodi')->default(1);
+            $table->integer('status_ujian')->default(0);
+            $table->integer('jml_peserta')->default(0);
         });
         Schema::create('trt_jadwal_ujian', function (Blueprint $table) {
             $table->increments('id');
@@ -123,6 +132,17 @@ class HonorariumScheduleAlignmentTest extends TestCase
         ]);
         $this->runMigration();
 
+        $this->insertExam('student-wrong-type', 0, 501, 51, '2026-08-25');
+        DB::table('trt_reg')->where('C_NPM', 'student-wrong-type')->update(['status' => 2]);
+        DB::table('trt_honorium')->insert([
+            'id' => 7,
+            'date' => '2026-08-25',
+            'C_NPM' => 'student-wrong-type',
+            'exam_type' => 2,
+            'jadwal_ujian_id' => 51,
+            'KS' => 'lecturer-1',
+        ]);
+
         DB::table('trt_reg')->insert([
             'pendaftaran_id' => 500,
             'status' => 2,
@@ -152,6 +172,89 @@ class HonorariumScheduleAlignmentTest extends TestCase
         $this->assertSame('2026-08-25', $rows->first()->tgl_ujian);
     }
 
+    public function testCorrectionRepairsOnlyAUniqueScheduleOfTheSameExamType()
+    {
+        $this->insertExam('student-corrupt', 0, 700, 70, '2026-07-30');
+        $this->insertExam('student-corrupt', 2, 701, 71, '2026-08-18');
+        DB::table('trt_reg')
+            ->where('C_NPM', 'student-corrupt')
+            ->where('status', 0)
+            ->update(['pendaftaran_id' => 701]);
+        DB::table('trt_honorium')->insert([
+            'id' => 8,
+            'date' => '2026-08-18',
+            'C_NPM' => 'student-corrupt',
+            'exam_type' => 0,
+            'KS' => 'lecturer-1',
+        ]);
+
+        $this->runMigration();
+        $this->assertNull(DB::table('trt_honorium')->where('id', 8)->value('jadwal_ujian_id'));
+
+        DB::table('trt_honorium')->where('id', 8)->update(['jadwal_ujian_id' => 71]);
+        $this->runCorrectionMigration();
+
+        $honorarium = DB::table('trt_honorium')->where('id', 8)->first();
+        $this->assertSame(70, (int) $honorarium->jadwal_ujian_id);
+        $this->assertSame('2026-07-30', $honorarium->date);
+        $this->assertDatabaseHas('trt_reg', [
+            'C_NPM' => 'student-corrupt',
+            'status' => 0,
+            'pendaftaran_id' => 700,
+        ]);
+        $this->assertDatabaseHas('trt_reg', [
+            'C_NPM' => 'student-corrupt',
+            'status' => 2,
+            'pendaftaran_id' => 701,
+        ]);
+        $this->assertDatabaseHas('trt_honorium_schedule_type_correction_audit', [
+            'honorarium_id' => 8,
+            'original_schedule_id' => 71,
+            'correct_schedule_id' => 70,
+            'original_period_id' => 701,
+            'correct_period_id' => 700,
+        ]);
+        $this->assertSame(0, Artisan::call('thesis:audit-honorarium-schedules', [
+            '--strict' => true,
+            '--json' => true,
+        ]));
+    }
+
+    public function testMovingFinalExamPeriodDoesNotOverwriteProposalRegistration()
+    {
+        DB::table('mst_pendaftaran')->insert([
+            ['pendaftaran_id' => 800, 'tipe_ujian' => 0, 'status_prodi' => 1, 'jml_peserta' => 1],
+            ['pendaftaran_id' => 801, 'tipe_ujian' => 2, 'status_prodi' => 1, 'jml_peserta' => 1],
+            ['pendaftaran_id' => 802, 'tipe_ujian' => 2, 'status_prodi' => 1, 'jml_peserta' => 0],
+        ]);
+        DB::table('trt_reg')->insert([
+            ['reg_id' => 80, 'pendaftaran_id' => 800, 'status' => 0, 'C_NPM' => 'student-move'],
+            ['reg_id' => 81, 'pendaftaran_id' => 801, 'status' => 2, 'C_NPM' => 'student-move'],
+        ]);
+        $request = Request::create('/prodi/ubah_periode_pendaftaran', 'POST', [
+            'reg_id' => [81],
+            'C_NPM' => ['student-move'],
+            'pendaftaran_asal' => [801],
+            'pindah_periode' => [802],
+            'tipe_ujian' => 2,
+        ]);
+
+        (new Prodi)->ubah_periode_pendaftaran($request);
+
+        $this->assertDatabaseHas('trt_reg', [
+            'reg_id' => 80,
+            'pendaftaran_id' => 800,
+            'status' => 0,
+        ]);
+        $this->assertDatabaseHas('trt_reg', [
+            'reg_id' => 81,
+            'pendaftaran_id' => 802,
+            'status' => 2,
+        ]);
+        $this->assertSame(0, (int) DB::table('mst_pendaftaran')->where('pendaftaran_id', 801)->value('jml_peserta'));
+        $this->assertSame(1, (int) DB::table('mst_pendaftaran')->where('pendaftaran_id', 802)->value('jml_peserta'));
+    }
+
     public function testStrictAuditRejectsAStoredDateThatDiffersFromTheLinkedSchedule()
     {
         $this->insertExam('student-audit', 2, 600, 60, '2026-08-26');
@@ -179,6 +282,10 @@ class HonorariumScheduleAlignmentTest extends TestCase
 
     private function insertExam($nim, $examType, $periodId, $scheduleId, $date)
     {
+        DB::table('mst_pendaftaran')->updateOrInsert(
+            ['pendaftaran_id' => $periodId],
+            ['tipe_ujian' => $examType, 'status_prodi' => 1]
+        );
         DB::table('trt_reg')->insert([
             'pendaftaran_id' => $periodId,
             'status' => $examType,
@@ -199,5 +306,11 @@ class HonorariumScheduleAlignmentTest extends TestCase
     {
         require_once __DIR__ . '/../../database/migrations/2026_09_09_020000_align_honorarium_with_exact_exam_schedule.php';
         (new \AlignHonorariumWithExactExamSchedule)->up();
+    }
+
+    private function runCorrectionMigration()
+    {
+        require_once __DIR__ . '/../../database/migrations/2026_09_09_030000_correct_honorarium_schedule_type_alignment.php';
+        (new \CorrectHonorariumScheduleTypeAlignment)->up();
     }
 }

@@ -1834,6 +1834,9 @@ class dosen extends Controller
             . ' WHERE ju.id = honorarium.jadwal_ujian_id'
             . ' AND ju.tgl_ujian IS NOT NULL'
             . " AND CAST(ju.tgl_ujian AS CHAR) <> '0000-00-00'"
+            . ' AND EXISTS (SELECT 1 FROM mst_pendaftaran AS mp'
+            . ' WHERE mp.pendaftaran_id = ju.pendaftaran_id'
+            . ' AND mp.tipe_ujian = honorarium.exam_type)'
             . ' AND EXISTS (SELECT 1 FROM trt_jadwal_ujian_per_mhs AS jpm'
             . ' WHERE jpm.jadwal_ujian = ju.id AND jpm.C_NPM = honorarium.C_NPM)'
             . ' AND EXISTS (SELECT 1 FROM trt_reg AS rg'

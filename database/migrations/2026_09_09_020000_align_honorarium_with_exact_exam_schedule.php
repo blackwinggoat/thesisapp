@@ -33,7 +33,8 @@ class AlignHonorariumWithExactExamSchedule extends Migration
 
         if (!Schema::hasTable('trt_reg')
             || !Schema::hasTable('trt_jadwal_ujian')
-            || !Schema::hasTable('trt_jadwal_ujian_per_mhs')) {
+            || !Schema::hasTable('trt_jadwal_ujian_per_mhs')
+            || !Schema::hasTable('mst_pendaftaran')) {
             return;
         }
 
@@ -43,12 +44,14 @@ class AlignHonorariumWithExactExamSchedule extends Migration
                     ->on('registrasi.status', '=', 'honorarium.exam_type');
             })
             ->join('trt_jadwal_ujian as jadwal', 'jadwal.pendaftaran_id', '=', 'registrasi.pendaftaran_id')
+            ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
             ->join('trt_jadwal_ujian_per_mhs as peserta', function ($join) {
                 $join->on('peserta.C_NPM', '=', 'honorarium.C_NPM')
                     ->on('peserta.jadwal_ujian', '=', 'jadwal.id');
             })
             ->whereNull('honorarium.jadwal_ujian_id')
             ->whereNotNull('honorarium.exam_type')
+            ->whereRaw('periode.tipe_ujian = honorarium.exam_type')
             ->whereNotNull('jadwal.tgl_ujian')
             ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
             ->select(

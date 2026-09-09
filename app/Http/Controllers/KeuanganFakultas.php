@@ -1341,6 +1341,8 @@ class KeuanganFakultas extends Controller
         return DB::table('trt_honorium as honorarium')
             ->whereRaw($this->honorariumOutstandingSql())
             ->join('trt_jadwal_ujian as jadwal', 'jadwal.id', '=', 'honorarium.jadwal_ujian_id')
+            ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
+            ->whereRaw('periode.tipe_ujian = honorarium.exam_type')
             ->where($this->honorariumMemilikiPesertaJadwal())
             ->where($this->honorariumMemilikiRegistrasiJadwal());
     }
@@ -1350,6 +1352,8 @@ class KeuanganFakultas extends Controller
         return DB::table('trt_honorium as honorarium')
             ->whereRaw($this->honorariumFullyPaidSql())
             ->join('trt_jadwal_ujian as jadwal', 'jadwal.id', '=', 'honorarium.jadwal_ujian_id')
+            ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
+            ->whereRaw('periode.tipe_ujian = honorarium.exam_type')
             ->where($this->honorariumMemilikiPesertaJadwal())
             ->where($this->honorariumMemilikiRegistrasiJadwal());
     }
@@ -1395,6 +1399,12 @@ class KeuanganFakultas extends Controller
                     ->whereRaw('jadwal.id = honorarium.jadwal_ujian_id')
                     ->whereNotNull('jadwal.tgl_ujian')
                     ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
+                    ->whereExists(function ($period) {
+                        $period->select(DB::raw(1))
+                            ->from('mst_pendaftaran as periode_validasi')
+                            ->whereRaw('periode_validasi.pendaftaran_id = jadwal.pendaftaran_id')
+                            ->whereRaw('periode_validasi.tipe_ujian = honorarium.exam_type');
+                    })
                     ->whereExists(function ($participant) {
                         $participant->select(DB::raw(1))
                             ->from('trt_jadwal_ujian_per_mhs as peserta')

@@ -61,15 +61,17 @@
 
                             @forelse($data as $i => $d)
                             <tr class="odd gradeX">
-                                <input type="hidden" name="C_NPM[]" value="{{$d->C_NPM}}">
                                 <td width="1%" align="center">{{++$i}}</td>
-                                <td>{{$d->C_NPM}}</td>
+                                <td>
+                                    {{$d->C_NPM}}
+                                    <input type="hidden" name="reg_id[]" value="{{$d->reg_id}}">
+                                    <input type="hidden" name="C_NPM[]" value="{{$d->C_NPM}}">
+                                    <input type="hidden" name="pendaftaran_asal[]" value="{{$d->pendaftaran_id}}">
+                                </td>
                                 <td>{{$d->NAMA_MAHASISWA}}</td>
                                 <td>{{$d->judul}}</td>
                                 <td>{{ helper::getNamaDosenByKode($d->pembimbing_I_id) }}</td>
                                 <td>{{ helper::getNamaDosenByKode($d->pembimbing_II_id) }}</td>
-                                <input type="hidden" name="status_ujian" value="{{$d->status_ujian}}">
-                                <input type="hidden" name="tipe_ujian" value="{{$info[0]->tipe_ujian}}">
                                 <td>
                                     <select class="form-control" name="pindah_periode[]" id="">
                                         <option value="{{$d->pendaftaran_id}}">Periode Yang Sama</option>
@@ -93,6 +95,8 @@
                     </table>
                 </div>
                 @if(count($data) > 0)
+                <input type="hidden" name="status_ujian" value="{{$info[0]->status_ujian}}">
+                <input type="hidden" name="tipe_ujian" value="{{$info[0]->tipe_ujian}}">
                 <input type="submit" value="Ubah Periode" class="btn btn-info">
                 @endif
             </form>
