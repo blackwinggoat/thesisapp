@@ -682,8 +682,7 @@ class KeuanganFakultas extends Controller
     protected function honorarium_tanda_terima_pdf_dengan_status(Request $request, $riwayat)
     {
         $redirectRoute = $riwayat ? 'honorarium_history' : 'honorarium_home';
-        $statusDibutuhkan = $riwayat ? 3 : 1;
-        $statusLabel = $riwayat ? 'Terbayar' : 'Available';
+        $statusLabel = $riwayat ? 'Terbayar' : 'belum terbayar';
         $tanggalInput = collect((array) $request->input('tanggal'))
             ->map(function ($tanggal) {
                 return trim((string) $tanggal);
@@ -762,7 +761,10 @@ class KeuanganFakultas extends Controller
             );
             foreach ($peranHonorarium as $role => $definition) {
                 $kodeDosen = trim((string) $honorarium->{$role});
-                if ($kodeDosen === '' || (int) $honorarium->{$definition['status']} !== $statusDibutuhkan) {
+                if ($kodeDosen === '' || !$this->honorariumStatusDapatDicetak(
+                    (int) $honorarium->{$definition['status']},
+                    $riwayat
+                )) {
                     continue;
                 }
 
@@ -882,6 +884,15 @@ class KeuanganFakultas extends Controller
             ->setPaper('a4', 'portrait');
 
         return $this->tambahParafDosenKePdf($pdf)->download($namaFile);
+    }
+
+    protected function honorariumStatusDapatDicetak($status, $riwayat)
+    {
+        if ($riwayat) {
+            return (int) $status === 3;
+        }
+
+        return in_array((int) $status, [0, 1], true);
     }
 
     protected function tambahParafDosenKePdf($pdf)

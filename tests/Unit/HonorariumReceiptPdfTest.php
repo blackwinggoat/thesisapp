@@ -38,7 +38,9 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString('if (!$riwayat && $belumDitetapkan > 0)', $controller);
         $this->assertStringContainsString("'KS' => ['label' => 'Ketua Sidang', 'amount' => 'KS_H', 'status' => 'KS_Stat']", $controller);
         $this->assertStringContainsString("'P3' => ['label' => 'Penguji III', 'amount' => 'P3_H', 'status' => 'P3_Stat']", $controller);
-        $this->assertStringContainsString("(int) \$honorarium->{\$definition['status']} !== \$statusDibutuhkan", $controller);
+        $this->assertStringContainsString('honorariumStatusDapatDicetak(', $controller);
+        $this->assertStringContainsString('return in_array((int) $status, [0, 1], true);', $controller);
+        $this->assertStringContainsString('return (int) $status === 3;', $controller);
         $this->assertStringContainsString("'Tidak ada honorarium berstatus ' . \$statusLabel", $controller);
         $this->assertStringContainsString("Route::post('/tanda-terima-pdf'", $routes);
         $this->assertStringContainsString("Route::post('/history/tanda-terima-pdf'", $routes);
@@ -82,6 +84,20 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString('page-break-after: always', $pdfView);
         $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $pdfView);
         $this->assertStringContainsString("publicImageDataUri('images/branding/fikom-pdf.jpg')", $pdfView);
+    }
+
+    public function testCurrentPdfAcceptsUnavailableAndAvailableButNotPaidStatuses()
+    {
+        $controller = new \App\Http\Controllers\KeuanganFakultas;
+        $method = new \ReflectionMethod($controller, 'honorariumStatusDapatDicetak');
+        $method->setAccessible(true);
+
+        $this->assertTrue($method->invoke($controller, 0, false));
+        $this->assertTrue($method->invoke($controller, 1, false));
+        $this->assertFalse($method->invoke($controller, 3, false));
+        $this->assertFalse($method->invoke($controller, 0, true));
+        $this->assertFalse($method->invoke($controller, 1, true));
+        $this->assertTrue($method->invoke($controller, 3, true));
     }
 
     public function testAdvisorAttendancePenaltyMovesHonorToPresentCounterpart()
