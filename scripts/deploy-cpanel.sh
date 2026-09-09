@@ -212,6 +212,7 @@ set +e
     "$PHP_BIN" artisan view:clear
     run_approved_migrations
     "$PHP_BIN" artisan thesis:audit-honorarium-schedules --strict
+    "$PHP_BIN" artisan thesis:audit-honorarium-date 2026-08-31 --json
 
     if [[ "$WAS_DOWN" -eq 0 ]]; then
         "$PHP_BIN" artisan up --no-interaction < /dev/null
