@@ -644,6 +644,20 @@ class Prodi extends Controller
                 $updated = 0;
 
                 foreach ($pesertaLengkap as $rowPeserta) {
+                    $bimbingan = DB::table('trt_bimbingan')
+                        ->select('bimbingan_id', 'C_NPM', 'pembimbing_I_id', 'pembimbing_II_id')
+                        ->where('bimbingan_id', $rowPeserta->bimbingan_id)
+                        ->where('C_NPM', $rowPeserta->C_NPM)
+                        ->where('status_bimbingan', $statusSaatIni)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$bimbingan) {
+                        throw new RuntimeException(
+                            'Status mahasiswa ' . $rowPeserta->C_NPM . ' telah berubah. Muat ulang halaman sebelum mengulangi konfirmasi.'
+                        );
+                    }
+
                     $penguji = DB::table('trt_penguji')
                         ->select('ketua_sidang_id', 'penguji_I_id', 'penguji_II_id', 'penguji_III_id')
                         ->where('C_NPM', $rowPeserta->C_NPM)
@@ -662,14 +676,20 @@ class Prodi extends Controller
                         $rowPeserta->C_NPM,
                         $rowPeserta->pendaftaran_id,
                         $tipeUjian,
-                        $rowPeserta,
+                        $bimbingan,
                         $penguji
                     );
 
-                    $updated += DB::table('trt_bimbingan')
+                    $updatedRow = DB::table('trt_bimbingan')
                         ->where('bimbingan_id', $rowPeserta->bimbingan_id)
                         ->where('status_bimbingan', $statusSaatIni)
                         ->update(['status_bimbingan' => $statusTujuan]);
+                    if ($updatedRow !== 1) {
+                        throw new RuntimeException(
+                            'Konfirmasi mahasiswa ' . $rowPeserta->C_NPM . ' berubah saat diproses dan dibatalkan.'
+                        );
+                    }
+                    $updated += $updatedRow;
                 }
 
                 return $updated;
@@ -713,10 +733,6 @@ class Prodi extends Controller
     protected function createHonorariumForConfirmedExam($bimbinganId, $nim, $pendaftaranId, $tipeUjian, $bimbingan, $penguji)
     {
         $sourceKey = 'bimbingan:' . $bimbinganId . ':periode:' . $pendaftaranId . ':ujian:' . $tipeUjian;
-        if (DB::table('trt_honorium')->where('source_key', $sourceKey)->exists()) {
-            return;
-        }
-
         $jadwalUjian = DB::table('trt_jadwal_ujian as jadwal')
             ->join('trt_jadwal_ujian_per_mhs as peserta', 'peserta.jadwal_ujian', '=', 'jadwal.id')
             ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
@@ -730,6 +746,20 @@ class Prodi extends Controller
 
         if (!$jadwalUjian) {
             throw new RuntimeException('Jadwal ujian mahasiswa belum ditemukan. Honorarium tidak dibuat agar tanggal pembayaran tidak keliru.');
+        }
+
+        $honorariumSudahAda = DB::table('trt_honorium')
+            ->where(function ($query) use ($sourceKey, $nim, $tipeUjian, $jadwalUjian) {
+                $query->where('source_key', $sourceKey)
+                    ->orWhere(function ($exact) use ($nim, $tipeUjian, $jadwalUjian) {
+                        $exact->where('C_NPM', $nim)
+                            ->where('exam_type', $tipeUjian)
+                            ->where('jadwal_ujian_id', (int) $jadwalUjian->id);
+                    });
+            })
+            ->exists();
+        if ($honorariumSudahAda) {
+            return;
         }
 
         $roles = [

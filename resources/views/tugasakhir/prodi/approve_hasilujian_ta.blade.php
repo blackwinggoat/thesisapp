@@ -39,6 +39,9 @@
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                     <p><strong>Status!</strong></p>
                     <p>Konfirmasi hasil ujian TA gagal. Tidak ada status tambahan yang diubah.</p>
+                    <?php if(session('message')): ?>
+                        <p><?= e(session('message')) ?></p>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 
@@ -46,7 +49,7 @@
                 @if (!empty($isHistory))
                     <a href="{{ url('prodi/approve_hasilujian_ta') }}" class="btn btn-default mb-5" style="margin-bottom: 20px">Kembali</a>
                 @else
-                    <form method="POST" action="{{ url('prodi/approve_hasilujian_ta_all_post') }}" style="display: inline-block" onsubmit="return confirm('Konfirmasi semua mahasiswa yang seluruh penilainya sudah lengkap?')">
+                    <form method="POST" action="{{ url('prodi/approve_hasilujian_ta_all_post') }}" style="display: inline-block" onsubmit="return confirm('Konfirmasi seluruh mahasiswa dengan nilai lengkap? Mahasiswa yang nilainya belum lengkap akan dilewati.')">
                         {{ csrf_field() }}
                         <button type="submit" class="btn btn-info mb-5" style="margin-bottom: 20px">Konfirmasi Semua Nilai Lengkap</button>
                     </form>

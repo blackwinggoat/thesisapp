@@ -158,6 +158,42 @@ class ExamResultConfirmationTest extends TestCase
         $this->assertSame(1, $response->getSession()->get('total_belum_lengkap'));
     }
 
+    public function testBulkConfirmationDoesNotDuplicateLegacyExactHonorarium()
+    {
+        $this->addCandidate(14, 204, 'TA-LEGACY', 2, 2, 1, ['P14', 'U14', 'K14']);
+        DB::table('trt_honorium')->insert([
+            'date' => '2026-08-31',
+            'C_NPM' => 'TA-LEGACY',
+            'source_key' => null,
+            'exam_type' => 2,
+            'jadwal_ujian_id' => 1,
+            'tipe_ujian' => '2',
+            'KS' => 'K14',
+            'PU' => 'P14',
+            'P1' => 'U14',
+        ]);
+
+        $response = (new Prodi())->approve_hasilujian_ta_all_post();
+
+        $this->assertSame('success', $response->getSession()->get('status'));
+        $this->assertSame(3, $this->statusBimbingan(14));
+        $this->assertSame(1, DB::table('trt_honorium')->where('C_NPM', 'TA-LEGACY')->count());
+    }
+
+    public function testBulkConfirmationRollsBackEveryStudentWhenOneExactScheduleIsInvalid()
+    {
+        $this->addCandidate(15, 205, 'TA-ATOMIC-1', 2, 2, 1, ['P15', 'U15', 'K15']);
+        $this->addCandidate(16, 206, 'TA-ATOMIC-2', 2, 2, 1, ['P16', 'U16', 'K16']);
+        DB::table('trt_jadwal_ujian_per_mhs')->where('C_NPM', 'TA-ATOMIC-2')->delete();
+
+        $response = (new Prodi())->approve_hasilujian_ta_all_post();
+
+        $this->assertSame('error', $response->getSession()->get('status'));
+        $this->assertSame(2, $this->statusBimbingan(15));
+        $this->assertSame(2, $this->statusBimbingan(16));
+        $this->assertSame(0, DB::table('trt_honorium')->count());
+    }
+
     public function testIndividualConfirmationCannotBypassIncompleteAssessmentCheck()
     {
         $this->addCandidate(21, 301, 'P-INCOMPLETE', 0, 0, 1, ['P21', 'U21']);
