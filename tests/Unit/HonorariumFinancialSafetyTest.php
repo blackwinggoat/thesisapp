@@ -29,6 +29,7 @@ class HonorariumFinancialSafetyTest extends TestCase
     public function testFinancialChangesAreLockedAndPaidRecordsAreProtected()
     {
         $keuangan = file_get_contents(__DIR__ . '/../../app/Http/Controllers/KeuanganFakultas.php');
+        $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
         $dosen = file_get_contents(__DIR__ . '/../../app/Http/Controllers/dosen.php');
         $detailView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium_detail.blade.php');
         $listView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium.blade.php');
@@ -62,6 +63,12 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('total-honorarium-tanggal', $detailView);
         $this->assertStringContainsString('data-total-honor', $detailView);
         $this->assertStringContainsString('updateTotalHonorariumTanggal', $detailView);
+        $this->assertStringContainsString('honorarium_update_date_availability', $keuangan);
+        $this->assertStringContainsString("Route::post('/tanggal/{date}/availability'", $routes);
+        $this->assertStringContainsString("->name('honorarium_update_date_availability')", $routes);
+        $this->assertStringContainsString('Ketersediaan Dana', $listView);
+        $this->assertStringContainsString('honorarium-date-availability-toggle', $listView);
+        $this->assertStringContainsString('data-current-state', $listView);
         $this->assertStringContainsString('modal-ks', $detailView);
         $this->assertStringContainsString('modal-ks-h', $detailView);
         $this->assertStringNotContainsString('modal-ks-status', $detailView);

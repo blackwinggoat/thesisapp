@@ -6,6 +6,27 @@
         $homeRoute = $isAkademikHonorarium ? 'honorarium_penetapan_home' : 'honorarium_home';
         $detailRoute = $isAkademikHonorarium ? 'honorarium_penetapan_detail_tanggal' : 'honorarium_detail_tanggal';
     @endphp
+    <style>
+        .honorarium-availability-cell {
+            min-width: 145px;
+        }
+
+        .honorarium-availability-state {
+            display: block;
+            margin-top: 5px;
+            color: #64748b;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .honorarium-availability-state.is-available {
+            color: #15803d;
+        }
+
+        .honorarium-availability-state.is-locked {
+            color: #b45309;
+        }
+    </style>
     <div class="page-content">
         <div class="container-fluid">
             <h1 class="page-heading thesis-page-heading">Thesis App <small>FIKOM UMI</small></h1>
@@ -72,7 +93,7 @@
                                 <th class="text-center">Type Mahasiswa</th>
                                 @if (!$isAkademikHonorarium)
                                     <th class="text-center">Total Honor Belum Dibayar</th>
-                                    <th class="text-center">Belum Tersedia</th>
+                                    <th class="text-center">Ketersediaan Dana</th>
                                 @endif
                                 <th class="text-center">Perlu Penetapan Tipe</th>
                                 <th class="text-center">Aksi</th>
@@ -102,9 +123,34 @@
                                     </td>
                                     @if (!$isAkademikHonorarium)
                                         <td class="text-right"><strong>{{ helper::formatRupiah($honorarium->total_honor) }}</strong></td>
-                                        <td class="text-center">
-                                            <span class="label {{ $honorarium->belum_tersedia > 0 ? 'label-warning' : 'label-success' }}">
-                                                {{ $honorarium->belum_tersedia }} data
+                                        @php
+                                            $seluruhDanaTersedia = (int) $honorarium->belum_tersedia === 0;
+                                            $ketersediaanTerkunci = (int) $honorarium->terkunci_pembayaran > 0;
+                                        @endphp
+                                        <td class="text-center honorarium-availability-cell">
+                                            <input type="checkbox"
+                                                class="honorarium-date-availability-toggle"
+                                                data-toggle="toggle"
+                                                data-size="small"
+                                                data-width="118"
+                                                data-on="Tersedia"
+                                                data-off="Belum tersedia"
+                                                data-onstyle="success"
+                                                data-offstyle="warning"
+                                                data-date="{{ $honorarium->date }}"
+                                                data-url="{{ route('honorarium_update_date_availability', $honorarium->date) }}"
+                                                data-needs-type="{{ (int) $honorarium->perlu_penetapan }}"
+                                                data-current-state="{{ $seluruhDanaTersedia ? 1 : 0 }}"
+                                                {{ $seluruhDanaTersedia ? 'checked' : '' }}
+                                                {{ $ketersediaanTerkunci ? 'disabled' : '' }}>
+                                            <span class="honorarium-availability-state {{ $seluruhDanaTersedia ? 'is-available' : '' }} {{ $ketersediaanTerkunci ? 'is-locked' : '' }}">
+                                                @if ($ketersediaanTerkunci)
+                                                    Terkunci karena sebagian honor telah dibayar
+                                                @elseif ($seluruhDanaTersedia)
+                                                    Seluruh data tersedia
+                                                @else
+                                                    {{ $honorarium->belum_tersedia }} data belum tersedia
+                                                @endif
                                             </span>
                                         </td>
                                     @endif
@@ -150,6 +196,89 @@
                     { orderable: false, targets: {!! $isAkademikHonorarium ? '[5]' : '[0, 8]' !!} }
                 ]
             });
+
+            function restoreAvailabilityToggle(toggle, checked) {
+                if (toggle.prop('checked') === checked) {
+                    return;
+                }
+                toggle.data('skip-availability-change', true);
+                toggle.bootstrapToggle(checked ? 'on' : 'off');
+            }
+
+            $('.honorarium-date-availability-toggle').bootstrapToggle();
+            $(document).off('change.honorariumDateAvailability', '.honorarium-date-availability-toggle')
+                .on('change.honorariumDateAvailability', '.honorarium-date-availability-toggle', function() {
+                    var toggle = $(this);
+                    if (toggle.data('skip-availability-change')) {
+                        toggle.data('skip-availability-change', false);
+                        return;
+                    }
+
+                    var previousState = parseInt(toggle.attr('data-current-state'), 10) === 1;
+                    var requestedState = toggle.prop('checked');
+                    var date = toggle.data('date');
+                    var needsType = parseInt(toggle.data('needs-type'), 10) || 0;
+
+                    if (requestedState && needsType > 0) {
+                        restoreAvailabilityToggle(toggle, previousState);
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Tipe honor belum lengkap',
+                            text: 'Tetapkan seluruh tipe honorarium tanggal ini sebelum dana dibuat tersedia.'
+                        });
+                        return;
+                    }
+
+                    restoreAvailabilityToggle(toggle, previousState);
+                    Swal.fire({
+                        icon: 'question',
+                        title: 'Ubah ketersediaan dana?',
+                        text: 'Seluruh data honorarium tanggal ' + date + ' akan menjadi ' +
+                            (requestedState ? 'Tersedia.' : 'Belum tersedia.'),
+                        showCancelButton: true,
+                        confirmButtonColor: requestedState ? '#16a34a' : '#d97706',
+                        confirmButtonText: 'Ya, ubah',
+                        cancelButtonText: 'Batal'
+                    }).then(function(result) {
+                        if (!result.value) {
+                            return;
+                        }
+
+                        toggle.bootstrapToggle('disable');
+                        $.ajax({
+                            url: toggle.data('url'),
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                available: requestedState ? 1 : 0
+                            },
+                            success: function(response) {
+                                toggle.attr('data-current-state', response.available ? '1' : '0');
+                                restoreAvailabilityToggle(toggle, !!response.available);
+                                var state = toggle.closest('td').find('.honorarium-availability-state');
+                                state.toggleClass('is-available', !!response.available)
+                                    .text(response.available ? 'Seluruh data tersedia' : 'Seluruh data belum tersedia');
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: response.message
+                                });
+                            },
+                            error: function(xhr) {
+                                var response = xhr.responseJSON || {};
+                                restoreAvailabilityToggle(toggle, previousState);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Tidak dapat diubah',
+                                    text: response.message || 'Ketersediaan dana gagal diubah.'
+                                });
+                            },
+                            complete: function() {
+                                toggle.bootstrapToggle('enable');
+                            }
+                        });
+                    });
+                });
 
             function updateSelectedDates() {
                 var selected = $('.honorarium-date-checkbox:checked').length;

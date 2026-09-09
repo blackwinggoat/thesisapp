@@ -528,6 +528,7 @@ class KeuanganFakultas extends Controller
     protected function renderHonorariumHome($honorariumMode)
     {
         $belumTersediaSql = $this->honorariumHasRoleStatusSql(0);
+        $sudahDibayarSql = $this->honorariumHasRoleStatusSql(3);
         $totalHonorByTanggal = $this->honorariumDenganJadwalQuery()
             ->whereNotNull('jadwal.tgl_ujian')
             ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
@@ -553,6 +554,7 @@ class KeuanganFakultas extends Controller
             DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '130%' THEN honorarium.C_NPM END) as total_teknik_informatika"),
             DB::raw("COUNT(DISTINCT CASE WHEN honorarium.C_NPM LIKE '131%' THEN honorarium.C_NPM END) as total_sistem_informasi"),
             DB::raw("SUM(CASE WHEN {$belumTersediaSql} THEN 1 ELSE 0 END) as belum_tersedia"),
+            DB::raw("SUM(CASE WHEN {$sudahDibayarSql} THEN 1 ELSE 0 END) as terkunci_pembayaran"),
             DB::raw("SUM(CASE WHEN honorarium.tipe_ujian IS NULL OR honorarium.tipe_ujian = '' OR honorarium.tipe_ujian IN ('0', '2') THEN 1 ELSE 0 END) as perlu_penetapan"),
         ];
 
@@ -1216,6 +1218,75 @@ class KeuanganFakultas extends Controller
     public function honorarium_unavailable_all($date)
     {
         return $this->ubahKetersediaanHonorariumTanggal($date, 0);
+    }
+
+    public function honorarium_update_date_availability(Request $request, $date)
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
+            abort(404);
+        }
+
+        $this->validate($request, [
+            'available' => 'required|boolean',
+        ]);
+
+        $status = (int) $request->input('available');
+
+        try {
+            $hasil = DB::transaction(function () use ($date, $status) {
+                $data = $this->honorariumDenganJadwalQuery()
+                    ->whereDate('jadwal.tgl_ujian', $date)
+                    ->select('honorarium.*')
+                    ->lockForUpdate()
+                    ->get()
+                    ->unique('id')
+                    ->values();
+
+                if ($data->isEmpty()) {
+                    throw new \RuntimeException('Tidak ada honorarium aktif pada tanggal tersebut.');
+                }
+
+                if ($data->contains(function ($honorarium) {
+                    return $this->honorariumHasPaidRole($honorarium);
+                })) {
+                    throw new \RuntimeException('Ketersediaan tidak dapat diubah karena sebagian honorarium pada tanggal ini sudah dibayar.');
+                }
+
+                if ($status === 1 && $data->contains(function ($honorarium) {
+                    return $this->honorariumNeedsTypeAssignment($honorarium);
+                })) {
+                    throw new \RuntimeException('Tetapkan seluruh tipe honorarium pada tanggal ini sebelum dana dibuat tersedia.');
+                }
+
+                $diterapkan = 0;
+                foreach ($data as $honorarium) {
+                    $payload = $this->honorariumStatusPayload($honorarium, $status);
+                    if (!empty($payload)) {
+                        DB::table('trt_honorium')->where('id', $honorarium->id)->update($payload);
+                        $diterapkan++;
+                    }
+                }
+
+                if ($diterapkan !== $data->count()) {
+                    throw new \RuntimeException('Sebagian data tidak memiliki penugasan dosen yang dapat diubah.');
+                }
+
+                return $diterapkan;
+            });
+
+            return response()->json([
+                'message' => 'Ketersediaan dana tanggal ' . date('d/m/Y', strtotime($date))
+                    . ' berhasil diubah menjadi ' . ($status === 1 ? 'Tersedia' : 'Belum tersedia') . '.',
+                'available' => $status,
+                'updated_count' => $hasil,
+            ]);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Ketersediaan dana gagal diubah. Tidak ada perubahan yang disimpan.',
+            ], 500);
+        }
     }
 
     protected function ubahKetersediaanHonorariumTanggal($date, $status)
