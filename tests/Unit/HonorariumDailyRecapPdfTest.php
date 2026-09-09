@@ -134,6 +134,8 @@ class HonorariumDailyRecapPdfTest extends TestCase
     public function testFacultyOfficialMigrationSeedsTheCurrentLeadershipRoles()
     {
         $migration = file_get_contents(__DIR__ . '/../../database/migrations/2026_09_09_070000_create_and_seed_fikom_faculty_officials.php');
+        $repairMigration = file_get_contents(__DIR__ . '/../../database/migrations/2026_09_09_080000_repair_fikom_faculty_officials.php');
+        $helper = file_get_contents(__DIR__ . '/../../app/Helper.php');
 
         $this->assertStringContainsString("'jabatan' => 'Dekan'", $migration);
         $this->assertStringContainsString("'jabatan' => 'Wakil Dekan I'", $migration);
@@ -141,6 +143,9 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString("'jabatan' => 'Wakil Dekan III'", $migration);
         $this->assertStringContainsString('Dr. Ir. Hj. Harlinda, MM., M.Kom., MTA.', $migration);
         $this->assertStringContainsString("->where('jabatan', \$official['jabatan'])", $migration);
+        $this->assertStringContainsString("trim((string) \$current->nama) === ''", $repairMigration);
+        $this->assertStringContainsString('officialPayload($official, false)', $repairMigration);
+        $this->assertStringContainsString("trim((string) (\$item->nama ?? '')) !== ''", $helper);
     }
 
     private function honorariumRow($nim, $type, array $assignments, $puPresent = 1, $ppPresent = 1)

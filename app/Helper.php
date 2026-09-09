@@ -1320,6 +1320,9 @@ class Helper
             ->whereRaw('UPPER(TRIM(kode_fakultas)) = ?', [$kodeFakultas])
             ->whereRaw('LOWER(TRIM(jabatan)) = ?', [strtolower($jabatan)])
             ->get()
+            ->filter(function ($item) {
+                return trim((string) ($item->nama ?? '')) !== '';
+            })
             ->sortByDesc(function ($item) {
                 $tanggalMulai = self::parseTanggalAcuan($item->tanggal_menjabat);
                 return $tanggalMulai ? $tanggalMulai->timestamp : 0;
