@@ -28,8 +28,24 @@
         }
 
         .honorarium-selected-availability-toggle {
-            float: left;
-            margin-left: 8px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .honorarium-toolbar {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            margin: -4px;
+        }
+
+        .honorarium-toolbar > * {
+            margin: 4px;
+        }
+
+        .honorarium-toolbar .honorarium-selected-count {
+            color: #64748b;
+            font-size: 12px;
         }
     </style>
     <div class="page-content">
@@ -71,14 +87,17 @@
                 <form action="{{ $isAkademikHonorarium ? route($homeRoute) : route('honorarium_tandai_terbayar') }}" method="{{ $isAkademikHonorarium ? 'GET' : 'POST' }}" id="honorarium-date-form">
                     @csrf
                     @if (!$isAkademikHonorarium)
-                        <div class="clearfix" style="margin-bottom: 15px;">
-                            <button type="submit" class="btn btn-success pull-left" id="mark-honorarium-paid" disabled>
+                        <div class="honorarium-toolbar" style="margin-bottom: 15px;">
+                            <button type="submit" class="btn btn-success" id="mark-honorarium-paid" disabled>
                                 <i class="fa fa-check-circle"></i> Tandai Terbayar
                             </button>
-                            <button type="submit" class="btn btn-danger pull-left" id="download-honorarium-pdf"
-                                formaction="{{ route('honorarium_tanda_terima_pdf') }}" formtarget="_blank"
-                                style="margin-left: 8px;" disabled>
-                                <i class="fa fa-file-pdf-o"></i> Download PDF Terpilih
+                            <button type="submit" class="btn btn-danger" id="download-honorarium-pdf"
+                                formaction="{{ route('honorarium_tanda_terima_pdf') }}" formtarget="_blank" disabled>
+                                <i class="fa fa-file-pdf-o"></i> Tanda Terima Dosen
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="download-honorarium-daily-recap"
+                                formaction="{{ route('honorarium_rekap_harian_pdf') }}" formtarget="_blank" disabled>
+                                <i class="fa fa-file-pdf-o"></i> Rekap Honorarium Harian
                             </button>
                             <input type="checkbox"
                                 id="selected-dates-availability-toggle"
@@ -91,7 +110,7 @@
                                 data-style="honorarium-selected-availability-toggle"
                                 data-current-state="0"
                                 disabled>
-                            <span class="text-muted pull-left" id="honorarium-selected-count" style="margin: 8px 0 0 10px;">0 tanggal dipilih</span>
+                            <span class="honorarium-selected-count" id="honorarium-selected-count">0 tanggal dipilih</span>
                         </div>
                     @endif
                     <div class="table-responsive">
@@ -300,6 +319,7 @@
 
                 $('#honorarium-selected-count').text(selected + ' tanggal dipilih');
                 $('#download-honorarium-pdf').prop('disabled', selected === 0);
+                $('#download-honorarium-daily-recap').prop('disabled', selected === 0);
                 $('#mark-honorarium-paid').prop('disabled', selected === 0);
                 bulkToggle.bootstrapToggle('enable');
                 if (selected === 0) {

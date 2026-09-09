@@ -50,7 +50,7 @@ class HonorariumReceiptPdfTest extends TestCase
         $this->assertStringContainsString('$label = "Paraf Dosen"', $controller);
         $this->assertStringContainsString('$pdf->rectangle(', $controller);
         $this->assertStringContainsString('fa-file-pdf-o', $listView);
-        $this->assertStringContainsString('Download PDF Terpilih', $listView);
+        $this->assertStringContainsString('Tanda Terima Dosen', $listView);
         $this->assertStringContainsString('name="tanggal[]"', $listView);
         $this->assertStringContainsString('select-all-honorarium-dates', $listView);
         $this->assertStringContainsString('TANDA TERIMA HONORARIUM', $pdfView);

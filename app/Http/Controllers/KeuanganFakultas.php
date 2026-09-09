@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Helper;
 use App\Services\HonorariumAutomaticTypeSetupService;
+use App\Services\HonorariumDailyRecapVerificationService;
 use Barryvdh\DomPDF\Facade as PDF;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -740,14 +742,7 @@ class KeuanganFakultas extends Controller
         $namaMahasiswa = DB::table('t_mst_mahasiswa')
             ->whereIn('C_NPM', $honorariums->pluck('C_NPM')->unique()->all())
             ->pluck('NAMA_MAHASISWA', 'C_NPM');
-        $peranHonorarium = [
-            'KS' => ['label' => 'Ketua Sidang', 'amount' => 'KS_H', 'status' => 'KS_Stat'],
-            'PU' => ['label' => 'Pembimbing Utama', 'amount' => 'PU_H', 'status' => 'PU_Stat'],
-            'PP' => ['label' => 'Pembimbing Pendamping', 'amount' => 'PP_H', 'status' => 'PP_Stat'],
-            'P1' => ['label' => 'Penguji I', 'amount' => 'P1_H', 'status' => 'P1_Stat'],
-            'P2' => ['label' => 'Penguji II', 'amount' => 'P2_H', 'status' => 'P2_Stat'],
-            'P3' => ['label' => 'Penguji III', 'amount' => 'P3_H', 'status' => 'P3_Stat'],
-        ];
+        $peranHonorarium = $this->honorariumReportRoles();
         $jumlahSanksiByTanggal = $tanggalTerpilih->mapWithKeys(function ($tanggal) {
             return [$tanggal => $this->jumlahSanksiPembayaranPadaTanggal($tanggal)];
         });
@@ -886,6 +881,151 @@ class KeuanganFakultas extends Controller
         return $this->tambahParafDosenKePdf($pdf)->download($namaFile);
     }
 
+    public function honorarium_rekap_harian_pdf(Request $request)
+    {
+        $tanggalInput = collect((array) $request->input('tanggal'))
+            ->map(function ($tanggal) {
+                return trim((string) $tanggal);
+            })
+            ->filter()
+            ->values();
+        if ($tanggalInput->isEmpty()) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'warning',
+                'message' => 'Pilih minimal satu tanggal ujian untuk membuat rekap honorarium harian.',
+            ]);
+        }
+
+        $tanggalTidakValid = $tanggalInput->first(function ($tanggal) {
+            return !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal);
+        });
+        if ($tanggalTidakValid !== null) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'danger',
+                'message' => 'Pilihan tanggal ujian tidak valid.',
+            ]);
+        }
+
+        $tanggalTerpilih = $tanggalInput->unique()->sort()->values();
+        $tanggalSql = $this->honorariumTanggalEfektifSql();
+        $honorariums = $this->honorariumDenganJadwalQuery()
+            ->whereIn(DB::raw($tanggalSql), $tanggalTerpilih->all())
+            ->select('honorarium.*', DB::raw("{$tanggalSql} as tanggal_ujian"))
+            ->orderBy(DB::raw($tanggalSql))
+            ->orderBy('honorarium.C_NPM')
+            ->get()
+            ->unique(function ($honorarium) {
+                return $honorarium->id . '|' . $honorarium->tanggal_ujian;
+            })
+            ->values();
+
+        if ($honorariums->isEmpty()) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'info',
+                'message' => 'Tidak ada honorarium belum terbayar pada tanggal yang dipilih.',
+            ]);
+        }
+
+        $belumDitetapkan = $honorariums->filter(function ($honorarium) {
+            return $this->honorariumNeedsTypeAssignment($honorarium);
+        })->count();
+        if ($belumDitetapkan > 0) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'warning',
+                'message' => 'Rekap belum dapat dibuat. Tetapkan tipe honorarium untuk ' . $belumDitetapkan
+                    . ' data pada tanggal yang dipilih terlebih dahulu.',
+            ]);
+        }
+
+        $roles = $this->honorariumReportRoles();
+        $kodeDosen = collect();
+        foreach ($honorariums as $honorarium) {
+            foreach ($roles as $role => $definition) {
+                $code = trim((string) $honorarium->{$role});
+                if ($code !== '' && $this->honorariumStatusDapatDicetak(
+                    (int) $honorarium->{$definition['status']},
+                    false
+                )) {
+                    $kodeDosen->push($code);
+                }
+            }
+        }
+        $kodeDosen = $kodeDosen->unique()->values();
+        $namaDosen = $kodeDosen->isEmpty()
+            ? collect()
+            : DB::table('t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $kodeDosen->all())
+                ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN');
+        foreach ($kodeDosen as $code) {
+            if (!$namaDosen->has($code) || trim((string) $namaDosen->get($code)) === '') {
+                $resolvedName = trim((string) Helper::getNamaDosenByKode($code));
+                $namaDosen->put($code, $resolvedName !== '' ? $resolvedName : $code);
+            }
+        }
+
+        $jumlahPenyesuaianByTanggal = $tanggalTerpilih->mapWithKeys(function ($tanggal) {
+            return [$tanggal => $this->jumlahSanksiPembayaranPadaTanggal($tanggal)];
+        });
+        $reports = $this->buildHonorariumDailyRecapReports(
+            $honorariums,
+            $namaDosen,
+            $jumlahPenyesuaianByTanggal
+        );
+        if ($reports->isEmpty()) {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'warning',
+                'message' => 'Tidak ada penugasan honorarium yang dapat direkap pada tanggal yang dipilih.',
+            ]);
+        }
+
+        $generatedAt = Carbon::now();
+        $wakilDekanDua = Helper::getPejabatFakultasByTanggal(
+            'Wakil Dekan II',
+            $generatedAt->format('Y-m-d')
+        );
+        if (trim((string) $wakilDekanDua->nama) === '') {
+            return redirect()->route('honorarium_home')->with([
+                'status' => 'warning',
+                'message' => 'Master Wakil Dekan II belum lengkap. Lengkapi pejabat fakultas sebelum membuat rekap.',
+            ]);
+        }
+
+        $verificationService = app(HonorariumDailyRecapVerificationService::class);
+        foreach ($reports as $report) {
+            $singleReport = collect([$report]);
+            $report->report_hash = $verificationService->buildReportHash($singleReport);
+            $verificationToken = $verificationService->buildVerificationToken(
+                $singleReport,
+                $wakilDekanDua,
+                $generatedAt
+            );
+            $report->verification_url = route('verifikasi_honorarium_rekap_harian', [
+                'token' => $verificationToken,
+            ]);
+        }
+
+        $namaFile = $tanggalTerpilih->count() === 1
+            ? 'Rekap-Honorarium-Harian-' . $tanggalTerpilih->first() . '.pdf'
+            : 'Rekap-Honorarium-Harian-' . $tanggalTerpilih->first() . '-sd-' . $tanggalTerpilih->last() . '.pdf';
+        $pdf = PDF::loadView('tugasakhir.keuanganfakultas.rekap_honorarium_harian_pdf', compact(
+            'reports',
+            'wakilDekanDua',
+            'generatedAt'
+        ))->setPaper('a4', 'landscape');
+
+        return $pdf->download($namaFile);
+    }
+
+    public function verifikasi_honorarium_rekap_harian($token)
+    {
+        $payload = app(HonorariumDailyRecapVerificationService::class)->decodeVerificationToken($token);
+        if (!$payload) {
+            abort(404);
+        }
+
+        return view('tugasakhir.keuanganfakultas.verifikasi_rekap_honorarium_harian', compact('payload'));
+    }
+
     protected function honorariumStatusDapatDicetak($status, $riwayat)
     {
         if ($riwayat) {
@@ -893,6 +1033,128 @@ class KeuanganFakultas extends Controller
         }
 
         return in_array((int) $status, [0, 1], true);
+    }
+
+    protected function honorariumReportRoles()
+    {
+        return [
+            'KS' => ['label' => 'Ketua Sidang', 'amount' => 'KS_H', 'status' => 'KS_Stat'],
+            'PU' => ['label' => 'Pembimbing Utama', 'amount' => 'PU_H', 'status' => 'PU_Stat'],
+            'PP' => ['label' => 'Pembimbing Pendamping', 'amount' => 'PP_H', 'status' => 'PP_Stat'],
+            'P1' => ['label' => 'Penguji I', 'amount' => 'P1_H', 'status' => 'P1_Stat'],
+            'P2' => ['label' => 'Penguji II', 'amount' => 'P2_H', 'status' => 'P2_Stat'],
+            'P3' => ['label' => 'Penguji III', 'amount' => 'P3_H', 'status' => 'P3_Stat'],
+        ];
+    }
+
+    protected function buildHonorariumDailyRecapReports($honorariums, $namaDosen, $jumlahPenyesuaianByTanggal)
+    {
+        $reports = collect();
+        $roles = $this->honorariumReportRoles();
+
+        foreach ($honorariums as $honorarium) {
+            $tanggal = substr((string) $honorarium->tanggal_ujian, 0, 10);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+                continue;
+            }
+
+            if (!$reports->has($tanggal)) {
+                $reports->put($tanggal, (object) [
+                    'tanggal' => $tanggal,
+                    'student_nims' => [],
+                    'exam_types' => collect(),
+                    'lecturers' => collect(),
+                    'student_count' => 0,
+                    'exam_type_count' => 0,
+                    'lecturer_count' => 0,
+                    'assignment_count' => 0,
+                    'total_honor' => 0,
+                ]);
+            }
+
+            $report = $reports->get($tanggal);
+            $nim = trim((string) $honorarium->C_NPM);
+            $typeName = trim((string) $honorarium->tipe_ujian) ?: 'Belum ditetapkan';
+            $penyesuaianHonor = $this->penyesuaianHonorPembimbing(
+                $honorarium,
+                (float) $jumlahPenyesuaianByTanggal->get($tanggal, 0)
+            );
+
+            $report->student_nims[$nim] = true;
+            if (!$report->exam_types->has($typeName)) {
+                $report->exam_types->put($typeName, (object) [
+                    'name' => $typeName,
+                    'student_nims' => [],
+                    'student_count' => 0,
+                    'assignment_count' => 0,
+                    'total_honor' => 0,
+                ]);
+            }
+            $typeReport = $report->exam_types->get($typeName);
+            $typeReport->student_nims[$nim] = true;
+
+            foreach ($roles as $role => $definition) {
+                $code = trim((string) $honorarium->{$role});
+                if ($code === '' || !$this->honorariumStatusDapatDicetak(
+                    (int) $honorarium->{$definition['status']},
+                    false
+                )) {
+                    continue;
+                }
+
+                $honor = isset($penyesuaianHonor['amounts'][$role])
+                    ? (float) $penyesuaianHonor['amounts'][$role]
+                    : (float) $honorarium->{$definition['amount']};
+                if (!$report->lecturers->has($code)) {
+                    $report->lecturers->put($code, (object) [
+                        'code' => $code,
+                        'name' => trim((string) $namaDosen->get($code, $code)),
+                        'student_nims' => [],
+                        'role_counts' => [],
+                        'roles' => '',
+                        'student_count' => 0,
+                        'assignment_count' => 0,
+                        'total_honor' => 0,
+                    ]);
+                }
+
+                $lecturer = $report->lecturers->get($code);
+                $lecturer->student_nims[$nim] = true;
+                $lecturer->role_counts[$definition['label']] =
+                    (int) ($lecturer->role_counts[$definition['label']] ?? 0) + 1;
+                $lecturer->assignment_count++;
+                $lecturer->total_honor += $honor;
+                $typeReport->assignment_count++;
+                $typeReport->total_honor += $honor;
+                $report->assignment_count++;
+                $report->total_honor += $honor;
+            }
+        }
+
+        return $reports->map(function ($report) {
+            $report->student_count = count($report->student_nims);
+            $report->exam_types = $report->exam_types->map(function ($type) {
+                $type->student_count = count($type->student_nims);
+
+                return $type;
+            })->sortBy(function ($type) {
+                return strtolower($type->name);
+            })->values();
+            $report->lecturers = $report->lecturers->map(function ($lecturer) {
+                $lecturer->student_count = count($lecturer->student_nims);
+                $lecturer->roles = collect($lecturer->role_counts)->map(function ($count, $role) {
+                    return $role . ' (' . $count . ')';
+                })->implode(', ');
+
+                return $lecturer;
+            })->sortBy(function ($lecturer) {
+                return strtolower($lecturer->name . '|' . $lecturer->code);
+            })->values();
+            $report->exam_type_count = $report->exam_types->count();
+            $report->lecturer_count = $report->lecturers->count();
+
+            return $report;
+        })->sortBy('tanggal')->values();
     }
 
     protected function tambahParafDosenKePdf($pdf)

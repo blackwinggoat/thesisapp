@@ -49,7 +49,7 @@ class HonorariumPaidDateWorkflowTest extends TestCase
         $this->assertStringContainsString('Total Honor Terbayar', $history);
         $this->assertStringContainsString('Lihat Detail', $history);
         $this->assertStringContainsString('name="tanggal[]"', $history);
-        $this->assertStringContainsString('Download PDF Terpilih', $history);
+        $this->assertStringContainsString('Tanda Terima Dosen', $history);
         $this->assertStringContainsString('Kembalikan ke Belum Terbayar', $history);
         $this->assertStringContainsString('if (result.value)', $history);
         $this->assertStringContainsString('Riwayat Honorarium Tanggal {{ $date }}', $detail);

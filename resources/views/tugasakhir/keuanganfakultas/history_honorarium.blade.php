@@ -34,7 +34,7 @@
                         <button type="submit" class="btn btn-danger pull-left" id="download-history-honorarium-pdf"
                             formaction="{{ route('honorarium_history_tanda_terima_pdf') }}" formtarget="_blank"
                             style="margin-left: 8px;" disabled>
-                            <i class="fa fa-file-pdf-o"></i> Download PDF Terpilih
+                            <i class="fa fa-file-pdf-o"></i> Tanda Terima Dosen
                         </button>
                         <span class="text-muted pull-left" id="honorarium-history-selected-count" style="margin: 8px 0 0 10px;">0 tanggal dipilih</span>
                     </div>

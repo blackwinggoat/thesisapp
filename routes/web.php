@@ -36,6 +36,7 @@ Route::get('/sk_pembimbing/{nomor}', 'HomeController@surat_sk_pembimbing')->midd
 Route::get('/sk_pembimbing_pdf/{nomor}', 'HomeController@surat_sk_pembimbing_pdf')->middleware('auth');
 Route::get('/verifikasi/sk-yudisium/{token}', 'fakultas@verifikasi_sk_yudisium')->name('verifikasi_sk_yudisium');
 Route::get('/verifikasi/laporan-jenis-tugas-akhir/{token}', 'Prodi@verifikasi_report_jenis_tugas_akhir')->name('verifikasi_report_jenis_tugas_akhir');
+Route::get('/verifikasi/rekap-honorarium/{token}', 'KeuanganFakultas@verifikasi_honorarium_rekap_harian')->name('verifikasi_honorarium_rekap_harian');
 Route::post('/admin/back-to-admin', 'Admin@back_to_admin')->middleware('auth')->name('admin.back_to_admin');
 
 
@@ -691,6 +692,7 @@ Route::group(['middleware' => 'keuangan_fakultas'], function () {
         Route::post('/tanggal/{date}/available-all', 'KeuanganFakultas@honorarium_available_all')->name('honorarium_available_all');
         Route::post('/tanggal/{date}/unavailable-all', 'KeuanganFakultas@honorarium_unavailable_all')->name('honorarium_unavailable_all');
         Route::post('/tanda-terima-pdf', 'KeuanganFakultas@honorarium_tanda_terima_pdf')->name('honorarium_tanda_terima_pdf');
+        Route::post('/rekap-harian-pdf', 'KeuanganFakultas@honorarium_rekap_harian_pdf')->name('honorarium_rekap_harian_pdf');
         Route::post('/tandai-terbayar', 'KeuanganFakultas@honorarium_tandai_terbayar')->name('honorarium_tandai_terbayar');
         Route::post('/history/tanda-terima-pdf', 'KeuanganFakultas@honorarium_history_tanda_terima_pdf')->name('honorarium_history_tanda_terima_pdf');
         Route::post('/history/kembalikan-belum-terbayar', 'KeuanganFakultas@honorarium_kembalikan_belum_terbayar')->name('honorarium_kembalikan_belum_terbayar');
