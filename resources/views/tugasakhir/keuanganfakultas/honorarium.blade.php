@@ -197,30 +197,24 @@
                 ]
             });
 
-            function restoreAvailabilityToggle(toggle, checked) {
+            function syncAvailabilityToggle(toggle, checked) {
                 if (toggle.prop('checked') === checked) {
                     return;
                 }
-                toggle.data('skip-availability-change', true);
-                toggle.bootstrapToggle(checked ? 'on' : 'off');
+                toggle.bootstrapToggle(checked ? 'on' : 'off', true);
             }
 
             $('.honorarium-date-availability-toggle').bootstrapToggle();
             $(document).off('change.honorariumDateAvailability', '.honorarium-date-availability-toggle')
                 .on('change.honorariumDateAvailability', '.honorarium-date-availability-toggle', function() {
                     var toggle = $(this);
-                    if (toggle.data('skip-availability-change')) {
-                        toggle.data('skip-availability-change', false);
-                        return;
-                    }
-
                     var previousState = parseInt(toggle.attr('data-current-state'), 10) === 1;
                     var requestedState = toggle.prop('checked');
                     var date = toggle.data('date');
                     var needsType = parseInt(toggle.data('needs-type'), 10) || 0;
 
                     if (requestedState && needsType > 0) {
-                        restoreAvailabilityToggle(toggle, previousState);
+                        syncAvailabilityToggle(toggle, previousState);
                         Swal.fire({
                             icon: 'warning',
                             title: 'Tipe honor belum lengkap',
@@ -229,7 +223,7 @@
                         return;
                     }
 
-                    restoreAvailabilityToggle(toggle, previousState);
+                    syncAvailabilityToggle(toggle, previousState);
                     Swal.fire({
                         icon: 'question',
                         title: 'Ubah ketersediaan dana?',
@@ -254,7 +248,6 @@
                             },
                             success: function(response) {
                                 toggle.attr('data-current-state', response.available ? '1' : '0');
-                                restoreAvailabilityToggle(toggle, !!response.available);
                                 var state = toggle.closest('td').find('.honorarium-availability-state');
                                 state.toggleClass('is-available', !!response.available)
                                     .text(response.available ? 'Seluruh data tersedia' : 'Seluruh data belum tersedia');
@@ -266,7 +259,6 @@
                             },
                             error: function(xhr) {
                                 var response = xhr.responseJSON || {};
-                                restoreAvailabilityToggle(toggle, previousState);
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Tidak dapat diubah',
@@ -275,6 +267,10 @@
                             },
                             complete: function() {
                                 toggle.bootstrapToggle('enable');
+                                syncAvailabilityToggle(
+                                    toggle,
+                                    parseInt(toggle.attr('data-current-state'), 10) === 1
+                                );
                             }
                         });
                     });

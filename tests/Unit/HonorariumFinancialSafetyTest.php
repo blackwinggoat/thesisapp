@@ -69,6 +69,9 @@ class HonorariumFinancialSafetyTest extends TestCase
         $this->assertStringContainsString('Ketersediaan Dana', $listView);
         $this->assertStringContainsString('honorarium-date-availability-toggle', $listView);
         $this->assertStringContainsString('data-current-state', $listView);
+        $this->assertStringContainsString("toggle.bootstrapToggle(checked ? 'on' : 'off', true);", $listView);
+        $this->assertStringContainsString("toggle.bootstrapToggle('enable');", $listView);
+        $this->assertStringContainsString('syncAvailabilityToggle(', $listView);
         $this->assertStringContainsString('modal-ks', $detailView);
         $this->assertStringContainsString('modal-ks-h', $detailView);
         $this->assertStringNotContainsString('modal-ks-status', $detailView);
