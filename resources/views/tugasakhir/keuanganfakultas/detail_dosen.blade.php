@@ -1,19 +1,14 @@
 @extends('tugasakhir.index')
 @section('isi')
-    <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
         <div class="container-fluid">
-            <!-- Begin page heading -->
             <h1 class="page-heading thesis-page-heading">Thesis App <small>FIKOM UMI</small></h1>
-            <!-- End page heading -->
 
-            <!-- Begin breadcrumb -->
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
-                <li><a href="{{ url('/') }}">Home</a></li>
-                <li class="active">Honorarium</li>
+                <li><a href="{{ route('report_dosen_home') }}">Laporan Dosen</a></li>
+                <li class="active">Laporan Harian</li>
             </ol>
-            <!-- End breadcrumb -->
 
             @if (session('status'))
                 <div class="alert alert-{{ session('status') }} alert-block square fade in alert-dismissable">
@@ -22,148 +17,246 @@
                 </div>
             @endif
 
-            <!-- BEGIN DATA TABLE -->
-            <h3 class="page-heading">Honorarium List <b>{{helper::getDeskripsi($nidn)}}</b></h3>
+            <h3 class="page-heading">Laporan Honorarium Harian <b>{{ helper::getDeskripsi($nidn) }}</b></h3>
             <div class="the-box">
-                <div style="margin-bottom: 20px; text-align: right;">
-                    <a href="{{route('report_dosen_history', $nidn)}}" type="button" class="btn btn-primary">
-                        <i class="fa fa-history"></i> History
+                @php
+                    $totalTersedia = $reportHarian->sum('available_total');
+                    $totalBelumTersedia = $reportHarian->sum('unavailable_total');
+                    $jumlahMahasiswa = $reportHarian->flatMap(function ($report) {
+                        return $report->items->pluck('C_NPM');
+                    })->filter()->unique()->count();
+                @endphp
+
+                <div class="daily-report-toolbar">
+                    <p class="text-muted">Setiap baris mewakili satu tanggal ujian. Rincian mahasiswa dan peran dosen tersedia pada tombol Detail.</p>
+                    <a href="{{ route('report_dosen_history', $nidn) }}" class="btn btn-primary">
+                        <i class="fa fa-history"></i> Riwayat Pembayaran
                     </a>
                 </div>
 
-                <form>
-                    @csrf
-                    <div class="table-responsive">
-                        <table class="table" id="datatable-example">
-                            <thead class="the-box dark full">
-                                <tr>
-                                    <th>No</th>
-                                    <th>Date</th>
-                                    <th>Nim</th>
-                                    <th>Student Name</th>
-                                    <th>Act As</th>
-                                    <th>Honorarium</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="datatable-example">
+                        <thead class="the-box dark full">
+                            <tr>
+                                <th class="daily-report-number">No</th>
+                                <th>Tanggal Ujian</th>
+                                <th>Mahasiswa</th>
+                                <th>Status Honorarium</th>
+                                <th>Total Honorarium</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($reportHarian as $report)
                                 @php
-                                    $totalReceived = 0;
-                                    $totalUnpaid = 0;
+                                    $modalId = 'daily-report-' . preg_replace('/[^a-zA-Z0-9_-]/', '', $report->date);
                                 @endphp
-                                @foreach ($data as $honorarium)
-                                    @php
-                                        if ($honorarium->status == 3) {
-                                            $totalReceived += $honorarium->amount;
-                                        } elseif ($honorarium->status == 1 || $honorarium->status == 0) {
-                                            $totalUnpaid += $honorarium->amount;
-                                        }
-                                    @endphp
-                                    <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $honorarium->date }}</td>
-                                        <td>{{ $honorarium->C_NPM }}</td>
-                                        <td>{{ helper::getNamaMhs($honorarium->C_NPM) }}</td>
-                                        <td>{{ $honorarium->role }}</td>
-                                        <td>
-                                            @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
-                                                <span class="badge badge-danger">Unset</span>
-                                            @elseif ($honorarium->status == 1)
-                                                <span class="badge badge-success amount-display">Rp
-                                                    {{ number_format($honorarium->amount, 0, ',', '.') }}
-                                                </span>
-                                            @elseif ($honorarium->status == 0)
-                                                <span class="badge badge-warning amount-display">Rp
-                                                    {{ number_format($honorarium->amount, 0, ',', '.') }}
-                                                </span>
-                                            @elseif ($honorarium->status == 3)
-                                                <span class="badge badge-primary amount-display">Rp
-                                                    {{ number_format($honorarium->amount, 0, ',', '.') }}
-                                                </span>
-                                            @else
-                                                <span class="badge badge-danger">Tidak Diketahui</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div><!-- /.table-responsive -->
-                    <div style="margin-top: 20px; text-align: right;">
-                        <table style="display: inline-table; border-collapse: separate;border: 1px solid gray;">
-                            <tr>
-                                <td style="border: 1px solid gray; padding: 10px"><strong>Honorarium to be
-                                        received:</strong></td>
-                                <td style="border: 1px solid gray; padding: 10px">Rp <span
-                                        id="totalReceived">{{ number_format($totalReceived, 0, ',', '.') }}</span>,-</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid gray; padding: 10px"><strong>Unpaid Honorarium:</strong></td>
-                                <td style="border: 1px solid gray; padding: 10px">Rp <span
-                                        id="totalUnpaid">{{ number_format($totalUnpaid, 0, ',', '.') }}</span>,-</td>
-                            </tr>
-                        </table>
-                    </div>
-                </form>
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>
+                                        <strong>
+                                            {{ $report->date === 'tanpa-tanggal' ? 'Tanggal belum tersedia' : \Carbon\Carbon::parse($report->date)->format('d/m/Y') }}
+                                        </strong>
+                                    </td>
+                                    <td><strong>{{ $report->student_count }}</strong> mahasiswa</td>
+                                    <td>
+                                        @if ($report->available_count > 0)
+                                            <span class="badge badge-success">{{ $report->available_count }} tersedia</span>
+                                        @endif
+                                        @if ($report->unavailable_count > 0)
+                                            <span class="badge badge-warning">{{ $report->unavailable_count }} belum tersedia</span>
+                                        @endif
+                                        @if ($report->unset_count > 0)
+                                            <span class="badge badge-danger">{{ $report->unset_count }} tipe belum ditetapkan</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($report->available_count + $report->unavailable_count > 0)
+                                            <strong>{{ helper::formatRupiah($report->total_amount) }}</strong>
+                                        @else
+                                            <span class="text-muted">Belum dapat dihitung</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#{{ $modalId }}">
+                                            <i class="fa fa-list"></i> Detail
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
 
+                @if ($reportHarian->isEmpty())
+                    <div class="alert alert-info square daily-report-empty">Belum ada honorarium aktif untuk dosen ini.</div>
+                @endif
 
-                <div class="row">
-                    <div class="col-md-3">
-                        <div style="border: 2px dashed #007bff; background-color: #e7f1ff; padding: 10px;">
-                            <small>
-                                <p>KS: Ketua Sidang</p>
-                                <p>PU: Pembimbing Utama</p>
-                                <p>PP: Pembimbing Pendamping</p>
-                                <p>P1: Penguji I</p>
-                                <p>P2: Penguji II</p>
-                                <p>P3: Penguji III</p>
-                            </small>
-                        </div>
+                <div class="daily-report-summary">
+                    <div>
+                        <small>Tanggal Ujian</small>
+                        <strong>{{ $reportHarian->count() }} hari</strong>
                     </div>
-                    <div class="col-md-9" style="text-align: left;">
-                        <div>
-                            <div
-                                style="display: inline-block; border: 2px solid #8cc152; background-color: #e1f7f4; padding: 5px 15px; margin-bottom: 10px;">
-                                Available</div><br>
-                            <div
-                                style="display: inline-block; border: 2px solid #f6bb42; background-color: #fff5e1; padding: 5px 15px;">
-                                Unavailable</div>
+                    <div>
+                        <small>Mahasiswa Unik</small>
+                        <strong>{{ $jumlahMahasiswa }} mahasiswa</strong>
+                    </div>
+                    <div>
+                        <small>Honorarium Tersedia</small>
+                        <strong>{{ helper::formatRupiah($totalTersedia) }}</strong>
+                    </div>
+                    <div>
+                        <small>Honorarium Belum Tersedia</small>
+                        <strong>{{ helper::formatRupiah($totalBelumTersedia) }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            @foreach ($reportHarian as $report)
+                @php
+                    $modalId = 'daily-report-' . preg_replace('/[^a-zA-Z0-9_-]/', '', $report->date);
+                @endphp
+                <div class="modal fade" id="{{ $modalId }}" tabindex="-1" role="dialog" aria-labelledby="{{ $modalId }}-title">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title" id="{{ $modalId }}-title">
+                                    Rincian Honorarium {{ $report->date === 'tanpa-tanggal' ? 'Tanpa Tanggal' : \Carbon\Carbon::parse($report->date)->format('d/m/Y') }}
+                                </h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped daily-report-detail">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Mahasiswa</th>
+                                                <th>Peran Dosen</th>
+                                                <th>Tipe Ujian</th>
+                                                <th>Status</th>
+                                                <th>Honorarium</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($report->items as $honorarium)
+                                                @php
+                                                    $tipeBelumDitetapkan = trim((string) $honorarium->tipe_ujian) === ''
+                                                        || in_array((string) $honorarium->tipe_ujian, ['0', '2'], true);
+                                                @endphp
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>
+                                                        <strong>{{ $honorarium->nama_mahasiswa }}</strong>
+                                                        <small class="text-muted daily-report-nim">{{ $honorarium->C_NPM }}</small>
+                                                    </td>
+                                                    <td>{{ $honorarium->role }}</td>
+                                                    <td>
+                                                        @if ($tipeBelumDitetapkan)
+                                                            <span class="text-muted">Belum ditetapkan</span>
+                                                        @else
+                                                            {{ $honorarium->tipe_ujian }}
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if ($tipeBelumDitetapkan)
+                                                            <span class="badge badge-danger">Perlu penetapan</span>
+                                                        @elseif ((int) $honorarium->status === 1)
+                                                            <span class="badge badge-success">Tersedia</span>
+                                                        @elseif ((int) $honorarium->status === 0)
+                                                            <span class="badge badge-warning">Belum tersedia</span>
+                                                        @else
+                                                            <span class="badge badge-default">Tidak diketahui</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if ($tipeBelumDitetapkan)
+                                                            <span class="text-muted">-</span>
+                                                        @else
+                                                            {{ helper::formatRupiah($honorarium->amount) }}
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-            </div><!-- /.the-box .default -->
-            <!-- END DATA TABLE -->
-        </div><!-- /.container-fluid -->
-    </div><!-- /.page-content -->
+            @endforeach
+        </div>
+    </div>
 @endsection
 
 @section('script')
-    <script>
-        $(function() {
-            $('input[data-toggle="toggle"]').bootstrapToggle();
+    <style>
+        .daily-report-toolbar {
+            align-items: center;
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
 
-            let totalReceived = parseFloat('{{ $totalReceived }}');
-            let totalUnpaid = parseFloat('{{ $totalUnpaid }}');
+        .daily-report-toolbar p {
+            margin: 0;
+        }
 
-            $('input[data-toggle="toggle"]').change(function() {
-                let isChecked = $(this).prop('checked');
-                let amount = parseFloat($(this).data('amount'));
-                let index = $(this).closest('tr').index();
+        .daily-report-number {
+            width: 54px;
+        }
 
-                $('#status-' + index).val(isChecked ? 3 : 1);
+        .daily-report-summary {
+            border-top: 1px solid #e5e9ed;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(4, minmax(150px, 1fr));
+            margin-top: 18px;
+            padding-top: 18px;
+        }
 
-                if (isChecked) {
-                    totalReceived += amount;
-                    totalUnpaid -= amount;
-                } else {
-                    totalReceived -= amount;
-                    totalUnpaid += amount;
-                }
+        .daily-report-summary > div {
+            background: #f7f9fb;
+            border-left: 3px solid #2f6f91;
+            padding: 10px 12px;
+        }
 
-                // Update displayed totals
-                $('#totalReceived').text(totalReceived.toLocaleString('id-ID'));
-                $('#totalUnpaid').text(totalUnpaid.toLocaleString('id-ID'));
-            });
-        });
-    </script>
+        .daily-report-summary small,
+        .daily-report-summary strong,
+        .daily-report-nim {
+            display: block;
+        }
+
+        .daily-report-summary strong {
+            margin-top: 4px;
+        }
+
+        .daily-report-detail th {
+            white-space: nowrap;
+        }
+
+        .daily-report-nim {
+            margin-top: 3px;
+        }
+
+        .daily-report-empty {
+            margin-top: 16px;
+        }
+
+        @media (max-width: 767px) {
+            .daily-report-toolbar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .daily-report-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 @endsection

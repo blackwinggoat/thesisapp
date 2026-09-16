@@ -2552,15 +2552,67 @@ class KeuanganFakultas extends Controller
                         ->orWhere('trt_honorium.P3', $C_KODE_DOSEN);
                 })
                 ->having('status', '<>', 3) // Exclude records where status is 3
+                ->orderBy('date', 'desc')
+                ->orderBy('C_NPM')
                 ->get();
 
-            return view('tugasakhir.keuanganfakultas.detail_dosen', compact('data', 'nidn'));
+            $nims = $data->pluck('C_NPM')->filter()->unique()->values();
+            $namaMahasiswa = $nims->isEmpty()
+                ? collect()
+                : DB::table('t_mst_mahasiswa')
+                    ->whereIn('C_NPM', $nims->all())
+                    ->pluck('NAMA_MAHASISWA', 'C_NPM');
+
+            $data->each(function ($honorarium) use ($namaMahasiswa) {
+                $honorarium->nama_mahasiswa = $namaMahasiswa->get($honorarium->C_NPM, '-');
+            });
+
+            $reportHarian = $this->groupDosenReportByDate($data);
+
+            return view('tugasakhir.keuanganfakultas.detail_dosen', compact('reportHarian', 'nidn'));
         } catch (\Throwable $th) {
             return redirect()->back()->with([
                 'status' => 'danger',
                 'message' => 'Terjadi kesalahan saat mengambil data dosen: ',
             ]);
         }
+    }
+
+    protected function groupDosenReportByDate($honorariums)
+    {
+        return collect($honorariums)
+            ->groupBy(function ($honorarium) {
+                $date = substr((string) $honorarium->date, 0, 10);
+
+                return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? $date : 'tanpa-tanggal';
+            })
+            ->map(function ($items, $date) {
+                $items = $items->sortBy(function ($item) {
+                    return strtolower((string) ($item->nama_mahasiswa ?? '') . '|' . (string) $item->C_NPM);
+                })->values();
+                $tipeBelumDitetapkan = $items->filter(function ($item) {
+                    return trim((string) $item->tipe_ujian) === ''
+                        || in_array((string) $item->tipe_ujian, ['0', '2'], true);
+                });
+                $tipeSudahDitetapkan = $items->diffKeys($tipeBelumDitetapkan);
+
+                return (object) [
+                    'date' => $date,
+                    'items' => $items,
+                    'student_count' => $items->pluck('C_NPM')->filter()->unique()->count(),
+                    'assignment_count' => $items->count(),
+                    'available_count' => $tipeSudahDitetapkan->where('status', 1)->count(),
+                    'unavailable_count' => $tipeSudahDitetapkan->where('status', 0)->count(),
+                    'unset_count' => $tipeBelumDitetapkan->count(),
+                    'available_total' => (float) $tipeSudahDitetapkan->where('status', 1)->sum('amount'),
+                    'unavailable_total' => (float) $tipeSudahDitetapkan->where('status', 0)->sum('amount'),
+                    'total_amount' => (float) $tipeSudahDitetapkan->sum('amount'),
+                ];
+            })
+            ->sortByDesc(function ($report) {
+                return $report->date === 'tanpa-tanggal' ? '' : $report->date;
+            })
+            ->values();
     }
 
     public function report_dosen_history($nidn)
