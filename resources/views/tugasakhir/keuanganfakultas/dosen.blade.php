@@ -12,7 +12,9 @@
             <h3 class="page-heading">Laporan Honorarium Dosen</h3>
             <div class="the-box">
                 <div class="lecturer-report-intro">
-                    <p class="text-muted">Daftar dosen, tanda tangan digital, dan total honorarium yang belum dikonfirmasi telah diterima.</p>
+                    <p class="text-muted">
+                        Total belum diterima = honor dasar + penyesuaian kehadiran pembimbing. Penugasan yang tipenya belum ditetapkan tidak dihitung.
+                    </p>
                     <span class="label label-default">{{ $data->count() }} dosen</span>
                 </div>
 
@@ -50,6 +52,15 @@
                                     <td class="text-right" data-order="{{ $item->total_honorarium_belum_diterima }}">
                                         @if ($item->total_honorarium_belum_diterima > 0)
                                             <strong class="lecturer-report-amount">{{ helper::formatRupiah($item->total_honorarium_belum_diterima) }}</strong>
+                                            <small class="lecturer-report-base">
+                                                Dasar: {{ helper::formatRupiah($item->total_honorarium_dasar_belum_diterima) }}
+                                            </small>
+                                            @if ($item->total_penyesuaian_belum_diterima != 0)
+                                                <small class="{{ $item->total_penyesuaian_belum_diterima > 0 ? 'lecturer-report-adjustment-positive' : 'lecturer-report-adjustment-negative' }}">
+                                                    Penyesuaian:
+                                                    {{ $item->total_penyesuaian_belum_diterima > 0 ? '+' : '-' }}{{ helper::formatRupiah(abs($item->total_penyesuaian_belum_diterima)) }}
+                                                </small>
+                                            @endif
                                         @elseif ($item->jumlah_penugasan_belum_ditetapkan > 0)
                                             <span class="text-muted">Belum dapat dihitung</span>
                                         @else
@@ -179,6 +190,27 @@
         .lecturer-report-amount {
             color: #226b45;
             white-space: nowrap;
+        }
+
+        .lecturer-report-base,
+        .lecturer-report-adjustment-positive,
+        .lecturer-report-adjustment-negative {
+            display: block;
+            font-size: 11px;
+            margin-top: 3px;
+            white-space: nowrap;
+        }
+
+        .lecturer-report-base {
+            color: #7a838b;
+        }
+
+        .lecturer-report-adjustment-positive {
+            color: #226b45;
+        }
+
+        .lecturer-report-adjustment-negative {
+            color: #a94442;
         }
 
         .lecturer-report-unset {

@@ -1,144 +1,138 @@
 @extends('tugasakhir.index')
 @section('isi')
-    <!-- BEGIN PAGE CONTENT -->
     <div class="page-content">
         <div class="container-fluid">
-            <!-- Begin page heading -->
             <h1 class="page-heading thesis-page-heading">Thesis App <small>FIKOM UMI</small></h1>
-            <!-- End page heading -->
 
-            <!-- Begin breadcrumb -->
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
-                <li><a href="{{ url('/') }}">Home</a></li>
-                <li class="active">History Honorarium</li>
+                <li><a href="{{ route('report_dosen_home') }}">Laporan Dosen</a></li>
+                <li><a href="{{ route('report_dosen_detail', $nidn) }}">Rincian Harian</a></li>
+                <li class="active">Riwayat Pembayaran</li>
             </ol>
-            <!-- End breadcrumb -->
 
-            @if (session('status'))
-                <div class="alert alert-{{ session('status') }} alert-block square fade in alert-dismissable">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                    {{ session('message') }}
-                </div>
-            @endif
-
-            <!-- BEGIN DATA TABLE -->
-            <h3 class="page-heading">Paid Honorarium List</h3>
+            <h3 class="page-heading">Riwayat Honorarium <b>{{ helper::getDeskripsi($nidn) }}</b></h3>
             <div class="the-box">
+                @php
+                    $totalDasar = $data->filter(function ($item) {
+                        return $item->tipe_ditetapkan;
+                    })->sum('base_amount');
+                    $totalPenyesuaian = $data->filter(function ($item) {
+                        return $item->tipe_ditetapkan;
+                    })->sum('adjustment_amount');
+                    $totalDiterima = $data->filter(function ($item) {
+                        return $item->tipe_ditetapkan;
+                    })->sum('amount');
+                    $formatPenyesuaian = function ($nilai) {
+                        if ($nilai > 0) {
+                            return '+' . helper::formatRupiah($nilai);
+                        }
+                        if ($nilai < 0) {
+                            return '-' . helper::formatRupiah(abs($nilai));
+                        }
+                        return helper::formatRupiah(0);
+                    };
+                @endphp
+
+                <p class="text-muted report-adjustment-help">Nominal diterima sudah memperhitungkan penyesuaian kehadiran pembimbing yang berlaku pada tanggal ujian.</p>
+
                 <div class="table-responsive">
-                    <table class="table" id="datatable-example">
+                    <table class="table table-striped table-hover" id="history-dosen-table">
                         <thead class="the-box dark full">
                             <tr>
                                 <th>No</th>
-                                <th>Date</th>
-                                <th>Nim</th>
-                                <th>Student Name</th>
-                                <th>Act As</th>
-                                <th>Honorarium</th>
+                                <th>Tanggal Ujian</th>
+                                <th>Mahasiswa</th>
+                                <th>Peran</th>
+                                <th>Tipe Ujian</th>
+                                <th class="text-right">Honor Dasar</th>
+                                <th class="text-right">Penyesuaian</th>
+                                <th class="text-right">Diterima</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $totalReceived = 0;
-                                $totalUnpaid = 0;
-                            @endphp
                             @foreach ($data as $honorarium)
-                                @php
-                                    if ($honorarium->status == 3) {
-                                        $totalReceived += $honorarium->amount;
-                                    } elseif ($honorarium->status == 1 || $honorarium->status == 0) {
-                                        $totalUnpaid += $honorarium->amount;
-                                    }
-                                @endphp
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $honorarium->date }}</td>
-                                    <td>{{ $honorarium->C_NPM }}</td>
-                                    <td>{{ helper::getNamaMhs($honorarium->C_NPM) }}</td>
-                                    <td>{{ $honorarium->role }}</td>
+                                    <td data-order="{{ $honorarium->date }}">{{ \Carbon\Carbon::parse($honorarium->date)->format('d/m/Y') }}</td>
                                     <td>
-                                        @if ($honorarium->tipe_ujian == '0' || $honorarium->tipe_ujian == '2')
-                                            <span class="badge badge-danger">Unset</span>
-                                        @elseif ($honorarium->status == 1)
-                                            <span class="badge badge-success amount-display">Rp
-                                                {{ number_format($honorarium->amount, 0, ',', '.') }}
+                                        <strong>{{ $honorarium->nama_mahasiswa }}</strong>
+                                        <small class="text-muted report-student-nim">{{ $honorarium->C_NPM }}</small>
+                                    </td>
+                                    <td>{{ $honorarium->role }}</td>
+                                    <td>{{ $honorarium->tipe_ditetapkan ? $honorarium->tipe_ujian : 'Belum ditetapkan' }}</td>
+                                    <td class="text-right">{{ $honorarium->tipe_ditetapkan ? helper::formatRupiah($honorarium->base_amount) : '-' }}</td>
+                                    <td class="text-right">
+                                        @if ($honorarium->tipe_ditetapkan)
+                                            <span class="{{ $honorarium->adjustment_amount < 0 ? 'text-danger' : ($honorarium->adjustment_amount > 0 ? 'text-success' : 'text-muted') }}">
+                                                {{ $formatPenyesuaian($honorarium->adjustment_amount) }}
                                             </span>
-                                        @elseif ($honorarium->status == 0)
-                                            <span class="badge badge-warning amount-display">Rp
-                                                {{ number_format($honorarium->amount, 0, ',', '.') }}
-                                            </span>
-                                        @elseif ($honorarium->status == 3)
-                                            <span class="badge badge-primary amount-display">Rp
-                                                {{ number_format($honorarium->amount, 0, ',', '.') }}
-                                            </span>
+                                            @if ($honorarium->adjustment_note !== '')
+                                                <small class="text-muted report-adjustment-note">{{ $honorarium->adjustment_note }}</small>
+                                            @endif
                                         @else
-                                            <span class="badge badge-danger">Tidak Diketahui</span>
+                                            <span class="text-muted">-</span>
                                         @endif
                                     </td>
+                                    <td class="text-right"><strong>{{ $honorarium->tipe_ditetapkan ? helper::formatRupiah($honorarium->amount) : '-' }}</strong></td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
-                </div><!-- /.table-responsive -->
-                <div style="margin-top: 20px; text-align: right;">
-                    <table style="display: inline-table; border-collapse: separate;border: 1px solid gray;">
-                        <tr>
-                            <td style="border: 1px solid gray; padding: 10px"><strong>Paid Honorarium:</strong></td>
-                            <td style="border: 1px solid gray; padding: 10px">Rp <span
-                                    id="totalReceived">{{ number_format($totalReceived, 0, ',', '.') }}</span>,-</td>
-                        </tr>
-                    </table>
                 </div>
 
-
-                <div class="row">
-                    <div class="col-md-3">
-                        <div style="border: 2px dashed #007bff; background-color: #e7f1ff; padding: 10px;">
-                            <small>
-                                <p>KS: Ketua Sidang</p>
-                                <p>PU: Pembimbing Utama</p>
-                                <p>PP: Pembimbing Pendamping</p>
-                                <p>P1: Penguji I</p>
-                                <p>P2: Penguji II</p>
-                                <p>P3: Penguji III</p>
-                            </small>
-                        </div>
-                    </div>
+                <div class="report-total-summary">
+                    <span>Honor Dasar <strong>{{ helper::formatRupiah($totalDasar) }}</strong></span>
+                    <span>Penyesuaian <strong class="{{ $totalPenyesuaian < 0 ? 'text-danger' : ($totalPenyesuaian > 0 ? 'text-success' : '') }}">{{ $formatPenyesuaian($totalPenyesuaian) }}</strong></span>
+                    <span>Total Diterima <strong>{{ helper::formatRupiah($totalDiterima) }}</strong></span>
                 </div>
-
-            </div><!-- /.the-box .default -->
-            <!-- END DATA TABLE -->
-        </div><!-- /.container-fluid -->
-    </div><!-- /.page-content -->
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('script')
+    <style>
+        .report-adjustment-help {
+            margin-bottom: 18px;
+        }
+
+        .report-student-nim,
+        .report-adjustment-note {
+            display: block;
+            margin-top: 3px;
+        }
+
+        .report-total-summary {
+            border-top: 1px solid #e5e9ed;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            justify-content: flex-end;
+            margin-top: 18px;
+            padding-top: 15px;
+        }
+
+        .report-total-summary span {
+            white-space: nowrap;
+        }
+
+        .report-total-summary strong {
+            margin-left: 5px;
+        }
+    </style>
     <script>
         $(function() {
-            $('input[data-toggle="toggle"]').bootstrapToggle();
-
-            let totalReceived = parseFloat('{{ $totalReceived }}');
-            let totalUnpaid = parseFloat('{{ $totalUnpaid }}');
-
-            $('input[data-toggle="toggle"]').change(function() {
-                let isChecked = $(this).prop('checked');
-                let amount = parseFloat($(this).data('amount'));
-                let index = $(this).closest('tr').index(); // Get the index of the row
-
-                // Update the hidden input with the current status
-                $('#status-' + index).val(isChecked ? 3 : 1);
-
-                if (isChecked) {
-                    totalReceived += amount;
-                    totalUnpaid -= amount;
-                } else {
-                    totalReceived -= amount;
-                    totalUnpaid += amount;
+            $('#history-dosen-table').DataTable({
+                order: [[1, 'desc']],
+                pageLength: 25,
+                columnDefs: [
+                    { orderable: false, targets: [0, 6] }
+                ],
+                language: {
+                    search: 'Cari:',
+                    zeroRecords: 'Riwayat honorarium tidak ditemukan'
                 }
-
-                // Update displayed totals
-                $('#totalReceived').text(totalReceived.toLocaleString('id-ID'));
-                $('#totalUnpaid').text(totalUnpaid.toLocaleString('id-ID'));
             });
         });
     </script>

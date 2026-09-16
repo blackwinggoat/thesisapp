@@ -1764,8 +1764,13 @@ class KeuanganFakultas extends Controller
 
     protected function honorariumDenganJadwalQuery()
     {
+        return $this->honorariumSemuaDenganJadwalQuery()
+            ->whereRaw($this->honorariumOutstandingSql());
+    }
+
+    protected function honorariumSemuaDenganJadwalQuery()
+    {
         return DB::table('trt_honorium as honorarium')
-            ->whereRaw($this->honorariumOutstandingSql())
             ->join('trt_jadwal_ujian as jadwal', 'jadwal.id', '=', 'honorarium.jadwal_ujian_id')
             ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
             ->whereRaw('periode.tipe_ujian = honorarium.exam_type')
@@ -2511,18 +2516,7 @@ class KeuanganFakultas extends Controller
                 ->get()
                 ->unique('id')
                 ->values();
-            $jumlahPenyesuaianByTanggal = $honorariums
-                ->pluck('tanggal_ujian')
-                ->map(function ($tanggal) {
-                    return substr((string) $tanggal, 0, 10);
-                })
-                ->filter(function ($tanggal) {
-                    return preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal);
-                })
-                ->unique()
-                ->mapWithKeys(function ($tanggal) {
-                    return [$tanggal => $this->jumlahSanksiPembayaranPadaTanggal($tanggal)];
-                });
+            $jumlahPenyesuaianByTanggal = $this->jumlahPenyesuaianHonorariumByTanggal($honorariums);
 
             $tandaTanganDosen = collect();
             if (Schema::hasTable('mst_tanda_tangan')) {
@@ -2560,6 +2554,8 @@ class KeuanganFakultas extends Controller
         $tandaTanganDosen = collect($tandaTanganDosen);
         $lecturersByCode = collect($lecturers)->mapWithKeys(function ($lecturer) use ($tandaTanganDosen) {
             $code = trim((string) $lecturer->C_KODE_DOSEN);
+            $lecturer->total_honorarium_dasar_belum_diterima = 0.0;
+            $lecturer->total_penyesuaian_belum_diterima = 0.0;
             $lecturer->total_honorarium_belum_diterima = 0.0;
             $lecturer->jumlah_penugasan_belum_ditetapkan = 0;
             $lecturer->tanda_tangan_data_uri = Helper::binaryImageDataUri($tandaTanganDosen->get($code, ''));
@@ -2567,37 +2563,25 @@ class KeuanganFakultas extends Controller
             return [$code => $lecturer];
         });
 
-        foreach (collect($honorariums) as $honorarium) {
-            if ($this->honorariumNeedsTypeAssignment($honorarium)) {
-                foreach ($this->honorariumRoles() as $role => $definition) {
-                    $code = trim((string) $honorarium->{$role});
-                    if ($code !== ''
-                        && $lecturersByCode->has($code)
-                        && (int) $honorarium->{$definition['status']} !== 3) {
-                        $lecturersByCode->get($code)->jumlah_penugasan_belum_ditetapkan++;
-                    }
-                }
-
+        $assignments = $this->buildHonorariumReportAssignments(
+            $honorariums,
+            $jumlahPenyesuaianByTanggal
+        );
+        foreach ($assignments as $assignment) {
+            $code = (string) $assignment->kode_dosen;
+            if (!$lecturersByCode->has($code) || (int) $assignment->status === 3) {
                 continue;
             }
 
-            $tanggal = substr((string) ($honorarium->tanggal_ujian ?? $honorarium->date), 0, 10);
-            $penyesuaian = $this->penyesuaianHonorPembimbing(
-                $honorarium,
-                (float) $jumlahPenyesuaianByTanggal->get($tanggal, 0)
-            );
-
-            foreach ($this->honorariumRoles() as $role => $definition) {
-                $code = trim((string) $honorarium->{$role});
-                if ($code === ''
-                    || !$lecturersByCode->has($code)
-                    || (int) $honorarium->{$definition['status']} === 3) {
-                    continue;
-                }
-
-                $lecturer = $lecturersByCode->get($code);
-                $lecturer->total_honorarium_belum_diterima += (float) $penyesuaian['amounts'][$role];
+            $lecturer = $lecturersByCode->get($code);
+            if (!$assignment->tipe_ditetapkan) {
+                $lecturer->jumlah_penugasan_belum_ditetapkan++;
+                continue;
             }
+
+            $lecturer->total_honorarium_dasar_belum_diterima += (float) $assignment->base_amount;
+            $lecturer->total_penyesuaian_belum_diterima += (float) $assignment->adjustment_amount;
+            $lecturer->total_honorarium_belum_diterima += (float) $assignment->amount;
         }
 
         return $lecturersByCode->sortBy(function ($lecturer) {
@@ -2605,65 +2589,106 @@ class KeuanganFakultas extends Controller
         })->values();
     }
 
+    protected function jumlahPenyesuaianHonorariumByTanggal($honorariums)
+    {
+        return collect($honorariums)
+            ->map(function ($honorarium) {
+                return substr((string) ($honorarium->tanggal_ujian ?? $honorarium->date), 0, 10);
+            })
+            ->filter(function ($tanggal) {
+                return preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal);
+            })
+            ->unique()
+            ->mapWithKeys(function ($tanggal) {
+                return [$tanggal => $this->jumlahSanksiPembayaranPadaTanggal($tanggal)];
+            });
+    }
+
+    protected function buildHonorariumReportAssignments(
+        $honorariums,
+        $jumlahPenyesuaianByTanggal,
+        $namaMahasiswa = null
+    ) {
+        $jumlahPenyesuaianByTanggal = collect($jumlahPenyesuaianByTanggal);
+        $namaMahasiswa = collect($namaMahasiswa ?: []);
+        $assignments = collect();
+
+        foreach (collect($honorariums) as $honorarium) {
+            $tanggal = substr((string) ($honorarium->tanggal_ujian ?? $honorarium->date), 0, 10);
+            $penyesuaian = $this->penyesuaianHonorPembimbing(
+                $honorarium,
+                (float) $jumlahPenyesuaianByTanggal->get($tanggal, 0)
+            );
+            $tipeDitetapkan = !$this->honorariumNeedsTypeAssignment($honorarium);
+
+            foreach ($this->honorariumReportRoles() as $role => $definition) {
+                $code = trim((string) $honorarium->{$role});
+                if ($code === '' || $code === '0') {
+                    continue;
+                }
+
+                $assignment = clone $honorarium;
+                $assignment->date = $tanggal;
+                $assignment->kode_dosen = $code;
+                $assignment->nama_mahasiswa = $namaMahasiswa->get($honorarium->C_NPM, '-');
+                $assignment->role = $definition['label'];
+                $assignment->base_amount = (float) $penyesuaian['base_amounts'][$role];
+                $assignment->adjustment_amount = (float) $penyesuaian['amounts'][$role]
+                    - (float) $penyesuaian['base_amounts'][$role];
+                $assignment->amount = (float) $penyesuaian['amounts'][$role];
+                $assignment->adjustment_note = (string) $penyesuaian['notes'][$role];
+                $assignment->status = (int) $honorarium->{$definition['status']};
+                $assignment->tipe_ditetapkan = $tipeDitetapkan;
+                $assignments->push($assignment);
+            }
+        }
+
+        return $assignments;
+    }
+
+    protected function getDosenReportAssignments($kodeDosen)
+    {
+        $kodeDosen = trim((string) $kodeDosen);
+        $honorariums = $this->honorariumSemuaDenganJadwalQuery()
+            ->where(function ($query) use ($kodeDosen) {
+                $query->where('honorarium.KS', $kodeDosen)
+                    ->orWhere('honorarium.PU', $kodeDosen)
+                    ->orWhere('honorarium.PP', $kodeDosen)
+                    ->orWhere('honorarium.P1', $kodeDosen)
+                    ->orWhere('honorarium.P2', $kodeDosen)
+                    ->orWhere('honorarium.P3', $kodeDosen);
+            })
+            ->whereNotNull('jadwal.tgl_ujian')
+            ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
+            ->select('honorarium.*', 'jadwal.tgl_ujian as tanggal_ujian')
+            ->orderBy('jadwal.tgl_ujian', 'desc')
+            ->orderBy('honorarium.C_NPM')
+            ->get()
+            ->unique('id')
+            ->values();
+
+        $nims = $honorariums->pluck('C_NPM')->filter()->unique()->values();
+        $namaMahasiswa = $nims->isEmpty()
+            ? collect()
+            : DB::table('t_mst_mahasiswa')
+                ->whereIn('C_NPM', $nims->all())
+                ->pluck('NAMA_MAHASISWA', 'C_NPM');
+
+        return $this->buildHonorariumReportAssignments(
+            $honorariums,
+            $this->jumlahPenyesuaianHonorariumByTanggal($honorariums),
+            $namaMahasiswa
+        )->where('kode_dosen', $kodeDosen)->values();
+    }
+
     public function report_dosen_detail($nidn)
     {
         try {
-            $C_KODE_DOSEN = $nidn;
-            $data = DB::table('trt_honorium')
-                ->select('trt_honorium.*', DB::raw("
-                CASE
-                    WHEN KS = '$C_KODE_DOSEN' THEN 'Ketua Sidang'
-                    WHEN PU = '$C_KODE_DOSEN' THEN 'Pembimbing Utama'
-                    WHEN PP = '$C_KODE_DOSEN' THEN 'Pembimbing Pendamping'
-                    WHEN P1 = '$C_KODE_DOSEN' THEN 'Penguji I'
-                    WHEN P2 = '$C_KODE_DOSEN' THEN 'Penguji II'
-                    WHEN P3 = '$C_KODE_DOSEN' THEN 'Penguji III'
-                    ELSE 'Unknown'
-                END as role,
-                CASE
-                    WHEN KS = '$C_KODE_DOSEN' THEN KS_H
-                    WHEN PU = '$C_KODE_DOSEN' THEN PU_H
-                    WHEN PP = '$C_KODE_DOSEN' THEN PP_H
-                    WHEN P1 = '$C_KODE_DOSEN' THEN P1_H
-                    WHEN P2 = '$C_KODE_DOSEN' THEN P2_H
-                    WHEN P3 = '$C_KODE_DOSEN' THEN P3_H
-                    ELSE 0
-                END as amount,
-                CASE
-                    WHEN KS = '$C_KODE_DOSEN' THEN KS_Stat
-                    WHEN PU = '$C_KODE_DOSEN' THEN PU_Stat
-                    WHEN PP = '$C_KODE_DOSEN' THEN PP_Stat
-                    WHEN P1 = '$C_KODE_DOSEN' THEN P1_Stat
-                    WHEN P2 = '$C_KODE_DOSEN' THEN P2_Stat
-                    WHEN P3 = '$C_KODE_DOSEN' THEN P3_Stat
-                    ELSE 0
-                END as status
-            "))
-                ->where(function ($query) use ($C_KODE_DOSEN) {
-                    $query->where('trt_honorium.KS', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.PU', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.PP', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.P1', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.P2', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.P3', $C_KODE_DOSEN);
-                })
-                ->having('status', '<>', 3) // Exclude records where status is 3
-                ->orderBy('date', 'desc')
-                ->orderBy('C_NPM')
-                ->get();
-
-            $nims = $data->pluck('C_NPM')->filter()->unique()->values();
-            $namaMahasiswa = $nims->isEmpty()
-                ? collect()
-                : DB::table('t_mst_mahasiswa')
-                    ->whereIn('C_NPM', $nims->all())
-                    ->pluck('NAMA_MAHASISWA', 'C_NPM');
-
-            $data->each(function ($honorarium) use ($namaMahasiswa) {
-                $honorarium->nama_mahasiswa = $namaMahasiswa->get($honorarium->C_NPM, '-');
-            });
-
-            $reportHarian = $this->groupDosenReportByDate($data);
+            $reportHarian = $this->groupDosenReportByDate(
+                $this->getDosenReportAssignments($nidn)->filter(function ($assignment) {
+                    return (int) $assignment->status !== 3;
+                })->values()
+            );
 
             return view('tugasakhir.keuanganfakultas.detail_dosen', compact('reportHarian', 'nidn'));
         } catch (\Throwable $th) {
@@ -2687,6 +2712,10 @@ class KeuanganFakultas extends Controller
                     return strtolower((string) ($item->nama_mahasiswa ?? '') . '|' . (string) $item->C_NPM);
                 })->values();
                 $tipeBelumDitetapkan = $items->filter(function ($item) {
+                    if (isset($item->tipe_ditetapkan)) {
+                        return !$item->tipe_ditetapkan;
+                    }
+
                     return trim((string) $item->tipe_ujian) === ''
                         || in_array((string) $item->tipe_ujian, ['0', '2'], true);
                 });
@@ -2699,9 +2728,17 @@ class KeuanganFakultas extends Controller
                     'assignment_count' => $items->count(),
                     'available_count' => $tipeSudahDitetapkan->where('status', 1)->count(),
                     'unavailable_count' => $tipeSudahDitetapkan->where('status', 0)->count(),
+                    'paid_count' => $tipeSudahDitetapkan->where('status', 3)->count(),
                     'unset_count' => $tipeBelumDitetapkan->count(),
                     'available_total' => (float) $tipeSudahDitetapkan->where('status', 1)->sum('amount'),
                     'unavailable_total' => (float) $tipeSudahDitetapkan->where('status', 0)->sum('amount'),
+                    'paid_total' => (float) $tipeSudahDitetapkan->where('status', 3)->sum('amount'),
+                    'base_total' => (float) $tipeSudahDitetapkan->sum(function ($item) {
+                        return isset($item->base_amount) ? $item->base_amount : $item->amount;
+                    }),
+                    'adjustment_total' => (float) $tipeSudahDitetapkan->sum(function ($item) {
+                        return isset($item->adjustment_amount) ? $item->adjustment_amount : 0;
+                    }),
                     'total_amount' => (float) $tipeSudahDitetapkan->sum('amount'),
                 ];
             })
@@ -2714,49 +2751,13 @@ class KeuanganFakultas extends Controller
     public function report_dosen_history($nidn)
     {
         try {
-            $C_KODE_DOSEN = $nidn;
-            $data = DB::table('trt_honorium')
-                ->select('trt_honorium.*', DB::raw("
-        CASE
-            WHEN KS = '$C_KODE_DOSEN' THEN 'Ketua Sidang'
-            WHEN PU = '$C_KODE_DOSEN' THEN 'Pembimbing Utama'
-            WHEN PP = '$C_KODE_DOSEN' THEN 'Pembimbing Pendamping'
-            WHEN P1 = '$C_KODE_DOSEN' THEN 'Penguji I'
-            WHEN P2 = '$C_KODE_DOSEN' THEN 'Penguji II'
-            WHEN P3 = '$C_KODE_DOSEN' THEN 'Penguji III'
-            ELSE 'Unknown'
-        END as role,
-        CASE
-            WHEN KS = '$C_KODE_DOSEN' THEN KS_H
-            WHEN PU = '$C_KODE_DOSEN' THEN PU_H
-            WHEN PP = '$C_KODE_DOSEN' THEN PP_H
-            WHEN P1 = '$C_KODE_DOSEN' THEN P1_H
-            WHEN P2 = '$C_KODE_DOSEN' THEN P2_H
-            WHEN P3 = '$C_KODE_DOSEN' THEN P3_H
-            ELSE 0
-        END as amount,
-        CASE
-            WHEN KS = '$C_KODE_DOSEN' THEN KS_Stat
-            WHEN PU = '$C_KODE_DOSEN' THEN PU_Stat
-            WHEN PP = '$C_KODE_DOSEN' THEN PP_Stat
-            WHEN P1 = '$C_KODE_DOSEN' THEN P1_Stat
-            WHEN P2 = '$C_KODE_DOSEN' THEN P2_Stat
-            WHEN P3 = '$C_KODE_DOSEN' THEN P3_Stat
-            ELSE 0
-        END as status
-    "))
-                ->where(function ($query) use ($C_KODE_DOSEN) {
-                    $query->where('trt_honorium.KS', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.PU', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.PP', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.P1', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.P2', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.P3', $C_KODE_DOSEN);
+            $data = $this->getDosenReportAssignments($nidn)
+                ->filter(function ($assignment) {
+                    return (int) $assignment->status === 3;
                 })
-                ->having('status', '=', 3)
-                ->get();
+                ->values();
 
-            return view('tugasakhir.keuanganfakultas.history_detail_dosen', compact('data'));
+            return view('tugasakhir.keuanganfakultas.history_detail_dosen', compact('data', 'nidn'));
         } catch (\Throwable $th) {
             return redirect()->back()->with([
                 'status' => 'danger',
@@ -2768,49 +2769,27 @@ class KeuanganFakultas extends Controller
     public function report_dosen_detail_by_date($nidn, $start_date, $end_date)
     {
         try {
-            $C_KODE_DOSEN = $nidn;
-            $data = DB::table('trt_honorium')
-                ->select('trt_honorium.*', DB::raw("
-                CASE
-                    WHEN KS = '$C_KODE_DOSEN' THEN 'Ketua Sidang'
-                    WHEN PU = '$C_KODE_DOSEN' THEN 'Pembimbing Utama'
-                    WHEN PP = '$C_KODE_DOSEN' THEN 'Pembimbing Pendamping'
-                    WHEN P1 = '$C_KODE_DOSEN' THEN 'Penguji I'
-                    WHEN P2 = '$C_KODE_DOSEN' THEN 'Penguji II'
-                    WHEN P3 = '$C_KODE_DOSEN' THEN 'Penguji III'
-                    ELSE 'Unknown'
-                END as role,
-                CASE
-                    WHEN KS = '$C_KODE_DOSEN' THEN KS_H
-                    WHEN PU = '$C_KODE_DOSEN' THEN PU_H
-                    WHEN PP = '$C_KODE_DOSEN' THEN PP_H
-                    WHEN P1 = '$C_KODE_DOSEN' THEN P1_H
-                    WHEN P2 = '$C_KODE_DOSEN' THEN P2_H
-                    WHEN P3 = '$C_KODE_DOSEN' THEN P3_H
-                    ELSE 0
-                END as amount,
-                CASE
-                    WHEN KS = '$C_KODE_DOSEN' THEN KS_Stat
-                    WHEN PU = '$C_KODE_DOSEN' THEN PU_Stat
-                    WHEN PP = '$C_KODE_DOSEN' THEN PP_Stat
-                    WHEN P1 = '$C_KODE_DOSEN' THEN P1_Stat
-                    WHEN P2 = '$C_KODE_DOSEN' THEN P2_Stat
-                    WHEN P3 = '$C_KODE_DOSEN' THEN P3_Stat
-                    ELSE 0
-                END as status
-            "))
-                ->where(function ($query) use ($C_KODE_DOSEN) {
-                    $query->where('trt_honorium.KS', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.PU', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.PP', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.P1', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.P2', $C_KODE_DOSEN)
-                        ->orWhere('trt_honorium.P3', $C_KODE_DOSEN);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $start_date)
+                || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $end_date)
+                || $start_date > $end_date) {
+                return redirect()->route('report_dosen_home')->with([
+                    'status' => 'warning',
+                    'message' => 'Rentang tanggal laporan tidak valid.',
+                ]);
+            }
+
+            $data = $this->getDosenReportAssignments($nidn)
+                ->filter(function ($assignment) use ($start_date, $end_date) {
+                    return $assignment->date >= $start_date && $assignment->date <= $end_date;
                 })
-                ->where('date', '>=', $start_date)
-                ->where('date', '<=', $end_date)
-                ->get();
-            return view('tugasakhir.keuanganfakultas.filter_detail_dosen', compact('data', 'nidn'));
+                ->values();
+
+            return view('tugasakhir.keuanganfakultas.filter_detail_dosen', compact(
+                'data',
+                'nidn',
+                'start_date',
+                'end_date'
+            ));
         } catch (\Throwable $th) {
             return redirect()->back()->with([
                 'status' => 'danger',

@@ -33,6 +33,10 @@ class DosenReportOverviewTest extends TestCase
 
         $this->assertSame(150000.0, $dosenUtama->total_honorarium_belum_diterima);
         $this->assertSame(250000.0, $dosenPendamping->total_honorarium_belum_diterima);
+        $this->assertSame(200000.0, $dosenUtama->total_honorarium_dasar_belum_diterima);
+        $this->assertSame(-50000.0, $dosenUtama->total_penyesuaian_belum_diterima);
+        $this->assertSame(200000.0, $dosenPendamping->total_honorarium_dasar_belum_diterima);
+        $this->assertSame(50000.0, $dosenPendamping->total_penyesuaian_belum_diterima);
         $this->assertSame(1, $dosenUtama->jumlah_penugasan_belum_ditetapkan);
         $this->assertSame(1, $dosenPendamping->jumlah_penugasan_belum_ditetapkan);
         $this->assertStringStartsWith('data:image/png;base64,', $dosenUtama->tanda_tangan_data_uri);
@@ -48,15 +52,61 @@ class DosenReportOverviewTest extends TestCase
         $this->assertStringContainsString('total_honorarium_belum_diterima', $controller);
         $this->assertStringContainsString('Tanda Tangan', $view);
         $this->assertStringContainsString('Honorarium Belum Diterima', $view);
+        $this->assertStringContainsString('honor dasar + penyesuaian kehadiran pembimbing', $view);
         $this->assertStringContainsString('penugasan menunggu tipe', $view);
         $this->assertStringContainsString('Rincian Harian', $view);
         $this->assertStringContainsString('paging: false', $view);
         $this->assertStringContainsString('lengthChange: false', $view);
     }
 
+    public function testEveryLecturerReportAssignmentUsesBaseAdjustmentAndFinalAmount()
+    {
+        $controller = new KeuanganFakultas;
+        $method = new \ReflectionMethod($controller, 'buildHonorariumReportAssignments');
+        $method->setAccessible(true);
+
+        $assignments = $method->invoke(
+            $controller,
+            collect([$this->honorarium('Ujian Meja', 0, 1)]),
+            collect(['2026-09-17' => 50000]),
+            collect(['13020220001' => 'Mahasiswa Uji'])
+        );
+
+        $utama = $assignments->firstWhere('kode_dosen', 'D1');
+        $pendamping = $assignments->firstWhere('kode_dosen', 'D2');
+
+        $this->assertSame(200000.0, $utama->base_amount);
+        $this->assertSame(-50000.0, $utama->adjustment_amount);
+        $this->assertSame(150000.0, $utama->amount);
+        $this->assertStringContainsString('Pembimbing Utama', $utama->adjustment_note);
+        $this->assertSame(200000.0, $pendamping->base_amount);
+        $this->assertSame(50000.0, $pendamping->adjustment_amount);
+        $this->assertSame(250000.0, $pendamping->amount);
+        $this->assertSame('Mahasiswa Uji', $utama->nama_mahasiswa);
+    }
+
+    public function testDailyHistoryAndDateRangeViewsExposeAdjustmentBreakdown()
+    {
+        $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/KeuanganFakultas.php');
+        $daily = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/detail_dosen.blade.php');
+        $history = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/history_detail_dosen.blade.php');
+        $range = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/filter_detail_dosen.blade.php');
+
+        $this->assertStringContainsString('getDosenReportAssignments($nidn)', $controller);
+        $this->assertStringContainsString('buildHonorariumReportAssignments', $controller);
+        $this->assertStringContainsString('honorariumSemuaDenganJadwalQuery', $controller);
+        foreach ([$daily, $history, $range] as $view) {
+            $this->assertStringContainsString('Honor Dasar', $view);
+            $this->assertStringContainsString('Penyesuaian', $view);
+            $this->assertStringContainsString('adjustment_amount', $view);
+            $this->assertStringContainsString('adjustment_note', $view);
+        }
+    }
+
     private function honorarium($type, $puPresent, $ppPresent)
     {
         return (object) [
+            'C_NPM' => '13020220001',
             'tanggal_ujian' => '2026-09-17',
             'date' => '2026-09-17',
             'tipe_ujian' => $type,

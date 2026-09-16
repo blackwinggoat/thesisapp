@@ -22,9 +22,22 @@
                 @php
                     $totalTersedia = $reportHarian->sum('available_total');
                     $totalBelumTersedia = $reportHarian->sum('unavailable_total');
+                    $totalDasar = $reportHarian->sum('base_total');
+                    $totalPenyesuaian = $reportHarian->sum('adjustment_total');
+                    $totalAkhir = $reportHarian->sum('total_amount');
                     $jumlahMahasiswa = $reportHarian->flatMap(function ($report) {
                         return $report->items->pluck('C_NPM');
                     })->filter()->unique()->count();
+                    $formatPenyesuaian = function ($nilai) {
+                        $nilai = (float) $nilai;
+                        if ($nilai > 0) {
+                            return '+' . helper::formatRupiah($nilai);
+                        }
+                        if ($nilai < 0) {
+                            return '-' . helper::formatRupiah(abs($nilai));
+                        }
+                        return helper::formatRupiah(0);
+                    };
                 @endphp
 
                 <div class="daily-report-toolbar">
@@ -42,7 +55,7 @@
                                 <th>Tanggal Ujian</th>
                                 <th>Mahasiswa</th>
                                 <th>Status Honorarium</th>
-                                <th>Total Honorarium</th>
+                                <th>Rincian Honorarium</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -73,6 +86,10 @@
                                     <td>
                                         @if ($report->available_count + $report->unavailable_count > 0)
                                             <strong>{{ helper::formatRupiah($report->total_amount) }}</strong>
+                                            <small class="daily-report-value-detail">Dasar: {{ helper::formatRupiah($report->base_total) }}</small>
+                                            <small class="daily-report-value-detail {{ $report->adjustment_total < 0 ? 'text-danger' : ($report->adjustment_total > 0 ? 'text-success' : 'text-muted') }}">
+                                                Penyesuaian: {{ $formatPenyesuaian($report->adjustment_total) }}
+                                            </small>
                                         @else
                                             <span class="text-muted">Belum dapat dihitung</span>
                                         @endif
@@ -102,12 +119,21 @@
                         <strong>{{ $jumlahMahasiswa }} mahasiswa</strong>
                     </div>
                     <div>
-                        <small>Honorarium Tersedia</small>
-                        <strong>{{ helper::formatRupiah($totalTersedia) }}</strong>
+                        <small>Honorarium Dasar</small>
+                        <strong>{{ helper::formatRupiah($totalDasar) }}</strong>
                     </div>
                     <div>
-                        <small>Honorarium Belum Tersedia</small>
-                        <strong>{{ helper::formatRupiah($totalBelumTersedia) }}</strong>
+                        <small>Total Penyesuaian</small>
+                        <strong class="{{ $totalPenyesuaian < 0 ? 'text-danger' : ($totalPenyesuaian > 0 ? 'text-success' : '') }}">{{ $formatPenyesuaian($totalPenyesuaian) }}</strong>
+                    </div>
+                    <div>
+                        <small>Honorarium Akhir</small>
+                        <strong>{{ helper::formatRupiah($totalAkhir) }}</strong>
+                    </div>
+                    <div>
+                        <small>Status Dana</small>
+                        <strong>{{ helper::formatRupiah($totalTersedia) }} tersedia</strong>
+                        <small>{{ helper::formatRupiah($totalBelumTersedia) }} belum tersedia</small>
                     </div>
                 </div>
             </div>
@@ -135,14 +161,18 @@
                                                 <th>Peran Dosen</th>
                                                 <th>Tipe Ujian</th>
                                                 <th>Status</th>
-                                                <th>Honorarium</th>
+                                                <th>Honor Dasar</th>
+                                                <th>Penyesuaian</th>
+                                                <th>Honor Akhir</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach ($report->items as $honorarium)
                                                 @php
-                                                    $tipeBelumDitetapkan = trim((string) $honorarium->tipe_ujian) === ''
-                                                        || in_array((string) $honorarium->tipe_ujian, ['0', '2'], true);
+                                                    $tipeBelumDitetapkan = isset($honorarium->tipe_ditetapkan)
+                                                        ? !$honorarium->tipe_ditetapkan
+                                                        : trim((string) $honorarium->tipe_ujian) === ''
+                                                            || in_array((string) $honorarium->tipe_ujian, ['0', '2'], true);
                                                 @endphp
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
@@ -165,6 +195,8 @@
                                                             <span class="badge badge-success">Tersedia</span>
                                                         @elseif ((int) $honorarium->status === 0)
                                                             <span class="badge badge-warning">Belum tersedia</span>
+                                                        @elseif ((int) $honorarium->status === 3)
+                                                            <span class="badge badge-primary">Sudah diterima</span>
                                                         @else
                                                             <span class="badge badge-default">Tidak diketahui</span>
                                                         @endif
@@ -173,7 +205,26 @@
                                                         @if ($tipeBelumDitetapkan)
                                                             <span class="text-muted">-</span>
                                                         @else
-                                                            {{ helper::formatRupiah($honorarium->amount) }}
+                                                            {{ helper::formatRupiah($honorarium->base_amount) }}
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if ($tipeBelumDitetapkan)
+                                                            <span class="text-muted">-</span>
+                                                        @else
+                                                            <span class="{{ $honorarium->adjustment_amount < 0 ? 'text-danger' : ($honorarium->adjustment_amount > 0 ? 'text-success' : 'text-muted') }}">
+                                                                {{ $formatPenyesuaian($honorarium->adjustment_amount) }}
+                                                            </span>
+                                                            @if ($honorarium->adjustment_note !== '')
+                                                                <small class="text-muted daily-report-adjustment-note">{{ $honorarium->adjustment_note }}</small>
+                                                            @endif
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if ($tipeBelumDitetapkan)
+                                                            <span class="text-muted">-</span>
+                                                        @else
+                                                            <strong>{{ helper::formatRupiah($honorarium->amount) }}</strong>
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -215,7 +266,7 @@
             border-top: 1px solid #e5e9ed;
             display: grid;
             gap: 12px;
-            grid-template-columns: repeat(4, minmax(150px, 1fr));
+            grid-template-columns: repeat(3, minmax(150px, 1fr));
             margin-top: 18px;
             padding-top: 18px;
         }
@@ -241,6 +292,12 @@
         }
 
         .daily-report-nim {
+            margin-top: 3px;
+        }
+
+        .daily-report-value-detail,
+        .daily-report-adjustment-note {
+            display: block;
             margin-top: 3px;
         }
 
