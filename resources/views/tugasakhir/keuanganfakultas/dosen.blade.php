@@ -6,40 +6,75 @@
 
             <ol class="breadcrumb default square rsaquo sm">
                 <li><a href="{{ url('/') }}"><i class="fa fa-home"></i></a></li>
-                <li><a href="{{ url('/') }}">Home</a></li>
-                <li class="active">Dosen Pembimbing</li>
+                <li class="active">Laporan Dosen</li>
             </ol>
 
-            <h3 class="page-heading">List of Lecturer</h3>
+            <h3 class="page-heading">Laporan Honorarium Dosen</h3>
             <div class="the-box">
+                <div class="lecturer-report-intro">
+                    <p class="text-muted">Daftar dosen, tanda tangan digital, dan total honorarium yang belum dikonfirmasi telah diterima.</p>
+                    <span class="label label-default">{{ $data->count() }} dosen</span>
+                </div>
+
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover" id="datatable-example">
+                    <table class="table table-striped table-hover" id="report-dosen-table">
                         <thead class="the-box dark full">
                             <tr>
-                                <th>No</th>
-                                <th>NIDN</th>
-                                <th>Nama</th>
-                                <th>Custom Report</th>
-                                <th>Details</th>
+                                <th class="lecturer-report-number">No</th>
+                                <th>Dosen</th>
+                                <th class="text-center lecturer-report-signature-column">Tanda Tangan</th>
+                                <th class="text-right lecturer-report-amount-column">Honorarium Belum Diterima</th>
+                                <th class="text-center lecturer-report-action-column">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($data as $key => $item)
+                            @foreach ($data as $item)
                                 <tr>
-                                    <td>{{ $key + 1 }}</td>
-                                    <td>{{ $item->C_KODE_DOSEN }}</td>
-                                    <td>{{ $item->NAMA_DOSEN }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>
-                                        <!-- Tombol Custom Report -->
-                                        <button class="btn btn-primary"
+                                        <strong>{{ $item->NAMA_DOSEN }}</strong>
+                                        <small class="text-muted lecturer-report-code">{{ $item->C_KODE_DOSEN }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        @if ($item->tanda_tangan_data_uri !== '')
+                                            <img src="{{ $item->tanda_tangan_data_uri }}"
+                                                class="lecturer-report-signature"
+                                                alt="Tanda tangan {{ $item->NAMA_DOSEN }}">
+                                        @else
+                                            <span class="lecturer-report-signature-empty">
+                                                <i class="fa fa-pencil-square-o"></i>
+                                                Belum tersedia
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="text-right" data-order="{{ $item->total_honorarium_belum_diterima }}">
+                                        @if ($item->total_honorarium_belum_diterima > 0)
+                                            <strong class="lecturer-report-amount">{{ helper::formatRupiah($item->total_honorarium_belum_diterima) }}</strong>
+                                        @elseif ($item->jumlah_penugasan_belum_ditetapkan > 0)
+                                            <span class="text-muted">Belum dapat dihitung</span>
+                                        @else
+                                            <span class="text-muted">Rp 0</span>
+                                        @endif
+                                        @if ($item->jumlah_penugasan_belum_ditetapkan > 0)
+                                            <small class="lecturer-report-unset">
+                                                {{ $item->jumlah_penugasan_belum_ditetapkan }} penugasan menunggu tipe
+                                            </small>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="lecturer-report-actions" role="group" aria-label="Aksi laporan dosen">
+                                            <button type="button"
+                                                class="btn btn-default btn-sm"
                                                 data-toggle="modal"
                                                 data-target="#customReportModal"
-                                                data-id="{{ $item->C_KODE_DOSEN }}">
-                                            Custom Report
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('report_dosen_detail', $item->C_KODE_DOSEN) }}" class="btn btn-primary">Details</a>
+                                                data-id="{{ $item->C_KODE_DOSEN }}"
+                                                data-name="{{ $item->NAMA_DOSEN }}">
+                                                <i class="fa fa-calendar"></i> Rentang Tanggal
+                                            </button>
+                                            <a href="{{ route('report_dosen_detail', $item->C_KODE_DOSEN) }}" class="btn btn-primary btn-sm">
+                                                <i class="fa fa-list"></i> Rincian Harian
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -50,67 +85,177 @@
         </div>
     </div>
 
-    <!-- Modal Custom Report -->
     <div class="modal fade" id="customReportModal" tabindex="-1" role="dialog" aria-labelledby="customReportModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="customReportModalLabel">Custom Report</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
                         <span aria-hidden="true">&times;</span>
                     </button>
+                    <h4 class="modal-title" id="customReportModalLabel">Laporan Berdasarkan Rentang Tanggal</h4>
                 </div>
                 <div class="modal-body">
-                    <!-- Form untuk memasukkan Start Date dan End Date -->
+                    <p class="text-muted" id="customReportLecturer"></p>
                     <form id="customReportForm">
-                        <div class="form-group">
-                            <label for="start_date">Start Date</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="end_date">End Date</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="start_date">Tanggal Mulai</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="end_date">Tanggal Selesai</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" required>
+                                </div>
+                            </div>
                         </div>
                         <input type="hidden" id="dosen_id" name="dosen_id">
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="processReport">Process</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="processReport">
+                        <i class="fa fa-filter"></i> Tampilkan Laporan
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-
 @endsection
 
 @section('script')
-<script>
-    $(document).ready(function() {
-        // Set nilai dosen ID ketika tombol Custom Report diklik
-        $('#customReportModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget); // Button yang diklik
-            var dosenId = button.data('id'); // Ambil data-id dari button
+    <style>
+        .lecturer-report-intro {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
 
-            // Set nilai dosen ID di input hidden
-            var modal = $(this);
-            modal.find('#dosen_id').val(dosenId);
-        });
+        .lecturer-report-intro p {
+            margin: 0;
+        }
 
-        // Ketika tombol Process diklik
-        $('#processReport').on('click', function () {
-            var dosenId = $('#dosen_id').val();
-            var startDate = $('#start_date').val();
-            var endDate = $('#end_date').val();
+        .lecturer-report-number {
+            width: 54px;
+        }
 
-            if (startDate && endDate) {
-                // Redirect ke route dengan parameter NIDN, Start Date, dan End Date
-                var url = '/report/dosen/' + dosenId + '/' + startDate + '/' + endDate;
-                window.location.href = url;
-            } else {
-                alert('Please select both start date and end date.');
+        .lecturer-report-code {
+            display: block;
+            margin-top: 4px;
+        }
+
+        .lecturer-report-signature-column {
+            width: 150px;
+        }
+
+        .lecturer-report-signature {
+            display: inline-block;
+            height: 48px;
+            max-width: 125px;
+            object-fit: contain;
+            vertical-align: middle;
+        }
+
+        .lecturer-report-signature-empty {
+            color: #8a9299;
+            display: inline-block;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .lecturer-report-signature-empty i {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 3px;
+        }
+
+        .lecturer-report-amount-column {
+            width: 215px;
+        }
+
+        .lecturer-report-amount {
+            color: #226b45;
+            white-space: nowrap;
+        }
+
+        .lecturer-report-unset {
+            color: #b26a00;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .lecturer-report-action-column {
+            width: 255px;
+        }
+
+        .lecturer-report-actions {
+            display: inline-flex;
+            gap: 6px;
+        }
+
+        @media (max-width: 767px) {
+            .lecturer-report-intro {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 8px;
             }
+
+            .lecturer-report-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+        }
+    </style>
+    <script>
+        $(function() {
+            var tableSelector = '#report-dosen-table';
+            if ($.fn.dataTable.isDataTable(tableSelector)) {
+                $(tableSelector).DataTable().destroy();
+            }
+
+            $(tableSelector).DataTable({
+                order: [[1, 'asc']],
+                paging: false,
+                info: false,
+                lengthChange: false,
+                columnDefs: [
+                    { orderable: false, targets: [0, 2, 4] }
+                ],
+                language: {
+                    search: 'Cari dosen:',
+                    zeroRecords: 'Data dosen tidak ditemukan'
+                }
+            });
+
+            $('#customReportModal').on('show.bs.modal', function(event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#dosen_id').val(button.data('id'));
+                modal.find('#customReportLecturer').text(button.data('name') + ' (' + button.data('id') + ')');
+            });
+
+            $('#processReport').on('click', function() {
+                var dosenId = $('#dosen_id').val();
+                var startDate = $('#start_date').val();
+                var endDate = $('#end_date').val();
+
+                if (!startDate || !endDate) {
+                    alert('Pilih tanggal mulai dan tanggal selesai.');
+                    return;
+                }
+
+                if (startDate > endDate) {
+                    alert('Tanggal mulai tidak boleh melewati tanggal selesai.');
+                    return;
+                }
+
+                window.location.href = '/report/dosen/' + encodeURIComponent(dosenId)
+                    + '/' + encodeURIComponent(startDate)
+                    + '/' + encodeURIComponent(endDate);
+            });
         });
-    });
-</script>
+    </script>
 @endsection

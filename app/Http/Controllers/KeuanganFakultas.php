@@ -2499,7 +2499,48 @@ class KeuanganFakultas extends Controller
     public function report_dosen_home()
     {
         try {
-            $data = DB::table('t_mst_dosen')->get();
+            $data = DB::table('t_mst_dosen')
+                ->select('C_KODE_DOSEN', 'NAMA_DOSEN')
+                ->orderBy('NAMA_DOSEN')
+                ->get();
+
+            $honorariums = $this->honorariumDenganJadwalQuery()
+                ->whereNotNull('jadwal.tgl_ujian')
+                ->whereRaw("CAST(jadwal.tgl_ujian AS CHAR) <> '0000-00-00'")
+                ->select('honorarium.*', 'jadwal.tgl_ujian as tanggal_ujian')
+                ->get()
+                ->unique('id')
+                ->values();
+            $jumlahPenyesuaianByTanggal = $honorariums
+                ->pluck('tanggal_ujian')
+                ->map(function ($tanggal) {
+                    return substr((string) $tanggal, 0, 10);
+                })
+                ->filter(function ($tanggal) {
+                    return preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal);
+                })
+                ->unique()
+                ->mapWithKeys(function ($tanggal) {
+                    return [$tanggal => $this->jumlahSanksiPembayaranPadaTanggal($tanggal)];
+                });
+
+            $tandaTanganDosen = collect();
+            if (Schema::hasTable('mst_tanda_tangan')) {
+                $tandaTanganDosen = DB::table('mst_tanda_tangan')
+                    ->whereNotNull('tanda_tangan')
+                    ->get(['C_KODE_DOSEN', 'tanda_tangan'])
+                    ->mapWithKeys(function ($tandaTangan) {
+                        return [trim((string) $tandaTangan->C_KODE_DOSEN) => $tandaTangan->tanda_tangan];
+                    });
+            }
+
+            $data = $this->buildDosenReportOverview(
+                $data,
+                $honorariums,
+                $jumlahPenyesuaianByTanggal,
+                $tandaTanganDosen
+            );
+
             return view('tugasakhir.keuanganfakultas.dosen', ['data' => $data]);
         } catch (\Throwable $th) {
             return redirect()->back()->with([
@@ -2507,6 +2548,61 @@ class KeuanganFakultas extends Controller
                 'message' => 'Terjadi kesalahan saat mengambil data dosen: ',
             ]);
         }
+    }
+
+    protected function buildDosenReportOverview(
+        $lecturers,
+        $honorariums,
+        $jumlahPenyesuaianByTanggal,
+        $tandaTanganDosen
+    ) {
+        $jumlahPenyesuaianByTanggal = collect($jumlahPenyesuaianByTanggal);
+        $tandaTanganDosen = collect($tandaTanganDosen);
+        $lecturersByCode = collect($lecturers)->mapWithKeys(function ($lecturer) use ($tandaTanganDosen) {
+            $code = trim((string) $lecturer->C_KODE_DOSEN);
+            $lecturer->total_honorarium_belum_diterima = 0.0;
+            $lecturer->jumlah_penugasan_belum_ditetapkan = 0;
+            $lecturer->tanda_tangan_data_uri = Helper::binaryImageDataUri($tandaTanganDosen->get($code, ''));
+
+            return [$code => $lecturer];
+        });
+
+        foreach (collect($honorariums) as $honorarium) {
+            if ($this->honorariumNeedsTypeAssignment($honorarium)) {
+                foreach ($this->honorariumRoles() as $role => $definition) {
+                    $code = trim((string) $honorarium->{$role});
+                    if ($code !== ''
+                        && $lecturersByCode->has($code)
+                        && (int) $honorarium->{$definition['status']} !== 3) {
+                        $lecturersByCode->get($code)->jumlah_penugasan_belum_ditetapkan++;
+                    }
+                }
+
+                continue;
+            }
+
+            $tanggal = substr((string) ($honorarium->tanggal_ujian ?? $honorarium->date), 0, 10);
+            $penyesuaian = $this->penyesuaianHonorPembimbing(
+                $honorarium,
+                (float) $jumlahPenyesuaianByTanggal->get($tanggal, 0)
+            );
+
+            foreach ($this->honorariumRoles() as $role => $definition) {
+                $code = trim((string) $honorarium->{$role});
+                if ($code === ''
+                    || !$lecturersByCode->has($code)
+                    || (int) $honorarium->{$definition['status']} === 3) {
+                    continue;
+                }
+
+                $lecturer = $lecturersByCode->get($code);
+                $lecturer->total_honorarium_belum_diterima += (float) $penyesuaian['amounts'][$role];
+            }
+        }
+
+        return $lecturersByCode->sortBy(function ($lecturer) {
+            return strtolower(trim((string) $lecturer->NAMA_DOSEN) . '|' . trim((string) $lecturer->C_KODE_DOSEN));
+        })->values();
     }
 
     public function report_dosen_detail($nidn)
