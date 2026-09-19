@@ -37,6 +37,10 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('Rekap Pajak Honorarium', $pdfView);
         $this->assertStringContainsString('Pajak (5%)', $pdfView);
         $this->assertStringContainsString('Honor adalah nilai sebelum pajak', $pdfView);
+        $this->assertStringContainsString("->chunk(20)", $pdfView);
+        $this->assertStringContainsString('$report->tax_assignment_count > 20', $pdfView);
+        $this->assertStringContainsString('tax-section-new-page', $pdfView);
+        $this->assertStringContainsString('Rekap Pajak Honorarium{{ $taxChunkIndex > 0 ? \' - Lanjutan\' : \'\' }}', $pdfView);
         $this->assertStringContainsString('rincianPajakHonorarium', $controller);
         $this->assertStringNotContainsString('<th class="lecturer-assignment">Penugasan</th>', $pdfView);
         $this->assertStringContainsString("->setPaper('a4', 'portrait')", $controller);
