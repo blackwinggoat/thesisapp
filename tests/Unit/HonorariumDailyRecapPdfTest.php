@@ -34,6 +34,10 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('Honorarium Diterima', $pdfView);
         $this->assertStringContainsString('Tipe Ujian', $pdfView);
         $this->assertStringContainsString('Paraf', $pdfView);
+        $this->assertStringContainsString('Rekap Pajak Honorarium', $pdfView);
+        $this->assertStringContainsString('Pajak (5%)', $pdfView);
+        $this->assertStringContainsString('Honor adalah nilai sebelum pajak', $pdfView);
+        $this->assertStringContainsString('rincianPajakHonorarium', $controller);
         $this->assertStringNotContainsString('<th class="lecturer-assignment">Penugasan</th>', $pdfView);
         $this->assertStringContainsString("->setPaper('a4', 'portrait')", $controller);
         $this->assertStringContainsString('class="btn btn-danger" id="download-honorarium-daily-recap"', $listView);
@@ -72,7 +76,11 @@ class HonorariumDailyRecapPdfTest extends TestCase
             $rows,
             $names,
             collect(['2026-08-19' => 50000]),
-            collect(['D1' => $signature])
+            collect(['D1' => $signature]),
+            collect([
+                '13020220001' => 'Mahasiswa Proposal',
+                '13120220001' => 'Mahasiswa Ujian Meja',
+            ])
         );
         $report = $reports->first();
 
@@ -100,6 +108,24 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('Penguji I (1)', $dosenSatu->roles);
         $this->assertStringStartsWith('data:image/png;base64,', $dosenSatu->signature_data_uri);
         $this->assertSame('', $dosenDua->signature_data_uri);
+
+        $this->assertCount(2, $report->tax_items);
+        $this->assertSame(2, $report->tax_assignment_count);
+        $this->assertSame(421053.0, $report->tax_total_honor);
+        $this->assertSame(21053.0, $report->tax_total_amount);
+        $this->assertSame(400000.0, $report->tax_total_received);
+
+        $taxPu = $report->tax_items->firstWhere('lecturer_code', 'D2');
+        $taxPp = $report->tax_items->firstWhere('lecturer_code', 'D3');
+        $this->assertSame('Mahasiswa Proposal', $taxPu->student_name);
+        $this->assertSame('Pembimbing Utama', $taxPu->role);
+        $this->assertSame(157895, $taxPu->honor);
+        $this->assertSame(7895, $taxPu->tax);
+        $this->assertSame(150000, $taxPu->received);
+        $this->assertSame('Pembimbing Pendamping', $taxPp->role);
+        $this->assertSame(263158, $taxPp->honor);
+        $this->assertSame(13158, $taxPp->tax);
+        $this->assertSame(250000, $taxPp->received);
     }
 
     public function testVerificationTokenProtectsMetadataWithoutPublishingAmounts()

@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Schema;
 
 class KeuanganFakultas extends Controller
 {
+    const HONORARIUM_TAX_RATE = 0.05;
+
     public function ubah_password()
     {
         return view('tugasakhir.fakultas.ubah_password', [
@@ -976,11 +978,15 @@ class KeuanganFakultas extends Controller
         $jumlahPenyesuaianByTanggal = $tanggalTerpilih->mapWithKeys(function ($tanggal) {
             return [$tanggal => $this->jumlahSanksiPembayaranPadaTanggal($tanggal)];
         });
+        $namaMahasiswa = DB::table('t_mst_mahasiswa')
+            ->whereIn('C_NPM', $honorariums->pluck('C_NPM')->unique()->all())
+            ->pluck('NAMA_MAHASISWA', 'C_NPM');
         $reports = $this->buildHonorariumDailyRecapReports(
             $honorariums,
             $namaDosen,
             $jumlahPenyesuaianByTanggal,
-            $tandaTanganDosen
+            $tandaTanganDosen,
+            $namaMahasiswa
         );
         if ($reports->isEmpty()) {
             return redirect()->route('honorarium_home')->with([
@@ -1062,12 +1068,14 @@ class KeuanganFakultas extends Controller
         $honorariums,
         $namaDosen,
         $jumlahPenyesuaianByTanggal,
-        $tandaTanganDosen = null
+        $tandaTanganDosen = null,
+        $namaMahasiswa = null
     )
     {
         $reports = collect();
         $roles = $this->honorariumReportRoles();
         $tandaTanganDosen = collect($tandaTanganDosen ?: []);
+        $namaMahasiswa = collect($namaMahasiswa ?: []);
 
         foreach ($honorariums as $honorarium) {
             $tanggal = substr((string) $honorarium->tanggal_ujian, 0, 10);
@@ -1081,11 +1089,16 @@ class KeuanganFakultas extends Controller
                     'student_nims' => [],
                     'exam_types' => collect(),
                     'lecturers' => collect(),
+                    'tax_items' => collect(),
                     'student_count' => 0,
                     'exam_type_count' => 0,
                     'lecturer_count' => 0,
                     'assignment_count' => 0,
                     'total_honor' => 0,
+                    'tax_assignment_count' => 0,
+                    'tax_total_honor' => 0.0,
+                    'tax_total_amount' => 0.0,
+                    'tax_total_received' => 0.0,
                 ]);
             }
 
@@ -1127,6 +1140,25 @@ class KeuanganFakultas extends Controller
                 $honor = isset($penyesuaianHonor['amounts'][$role])
                     ? (float) $penyesuaianHonor['amounts'][$role]
                     : (float) $honorarium->{$definition['amount']};
+
+                if (in_array($role, ['PU', 'PP'], true)) {
+                    $taxDetail = $this->rincianPajakHonorarium($honor);
+                    $report->tax_items->push((object) [
+                        'lecturer_code' => $code,
+                        'lecturer_name' => trim((string) $namaDosen->get($code, $code)),
+                        'student_nim' => $nim,
+                        'student_name' => trim((string) $namaMahasiswa->get($nim, '-')) ?: '-',
+                        'role' => $definition['label'],
+                        'honor' => $taxDetail['honor'],
+                        'tax' => $taxDetail['tax'],
+                        'received' => $taxDetail['received'],
+                    ]);
+                    $report->tax_assignment_count++;
+                    $report->tax_total_honor += $taxDetail['honor'];
+                    $report->tax_total_amount += $taxDetail['tax'];
+                    $report->tax_total_received += $taxDetail['received'];
+                }
+
                 if (!$report->lecturers->has($code)) {
                     $report->lecturers->put($code, (object) [
                         'code' => $code,
@@ -1173,11 +1205,34 @@ class KeuanganFakultas extends Controller
             })->sortBy(function ($lecturer) {
                 return strtolower($lecturer->name . '|' . $lecturer->code);
             })->values();
+            $report->tax_items = $report->tax_items->sortBy(function ($item) {
+                return strtolower(
+                    $item->lecturer_name . '|'
+                    . $item->lecturer_code . '|'
+                    . $item->student_name . '|'
+                    . $item->student_nim . '|'
+                    . $item->role
+                );
+            })->values();
             $report->exam_type_count = $report->exam_types->pluck('exam_name')->unique()->count();
             $report->lecturer_count = $report->lecturers->count();
 
             return $report;
         })->sortBy('tanggal')->values();
+    }
+
+    protected function rincianPajakHonorarium($honorDiterima)
+    {
+        $honorDiterima = max(0, (int) round((float) $honorDiterima));
+        $honorSebelumPajak = $honorDiterima > 0
+            ? (int) round($honorDiterima / (1 - self::HONORARIUM_TAX_RATE))
+            : 0;
+
+        return [
+            'honor' => $honorSebelumPajak,
+            'tax' => max(0, $honorSebelumPajak - $honorDiterima),
+            'received' => $honorDiterima,
+        ];
     }
 
     protected function tambahParafDosenKePdf($pdf)

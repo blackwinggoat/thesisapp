@@ -49,6 +49,13 @@
         .lecturer-amount { width: 16%; }
         .lecturer-signature { width: 10%; }
         .lecturer-signature img { display: block; margin: 0 auto; max-height: 34px; max-width: 64px; }
+        .tax-lecturer { width: 23%; }
+        .tax-student { width: 23%; }
+        .tax-role { width: 15%; }
+        .tax-honor { width: 12%; }
+        .tax-amount { width: 10%; }
+        .tax-received { width: 12%; }
+        .tax-note { color: #4b5563; font-family: Arial, sans-serif; font-size: 6.4pt; line-height: 1.2; margin: 3px 0 0; }
         .lecturer-table-compact { font-size: 6.5pt; line-height: 1; }
         .lecturer-table-compact th, .lecturer-table-compact td { padding: 1.5px 2px; }
         .lecturer-table-compact .official-id { font-size: 5.6pt; }
@@ -179,6 +186,49 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Rekap Pajak Honorarium</div>
+                <table class="report-table tax-table">
+                    <thead>
+                        <tr>
+                            <th class="number">No.</th>
+                            <th class="tax-lecturer">Dosen / NIDN</th>
+                            <th class="tax-student">Mahasiswa</th>
+                            <th class="tax-role">Peran</th>
+                            <th class="tax-honor">Honor</th>
+                            <th class="tax-amount">Pajak (5%)</th>
+                            <th class="tax-received">Honor Diterima</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($report->tax_items as $item)
+                            <tr>
+                                <td class="center">{{ $loop->iteration }}</td>
+                                <td><strong>{{ $item->lecturer_name }}</strong><br><span class="official-id">{{ $item->lecturer_code }}</span></td>
+                                <td><strong>{{ $item->student_name }}</strong><br><span class="official-id">{{ $item->student_nim }}</span></td>
+                                <td>{{ $item->role }}</td>
+                                <td class="right">{{ helper::formatRupiah($item->honor) }}</td>
+                                <td class="right">{{ helper::formatRupiah($item->tax) }}</td>
+                                <td class="right">{{ helper::formatRupiah($item->received) }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="center">Tidak ada honorarium Pembimbing Utama atau Pembimbing Pendamping pada tanggal ini.</td>
+                            </tr>
+                        @endforelse
+                        <tr class="total-row">
+                            <td colspan="4" class="right">TOTAL PAJAK HONORARIUM</td>
+                            <td class="right">{{ helper::formatRupiah($report->tax_total_honor) }}</td>
+                            <td class="right">{{ helper::formatRupiah($report->tax_total_amount) }}</td>
+                            <td class="right">{{ helper::formatRupiah($report->tax_total_received) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="tax-note">
+                    Honor diterima menggunakan nominal bersih setelah penyesuaian kehadiran pembimbing. Honor adalah nilai sebelum pajak, dan Pajak 5% adalah selisih antara Honor dan Honor Diterima.
+                </p>
             </div>
 
             <div class="grand-total">TOTAL HONORARIUM HARIAN: {{ helper::formatRupiah($report->total_honor) }}</div>
