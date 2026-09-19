@@ -50,7 +50,9 @@
         .lecturer-amount { width: 16%; }
         .lecturer-signature { width: 10%; }
         .lecturer-signature img { display: block; margin: 0 auto; max-height: 34px; max-width: 64px; }
-        .tax-table { font-size: 7pt; }
+        .tax-table { font-size: 6.4pt; line-height: 1; }
+        .tax-table th, .tax-table td { padding: 2px; }
+        .tax-table .official-id { font-size: 5.6pt; }
         .tax-number { width: 4%; }
         .tax-lecturer { width: 24%; }
         .tax-role { width: 16%; }
@@ -80,12 +82,28 @@
         .verification-qr { display: block; height: 54px; margin: 0; width: 54px; }
         .signature-identity { line-height: 1.15; min-height: 23px; }
         .official-name { font-weight: bold; text-decoration: underline; }
-        .tax-signature { margin-top: 12px; page-break-inside: avoid; }
+        .tax-signature { margin-top: 8px; page-break-inside: avoid; }
         .tax-signature td { color: #000; text-align: center; vertical-align: top; width: 50%; }
         .tax-signature td:first-child { padding-right: 20px; }
         .tax-signature td:last-child { padding-left: 20px; }
-        .tax-signature-space { height: 55px; }
+        .tax-signature-space { height: 44px; }
         .tax-document-continuation { padding-top: 8mm; }
+        .tax-document-needs-initial { min-height: 258mm; position: relative; }
+        .tax-document-needs-initial { padding-bottom: 17mm; }
+        .tax-signature-bottom { margin-top: 38mm; }
+        .tax-page-initial {
+            border: 1px solid #374151;
+            bottom: 0;
+            color: #374151;
+            font-family: Arial, sans-serif;
+            font-size: 6.2pt;
+            height: 13mm;
+            padding-top: 2mm;
+            position: absolute;
+            right: 0;
+            text-align: center;
+            width: 25mm;
+        }
     </style>
 </head>
 <body>
@@ -221,7 +239,7 @@
             if ($taxRows->isEmpty()) {
                 $taxChunks->push((object) ['offset' => 0, 'items' => collect()]);
             } else {
-                $taxPageCount = (int) ceil($taxRows->count() / 18);
+                $taxPageCount = (int) ceil($taxRows->count() / 22);
                 $taxBaseSize = (int) floor($taxRows->count() / $taxPageCount);
                 $taxExtraRows = $taxRows->count() % $taxPageCount;
                 $taxOffset = 0;
@@ -238,7 +256,7 @@
         @foreach ($taxChunks as $taxPage)
             @php($taxChunkIndex = $loop->index)
             @php($taxChunk = $taxPage->items)
-            <div class="document tax-document document-page-offset{{ $loop->first ? '' : ' tax-document-continuation' }}">
+            <div class="document tax-document document-page-offset{{ $loop->first ? '' : ' tax-document-continuation' }}{{ $taxChunks->count() > 1 && !$loop->last ? ' tax-document-needs-initial' : '' }}">
                 @if ($loop->first)
                     <div class="letterhead">
                         <table>
@@ -314,7 +332,7 @@
 
                 @if ($loop->last)
                     <p class="tax-formula">Honor Diterima = Honor - Pajak + Penyesuaian</p>
-                    <table class="tax-signature">
+                    <table class="tax-signature{{ $taxChunks->count() > 1 ? ' tax-signature-bottom' : '' }}">
                         <tr>
                             <td>
                                 Makassar, {{ helper::tgl_indo_lengkap($generatedAt->format('Y-m-d')) }}<br>Dekan,
@@ -330,6 +348,8 @@
                             </td>
                         </tr>
                     </table>
+                @elseif ($taxChunks->count() > 1)
+                    <div class="tax-page-initial">Paraf WD II</div>
                 @endif
             </div>
         @endforeach

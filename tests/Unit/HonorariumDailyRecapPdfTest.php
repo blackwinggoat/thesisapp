@@ -39,9 +39,13 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('Pajak (5%)', $pdfView);
         $this->assertStringContainsString('Penyesuaian', $pdfView);
         $this->assertStringContainsString('Honor Diterima = Honor - Pajak + Penyesuaian', $pdfView);
-        $this->assertStringContainsString('$taxPageCount = (int) ceil($taxRows->count() / 18)', $pdfView);
+        $this->assertStringContainsString('$taxPageCount = (int) ceil($taxRows->count() / 22)', $pdfView);
         $this->assertStringContainsString("'offset' => \$taxOffset", $pdfView);
         $this->assertStringContainsString('class="document tax-document document-page-offset', $pdfView);
+        $this->assertStringContainsString('tax-document-needs-initial', $pdfView);
+        $this->assertStringContainsString('tax-signature-bottom', $pdfView);
+        $this->assertStringContainsString('class="tax-page-initial">Paraf WD II</div>', $pdfView);
+        $this->assertStringContainsString('$taxChunks->count() > 1 && !$loop->last', $pdfView);
         $this->assertStringContainsString('REKAP PAJAK HONORARIUM{{ $taxChunkIndex > 0 ? \' - LANJUTAN\' : \'\' }}', $pdfView);
         $this->assertStringContainsString('<th class="tax-count">Jumlah</th>', $pdfView);
         $this->assertStringNotContainsString('<th class="tax-student">Mahasiswa</th>', $pdfView);
