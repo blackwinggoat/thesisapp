@@ -15,6 +15,7 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
         $listView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/honorarium.blade.php');
         $pdfView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/rekap_honorarium_harian_pdf.blade.php');
+        $letterheadView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/_honorarium_pdf_letterhead.blade.php');
         $verificationView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/keuanganfakultas/verifikasi_rekap_honorarium_harian.blade.php');
 
         $this->assertStringContainsString('honorarium_rekap_harian_pdf', $controller);
@@ -39,10 +40,15 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('Pajak (5%)', $pdfView);
         $this->assertStringContainsString('Penyesuaian', $pdfView);
         $this->assertStringContainsString('Honor Diterima = Honor - Pajak + Penyesuaian', $pdfView);
-        $this->assertStringContainsString('$taxRows->slice($taxOffset, 22)->values()', $pdfView);
-        $this->assertStringContainsString('$taxOffset += 22', $pdfView);
+        $this->assertStringContainsString('$taxRows->slice($taxOffset, 20)->values()', $pdfView);
+        $this->assertStringContainsString('$taxOffset += 20', $pdfView);
         $this->assertStringContainsString("'offset' => \$taxOffset", $pdfView);
-        $this->assertStringContainsString('class="document tax-document document-page-offset', $pdfView);
+        $this->assertStringContainsString('class="document honorarium-document"', $pdfView);
+        $this->assertStringContainsString('class="document tax-document{{ $loop->first', $pdfView);
+        $this->assertStringNotContainsString('document-page-offset', $pdfView);
+        $this->assertStringContainsString('.document { page-break-before: always;', $pdfView);
+        $this->assertStringContainsString('.document:first-child { page-break-before: auto;', $pdfView);
+        $this->assertStringNotContainsString('page-break-after: always', $pdfView);
         $this->assertStringContainsString('tax-document-needs-initial', $pdfView);
         $this->assertStringContainsString('tax-signature-bottom', $pdfView);
         $this->assertStringContainsString('class="tax-page-initial">Paraf WD II</div>', $pdfView);
@@ -56,9 +62,10 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('class="btn btn-danger" id="download-honorarium-daily-recap"', $listView);
         $this->assertStringContainsString('Wakil Dekan II Bidang Keuangan dan SDM', $pdfView);
         $this->assertStringContainsString('Makassar, {{ helper::tgl_indo_lengkap($generatedAt->format(\'Y-m-d\')) }}<br>Dekan,', $pdfView);
-        $this->assertSame(2, substr_count($pdfView, 'class="letterhead"'));
-        $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $pdfView);
-        $this->assertStringContainsString("publicImageDataUri('images/branding/fikom-pdf.jpg')", $pdfView);
+        $this->assertSame(2, substr_count($pdfView, "@include('tugasakhir.keuanganfakultas._honorarium_pdf_letterhead')"));
+        $this->assertSame(1, substr_count($letterheadView, 'class="letterhead"'));
+        $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $letterheadView);
+        $this->assertStringContainsString("publicImageDataUri('images/branding/fikom-pdf.jpg')", $letterheadView);
         $this->assertStringContainsString('qrCodeDataUri($report->verification_url', $pdfView);
         $this->assertStringContainsString('Identitas mahasiswa', $verificationView);
         $this->assertStringNotContainsString("['total_honor']", $verificationView);

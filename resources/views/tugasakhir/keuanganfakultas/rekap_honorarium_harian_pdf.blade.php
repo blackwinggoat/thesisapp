@@ -7,9 +7,8 @@
         @page { margin: 9mm 10mm 10mm; }
         * { box-sizing: border-box; }
         body { color: #111827; font-family: "Times New Roman", serif; font-size: 8.2pt; line-height: 1.12; margin: 0; }
-        .document { page-break-after: always; width: 100%; }
-        .document:last-child { page-break-after: auto; }
-        .document-page-offset { padding-top: 22mm; }
+        .document { page-break-before: always; width: 100%; }
+        .document:first-child { page-break-before: auto; }
         .letterhead table, .summary, .metric-table, .report-table, .signature, .tax-signature { border-collapse: collapse; width: 100%; }
         .letterhead td { vertical-align: middle; }
         .logo-umi { height: 36px; width: auto; }
@@ -108,20 +107,8 @@
 </head>
 <body>
     @foreach ($reports as $report)
-        <div class="document{{ $loop->first ? '' : ' document-page-offset' }}">
-            <div class="letterhead">
-                <table>
-                    <tr>
-                        <td width="43%"><img class="logo-umi" src="{{ \App\Helper::publicImageDataUri('images/branding/umi-pdf.jpg') }}" alt="Logo UMI"><img class="logo-fikom" src="{{ \App\Helper::publicImageDataUri('images/branding/fikom-pdf.jpg') }}" alt="Logo FIKOM"></td>
-                        <td class="letterhead-title" width="57%">YAYASAN WAKAF UMI<br>UNIVERSITAS MUSLIM INDONESIA<br>FAKULTAS ILMU KOMPUTER</td>
-                    </tr>
-                </table>
-                <div class="letterhead-divider"></div>
-                <div class="address">
-                    Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
-                    <div class="contact-line">Website: fikom.umi.ac.id, Email: fikom@umi.ac.id</div>
-                </div>
-            </div>
+        <div class="document honorarium-document">
+            @include('tugasakhir.keuanganfakultas._honorarium_pdf_letterhead')
 
             <div class="document-title">REKAP HONORARIUM HARIAN</div>
             <div class="document-subtitle">Pelaksanaan Ujian Proposal dan Tugas Akhir</div>
@@ -243,30 +230,18 @@
                 while ($taxOffset < $taxRows->count()) {
                     $taxChunks->push((object) [
                         'offset' => $taxOffset,
-                        'items' => $taxRows->slice($taxOffset, 22)->values(),
+                        'items' => $taxRows->slice($taxOffset, 20)->values(),
                     ]);
-                    $taxOffset += 22;
+                    $taxOffset += 20;
                 }
             }
         @endphp
         @foreach ($taxChunks as $taxPage)
             @php($taxChunkIndex = $loop->index)
             @php($taxChunk = $taxPage->items)
-            <div class="document tax-document document-page-offset{{ $loop->first ? '' : ' tax-document-continuation' }}{{ $taxChunks->count() > 1 && !$loop->last ? ' tax-document-needs-initial' : '' }}">
+            <div class="document tax-document{{ $loop->first ? '' : ' tax-document-continuation' }}{{ $taxChunks->count() > 1 && !$loop->last ? ' tax-document-needs-initial' : '' }}">
                 @if ($loop->first)
-                    <div class="letterhead">
-                        <table>
-                            <tr>
-                                <td width="43%"><img class="logo-umi" src="{{ \App\Helper::publicImageDataUri('images/branding/umi-pdf.jpg') }}" alt="Logo UMI"><img class="logo-fikom" src="{{ \App\Helper::publicImageDataUri('images/branding/fikom-pdf.jpg') }}" alt="Logo FIKOM"></td>
-                                <td class="letterhead-title" width="57%">YAYASAN WAKAF UMI<br>UNIVERSITAS MUSLIM INDONESIA<br>FAKULTAS ILMU KOMPUTER</td>
-                            </tr>
-                        </table>
-                        <div class="letterhead-divider"></div>
-                        <div class="address">
-                            Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
-                            <div class="contact-line">Website: fikom.umi.ac.id, Email: fikom@umi.ac.id</div>
-                        </div>
-                    </div>
+                    @include('tugasakhir.keuanganfakultas._honorarium_pdf_letterhead')
                 @endif
 
                 <div class="document-title">REKAP PAJAK HONORARIUM{{ $taxChunkIndex > 0 ? ' - LANJUTAN' : '' }}</div>
