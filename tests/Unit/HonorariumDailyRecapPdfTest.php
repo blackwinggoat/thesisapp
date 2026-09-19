@@ -46,8 +46,8 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('class="document honorarium-document"', $pdfView);
         $this->assertStringContainsString('class="document tax-document{{ $loop->first', $pdfView);
         $this->assertStringNotContainsString('document-page-offset', $pdfView);
-        $this->assertStringContainsString('.document { page-break-before: always;', $pdfView);
-        $this->assertStringContainsString('.document:first-child { page-break-before: auto;', $pdfView);
+        $this->assertStringContainsString('.page-break { font-size: 0; height: 0; line-height: 0; page-break-before: always;', $pdfView);
+        $this->assertSame(2, substr_count($pdfView, '<div class="page-break"></div>'));
         $this->assertStringNotContainsString('page-break-after: always', $pdfView);
         $this->assertStringContainsString('tax-document-needs-initial', $pdfView);
         $this->assertStringContainsString('tax-signature-bottom', $pdfView);

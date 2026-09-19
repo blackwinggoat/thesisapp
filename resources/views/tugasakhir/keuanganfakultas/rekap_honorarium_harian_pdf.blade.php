@@ -7,8 +7,8 @@
         @page { margin: 9mm 10mm 10mm; }
         * { box-sizing: border-box; }
         body { color: #111827; font-family: "Times New Roman", serif; font-size: 8.2pt; line-height: 1.12; margin: 0; }
-        .document { page-break-before: always; width: 100%; }
-        .document:first-child { page-break-before: auto; }
+        .document { width: 100%; }
+        .page-break { font-size: 0; height: 0; line-height: 0; page-break-before: always; }
         .letterhead table, .summary, .metric-table, .report-table, .signature, .tax-signature { border-collapse: collapse; width: 100%; }
         .letterhead td { vertical-align: middle; }
         .logo-umi { height: 36px; width: auto; }
@@ -107,6 +107,9 @@
 </head>
 <body>
     @foreach ($reports as $report)
+        @if (!$loop->first)
+            <div class="page-break"></div>
+        @endif
         <div class="document honorarium-document">
             @include('tugasakhir.keuanganfakultas._honorarium_pdf_letterhead')
 
@@ -239,6 +242,7 @@
         @foreach ($taxChunks as $taxPage)
             @php($taxChunkIndex = $loop->index)
             @php($taxChunk = $taxPage->items)
+            <div class="page-break"></div>
             <div class="document tax-document{{ $loop->first ? '' : ' tax-document-continuation' }}{{ $taxChunks->count() > 1 && !$loop->last ? ' tax-document-needs-initial' : '' }}">
                 @if ($loop->first)
                     @include('tugasakhir.keuanganfakultas._honorarium_pdf_letterhead')
