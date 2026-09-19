@@ -51,8 +51,13 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('Pajak (5%)', $pdfView);
         $this->assertStringContainsString('Penyesuaian', $pdfView);
         $this->assertStringContainsString('Honor Diterima = Honor - Pajak + Penyesuaian', $pdfView);
-        $this->assertStringContainsString('$taxRows->slice($taxOffset, 20)->values()', $pdfView);
-        $this->assertStringContainsString('$taxOffset += 20', $pdfView);
+        $this->assertStringContainsString('$taxSinglePageLimit = 30', $pdfView);
+        $this->assertStringContainsString('$taxFirstPageSize = 29', $pdfView);
+        $this->assertStringContainsString('$taxContinuationPageSize = 30', $pdfView);
+        $this->assertStringContainsString('$taxMinimumFinalRows = 2', $pdfView);
+        $this->assertStringContainsString('$taxRemaining - $taxMinimumFinalRows', $pdfView);
+        $this->assertStringContainsString('$taxRows->slice($taxOffset, $taxTake)->values()', $pdfView);
+        $this->assertStringNotContainsString('$taxRows->slice($taxOffset, 20)->values()', $pdfView);
         $this->assertStringContainsString("'offset' => \$taxOffset", $pdfView);
         $this->assertStringContainsString('$lecturerSinglePageLimit = 21', $pdfView);
         $this->assertStringContainsString('$lecturerPageSize = 27', $pdfView);

@@ -285,17 +285,35 @@
         @php
             $taxRows = $report->tax_lecturers->values();
             $taxChunks = collect();
+            $taxSinglePageLimit = 30;
+            $taxFirstPageSize = 29;
+            $taxContinuationPageSize = 30;
+            $taxMinimumFinalRows = 2;
+
             if ($taxRows->isEmpty()) {
                 $taxChunks->push((object) ['offset' => 0, 'items' => collect()]);
+            } elseif ($taxRows->count() <= $taxSinglePageLimit) {
+                $taxChunks->push((object) ['offset' => 0, 'items' => $taxRows]);
             } else {
                 $taxOffset = 0;
-                while ($taxOffset < $taxRows->count()) {
+                $taxRemaining = $taxRows->count();
+                while ($taxRemaining > $taxSinglePageLimit) {
+                    $taxPageSize = $taxOffset === 0 ? $taxFirstPageSize : $taxContinuationPageSize;
+                    $taxTake = min($taxPageSize, $taxRemaining - $taxMinimumFinalRows);
                     $taxChunks->push((object) [
                         'offset' => $taxOffset,
-                        'items' => $taxRows->slice($taxOffset, 20)->values(),
+                        'items' => $taxRows->slice($taxOffset, $taxTake)->values(),
                     ]);
-                    $taxOffset += 20;
+                    $taxOffset += $taxTake;
+                    $taxRemaining -= $taxTake;
+                    if ($taxRemaining <= $taxContinuationPageSize) {
+                        break;
+                    }
                 }
+                $taxChunks->push((object) [
+                    'offset' => $taxOffset,
+                    'items' => $taxRows->slice($taxOffset)->values(),
+                ]);
             }
         @endphp
         @foreach ($taxChunks as $taxPage)
