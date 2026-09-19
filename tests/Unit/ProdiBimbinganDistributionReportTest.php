@@ -14,10 +14,15 @@ class ProdiBimbinganDistributionReportTest extends TestCase
         $this->assertStringContainsString('getBimbinganDistributionReport', $controller);
         $this->assertStringContainsString("getBimbinganDistributionReport(\n                    '%',", $controller);
         $this->assertStringContainsString("where('tb.pembimbing_I_id', '<>', '')", $controller);
+        $this->assertStringContainsString("where('tb.pembimbing_II_id', '<>', '')", $controller);
+        $this->assertStringContainsString("['utama', 'lengkap']", $controller);
         $this->assertStringContainsString('Helper::getSemesterAkademik($assignment->tanggal_sk)', $controller);
         $this->assertStringContainsString('->push($currentAcademicYear)', $controller);
         $this->assertStringContainsString("name=\"tahun_ajaran\"", $view);
         $this->assertStringContainsString('Distribusi Jumlah Bimbingan Utama', $view);
+        $this->assertStringContainsString('Rinci PU/PP', $view);
+        $this->assertStringContainsString("['Ganjil']['PP']", $view);
+        $this->assertStringContainsString("['Genap']['PU']", $view);
         $this->assertStringContainsString('distribution-guidance-table', $view);
         $this->assertStringContainsString('background-color: #245c63 !important;', $view);
         $this->assertStringContainsString("'label' => 'Teknik Informatika'", $controller);
@@ -27,5 +32,9 @@ class ProdiBimbinganDistributionReportTest extends TestCase
         $this->assertStringContainsString('total_mahasiswa_by_program', $controller);
         $this->assertStringContainsString('Total Penugasan Mahasiswa -', $view);
         $this->assertStringContainsString('$reportExcelUrl', $view);
+
+        $excel = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/report_laporan_excel.blade.php');
+        $this->assertStringContainsString('Data Distribusi Bimbingan Utama (PU) dan Pendamping (PP)', $excel);
+        $this->assertStringContainsString("['role_totals']['PP']", $excel);
     }
 }

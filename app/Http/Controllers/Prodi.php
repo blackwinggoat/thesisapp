@@ -4132,6 +4132,7 @@ class Prodi extends Controller
     {
         $reportContext = $this->getReportContext();
         $reportContext['label'] = 'Semua Program Studi';
+        $reportMode = $this->normalizeBimbinganDistributionMode($request->input('mode'));
         $isWakilDekanReport = optional($request->route())->getName() === 'wakildekan.report_distribusi_bimbingan';
         $reportActionUrl = $isWakilDekanReport
             ? route('wakildekan.report_distribusi_bimbingan')
@@ -4144,10 +4145,11 @@ class Prodi extends Controller
         $reportWarnings = [];
         $bimbinganReport = $this->safeReportSection(
             'distribusi_bimbingan_utama',
-            function () use ($request) {
+            function () use ($request, $reportMode) {
                 return $this->getBimbinganDistributionReport(
                     '%',
-                    $request->input('tahun_ajaran')
+                    $request->input('tahun_ajaran'),
+                    $reportMode
                 );
             },
             $this->getEmptyBimbinganDistributionReport(),
@@ -4167,11 +4169,16 @@ class Prodi extends Controller
 
     public function report_laporan_excel(Request $request)
     {
+        $reportMode = $this->normalizeBimbinganDistributionMode($request->input('mode'));
         $report = $this->getBimbinganDistributionReport(
             '%',
-            $request->input('tahun_ajaran')
+            $request->input('tahun_ajaran'),
+            $reportMode
         );
-        $filename = 'distribusi-jumlah-bimbingan-' . str_replace('/', '-', $report['selected_year']) . '.xls';
+        $filenamePrefix = $reportMode === 'lengkap'
+            ? 'distribusi-bimbingan-pu-pp-'
+            : 'distribusi-jumlah-bimbingan-';
+        $filename = $filenamePrefix . str_replace('/', '-', $report['selected_year']) . '.xls';
 
         return response()
             ->view('tugasakhir.prodi.report_laporan_excel', compact('report'))
@@ -4361,8 +4368,17 @@ class Prodi extends Controller
         ];
     }
 
-    protected function getBimbinganDistributionReport($nimLike, $selectedAcademicYear = null)
+    protected function normalizeBimbinganDistributionMode($mode)
     {
+        return in_array((string) $mode, ['utama', 'lengkap'], true)
+            ? (string) $mode
+            : 'utama';
+    }
+
+    protected function getBimbinganDistributionReport($nimLike, $selectedAcademicYear = null, $mode = 'utama')
+    {
+        $mode = $this->normalizeBimbinganDistributionMode($mode);
+        $isDetailed = $mode === 'lengkap';
         $currentAcademicYear = Helper::getSemesterAkademik(Carbon::today())->tahun_akademik;
         $periodDates = DB::table('mst_sk_pembimbing as sk')
             ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'sk.bimbingan_id')
@@ -4421,23 +4437,41 @@ class Prodi extends Controller
             $programs = array_slice($programs, 1, 1);
         }
 
-        $assignmentRows = DB::table('mst_sk_pembimbing as sk')
+        $assignmentQuery = DB::table('mst_sk_pembimbing as sk')
             ->join('trt_bimbingan as tb', 'tb.bimbingan_id', '=', 'sk.bimbingan_id')
             ->join('t_mst_mahasiswa as mhs', 'mhs.C_NPM', '=', 'tb.C_NPM')
-            ->leftJoin('t_mst_dosen as dosen', 'dosen.C_KODE_DOSEN', '=', 'tb.pembimbing_I_id')
-            ->leftJoin('mig_t_mst_dosen as dosen_lama', 'dosen_lama.C_KODE_DOSEN', '=', 'tb.pembimbing_I_id')
+            ->leftJoin('t_mst_dosen as dosen_utama', 'dosen_utama.C_KODE_DOSEN', '=', 'tb.pembimbing_I_id')
+            ->leftJoin('mig_t_mst_dosen as dosen_utama_lama', 'dosen_utama_lama.C_KODE_DOSEN', '=', 'tb.pembimbing_I_id')
+            ->leftJoin('t_mst_dosen as dosen_pendamping', 'dosen_pendamping.C_KODE_DOSEN', '=', 'tb.pembimbing_II_id')
+            ->leftJoin('mig_t_mst_dosen as dosen_pendamping_lama', 'dosen_pendamping_lama.C_KODE_DOSEN', '=', 'tb.pembimbing_II_id')
             ->where('tb.C_NPM', 'LIKE', $nimLike)
             ->whereBetween('sk.created_at', [$ganjilStart->toDateTimeString(), $genapEnd->toDateTimeString()])
-            ->whereNotNull('tb.pembimbing_I_id')
-            ->where('tb.pembimbing_I_id', '<>', '')
             ->select(
                 'tb.C_NPM',
-                'tb.pembimbing_I_id as kode_dosen',
+                'tb.pembimbing_I_id as kode_dosen_utama',
+                'tb.pembimbing_II_id as kode_dosen_pendamping',
                 'mhs.C_KODE_PRODI',
                 'sk.created_at as tanggal_sk',
-                DB::raw('COALESCE(dosen.NAMA_DOSEN, dosen_lama.NAMA_DOSEN, tb.pembimbing_I_id) as nama_dosen')
-            )
-            ->get();
+                DB::raw('COALESCE(dosen_utama.NAMA_DOSEN, dosen_utama_lama.NAMA_DOSEN, tb.pembimbing_I_id) as nama_dosen_utama'),
+                DB::raw('COALESCE(dosen_pendamping.NAMA_DOSEN, dosen_pendamping_lama.NAMA_DOSEN, tb.pembimbing_II_id) as nama_dosen_pendamping')
+            );
+
+        if ($isDetailed) {
+            $assignmentQuery->where(function ($query) {
+                $query->where(function ($utama) {
+                    $utama->whereNotNull('tb.pembimbing_I_id')
+                        ->where('tb.pembimbing_I_id', '<>', '');
+                })->orWhere(function ($pendamping) {
+                    $pendamping->whereNotNull('tb.pembimbing_II_id')
+                        ->where('tb.pembimbing_II_id', '<>', '');
+                });
+            });
+        } else {
+            $assignmentQuery->whereNotNull('tb.pembimbing_I_id')
+                ->where('tb.pembimbing_I_id', '<>', '');
+        }
+
+        $assignmentRows = $assignmentQuery->get();
 
         $grouped = [];
         foreach ($assignmentRows as $assignment) {
@@ -4462,20 +4496,36 @@ class Prodi extends Controller
                 continue;
             }
 
-            $kodeDosen = trim((string) $assignment->kode_dosen);
-            if ($kodeDosen === '') {
-                continue;
-            }
+            $roleAssignments = [
+                'PU' => [
+                    'kode_dosen' => $assignment->kode_dosen_utama,
+                    'nama_dosen' => $assignment->nama_dosen_utama,
+                ],
+            ];
 
-            if (!isset($grouped[$kodeDosen])) {
-                $grouped[$kodeDosen] = [
-                    'kode_dosen' => $kodeDosen,
-                    'nama_dosen' => trim((string) $assignment->nama_dosen) ?: $kodeDosen,
-                    'students' => [],
+            if ($isDetailed) {
+                $roleAssignments['PP'] = [
+                    'kode_dosen' => $assignment->kode_dosen_pendamping,
+                    'nama_dosen' => $assignment->nama_dosen_pendamping,
                 ];
             }
 
-            $grouped[$kodeDosen]['students'][$programKey][$semester->semester][(string) $assignment->C_NPM] = true;
+            foreach ($roleAssignments as $role => $lecturer) {
+                $kodeDosen = trim((string) $lecturer['kode_dosen']);
+                if ($kodeDosen === '') {
+                    continue;
+                }
+
+                if (!isset($grouped[$kodeDosen])) {
+                    $grouped[$kodeDosen] = [
+                        'kode_dosen' => $kodeDosen,
+                        'nama_dosen' => trim((string) $lecturer['nama_dosen']) ?: $kodeDosen,
+                        'students' => [],
+                    ];
+                }
+
+                $grouped[$kodeDosen]['students'][$programKey][$semester->semester][$role][(string) $assignment->C_NPM] = true;
+            }
         }
 
         $rows = collect($grouped)
@@ -4488,18 +4538,27 @@ class Prodi extends Controller
                     'no' => $index + 1,
                     'kode_dosen' => $item['kode_dosen'],
                     'nama_dosen' => $item['nama_dosen'],
+                    'role_totals' => ['PU' => 0, 'PP' => 0],
                     'total' => 0,
+                    'grand_total' => 0,
                 ];
 
                 foreach ($programs as $program) {
                     foreach (['Ganjil', 'Genap'] as $semester) {
-                        $count = isset($item['students'][$program['key']][$semester])
-                            ? count($item['students'][$program['key']][$semester])
-                            : 0;
-                        $row['counts'][$program['key']][$semester] = $count;
-                        $row['total'] += $count;
+                        foreach (['PU', 'PP'] as $role) {
+                            $count = isset($item['students'][$program['key']][$semester][$role])
+                                ? count($item['students'][$program['key']][$semester][$role])
+                                : 0;
+                            $row['role_counts'][$program['key']][$semester][$role] = $count;
+                            $row['role_totals'][$role] += $count;
+                        }
+
+                        $row['counts'][$program['key']][$semester] = $row['role_counts'][$program['key']][$semester]['PU'];
                     }
                 }
+
+                $row['total'] = $row['role_totals']['PU'];
+                $row['grand_total'] = $row['role_totals']['PU'] + $row['role_totals']['PP'];
 
                 return $row;
             })
@@ -4513,7 +4572,23 @@ class Prodi extends Controller
             });
         }
 
+        $totalPenugasanByProgram = [];
+        foreach ($programs as $program) {
+            $totalPenugasanByProgram[$program['key']] = ['PU' => 0, 'PP' => 0, 'total' => 0];
+            foreach (['PU', 'PP'] as $role) {
+                $totalPenugasanByProgram[$program['key']][$role] = collect($rows)->sum(function ($row) use ($program, $role) {
+                    return $row['role_counts'][$program['key']]['Ganjil'][$role]
+                        + $row['role_counts'][$program['key']]['Genap'][$role];
+                });
+            }
+            $totalPenugasanByProgram[$program['key']]['total'] =
+                $totalPenugasanByProgram[$program['key']]['PU']
+                + $totalPenugasanByProgram[$program['key']]['PP'];
+        }
+
         return [
+            'mode' => $mode,
+            'is_detailed' => $isDetailed,
             'period_options' => $periodOptions->all(),
             'selected_year' => $selectedAcademicYear,
             'awal_label' => 'Awal (' . $ganjilStart->format('M Y') . ' - ' . $ganjilEnd->format('M Y') . ')',
@@ -4523,12 +4598,16 @@ class Prodi extends Controller
             'total_dosen' => count($rows),
             'total_mahasiswa' => collect($rows)->sum('total'),
             'total_mahasiswa_by_program' => $totalMahasiswaByProgram,
+            'total_penugasan' => collect($rows)->sum('grand_total'),
+            'total_penugasan_by_program' => $totalPenugasanByProgram,
         ];
     }
 
     protected function getEmptyBimbinganDistributionReport()
     {
         return [
+            'mode' => 'utama',
+            'is_detailed' => false,
             'period_options' => [],
             'selected_year' => Helper::getSemesterAkademik(Carbon::today())->tahun_akademik,
             'awal_label' => 'Awal',
@@ -4538,6 +4617,8 @@ class Prodi extends Controller
             'total_dosen' => 0,
             'total_mahasiswa' => 0,
             'total_mahasiswa_by_program' => [],
+            'total_penugasan' => 0,
+            'total_penugasan_by_program' => [],
         ];
     }
 
