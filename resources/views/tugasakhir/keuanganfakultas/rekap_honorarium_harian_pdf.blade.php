@@ -9,7 +9,8 @@
         body { color: #111827; font-family: "Times New Roman", serif; font-size: 8.2pt; line-height: 1.12; margin: 0; }
         .document { page-break-after: always; width: 100%; }
         .document:last-child { page-break-after: auto; }
-        .letterhead table, .summary, .metric-table, .report-table, .signature { border-collapse: collapse; width: 100%; }
+        .document-page-offset { padding-top: 22mm; }
+        .letterhead table, .summary, .metric-table, .report-table, .signature, .tax-signature { border-collapse: collapse; width: 100%; }
         .letterhead td { vertical-align: middle; }
         .logo-umi { height: 36px; width: auto; }
         .logo-fikom { height: 28px; margin-left: 7px; vertical-align: middle; width: auto; }
@@ -49,15 +50,18 @@
         .lecturer-amount { width: 16%; }
         .lecturer-signature { width: 10%; }
         .lecturer-signature img { display: block; margin: 0 auto; max-height: 34px; max-width: 64px; }
-        .tax-lecturer { width: 23%; }
-        .tax-student { width: 23%; }
-        .tax-role { width: 15%; }
+        .tax-table { font-size: 7pt; }
+        .tax-number { width: 4%; }
+        .tax-lecturer { width: 24%; }
+        .tax-role { width: 16%; }
+        .tax-count { width: 7%; }
         .tax-honor { width: 12%; }
         .tax-amount { width: 10%; }
-        .tax-received { width: 12%; }
-        .tax-note { color: #4b5563; font-family: Arial, sans-serif; font-size: 6.4pt; line-height: 1.2; margin: 3px 0 0; }
-        .tax-section-new-page { page-break-before: always; }
-        .tax-section-page-break { page-break-after: always; }
+        .tax-adjustment { width: 13%; }
+        .tax-received { width: 14%; }
+        .tax-formula { color: #374151; font-family: Arial, sans-serif; font-size: 6.7pt; margin: 4px 0 0; text-align: right; }
+        .adjustment-positive { color: #166534; }
+        .adjustment-negative { color: #991b1b; }
         .lecturer-table-compact { font-size: 6.5pt; line-height: 1; }
         .lecturer-table-compact th, .lecturer-table-compact td { padding: 1.5px 2px; }
         .lecturer-table-compact .official-id { font-size: 5.6pt; }
@@ -76,11 +80,17 @@
         .verification-qr { display: block; height: 54px; margin: 0; width: 54px; }
         .signature-identity { line-height: 1.15; min-height: 23px; }
         .official-name { font-weight: bold; text-decoration: underline; }
+        .tax-signature { margin-top: 12px; page-break-inside: avoid; }
+        .tax-signature td { color: #000; text-align: center; vertical-align: top; width: 50%; }
+        .tax-signature td:first-child { padding-right: 20px; }
+        .tax-signature td:last-child { padding-left: 20px; }
+        .tax-signature-space { height: 55px; }
+        .tax-document-continuation { padding-top: 8mm; }
     </style>
 </head>
 <body>
     @foreach ($reports as $report)
-        <div class="document">
+        <div class="document{{ $loop->first ? '' : ' document-page-offset' }}">
             <div class="letterhead">
                 <table>
                     <tr>
@@ -150,7 +160,7 @@
             <div class="section">
                 <div class="section-title">Rekap Penerimaan Dosen</div>
                 @php
-                    $compactLecturerTable = $report->lecturer_count > 32;
+                    $compactLecturerTable = $report->lecturer_count > 18;
                     $lecturerRowHeight = !$compactLecturerTable && $report->lecturer_count > 24 ? 28 : null;
                 @endphp
                 <table class="report-table lecturer-table{{ $compactLecturerTable ? ' lecturer-table-compact' : '' }}">
@@ -190,63 +200,6 @@
                 </table>
             </div>
 
-            @php
-                $taxChunks = $report->tax_items->isEmpty()
-                    ? collect([collect()])
-                    : $report->tax_items->chunk(20)->values();
-            @endphp
-            @foreach ($taxChunks as $taxChunk)
-                @php($taxChunkIndex = $loop->index)
-                <div class="section{{ $report->tax_assignment_count > 20 && $loop->first ? ' tax-section-new-page' : '' }}{{ !$loop->last ? ' tax-section-page-break' : '' }}">
-                    <div class="section-title">
-                        Rekap Pajak Honorarium{{ $taxChunkIndex > 0 ? ' - Lanjutan' : '' }}
-                    </div>
-                    <table class="report-table tax-table">
-                        <thead>
-                            <tr>
-                                <th class="number">No.</th>
-                                <th class="tax-lecturer">Dosen / NIDN</th>
-                                <th class="tax-student">Mahasiswa</th>
-                                <th class="tax-role">Peran</th>
-                                <th class="tax-honor">Honor</th>
-                                <th class="tax-amount">Pajak (5%)</th>
-                                <th class="tax-received">Honor Diterima</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($taxChunk as $item)
-                                <tr>
-                                    <td class="center">{{ ($taxChunkIndex * 20) + $loop->iteration }}</td>
-                                    <td><strong>{{ $item->lecturer_name }}</strong><br><span class="official-id">{{ $item->lecturer_code }}</span></td>
-                                    <td><strong>{{ $item->student_name }}</strong><br><span class="official-id">{{ $item->student_nim }}</span></td>
-                                    <td>{{ $item->role }}</td>
-                                    <td class="right">{{ helper::formatRupiah($item->honor) }}</td>
-                                    <td class="right">{{ helper::formatRupiah($item->tax) }}</td>
-                                    <td class="right">{{ helper::formatRupiah($item->received) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="center">Tidak ada honorarium Pembimbing Utama atau Pembimbing Pendamping pada tanggal ini.</td>
-                                </tr>
-                            @endforelse
-                            @if ($loop->last)
-                                <tr class="total-row">
-                                    <td colspan="4" class="right">TOTAL PAJAK HONORARIUM</td>
-                                    <td class="right">{{ helper::formatRupiah($report->tax_total_honor) }}</td>
-                                    <td class="right">{{ helper::formatRupiah($report->tax_total_amount) }}</td>
-                                    <td class="right">{{ helper::formatRupiah($report->tax_total_received) }}</td>
-                                </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                    @if ($loop->last)
-                        <p class="tax-note">
-                            Honor diterima menggunakan nominal bersih setelah penyesuaian kehadiran pembimbing. Honor adalah nilai sebelum pajak, dan Pajak 5% adalah selisih antara Honor dan Honor Diterima.
-                        </p>
-                    @endif
-                </div>
-            @endforeach
-
             <div class="grand-total">TOTAL HONORARIUM HARIAN: {{ helper::formatRupiah($report->total_honor) }}</div>
             <p class="statement">Rekap ini merangkum honorarium pelaksanaan ujian pada tanggal {{ helper::tgl_indo_lengkap($report->tanggal) }} berdasarkan tipe ujian, penugasan dosen, dan penyesuaian kehadiran pembimbing yang tercatat di Thesis App FIKOM UMI.</p>
 
@@ -261,6 +214,125 @@
                 </tr>
             </table>
         </div>
+
+        @php
+            $taxRows = $report->tax_lecturers->values();
+            $taxChunks = collect();
+            if ($taxRows->isEmpty()) {
+                $taxChunks->push((object) ['offset' => 0, 'items' => collect()]);
+            } else {
+                $taxPageCount = (int) ceil($taxRows->count() / 18);
+                $taxBaseSize = (int) floor($taxRows->count() / $taxPageCount);
+                $taxExtraRows = $taxRows->count() % $taxPageCount;
+                $taxOffset = 0;
+                for ($taxPage = 0; $taxPage < $taxPageCount; $taxPage++) {
+                    $taxPageSize = $taxBaseSize + ($taxPage < $taxExtraRows ? 1 : 0);
+                    $taxChunks->push((object) [
+                        'offset' => $taxOffset,
+                        'items' => $taxRows->slice($taxOffset, $taxPageSize)->values(),
+                    ]);
+                    $taxOffset += $taxPageSize;
+                }
+            }
+        @endphp
+        @foreach ($taxChunks as $taxPage)
+            @php($taxChunkIndex = $loop->index)
+            @php($taxChunk = $taxPage->items)
+            <div class="document tax-document document-page-offset{{ $loop->first ? '' : ' tax-document-continuation' }}">
+                @if ($loop->first)
+                    <div class="letterhead">
+                        <table>
+                            <tr>
+                                <td width="43%"><img class="logo-umi" src="{{ \App\Helper::publicImageDataUri('images/branding/umi-pdf.jpg') }}" alt="Logo UMI"><img class="logo-fikom" src="{{ \App\Helper::publicImageDataUri('images/branding/fikom-pdf.jpg') }}" alt="Logo FIKOM"></td>
+                                <td class="letterhead-title" width="57%">YAYASAN WAKAF UMI<br>UNIVERSITAS MUSLIM INDONESIA<br>FAKULTAS ILMU KOMPUTER</td>
+                            </tr>
+                        </table>
+                        <div class="letterhead-divider"></div>
+                        <div class="address">
+                            Jln. Urip Sumohardjo Km.05 Gedung Fakultas Ilmu Komputer Lt.I Kampus II UMI HP/WA. 0811-4224-449 Makassar 90231
+                            <div class="contact-line">Website: fikom.umi.ac.id, Email: fikom@umi.ac.id</div>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="document-title">REKAP PAJAK HONORARIUM{{ $taxChunkIndex > 0 ? ' - LANJUTAN' : '' }}</div>
+                <div class="document-subtitle">Pembimbing Utama dan Pembimbing Pendamping</div>
+
+                <table class="summary">
+                    <tr><td class="label">Tanggal Ujian</td><td class="separator">:</td><td class="value">{{ helper::tgl_indo_lengkap($report->tanggal) }}</td></tr>
+                    <tr><td class="label">Unit Kerja</td><td class="separator">:</td><td class="value">Fakultas Ilmu Komputer, Universitas Muslim Indonesia</td></tr>
+                </table>
+
+                <div class="section">
+                    <table class="report-table tax-table">
+                        <thead>
+                            <tr>
+                                <th class="tax-number">No.</th>
+                                <th class="tax-lecturer">Dosen / NIDN</th>
+                                <th class="tax-role">Peran</th>
+                                <th class="tax-count">Jumlah</th>
+                                <th class="tax-honor">Honor</th>
+                                <th class="tax-amount">Pajak (5%)</th>
+                                <th class="tax-adjustment">Penyesuaian</th>
+                                <th class="tax-received">Honor Diterima</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($taxChunk as $item)
+                                <tr>
+                                    <td class="center">{{ $taxPage->offset + $loop->iteration }}</td>
+                                    <td><strong>{{ $item->lecturer_name }}</strong><br><span class="official-id">{{ $item->lecturer_code }}</span></td>
+                                    <td>{{ $item->role }}</td>
+                                    <td class="center">{{ number_format($item->assignment_count) }}</td>
+                                    <td class="right">{{ helper::formatRupiah($item->honor) }}</td>
+                                    <td class="right">{{ helper::formatRupiah($item->tax) }}</td>
+                                    <td class="right {{ $item->adjustment > 0 ? 'adjustment-positive' : ($item->adjustment < 0 ? 'adjustment-negative' : '') }}">
+                                        @if ($item->adjustment > 0)+@elseif ($item->adjustment < 0)-@endif{{ helper::formatRupiah(abs($item->adjustment)) }}
+                                    </td>
+                                    <td class="right">{{ helper::formatRupiah($item->received) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="center">Tidak ada honorarium Pembimbing Utama atau Pembimbing Pendamping pada tanggal ini.</td>
+                                </tr>
+                            @endforelse
+                            @if ($loop->last)
+                                <tr class="total-row">
+                                    <td colspan="3" class="right">TOTAL</td>
+                                    <td class="center">{{ number_format($report->tax_assignment_count) }}</td>
+                                    <td class="right">{{ helper::formatRupiah($report->tax_total_honor) }}</td>
+                                    <td class="right">{{ helper::formatRupiah($report->tax_total_amount) }}</td>
+                                    <td class="right">
+                                        @if ($report->tax_total_adjustment > 0)+@elseif ($report->tax_total_adjustment < 0)-@endif{{ helper::formatRupiah(abs($report->tax_total_adjustment)) }}
+                                    </td>
+                                    <td class="right">{{ helper::formatRupiah($report->tax_total_received) }}</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+
+                @if ($loop->last)
+                    <p class="tax-formula">Honor Diterima = Honor - Pajak + Penyesuaian</p>
+                    <table class="tax-signature">
+                        <tr>
+                            <td>
+                                Makassar, {{ helper::tgl_indo_lengkap($generatedAt->format('Y-m-d')) }}<br>Dekan,
+                                <div class="tax-signature-space"></div>
+                                <span class="official-name">{{ $dekan->nama }}</span><br>
+                                {{ $dekan->nip_nidn ? 'NIP/NIDN: ' . $dekan->nip_nidn : '' }}
+                            </td>
+                            <td>
+                                Makassar, {{ helper::tgl_indo_lengkap($generatedAt->format('Y-m-d')) }}<br>Wakil Dekan II Bidang Keuangan dan SDM,
+                                <div class="tax-signature-space"></div>
+                                <span class="official-name">{{ $wakilDekanDua->nama }}</span><br>
+                                {{ $wakilDekanDua->nip_nidn ? 'NIP/NIDN: ' . $wakilDekanDua->nip_nidn : '' }}
+                            </td>
+                        </tr>
+                    </table>
+                @endif
+            </div>
+        @endforeach
     @endforeach
 </body>
 </html>

@@ -978,15 +978,11 @@ class KeuanganFakultas extends Controller
         $jumlahPenyesuaianByTanggal = $tanggalTerpilih->mapWithKeys(function ($tanggal) {
             return [$tanggal => $this->jumlahSanksiPembayaranPadaTanggal($tanggal)];
         });
-        $namaMahasiswa = DB::table('t_mst_mahasiswa')
-            ->whereIn('C_NPM', $honorariums->pluck('C_NPM')->unique()->all())
-            ->pluck('NAMA_MAHASISWA', 'C_NPM');
         $reports = $this->buildHonorariumDailyRecapReports(
             $honorariums,
             $namaDosen,
             $jumlahPenyesuaianByTanggal,
-            $tandaTanganDosen,
-            $namaMahasiswa
+            $tandaTanganDosen
         );
         if ($reports->isEmpty()) {
             return redirect()->route('honorarium_home')->with([
@@ -1000,10 +996,11 @@ class KeuanganFakultas extends Controller
             'Wakil Dekan II',
             $generatedAt->format('Y-m-d')
         );
-        if (trim((string) $wakilDekanDua->nama) === '') {
+        $dekan = Helper::getDekanByTanggal($generatedAt->format('Y-m-d'));
+        if (trim((string) $wakilDekanDua->nama) === '' || trim((string) $dekan->nama) === '') {
             return redirect()->route('honorarium_home')->with([
                 'status' => 'warning',
-                'message' => 'Master Wakil Dekan II belum lengkap. Lengkapi pejabat fakultas sebelum membuat rekap.',
+                'message' => 'Master Dekan atau Wakil Dekan II belum lengkap. Lengkapi pejabat fakultas sebelum membuat rekap.',
             ]);
         }
 
@@ -1026,6 +1023,7 @@ class KeuanganFakultas extends Controller
             : 'Rekap-Honorarium-Harian-' . $tanggalTerpilih->first() . '-sd-' . $tanggalTerpilih->last() . '.pdf';
         $pdf = PDF::loadView('tugasakhir.keuanganfakultas.rekap_honorarium_harian_pdf', compact(
             'reports',
+            'dekan',
             'wakilDekanDua',
             'generatedAt'
         ))->setPaper('a4', 'portrait');
@@ -1068,14 +1066,12 @@ class KeuanganFakultas extends Controller
         $honorariums,
         $namaDosen,
         $jumlahPenyesuaianByTanggal,
-        $tandaTanganDosen = null,
-        $namaMahasiswa = null
+        $tandaTanganDosen = null
     )
     {
         $reports = collect();
         $roles = $this->honorariumReportRoles();
         $tandaTanganDosen = collect($tandaTanganDosen ?: []);
-        $namaMahasiswa = collect($namaMahasiswa ?: []);
 
         foreach ($honorariums as $honorarium) {
             $tanggal = substr((string) $honorarium->tanggal_ujian, 0, 10);
@@ -1089,7 +1085,7 @@ class KeuanganFakultas extends Controller
                     'student_nims' => [],
                     'exam_types' => collect(),
                     'lecturers' => collect(),
-                    'tax_items' => collect(),
+                    'tax_lecturers' => collect(),
                     'student_count' => 0,
                     'exam_type_count' => 0,
                     'lecturer_count' => 0,
@@ -1098,6 +1094,7 @@ class KeuanganFakultas extends Controller
                     'tax_assignment_count' => 0,
                     'tax_total_honor' => 0.0,
                     'tax_total_amount' => 0.0,
+                    'tax_total_adjustment' => 0.0,
                     'tax_total_received' => 0.0,
                 ]);
             }
@@ -1142,21 +1139,37 @@ class KeuanganFakultas extends Controller
                     : (float) $honorarium->{$definition['amount']};
 
                 if (in_array($role, ['PU', 'PP'], true)) {
-                    $taxDetail = $this->rincianPajakHonorarium($honor);
-                    $report->tax_items->push((object) [
-                        'lecturer_code' => $code,
-                        'lecturer_name' => trim((string) $namaDosen->get($code, $code)),
-                        'student_nim' => $nim,
-                        'student_name' => trim((string) $namaMahasiswa->get($nim, '-')) ?: '-',
-                        'role' => $definition['label'],
-                        'honor' => $taxDetail['honor'],
-                        'tax' => $taxDetail['tax'],
-                        'received' => $taxDetail['received'],
-                    ]);
+                    $baseHonorDiterima = isset($penyesuaianHonor['base_amounts'][$role])
+                        ? (float) $penyesuaianHonor['base_amounts'][$role]
+                        : (float) $honorarium->{$definition['amount']};
+                    $taxDetail = $this->rincianPajakHonorarium($baseHonorDiterima);
+                    $adjustment = (int) round($honor - $baseHonorDiterima);
+                    $taxKey = $code . '|' . $role;
+
+                    if (!$report->tax_lecturers->has($taxKey)) {
+                        $report->tax_lecturers->put($taxKey, (object) [
+                            'lecturer_code' => $code,
+                            'lecturer_name' => trim((string) $namaDosen->get($code, $code)),
+                            'role' => $definition['label'],
+                            'assignment_count' => 0,
+                            'honor' => 0,
+                            'tax' => 0,
+                            'adjustment' => 0,
+                            'received' => 0,
+                        ]);
+                    }
+
+                    $taxLecturer = $report->tax_lecturers->get($taxKey);
+                    $taxLecturer->assignment_count++;
+                    $taxLecturer->honor += $taxDetail['honor'];
+                    $taxLecturer->tax += $taxDetail['tax'];
+                    $taxLecturer->adjustment += $adjustment;
+                    $taxLecturer->received += (int) round($honor);
                     $report->tax_assignment_count++;
                     $report->tax_total_honor += $taxDetail['honor'];
                     $report->tax_total_amount += $taxDetail['tax'];
-                    $report->tax_total_received += $taxDetail['received'];
+                    $report->tax_total_adjustment += $adjustment;
+                    $report->tax_total_received += (int) round($honor);
                 }
 
                 if (!$report->lecturers->has($code)) {
@@ -1205,12 +1218,10 @@ class KeuanganFakultas extends Controller
             })->sortBy(function ($lecturer) {
                 return strtolower($lecturer->name . '|' . $lecturer->code);
             })->values();
-            $report->tax_items = $report->tax_items->sortBy(function ($item) {
+            $report->tax_lecturers = $report->tax_lecturers->sortBy(function ($item) {
                 return strtolower(
                     $item->lecturer_name . '|'
                     . $item->lecturer_code . '|'
-                    . $item->student_name . '|'
-                    . $item->student_nim . '|'
                     . $item->role
                 );
             })->values();

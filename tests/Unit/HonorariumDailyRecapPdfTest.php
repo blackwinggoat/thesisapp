@@ -22,6 +22,7 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('honorariumDenganJadwalQuery()', $controller);
         $this->assertStringContainsString('honorariumNeedsTypeAssignment', $controller);
         $this->assertStringContainsString("getPejabatFakultasByTanggal(\n            'Wakil Dekan II'", $controller);
+        $this->assertStringContainsString('getDekanByTanggal($generatedAt->format', $controller);
         $this->assertStringContainsString("Route::post('/rekap-harian-pdf'", $routes);
         $this->assertStringContainsString("Route::get('/verifikasi/rekap-honorarium/{token}'", $routes);
         $this->assertStringContainsString('Tanda Terima Dosen', $listView);
@@ -34,18 +35,23 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('Honorarium Diterima', $pdfView);
         $this->assertStringContainsString('Tipe Ujian', $pdfView);
         $this->assertStringContainsString('Paraf', $pdfView);
-        $this->assertStringContainsString('Rekap Pajak Honorarium', $pdfView);
+        $this->assertStringContainsString('REKAP PAJAK HONORARIUM', $pdfView);
         $this->assertStringContainsString('Pajak (5%)', $pdfView);
-        $this->assertStringContainsString('Honor adalah nilai sebelum pajak', $pdfView);
-        $this->assertStringContainsString("->chunk(20)", $pdfView);
-        $this->assertStringContainsString('$report->tax_assignment_count > 20', $pdfView);
-        $this->assertStringContainsString('tax-section-new-page', $pdfView);
-        $this->assertStringContainsString('Rekap Pajak Honorarium{{ $taxChunkIndex > 0 ? \' - Lanjutan\' : \'\' }}', $pdfView);
+        $this->assertStringContainsString('Penyesuaian', $pdfView);
+        $this->assertStringContainsString('Honor Diterima = Honor - Pajak + Penyesuaian', $pdfView);
+        $this->assertStringContainsString('$taxPageCount = (int) ceil($taxRows->count() / 18)', $pdfView);
+        $this->assertStringContainsString("'offset' => \$taxOffset", $pdfView);
+        $this->assertStringContainsString('class="document tax-document document-page-offset', $pdfView);
+        $this->assertStringContainsString('REKAP PAJAK HONORARIUM{{ $taxChunkIndex > 0 ? \' - LANJUTAN\' : \'\' }}', $pdfView);
+        $this->assertStringContainsString('<th class="tax-count">Jumlah</th>', $pdfView);
+        $this->assertStringNotContainsString('<th class="tax-student">Mahasiswa</th>', $pdfView);
         $this->assertStringContainsString('rincianPajakHonorarium', $controller);
         $this->assertStringNotContainsString('<th class="lecturer-assignment">Penugasan</th>', $pdfView);
         $this->assertStringContainsString("->setPaper('a4', 'portrait')", $controller);
         $this->assertStringContainsString('class="btn btn-danger" id="download-honorarium-daily-recap"', $listView);
         $this->assertStringContainsString('Wakil Dekan II Bidang Keuangan dan SDM', $pdfView);
+        $this->assertStringContainsString('Makassar, {{ helper::tgl_indo_lengkap($generatedAt->format(\'Y-m-d\')) }}<br>Dekan,', $pdfView);
+        $this->assertSame(2, substr_count($pdfView, 'class="letterhead"'));
         $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $pdfView);
         $this->assertStringContainsString("publicImageDataUri('images/branding/fikom-pdf.jpg')", $pdfView);
         $this->assertStringContainsString('qrCodeDataUri($report->verification_url', $pdfView);
@@ -80,11 +86,7 @@ class HonorariumDailyRecapPdfTest extends TestCase
             $rows,
             $names,
             collect(['2026-08-19' => 50000]),
-            collect(['D1' => $signature]),
-            collect([
-                '13020220001' => 'Mahasiswa Proposal',
-                '13120220001' => 'Mahasiswa Ujian Meja',
-            ])
+            collect(['D1' => $signature])
         );
         $report = $reports->first();
 
@@ -113,22 +115,26 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringStartsWith('data:image/png;base64,', $dosenSatu->signature_data_uri);
         $this->assertSame('', $dosenDua->signature_data_uri);
 
-        $this->assertCount(2, $report->tax_items);
+        $this->assertCount(2, $report->tax_lecturers);
         $this->assertSame(2, $report->tax_assignment_count);
-        $this->assertSame(421053.0, $report->tax_total_honor);
-        $this->assertSame(21053.0, $report->tax_total_amount);
+        $this->assertSame(421052.0, $report->tax_total_honor);
+        $this->assertSame(21052.0, $report->tax_total_amount);
+        $this->assertSame(0.0, $report->tax_total_adjustment);
         $this->assertSame(400000.0, $report->tax_total_received);
 
-        $taxPu = $report->tax_items->firstWhere('lecturer_code', 'D2');
-        $taxPp = $report->tax_items->firstWhere('lecturer_code', 'D3');
-        $this->assertSame('Mahasiswa Proposal', $taxPu->student_name);
+        $taxPu = $report->tax_lecturers->firstWhere('lecturer_code', 'D2');
+        $taxPp = $report->tax_lecturers->firstWhere('lecturer_code', 'D3');
         $this->assertSame('Pembimbing Utama', $taxPu->role);
-        $this->assertSame(157895, $taxPu->honor);
-        $this->assertSame(7895, $taxPu->tax);
+        $this->assertSame(1, $taxPu->assignment_count);
+        $this->assertSame(210526, $taxPu->honor);
+        $this->assertSame(10526, $taxPu->tax);
+        $this->assertSame(-50000, $taxPu->adjustment);
         $this->assertSame(150000, $taxPu->received);
         $this->assertSame('Pembimbing Pendamping', $taxPp->role);
-        $this->assertSame(263158, $taxPp->honor);
-        $this->assertSame(13158, $taxPp->tax);
+        $this->assertSame(1, $taxPp->assignment_count);
+        $this->assertSame(210526, $taxPp->honor);
+        $this->assertSame(10526, $taxPp->tax);
+        $this->assertSame(50000, $taxPp->adjustment);
         $this->assertSame(250000, $taxPp->received);
     }
 
@@ -173,6 +179,58 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertSame('Pejabat Penguji', $payload['signer_name']);
         $this->assertArrayNotHasKey('total_honor', $payload);
         $this->assertNull($service->decodeVerificationToken($token . 'tampered', 'test-signing-key'));
+    }
+
+    public function testTaxRecapAggregatesLecturerRolesAndReconcilesAdjustment()
+    {
+        $controller = new KeuanganFakultas;
+        $method = new \ReflectionMethod($controller, 'buildHonorariumDailyRecapReports');
+        $method->setAccessible(true);
+        $rows = collect([
+            $this->honorariumRow('13020220001', 'Ujian Meja', [
+                'PU' => ['D2', 200000, 1],
+                'PP' => ['D3', 200000, 1],
+            ]),
+            $this->honorariumRow('13020220002', 'Ujian Meja', [
+                'PU' => ['D2', 200000, 1],
+                'PP' => ['D3', 200000, 1],
+            ], 0, 1),
+        ]);
+
+        $report = $method->invoke(
+            $controller,
+            $rows,
+            collect(['D2' => 'Dosen Dua', 'D3' => 'Dosen Tiga']),
+            collect(['2026-08-19' => 50000]),
+            collect()
+        )->first();
+
+        $this->assertCount(2, $report->tax_lecturers);
+        $pu = $report->tax_lecturers->first(function ($item) {
+            return $item->lecturer_code === 'D2' && $item->role === 'Pembimbing Utama';
+        });
+        $pp = $report->tax_lecturers->first(function ($item) {
+            return $item->lecturer_code === 'D3' && $item->role === 'Pembimbing Pendamping';
+        });
+
+        $this->assertSame(2, $pu->assignment_count);
+        $this->assertSame(421052, $pu->honor);
+        $this->assertSame(21052, $pu->tax);
+        $this->assertSame(-50000, $pu->adjustment);
+        $this->assertSame(350000, $pu->received);
+        $this->assertSame($pu->received, $pu->honor - $pu->tax + $pu->adjustment);
+
+        $this->assertSame(2, $pp->assignment_count);
+        $this->assertSame(421052, $pp->honor);
+        $this->assertSame(21052, $pp->tax);
+        $this->assertSame(50000, $pp->adjustment);
+        $this->assertSame(450000, $pp->received);
+        $this->assertSame($pp->received, $pp->honor - $pp->tax + $pp->adjustment);
+
+        $this->assertSame(842104.0, $report->tax_total_honor);
+        $this->assertSame(42104.0, $report->tax_total_amount);
+        $this->assertSame(0.0, $report->tax_total_adjustment);
+        $this->assertSame(800000.0, $report->tax_total_received);
     }
 
     public function testFacultyOfficialMigrationSeedsTheCurrentLeadershipRoles()
