@@ -90,7 +90,7 @@
         .tax-document-continuation { padding-top: 8mm; }
         .tax-document-needs-initial { min-height: 258mm; position: relative; }
         .tax-document-needs-initial { padding-bottom: 17mm; }
-        .tax-signature-bottom { margin-top: 38mm; }
+        .tax-signature-bottom { margin-top: 12mm; }
         .tax-page-initial {
             border: 1px solid #374151;
             bottom: 0;
@@ -239,17 +239,13 @@
             if ($taxRows->isEmpty()) {
                 $taxChunks->push((object) ['offset' => 0, 'items' => collect()]);
             } else {
-                $taxPageCount = (int) ceil($taxRows->count() / 22);
-                $taxBaseSize = (int) floor($taxRows->count() / $taxPageCount);
-                $taxExtraRows = $taxRows->count() % $taxPageCount;
                 $taxOffset = 0;
-                for ($taxPage = 0; $taxPage < $taxPageCount; $taxPage++) {
-                    $taxPageSize = $taxBaseSize + ($taxPage < $taxExtraRows ? 1 : 0);
+                while ($taxOffset < $taxRows->count()) {
                     $taxChunks->push((object) [
                         'offset' => $taxOffset,
-                        'items' => $taxRows->slice($taxOffset, $taxPageSize)->values(),
+                        'items' => $taxRows->slice($taxOffset, 22)->values(),
                     ]);
-                    $taxOffset += $taxPageSize;
+                    $taxOffset += 22;
                 }
             }
         @endphp
