@@ -43,7 +43,11 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('$taxRows->slice($taxOffset, 20)->values()', $pdfView);
         $this->assertStringContainsString('$taxOffset += 20', $pdfView);
         $this->assertStringContainsString("'offset' => \$taxOffset", $pdfView);
-        $this->assertStringContainsString('class="document honorarium-document"', $pdfView);
+        $this->assertStringContainsString('$lecturerSinglePageLimit = 21', $pdfView);
+        $this->assertStringContainsString('$lecturerPageSize = 27', $pdfView);
+        $this->assertStringContainsString('$lecturerRemaining - 2', $pdfView);
+        $this->assertStringContainsString('$lecturerPage->offset + $loop->iteration', $pdfView);
+        $this->assertStringContainsString('class="document honorarium-document{{ $loop->first', $pdfView);
         $this->assertStringContainsString('class="document tax-document{{ $loop->first', $pdfView);
         $this->assertStringNotContainsString('document-page-offset', $pdfView);
         $this->assertStringContainsString('.page-break { font-size: 0; height: 0; line-height: 0; page-break-before: always;', $pdfView);
@@ -51,7 +55,9 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringNotContainsString('page-break-after: always', $pdfView);
         $this->assertStringContainsString('tax-document-needs-initial', $pdfView);
         $this->assertStringContainsString('tax-signature-bottom', $pdfView);
+        $this->assertStringContainsString('class="main-page-initial">Paraf WD II</div>', $pdfView);
         $this->assertStringContainsString('class="tax-page-initial">Paraf WD II</div>', $pdfView);
+        $this->assertStringContainsString('$lecturerChunks->count() > 1', $pdfView);
         $this->assertStringContainsString('$taxChunks->count() > 1 && !$loop->last', $pdfView);
         $this->assertStringContainsString('REKAP PAJAK HONORARIUM{{ $taxChunkIndex > 0 ? \' - LANJUTAN\' : \'\' }}', $pdfView);
         $this->assertStringContainsString('<th class="tax-count">Jumlah</th>', $pdfView);
@@ -67,6 +73,8 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString("publicImageDataUri('images/branding/umi-pdf.jpg')", $letterheadView);
         $this->assertStringContainsString("publicImageDataUri('images/branding/fikom-pdf.jpg')", $letterheadView);
         $this->assertStringContainsString('qrCodeDataUri($report->verification_url', $pdfView);
+        $this->assertStringNotContainsString('QR digunakan untuk memeriksa metadata', $pdfView);
+        $this->assertStringNotContainsString('Halaman verifikasi tidak menampilkan identitas mahasiswa', $pdfView);
         $this->assertStringContainsString('Identitas mahasiswa', $verificationView);
         $this->assertStringNotContainsString("['total_honor']", $verificationView);
     }

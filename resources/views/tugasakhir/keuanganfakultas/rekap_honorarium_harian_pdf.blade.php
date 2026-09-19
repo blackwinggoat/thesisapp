@@ -73,7 +73,7 @@
         .statement { margin: 6px 0 0; page-break-inside: avoid; text-align: justify; }
         .signature { margin-top: 6px; page-break-inside: avoid; }
         .signature td { vertical-align: top; }
-        .signature-note { color: #4b5563; font-family: Arial, sans-serif; font-size: 6.4pt; line-height: 1.22; padding-right: 18px; width: 58%; }
+        .signature-spacer { width: 58%; }
         .signature-official { color: #000; text-align: center; width: 42%; }
         .signature-heading { line-height: 1.15; }
         .signature-qr-box { height: 57px; text-align: center; }
@@ -86,142 +86,189 @@
         .tax-signature td:first-child { padding-right: 20px; }
         .tax-signature td:last-child { padding-left: 20px; }
         .tax-signature-space { height: 44px; }
-        .tax-document-continuation { padding-top: 8mm; }
-        .tax-document-needs-initial { min-height: 258mm; position: relative; }
-        .tax-document-needs-initial { padding-bottom: 17mm; }
+        .document-continuation { padding-top: 8mm; }
+        .tax-document-needs-initial { min-height: 258mm; padding-bottom: 17mm; position: relative; }
         .tax-signature-bottom { margin-top: 12mm; }
-        .tax-page-initial {
+        .main-page-initial, .tax-page-initial {
             border: 1px solid #374151;
-            bottom: 0;
             color: #374151;
             font-family: Arial, sans-serif;
             font-size: 6.2pt;
             height: 13mm;
             padding-top: 2mm;
-            position: absolute;
-            right: 0;
             text-align: center;
             width: 25mm;
         }
+        .main-page-initial { margin: 6px 0 0 auto; }
+        .tax-page-initial { bottom: 0; position: absolute; right: 0; }
     </style>
 </head>
 <body>
     @foreach ($reports as $report)
-        @if (!$loop->first)
-            <div class="page-break"></div>
-        @endif
-        <div class="document honorarium-document">
-            @include('tugasakhir.keuanganfakultas._honorarium_pdf_letterhead')
+        @php
+            $reportIndex = $loop->index;
+            $lecturerRows = $report->lecturers->values();
+            $lecturerChunks = collect();
+            $lecturerSinglePageLimit = 21;
+            $lecturerPageSize = 27;
 
-            <div class="document-title">REKAP HONORARIUM HARIAN</div>
-            <div class="document-subtitle">Pelaksanaan Ujian Proposal dan Tugas Akhir</div>
+            if ($lecturerRows->isEmpty() || $lecturerRows->count() <= $lecturerSinglePageLimit) {
+                $lecturerChunks->push((object) ['offset' => 0, 'items' => $lecturerRows]);
+            } else {
+                $lecturerOffset = 0;
+                $lecturerRemaining = $lecturerRows->count();
+                while ($lecturerRemaining > $lecturerSinglePageLimit) {
+                    $lecturerTake = min($lecturerPageSize, $lecturerRemaining - 2);
+                    $lecturerChunks->push((object) [
+                        'offset' => $lecturerOffset,
+                        'items' => $lecturerRows->slice($lecturerOffset, $lecturerTake)->values(),
+                    ]);
+                    $lecturerOffset += $lecturerTake;
+                    $lecturerRemaining -= $lecturerTake;
+                    if ($lecturerRemaining <= $lecturerPageSize) {
+                        break;
+                    }
+                }
+                $lecturerChunks->push((object) [
+                    'offset' => $lecturerOffset,
+                    'items' => $lecturerRows->slice($lecturerOffset)->values(),
+                ]);
+            }
+        @endphp
 
-            <table class="summary">
-                <tr><td class="label">Tanggal Ujian</td><td class="separator">:</td><td class="value">{{ helper::tgl_indo_lengkap($report->tanggal) }}</td></tr>
-                <tr><td class="label">Unit Kerja</td><td class="separator">:</td><td class="value">Fakultas Ilmu Komputer, Universitas Muslim Indonesia</td></tr>
-            </table>
+        @foreach ($lecturerChunks as $lecturerPage)
+            @php
+                $lecturerChunkIndex = $loop->index;
+            @endphp
+            @if ($reportIndex > 0 || !$loop->first)
+                <div class="page-break"></div>
+            @endif
+            <div class="document honorarium-document{{ $loop->first ? '' : ' document-continuation' }}">
+                @if ($loop->first)
+                    @include('tugasakhir.keuanganfakultas._honorarium_pdf_letterhead')
+                @endif
 
-            <table class="metric-table">
-                <tr>
-                    <td><span class="metric-value">{{ number_format($report->student_count) }}</span><span class="metric-label">Mahasiswa Ujian</span></td>
-                    <td><span class="metric-value">{{ number_format($report->exam_type_count) }}</span><span class="metric-label">Jenis Ujian</span></td>
-                    <td><span class="metric-value">{{ number_format($report->lecturer_count) }}</span><span class="metric-label">Dosen Penerima</span></td>
-                    <td><span class="metric-value">{{ number_format($report->assignment_count) }}</span><span class="metric-label">Penugasan Dosen</span></td>
-                    <td><span class="metric-value">{{ helper::formatRupiah($report->total_honor) }}</span><span class="metric-label">Total Honorarium</span></td>
-                </tr>
-            </table>
+                <div class="document-title">REKAP HONORARIUM HARIAN{{ $lecturerChunkIndex > 0 ? ' - LANJUTAN' : '' }}</div>
+                <div class="document-subtitle">Pelaksanaan Ujian Proposal dan Tugas Akhir</div>
 
-            <div class="section">
-                <div class="section-title">Rincian Jenis Ujian</div>
-                <table class="report-table">
-                    <thead>
+                <table class="summary">
+                    <tr><td class="label">Tanggal Ujian</td><td class="separator">:</td><td class="value">{{ helper::tgl_indo_lengkap($report->tanggal) }}</td></tr>
+                    <tr><td class="label">Unit Kerja</td><td class="separator">:</td><td class="value">Fakultas Ilmu Komputer, Universitas Muslim Indonesia</td></tr>
+                </table>
+
+                @if ($loop->first)
+                    <table class="metric-table">
                         <tr>
-                            <th class="number">No.</th>
-                            <th class="exam-name">Jenis Ujian</th>
-                            <th class="type-name">Tipe Ujian</th>
-                            <th class="type-count">Mahasiswa</th>
-                            <th class="type-assignment">Penugasan Dosen</th>
-                            <th class="type-amount">Honorarium</th>
+                            <td><span class="metric-value">{{ number_format($report->student_count) }}</span><span class="metric-label">Mahasiswa Ujian</span></td>
+                            <td><span class="metric-value">{{ number_format($report->exam_type_count) }}</span><span class="metric-label">Jenis Ujian</span></td>
+                            <td><span class="metric-value">{{ number_format($report->lecturer_count) }}</span><span class="metric-label">Dosen Penerima</span></td>
+                            <td><span class="metric-value">{{ number_format($report->assignment_count) }}</span><span class="metric-label">Penugasan Dosen</span></td>
+                            <td><span class="metric-value">{{ helper::formatRupiah($report->total_honor) }}</span><span class="metric-label">Total Honorarium</span></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($report->exam_types as $type)
+                    </table>
+
+                    <div class="section">
+                        <div class="section-title">Rincian Jenis Ujian</div>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th class="number">No.</th>
+                                    <th class="exam-name">Jenis Ujian</th>
+                                    <th class="type-name">Tipe Ujian</th>
+                                    <th class="type-count">Mahasiswa</th>
+                                    <th class="type-assignment">Penugasan Dosen</th>
+                                    <th class="type-amount">Honorarium</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($report->exam_types as $type)
+                                    <tr>
+                                        <td class="center">{{ $loop->iteration }}</td>
+                                        <td>{{ $type->exam_name }}</td>
+                                        <td>{{ $type->type_name }}</td>
+                                        <td class="center">{{ number_format($type->student_count) }}</td>
+                                        <td class="center">{{ number_format($type->assignment_count) }}</td>
+                                        <td class="right">{{ helper::formatRupiah($type->total_honor) }}</td>
+                                    </tr>
+                                @endforeach
+                                <tr class="total-row">
+                                    <td colspan="3" class="right">TOTAL</td>
+                                    <td class="center">{{ number_format($report->student_count) }}</td>
+                                    <td class="center">{{ number_format($report->assignment_count) }}</td>
+                                    <td class="right">{{ helper::formatRupiah($report->total_honor) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+
+                <div class="section">
+                    <div class="section-title">Rekap Penerimaan Dosen{{ $lecturerChunkIndex > 0 ? ' (Lanjutan)' : '' }}</div>
+                    @php
+                        $compactLecturerTable = $report->lecturer_count > 18;
+                    @endphp
+                    <table class="report-table lecturer-table{{ $compactLecturerTable ? ' lecturer-table-compact' : '' }}">
+                        <thead>
                             <tr>
-                                <td class="center">{{ $loop->iteration }}</td>
-                                <td>{{ $type->exam_name }}</td>
-                                <td>{{ $type->type_name }}</td>
-                                <td class="center">{{ number_format($type->student_count) }}</td>
-                                <td class="center">{{ number_format($type->assignment_count) }}</td>
-                                <td class="right">{{ helper::formatRupiah($type->total_honor) }}</td>
+                                <th class="number">No.</th>
+                                <th class="lecturer-name">Dosen / NIDN atau Kode Dosen</th>
+                                <th class="lecturer-student">Mahasiswa</th>
+                                <th class="lecturer-role">Peran</th>
+                                <th class="lecturer-amount">Honorarium Diterima</th>
+                                <th class="lecturer-signature">Paraf</th>
                             </tr>
-                        @endforeach
-                        <tr class="total-row">
-                            <td colspan="3" class="right">TOTAL</td>
-                            <td class="center">{{ number_format($report->student_count) }}</td>
-                            <td class="center">{{ number_format($report->assignment_count) }}</td>
-                            <td class="right">{{ helper::formatRupiah($report->total_honor) }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            @forelse ($lecturerPage->items as $lecturer)
+                                <tr>
+                                    <td class="center">{{ $lecturerPage->offset + $loop->iteration }}</td>
+                                    <td><strong>{{ $lecturer->name }}</strong> <span class="official-id">({{ $lecturer->code }})</span></td>
+                                    <td class="center">{{ number_format($lecturer->student_count) }}</td>
+                                    <td>{{ $lecturer->roles }}</td>
+                                    <td class="right">{{ helper::formatRupiah($lecturer->total_honor) }}</td>
+                                    <td class="center lecturer-signature">
+                                        @if ($lecturer->signature_data_uri)
+                                            <img src="{{ $lecturer->signature_data_uri }}" alt="Paraf {{ $lecturer->name }}">
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="center">Tidak ada penerima honorarium pada tanggal ini.</td>
+                                </tr>
+                            @endforelse
+                            @if ($loop->last)
+                                <tr class="total-row">
+                                    <td colspan="4" class="right">TOTAL HONORARIUM {{ strtoupper(helper::tgl_indo_lengkap($report->tanggal)) }}</td>
+                                    <td class="right">{{ helper::formatRupiah($report->total_honor) }}</td>
+                                    <td></td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="section">
-                <div class="section-title">Rekap Penerimaan Dosen</div>
-                @php
-                    $compactLecturerTable = $report->lecturer_count > 18;
-                    $lecturerRowHeight = !$compactLecturerTable && $report->lecturer_count > 24 ? 28 : null;
-                @endphp
-                <table class="report-table lecturer-table{{ $compactLecturerTable ? ' lecturer-table-compact' : '' }}">
-                    <thead>
+                @if ($loop->last)
+                    <div class="grand-total">TOTAL HONORARIUM HARIAN: {{ helper::formatRupiah($report->total_honor) }}</div>
+                    <p class="statement">Rekap ini merangkum honorarium pelaksanaan ujian pada tanggal {{ helper::tgl_indo_lengkap($report->tanggal) }} berdasarkan tipe ujian, penugasan dosen, dan penyesuaian kehadiran pembimbing yang tercatat di Thesis App FIKOM UMI.</p>
+
+                    <table class="signature">
                         <tr>
-                            <th class="number">No.</th>
-                            <th class="lecturer-name">Dosen / NIDN atau Kode Dosen</th>
-                            <th class="lecturer-student">Mahasiswa</th>
-                            <th class="lecturer-role">Peran</th>
-                            <th class="lecturer-amount">Honorarium Diterima</th>
-                            <th class="lecturer-signature">Paraf</th>
+                            <td class="signature-spacer"></td>
+                            <td class="signature-official">
+                                <div class="signature-heading">Makassar, {{ helper::tgl_indo_lengkap($generatedAt->format('Y-m-d')) }}<br>Wakil Dekan II Bidang Keuangan dan SDM,</div>
+                                <div class="signature-qr-box"><a href="{{ $report->verification_url }}"><img class="verification-qr" src="{{ \App\Helper::qrCodeDataUri($report->verification_url, 120) }}" alt="QR verifikasi rekap honorarium"></a></div>
+                                <div class="signature-identity"><span class="official-name">{{ $wakilDekanDua->nama }}</span><br>{{ $wakilDekanDua->nip_nidn ? 'NIP/NIDN: ' . $wakilDekanDua->nip_nidn : '' }}</div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($report->lecturers as $lecturer)
-                            <tr style="{{ $lecturerRowHeight ? 'height: ' . $lecturerRowHeight . 'px;' : '' }}">
-                                <td class="center" @if ($lecturerRowHeight) height="{{ $lecturerRowHeight }}" @endif>{{ $loop->iteration }}</td>
-                                <td><strong>{{ $lecturer->name }}</strong> <span class="official-id">({{ $lecturer->code }})</span></td>
-                                <td class="center">{{ number_format($lecturer->student_count) }}</td>
-                                <td>{{ $lecturer->roles }}</td>
-                                <td class="right">{{ helper::formatRupiah($lecturer->total_honor) }}</td>
-                                <td class="center lecturer-signature">
-                                    @if ($lecturer->signature_data_uri)
-                                        <img src="{{ $lecturer->signature_data_uri }}" alt="Paraf {{ $lecturer->name }}">
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                        <tr class="total-row">
-                            <td colspan="4" class="right">TOTAL HONORARIUM {{ strtoupper(helper::tgl_indo_lengkap($report->tanggal)) }}</td>
-                            <td class="right">{{ helper::formatRupiah($report->total_honor) }}</td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
+                    </table>
+                @elseif ($lecturerChunks->count() > 1)
+                    <div class="main-page-initial">Paraf WD II</div>
+                @endif
             </div>
-
-            <div class="grand-total">TOTAL HONORARIUM HARIAN: {{ helper::formatRupiah($report->total_honor) }}</div>
-            <p class="statement">Rekap ini merangkum honorarium pelaksanaan ujian pada tanggal {{ helper::tgl_indo_lengkap($report->tanggal) }} berdasarkan tipe ujian, penugasan dosen, dan penyesuaian kehadiran pembimbing yang tercatat di Thesis App FIKOM UMI.</p>
-
-            <table class="signature">
-                <tr>
-                    <td class="signature-note">QR digunakan untuk memeriksa metadata penerbitan dokumen. Halaman verifikasi tidak menampilkan identitas mahasiswa maupun rincian nilai honorarium.</td>
-                    <td class="signature-official">
-                        <div class="signature-heading">Makassar, {{ helper::tgl_indo_lengkap($generatedAt->format('Y-m-d')) }}<br>Wakil Dekan II Bidang Keuangan dan SDM,</div>
-                        <div class="signature-qr-box"><a href="{{ $report->verification_url }}"><img class="verification-qr" src="{{ \App\Helper::qrCodeDataUri($report->verification_url, 120) }}" alt="QR verifikasi rekap honorarium"></a></div>
-                        <div class="signature-identity"><span class="official-name">{{ $wakilDekanDua->nama }}</span><br>{{ $wakilDekanDua->nip_nidn ? 'NIP/NIDN: ' . $wakilDekanDua->nip_nidn : '' }}</div>
-                    </td>
-                </tr>
-            </table>
-        </div>
+        @endforeach
 
         @php
             $taxRows = $report->tax_lecturers->values();
@@ -243,7 +290,7 @@
             @php($taxChunkIndex = $loop->index)
             @php($taxChunk = $taxPage->items)
             <div class="page-break"></div>
-            <div class="document tax-document{{ $loop->first ? '' : ' tax-document-continuation' }}{{ $taxChunks->count() > 1 && !$loop->last ? ' tax-document-needs-initial' : '' }}">
+            <div class="document tax-document{{ $loop->first ? '' : ' document-continuation' }}{{ $taxChunks->count() > 1 && !$loop->last ? ' tax-document-needs-initial' : '' }}">
                 @if ($loop->first)
                     @include('tugasakhir.keuanganfakultas._honorarium_pdf_letterhead')
                 @endif
