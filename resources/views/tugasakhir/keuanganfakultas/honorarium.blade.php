@@ -47,6 +47,27 @@
             color: #64748b;
             font-size: 12px;
         }
+
+        .honorarium-report-actions {
+            display: inline-flex;
+            flex-wrap: wrap;
+        }
+
+        .honorarium-report-actions .btn + .btn {
+            margin-left: 6px;
+        }
+
+        @media (max-width: 767px) {
+            .honorarium-report-actions {
+                display: flex;
+                width: 100%;
+            }
+
+            .honorarium-report-actions .btn {
+                flex: 1 1 0;
+                white-space: normal;
+            }
+        }
     </style>
     <div class="page-content">
         <div class="container-fluid">
@@ -95,10 +116,16 @@
                                 formaction="{{ route('honorarium_tanda_terima_pdf') }}" formtarget="_blank" disabled>
                                 <i class="fa fa-file-pdf-o"></i> Tanda Terima Dosen
                             </button>
-                            <button type="submit" class="btn btn-danger" id="download-honorarium-daily-recap"
-                                formaction="{{ route('honorarium_rekap_harian_pdf') }}" formtarget="_blank" disabled>
-                                <i class="fa fa-file-pdf-o"></i> Rekap Honorarium Harian
-                            </button>
+                            <div class="honorarium-report-actions" role="group" aria-label="Unduh rekap honorarium">
+                                <button type="submit" class="btn btn-danger" id="download-honorarium-daily-recap"
+                                    formaction="{{ route('honorarium_rekap_harian_pdf') }}" formtarget="_blank" disabled>
+                                    <i class="fa fa-file-pdf-o"></i> Rekap Honorarium Harian
+                                </button>
+                                <button type="submit" class="btn btn-danger" id="download-honorarium-tax-recap"
+                                    formaction="{{ route('honorarium_rekap_pajak_pdf') }}" formtarget="_blank" disabled>
+                                    <i class="fa fa-file-pdf-o"></i> Rekap Pajak Honorarium
+                                </button>
+                            </div>
                             <input type="checkbox"
                                 id="selected-dates-availability-toggle"
                                 data-toggle="toggle"
@@ -320,6 +347,7 @@
                 $('#honorarium-selected-count').text(selected + ' tanggal dipilih');
                 $('#download-honorarium-pdf').prop('disabled', selected === 0);
                 $('#download-honorarium-daily-recap').prop('disabled', selected === 0);
+                $('#download-honorarium-tax-recap').prop('disabled', selected === 0);
                 $('#mark-honorarium-paid').prop('disabled', selected === 0);
                 bulkToggle.bootstrapToggle('enable');
                 if (selected === 0) {

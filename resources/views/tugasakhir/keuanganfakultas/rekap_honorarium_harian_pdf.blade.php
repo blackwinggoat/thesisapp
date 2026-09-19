@@ -1,8 +1,13 @@
+@php
+    $includeDailyRecap = isset($includeDailyRecap) ? (bool) $includeDailyRecap : true;
+    $includeTaxRecap = isset($includeTaxRecap) ? (bool) $includeTaxRecap : true;
+    $pdfTitle = isset($pdfTitle) ? $pdfTitle : 'Rekap Honorarium Harian';
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Rekap Honorarium Harian</title>
+    <title>{{ $pdfTitle }}</title>
     <style>
         @page { margin: 9mm 10mm 10mm; }
         * { box-sizing: border-box; }
@@ -87,6 +92,7 @@
         .tax-signature td:last-child { padding-left: 20px; }
         .tax-signature-space { height: 44px; }
         .document-continuation { padding-top: 8mm; }
+        .tax-document-continuation .section { margin-top: 0; }
         .tax-document-needs-initial { min-height: 258mm; padding-bottom: 17mm; position: relative; }
         .tax-signature-bottom { margin-top: 12mm; }
         .main-page-initial, .tax-page-initial {
@@ -107,6 +113,10 @@
     @foreach ($reports as $report)
         @php
             $reportIndex = $loop->index;
+        @endphp
+
+        @if ($includeDailyRecap)
+        @php
             $lecturerRows = $report->lecturers->values();
             $lecturerChunks = collect();
             $lecturerSinglePageLimit = 21;
@@ -269,7 +279,9 @@
                 @endif
             </div>
         @endforeach
+        @endif
 
+        @if ($includeTaxRecap)
         @php
             $taxRows = $report->tax_lecturers->values();
             $taxChunks = collect();
@@ -287,21 +299,22 @@
             }
         @endphp
         @foreach ($taxChunks as $taxPage)
-            @php($taxChunkIndex = $loop->index)
             @php($taxChunk = $taxPage->items)
-            <div class="page-break"></div>
-            <div class="document tax-document{{ $loop->first ? '' : ' document-continuation' }}{{ $taxChunks->count() > 1 && !$loop->last ? ' tax-document-needs-initial' : '' }}">
+            @if ($includeDailyRecap || $reportIndex > 0 || !$loop->first)
+                <div class="page-break"></div>
+            @endif
+            <div class="document tax-document{{ $loop->first ? '' : ' document-continuation tax-document-continuation' }}{{ $taxChunks->count() > 1 && !$loop->last ? ' tax-document-needs-initial' : '' }}">
                 @if ($loop->first)
                     @include('tugasakhir.keuanganfakultas._honorarium_pdf_letterhead')
+
+                    <div class="document-title">REKAP PAJAK HONORARIUM</div>
+                    <div class="document-subtitle">Pembimbing Utama dan Pembimbing Pendamping</div>
+
+                    <table class="summary">
+                        <tr><td class="label">Tanggal Ujian</td><td class="separator">:</td><td class="value">{{ helper::tgl_indo_lengkap($report->tanggal) }}</td></tr>
+                        <tr><td class="label">Unit Kerja</td><td class="separator">:</td><td class="value">Fakultas Ilmu Komputer, Universitas Muslim Indonesia</td></tr>
+                    </table>
                 @endif
-
-                <div class="document-title">REKAP PAJAK HONORARIUM{{ $taxChunkIndex > 0 ? ' - LANJUTAN' : '' }}</div>
-                <div class="document-subtitle">Pembimbing Utama dan Pembimbing Pendamping</div>
-
-                <table class="summary">
-                    <tr><td class="label">Tanggal Ujian</td><td class="separator">:</td><td class="value">{{ helper::tgl_indo_lengkap($report->tanggal) }}</td></tr>
-                    <tr><td class="label">Unit Kerja</td><td class="separator">:</td><td class="value">Fakultas Ilmu Komputer, Universitas Muslim Indonesia</td></tr>
-                </table>
 
                 <div class="section">
                     <table class="report-table tax-table">
@@ -375,6 +388,7 @@
                 @endif
             </div>
         @endforeach
+        @endif
     @endforeach
 </body>
 </html>

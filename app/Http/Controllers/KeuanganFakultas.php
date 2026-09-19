@@ -885,6 +885,18 @@ class KeuanganFakultas extends Controller
 
     public function honorarium_rekap_harian_pdf(Request $request)
     {
+        return $this->honorarium_rekap_pdf($request, 'harian');
+    }
+
+    public function honorarium_rekap_pajak_pdf(Request $request)
+    {
+        return $this->honorarium_rekap_pdf($request, 'pajak');
+    }
+
+    protected function honorarium_rekap_pdf(Request $request, $jenisRekap)
+    {
+        $isRekapPajak = $jenisRekap === 'pajak';
+        $namaRekap = $isRekapPajak ? 'rekap pajak honorarium' : 'rekap honorarium harian';
         $tanggalInput = collect((array) $request->input('tanggal'))
             ->map(function ($tanggal) {
                 return trim((string) $tanggal);
@@ -894,7 +906,7 @@ class KeuanganFakultas extends Controller
         if ($tanggalInput->isEmpty()) {
             return redirect()->route('honorarium_home')->with([
                 'status' => 'warning',
-                'message' => 'Pilih minimal satu tanggal ujian untuk membuat rekap honorarium harian.',
+                'message' => 'Pilih minimal satu tanggal ujian untuk membuat ' . $namaRekap . '.',
             ]);
         }
 
@@ -1004,28 +1016,37 @@ class KeuanganFakultas extends Controller
             ]);
         }
 
-        $verificationService = app(HonorariumDailyRecapVerificationService::class);
-        foreach ($reports as $report) {
-            $singleReport = collect([$report]);
-            $report->report_hash = $verificationService->buildReportHash($singleReport);
-            $verificationToken = $verificationService->buildVerificationToken(
-                $singleReport,
-                $wakilDekanDua,
-                $generatedAt
-            );
-            $report->verification_url = route('verifikasi_honorarium_rekap_harian', [
-                'token' => $verificationToken,
-            ]);
+        if (!$isRekapPajak) {
+            $verificationService = app(HonorariumDailyRecapVerificationService::class);
+            foreach ($reports as $report) {
+                $singleReport = collect([$report]);
+                $report->report_hash = $verificationService->buildReportHash($singleReport);
+                $verificationToken = $verificationService->buildVerificationToken(
+                    $singleReport,
+                    $wakilDekanDua,
+                    $generatedAt
+                );
+                $report->verification_url = route('verifikasi_honorarium_rekap_harian', [
+                    'token' => $verificationToken,
+                ]);
+            }
         }
 
+        $namaFilePrefix = $isRekapPajak ? 'Rekap-Pajak-Honorarium' : 'Rekap-Honorarium-Harian';
         $namaFile = $tanggalTerpilih->count() === 1
-            ? 'Rekap-Honorarium-Harian-' . $tanggalTerpilih->first() . '.pdf'
-            : 'Rekap-Honorarium-Harian-' . $tanggalTerpilih->first() . '-sd-' . $tanggalTerpilih->last() . '.pdf';
+            ? $namaFilePrefix . '-' . $tanggalTerpilih->first() . '.pdf'
+            : $namaFilePrefix . '-' . $tanggalTerpilih->first() . '-sd-' . $tanggalTerpilih->last() . '.pdf';
+        $includeDailyRecap = !$isRekapPajak;
+        $includeTaxRecap = $isRekapPajak;
+        $pdfTitle = $isRekapPajak ? 'Rekap Pajak Honorarium' : 'Rekap Honorarium Harian';
         $pdf = PDF::loadView('tugasakhir.keuanganfakultas.rekap_honorarium_harian_pdf', compact(
             'reports',
             'dekan',
             'wakilDekanDua',
-            'generatedAt'
+            'generatedAt',
+            'includeDailyRecap',
+            'includeTaxRecap',
+            'pdfTitle'
         ))->setPaper('a4', 'portrait');
 
         return $pdf->download($namaFile);
