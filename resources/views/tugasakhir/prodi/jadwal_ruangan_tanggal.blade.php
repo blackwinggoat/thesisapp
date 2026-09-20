@@ -5,6 +5,16 @@
     $boardHeight = (int) round($timeline['duration'] * $timeline['pixels_per_minute']);
     $roomCount = max(1, $ruangan->count());
     $unscheduledCount = $peserta->count() - $scheduledCount;
+    $roomPalette = [
+        ['header' => '#366f8a', 'track' => '#f2f8fb', 'line' => '#d8e7ee', 'border' => '#a4c7d7'],
+        ['header' => '#4e7658', 'track' => '#f3f9f4', 'line' => '#dbe9dd', 'border' => '#aecdb4'],
+        ['header' => '#956927', 'track' => '#fdf8ee', 'line' => '#eee0c6', 'border' => '#dbc18f'],
+        ['header' => '#36756f', 'track' => '#f1f9f8', 'line' => '#d6e9e7', 'border' => '#a7cdc9'],
+        ['header' => '#8a5360', 'track' => '#fbf4f6', 'line' => '#eadbe0', 'border' => '#d5aeb8'],
+        ['header' => '#586d89', 'track' => '#f4f6fa', 'line' => '#dce2ea', 'border' => '#b7c2d1'],
+        ['header' => '#725f84', 'track' => '#f8f5fa', 'line' => '#e4ddea', 'border' => '#c8b8d4'],
+        ['header' => '#687347', 'track' => '#f7f9f1', 'line' => '#e2e7d3', 'border' => '#c4cea6'],
+    ];
 @endphp
 
 <style>
@@ -90,7 +100,6 @@
     .schedule-corner,
     .schedule-room-header {
         align-items: center;
-        background: #34495e;
         border-right: 1px solid rgba(255, 255, 255, .18);
         color: #fff;
         display: flex;
@@ -104,10 +113,14 @@
         z-index: 8;
     }
     .schedule-corner {
+        background: #263746;
         grid-column: 1;
         grid-row: 1;
         left: 0;
         z-index: 10;
+    }
+    .schedule-room-header {
+        background: var(--room-header, #34495e);
     }
     .schedule-room-count {
         background: rgba(255, 255, 255, .18);
@@ -138,15 +151,15 @@
         width: 100%;
     }
     .schedule-room-track {
-        background-color: #fff;
+        background-color: var(--room-track, #fff);
         background-image: repeating-linear-gradient(
             to bottom,
             transparent 0,
             transparent {{ (30 * $timeline['pixels_per_minute']) - 1 }}px,
-            #e8edf2 {{ (30 * $timeline['pixels_per_minute']) - 1 }}px,
-            #e8edf2 {{ 30 * $timeline['pixels_per_minute'] }}px
+            var(--room-line, #e8edf2) {{ (30 * $timeline['pixels_per_minute']) - 1 }}px,
+            var(--room-line, #e8edf2) {{ 30 * $timeline['pixels_per_minute'] }}px
         );
-        border-right: 1px solid #dfe5eb;
+        border-right: 2px solid var(--room-border, #dfe5eb);
         grid-row: 2;
         min-width: 0;
         position: relative;
@@ -168,7 +181,7 @@
         line-height: 1.25;
         min-height: 42px;
         overflow: hidden;
-        padding: 6px 7px;
+        padding: 6px 7px 18px;
         position: absolute;
         transition: box-shadow .15s ease, opacity .15s ease;
         z-index: 3;
@@ -192,6 +205,7 @@
     .schedule-card.is-unscheduled {
         cursor: grab;
         min-height: 64px;
+        padding-bottom: 6px;
         position: relative;
         width: 220px;
     }
@@ -217,13 +231,39 @@
         color: #263746;
         font-weight: 700;
     }
-    .schedule-card .ui-resizable-s {
-        background: rgba(52, 73, 94, .18);
+    .schedule-duration-handle {
+        align-items: center;
+        background: #34495e;
+        border-radius: 0 0 3px 0;
         bottom: 0;
+        color: #fff;
         cursor: ns-resize;
-        height: 7px;
+        display: flex;
+        height: 14px;
+        justify-content: center;
         left: 0;
+        opacity: .86;
+        position: absolute;
+        touch-action: none;
+        transition: background .15s ease, opacity .15s ease;
+        user-select: none;
         width: 100%;
+        z-index: 7;
+    }
+    .schedule-duration-handle:hover,
+    .schedule-duration-handle:focus {
+        background: #1f7a8c;
+        opacity: 1;
+        outline: none;
+    }
+    .schedule-duration-handle .fa {
+        font-size: 10px;
+        pointer-events: none;
+    }
+    .schedule-card.is-resizing {
+        box-shadow: 0 4px 12px rgba(30, 45, 60, .28);
+        cursor: ns-resize;
+        z-index: 9;
     }
     .schedule-legend {
         align-items: center;
@@ -334,7 +374,8 @@
                 <div class="schedule-grid" id="scheduleGrid">
                     <div class="schedule-corner">Jam</div>
                     @foreach($ruangan as $roomIndex => $room)
-                        <div class="schedule-room-header" style="grid-column: {{ $roomIndex + 2 }}; grid-row: 1;">
+                        @php $roomColor = $roomPalette[$roomIndex % count($roomPalette)]; @endphp
+                        <div class="schedule-room-header" style="grid-column: {{ $roomIndex + 2 }}; grid-row: 1; --room-header: {{ $roomColor['header'] }};">
                             <span>{{ $room->nama_ruangan }}</span>
                             <span class="schedule-room-count" data-room-count="{{ $room->id }}">0</span>
                         </div>
@@ -351,10 +392,11 @@
                     </div>
 
                     @foreach($ruangan as $roomIndex => $room)
+                        @php $roomColor = $roomPalette[$roomIndex % count($roomPalette)]; @endphp
                         <div class="schedule-room-track"
                              data-room-id="{{ $room->id }}"
                              data-room-name="{{ $room->nama_ruangan }}"
-                             style="grid-column: {{ $roomIndex + 2 }}; height: {{ $boardHeight }}px;">
+                             style="grid-column: {{ $roomIndex + 2 }}; height: {{ $boardHeight }}px; --room-track: {{ $roomColor['track'] }}; --room-line: {{ $roomColor['line'] }}; --room-border: {{ $roomColor['border'] }};">
                             @foreach($peserta->filter(function ($item) use ($room) { return $item->is_scheduled && (int) $item->ruangan === (int) $room->id; }) as $item)
                                 @include('tugasakhir.prodi._jadwal_ruangan_card', ['item' => $item, 'unscheduled' => false])
                             @endforeach
@@ -582,9 +624,11 @@
     }
 
     function applyRemovedSchedule(card) {
-        if ($(card).hasClass('ui-resizable')) {
-            $(card).resizable('destroy');
+        var resizeHandle = card.querySelector('.schedule-duration-handle');
+        if (resizeHandle) {
+            resizeHandle.parentNode.removeChild(resizeHandle);
         }
+        card.removeAttribute('data-resize-bound');
         card.setAttribute('data-room-id', '');
         card.setAttribute('data-start-minute', '');
         card.setAttribute('data-duration', '100');
@@ -633,43 +677,99 @@
     }
 
     function enableResize(card) {
-        if (!$.fn.resizable || window.matchMedia('(max-width: 767px)').matches || card.classList.contains('is-unscheduled')) {
+        if (card.classList.contains('is-unscheduled') || card.getAttribute('data-resize-bound') === '1') {
             return;
         }
-        if ($(card).hasClass('ui-resizable')) {
-            $(card).resizable('destroy');
+        card.setAttribute('data-resize-bound', '1');
+
+        var handle = document.createElement('span');
+        handle.className = 'schedule-duration-handle';
+        handle.setAttribute('role', 'button');
+        handle.setAttribute('aria-label', 'Ubah durasi ujian');
+        handle.setAttribute('title', 'Tarik untuk memperpanjang atau memperpendek durasi');
+        handle.innerHTML = '<i class="fa fa-arrows-v" aria-hidden="true"></i>';
+        card.appendChild(handle);
+
+        var pointerId = null;
+        var startY = 0;
+        var originalDuration = 0;
+        var previewDuration = 0;
+        var resizeData = null;
+
+        function showDuration(duration) {
+            duration = Math.max(30, Math.min(300, timelineEnd - resizeData.start, duration));
+            card.setAttribute('data-duration', duration);
+            card.style.height = Math.max(42, duration * pixelsPerMinute - 4) + 'px';
+            card.querySelector('.schedule-card-time').textContent = minuteToTime(resizeData.start) + ' - ' + minuteToTime(resizeData.start + duration);
+            previewDuration = duration;
         }
-        $(card).resizable({
-            handles: 's',
-            grid: [1, slotMinutes * pixelsPerMinute],
-            minHeight: Math.max(42, 30 * pixelsPerMinute),
-            maxHeight: 300 * pixelsPerMinute,
-            start: function () {
-                suppressClick = true;
-                card.setAttribute('draggable', 'false');
-                card.setAttribute('data-original-height', card.style.height);
-            },
-            stop: function (event, ui) {
-                card.setAttribute('draggable', 'true');
-                var data = getCardData(card);
-                var oldDuration = data.duration;
-                var duration = Math.max(30, Math.min(300, snapMinute(ui.size.height / pixelsPerMinute)));
-                duration = Math.min(duration, timelineEnd - data.start);
-                saveSchedule(card, {
-                    jadwal_ujian_id: data.scheduleId,
-                    C_NPM: data.nim,
-                    ruangan: data.roomId,
-                    jam_mulai: minuteToTime(data.start),
-                    durasi_menit: duration
-                }, function (response) {
-                    applySavedSchedule(card, response);
-                }, function () {
-                    card.setAttribute('data-duration', oldDuration);
-                    card.style.height = card.getAttribute('data-original-height');
-                    layoutAllRooms();
-                });
-                window.setTimeout(function () { suppressClick = false; }, 200);
+
+        function finishResize(event, cancelled) {
+            if (pointerId === null || (event.pointerId !== undefined && event.pointerId !== pointerId)) {
+                return;
             }
+            event.preventDefault();
+            event.stopPropagation();
+            card.setAttribute('draggable', 'true');
+            card.classList.remove('is-resizing');
+            pointerId = null;
+
+            if (cancelled || previewDuration === originalDuration) {
+                showDuration(originalDuration);
+                layoutAllRooms();
+                window.setTimeout(function () { suppressClick = false; }, 200);
+                return;
+            }
+
+            saveSchedule(card, {
+                jadwal_ujian_id: resizeData.scheduleId,
+                C_NPM: resizeData.nim,
+                ruangan: resizeData.roomId,
+                jam_mulai: minuteToTime(resizeData.start),
+                durasi_menit: previewDuration
+            }, function (response) {
+                applySavedSchedule(card, response);
+            }, function () {
+                showDuration(originalDuration);
+                layoutAllRooms();
+            });
+            window.setTimeout(function () { suppressClick = false; }, 200);
+        }
+
+        handle.addEventListener('pointerdown', function (event) {
+            if (card.getAttribute('data-saving') === '1') {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            resizeData = getCardData(card);
+            pointerId = event.pointerId;
+            startY = event.clientY;
+            originalDuration = resizeData.duration;
+            previewDuration = originalDuration;
+            suppressClick = true;
+            card.setAttribute('draggable', 'false');
+            card.classList.add('is-resizing');
+            if (handle.setPointerCapture) {
+                handle.setPointerCapture(pointerId);
+            }
+        });
+
+        handle.addEventListener('pointermove', function (event) {
+            if (pointerId === null || event.pointerId !== pointerId) {
+                return;
+            }
+            event.preventDefault();
+            var deltaMinutes = (event.clientY - startY) / pixelsPerMinute;
+            showDuration(snapMinute(originalDuration + deltaMinutes));
+        });
+
+        handle.addEventListener('pointerup', function (event) {
+            finishResize(event, false);
+        });
+
+        handle.addEventListener('pointercancel', function (event) {
+            finishResize(event, true);
         });
     }
 

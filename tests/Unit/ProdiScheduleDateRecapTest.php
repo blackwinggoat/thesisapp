@@ -60,8 +60,12 @@ class ProdiScheduleDateRecapTest extends TestCase
         $this->assertStringContainsString("Route::get('/prodi/jadwal/tanggal/{tanggal}/ruangan'", $routes);
         $this->assertStringContainsString("Route::post('/prodi/jadwal/tanggal/{tanggal}/ruangan'", $routes);
         $this->assertStringContainsString('schedule-room-track', $boardView);
+        $this->assertStringContainsString('$roomPalette = [', $boardView);
+        $this->assertStringContainsString('--room-header:', $boardView);
         $this->assertStringContainsString("card.setAttribute('draggable', 'true')", $boardView);
-        $this->assertStringContainsString("$(card).resizable({", $boardView);
+        $this->assertStringContainsString('schedule-duration-handle', $boardView);
+        $this->assertStringContainsString("handle.addEventListener('pointerdown'", $boardView);
+        $this->assertStringContainsString("handle.addEventListener('pointermove'", $boardView);
         $this->assertStringContainsString('scheduleEditorModal', $boardView);
         $this->assertStringContainsString('layoutRoom(track)', $boardView);
     }
