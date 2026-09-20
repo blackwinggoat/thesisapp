@@ -68,6 +68,10 @@ class ProdiScheduleDateRecapTest extends TestCase
         $this->assertStringContainsString("handle.addEventListener('pointermove'", $boardView);
         $this->assertStringContainsString('scheduleEditorModal', $boardView);
         $this->assertStringContainsString('layoutRoom(track)', $boardView);
+        $this->assertStringContainsString('parseInt(error.response.status, 10) === 419', $boardView);
+        $this->assertStringContainsString('Sesi login telah berakhir.', $boardView);
+        $this->assertStringContainsString('recoverExpiredSession();', $boardView);
+        $this->assertStringContainsString('window.location.reload();', $boardView);
     }
 }
 

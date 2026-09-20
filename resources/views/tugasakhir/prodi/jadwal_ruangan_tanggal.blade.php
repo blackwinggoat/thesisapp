@@ -469,6 +469,7 @@
     var draggedCard = null;
     var editorCard = null;
     var suppressClick = false;
+    var sessionReloadPending = false;
 
     function examClass(type) {
         type = parseInt(type, 10);
@@ -512,6 +513,9 @@
     }
 
     function errorMessage(error) {
+        if (isExpiredSession(error)) {
+            return 'Sesi login telah berakhir. Silakan masuk kembali untuk menyimpan perubahan jadwal.';
+        }
         if (error && error.response && error.response.data) {
             if (error.response.data.message) {
                 return error.response.data.message;
@@ -524,6 +528,29 @@
             }
         }
         return 'Perubahan jadwal belum dapat disimpan.';
+    }
+
+    function isExpiredSession(error) {
+        return !!(error && error.response && parseInt(error.response.status, 10) === 419);
+    }
+
+    function recoverExpiredSession() {
+        if (sessionReloadPending) {
+            return;
+        }
+        sessionReloadPending = true;
+
+        var message = 'Sesi login telah berakhir. Halaman akan dimuat ulang agar Anda dapat masuk kembali.';
+        if (window.toastr) {
+            toastr.error(message);
+            window.setTimeout(function () {
+                window.location.reload();
+            }, 1400);
+            return;
+        }
+
+        window.alert(message);
+        window.location.reload();
     }
 
     function updateCounts() {
@@ -655,6 +682,10 @@
         }).catch(function (error) {
             if (onFailure) {
                 onFailure();
+            }
+            if (isExpiredSession(error)) {
+                recoverExpiredSession();
+                return;
             }
             notifyError(errorMessage(error));
         }).then(function () {
