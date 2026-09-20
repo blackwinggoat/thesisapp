@@ -71,6 +71,9 @@
                 @endphp
                 <form method="post" action="{{url('prodi/set_penguji/'.$pendaftaran_id)}}" enctype="multipart/form-data">
                     {{ csrf_field() }}
+                    @if(!empty($kembaliTanggal))
+                        <input type="hidden" name="kembali_tanggal" value="{{$kembaliTanggal}}">
+                    @endif
                     <fieldset>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">NIM</label>

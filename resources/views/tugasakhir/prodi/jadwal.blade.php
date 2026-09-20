@@ -227,15 +227,7 @@
                             @endif
                             <td>{{$d->tgl_ujian}}</td>
                             <td>{{$d->nama_periode}}</td>
-                            @php
-                            if($d->tipe_ujian == 0):
-                            $tipe = "Proposal";
-                            elseif($d->tipe_ujian == 2):
-                            $tipe = "Ujian Meja";
-                            endif;
-
-                            @endphp
-                            <td>{{$tipe}}</td>
+                            <td>{{$d->tipe_ujian_label}}</td>
                             <td>{{$d->jml_peserta}}</td>
                             {{-- <td>{{$d->status == 0 ? "<td>{{$value->status == 0 ? "<td>{{$d->status == 0 ? "Belum terlaksana" : "Terlaksana"}}
                             </td>" : "Terlaksana"}}</td>" : "Terlaksana"}}</td> --}}
@@ -254,6 +246,76 @@
             </div><!-- /.table-responsive -->
         </div><!-- /.the-box .default -->
         <!-- END DATA TABLE -->
+
+        <h3 class="page-heading">Rekap Jadwal Ujian per Tanggal</h3>
+        <div class="the-box">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="datatable-jadwal-tanggal">
+                    <thead class="the-box dark full">
+                        <tr>
+                            <th style="width: 48px;">No</th>
+                            @if($showProdiColumn)
+                            <th>Program Studi</th>
+                            @endif
+                            <th style="width: 120px;">Tanggal Ujian</th>
+                            <th>Nama Periode</th>
+                            <th style="width: 150px;">Tipe Ujian</th>
+                            <th style="width: 110px;" class="text-center">Jumlah Peserta</th>
+                            <th style="width: 90px;" class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($jadwalPerTanggal as $i => $rekap)
+                        <tr>
+                            <td class="text-center">{{$i + 1}}</td>
+                            @if($showProdiColumn)
+                            <td>
+                                @foreach($rekap->prodi_list as $prodi)
+                                    <div>{{$prodi}}</div>
+                                @endforeach
+                            </td>
+                            @endif
+                            <td data-order="{{$rekap->tgl_ujian}}"><strong>{{$rekap->tanggal_label}}</strong></td>
+                            <td>
+                                @if($rekap->nama_periode_list->count() === 1)
+                                    {{$rekap->nama_periode_list->first()}}
+                                @else
+                                    @php
+                                        $periodeCollapseId = 'periode-' . str_replace('-', '', $rekap->tgl_ujian);
+                                    @endphp
+                                    <button type="button" class="btn btn-default btn-xs" data-toggle="collapse" data-target="#{{$periodeCollapseId}}" aria-expanded="false" aria-controls="{{$periodeCollapseId}}">
+                                        <i class="fa fa-list"></i> {{$rekap->nama_periode_list->count()}} periode
+                                    </button>
+                                    <div class="collapse" id="{{$periodeCollapseId}}" style="margin-top: 8px; min-width: 260px;">
+                                        @foreach($rekap->nama_periode_list as $periode)
+                                            <div style="margin-bottom: 5px;">{{$periode}}</div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </td>
+                            <td>
+                                @foreach($rekap->tipe_ujian_list as $tipe)
+                                    <span class="label {{$tipe->kode === 0 ? 'label-info' : ($tipe->kode === 2 ? 'label-danger' : 'label-default')}}" style="display: inline-block; margin: 0 4px 4px 0;">
+                                        {{$tipe->label}}
+                                    </span>
+                                @endforeach
+                            </td>
+                            <td class="text-center"><strong>{{$rekap->jumlah_peserta}}</strong></td>
+                            <td class="text-center">
+                                <a class="btn btn-primary btn-sm" href="{{ url('prodi/daftar_peserta_tanggal/'.$rekap->tgl_ujian) }}" title="Detail peserta">
+                                    <i class="fa fa-users"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="{{$showProdiColumn ? 7 : 6}}" class="text-center">Belum ada jadwal ujian.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div><!-- /.container-fluid -->
 </div>
 
@@ -285,6 +347,16 @@ Apakah Anda yakin ingin menghapus data?
 
 @section("script")
 <script>
+    $(function () {
+        if ($.fn.DataTable && !$.fn.DataTable.isDataTable('#datatable-jadwal-tanggal')) {
+            $('#datatable-jadwal-tanggal').DataTable({
+                order: [[{{$showProdiColumn ? 2 : 1}}, 'desc']],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]]
+            });
+        }
+    });
+
     $('#tombol_satu').on('click', function () {
         console.log("Selamat Datang di Bagian Satu");
         var nama_periode = $('input[name="nama_periode"]').val();

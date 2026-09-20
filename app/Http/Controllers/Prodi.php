@@ -2208,7 +2208,12 @@ class Prodi extends Controller
     public function set_penguji($pendaftaran_id, $nim, $tipe_ujian)
     {
         try {
-            $mst_pendaftaran = mst_pendaftaran::where("pendaftaran_id", $pendaftaran_id)->first();
+            $statusProdi = $this->getProdiScope()['status_prodi'];
+            $mst_pendaftaran = mst_pendaftaran::where("pendaftaran_id", $pendaftaran_id)
+                ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                    $query->where('status_prodi', $statusProdi);
+                })
+                ->first();
 
             if (empty($mst_pendaftaran)) {
                 return response('Data pendaftaran ujian tidak ditemukan.', 404);
@@ -2275,8 +2280,9 @@ class Prodi extends Controller
             }
 
             $dosen = $dosen->sortBy('NAMA_DOSEN')->values();
+            $kembaliTanggal = $this->normalizeTanggalUjian(request()->query('kembali_tanggal'));
 
-            return view('tugasakhir.prodi.set_penguji', compact('dosen', 'info', 'pendaftaran_id', 'mst_pendaftaran', 'currentPenguji', 'tipeUjianAktif', 'namaPembimbing1', 'namaPembimbing2'));
+            return view('tugasakhir.prodi.set_penguji', compact('dosen', 'info', 'pendaftaran_id', 'mst_pendaftaran', 'currentPenguji', 'tipeUjianAktif', 'namaPembimbing1', 'namaPembimbing2', 'kembaliTanggal'));
         } catch (Exception $e) {
             Log::error('set_penguji error', [
                 'pendaftaran_id' => $pendaftaran_id,
@@ -2323,7 +2329,12 @@ class Prodi extends Controller
 
     public function set_pengujipost($pendaftaran_id, Request $request)
     {
-        $mst_pendaftaran = mst_pendaftaran::where("pendaftaran_id", $pendaftaran_id)->first();
+        $statusProdi = $this->getProdiScope()['status_prodi'];
+        $mst_pendaftaran = mst_pendaftaran::where("pendaftaran_id", $pendaftaran_id)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('status_prodi', $statusProdi);
+            })
+            ->first();
         if (empty($mst_pendaftaran)) {
             return redirect()->back()->with('error', 'Data pendaftaran ujian tidak ditemukan.');
         }
@@ -2338,8 +2349,15 @@ class Prodi extends Controller
             TrtPenguji::where([
                 "C_NPM" => $request->C_NPM,
                 "tipe_ujian" => $request->tipe_ujian
-            ])->update($request->except(["C_NPM", "tipe_ujian", "_token"]));
+            ])->update($request->except(["C_NPM", "tipe_ujian", "kembali_tanggal", "_token"]));
         endif;
+        $kembaliTanggal = $this->normalizeTanggalUjian($request->input('kembali_tanggal'));
+        if ($kembaliTanggal && TrtJadwalUjian::where('pendaftaran_id', $pendaftaran_id)
+            ->whereDate('tgl_ujian', $kembaliTanggal)
+            ->exists()) {
+            return redirect()->to("/prodi/daftar_peserta_tanggal/$kembaliTanggal");
+        }
+
         return redirect()->to("/prodi/daftar_peserta/$pendaftaran_id");
     }
 
@@ -2626,6 +2644,85 @@ class Prodi extends Controller
         return view('tugasakhir.prodi.daftar_peserta', compact("data", "info"));
     }
 
+    public function daftar_peserta_tanggal($tanggal)
+    {
+        $tanggal = $this->normalizeTanggalUjian($tanggal);
+        if (!$tanggal) {
+            return response('Tanggal jadwal ujian tidak valid.', 404);
+        }
+
+        $statusProdi = $this->getProdiScope()['status_prodi'];
+        $jadwalTanggal = TrtJadwalUjian::join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'trt_jadwal_ujian.pendaftaran_id')
+            ->whereDate('trt_jadwal_ujian.tgl_ujian', $tanggal)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('periode.status_prodi', $statusProdi);
+            })
+            ->select([
+                'trt_jadwal_ujian.id as jadwal_ujian_id',
+                'trt_jadwal_ujian.pendaftaran_id',
+                'trt_jadwal_ujian.tgl_ujian',
+                'periode.nama_periode',
+                'periode.tipe_ujian',
+                'periode.status_prodi',
+            ])
+            ->orderBy('periode.status_prodi')
+            ->orderBy('periode.tipe_ujian')
+            ->orderBy('periode.nama_periode')
+            ->get();
+
+        if ($jadwalTanggal->isEmpty()) {
+            return response('Data jadwal ujian pada tanggal tersebut tidak ditemukan.', 404);
+        }
+
+        $pendaftaranIds = $jadwalTanggal->pluck('pendaftaran_id')->filter()->unique()->values();
+        $data = DB::table('trt_reg as registrasi')
+            ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'registrasi.pendaftaran_id')
+            ->join('trt_bimbingan as bimbingan', 'bimbingan.bimbingan_id', '=', 'registrasi.bimbingan_id')
+            ->join('t_mst_mahasiswa as mahasiswa', 'mahasiswa.C_NPM', '=', 'bimbingan.C_NPM')
+            ->leftJoin('trt_penguji as penguji', function ($join) {
+                $join->on('penguji.C_NPM', '=', 'bimbingan.C_NPM')
+                    ->on('penguji.tipe_ujian', '=', 'registrasi.status');
+            })
+            ->whereIn('registrasi.pendaftaran_id', $pendaftaranIds)
+            ->whereColumn('registrasi.status', 'periode.tipe_ujian')
+            ->select([
+                'registrasi.reg_id',
+                'registrasi.pendaftaran_id',
+                'registrasi.status as tipe_ujian',
+                'periode.nama_periode',
+                'periode.status_prodi',
+                'bimbingan.C_NPM',
+                'mahasiswa.NAMA_MAHASISWA',
+                'bimbingan.pembimbing_I_id',
+                'bimbingan.pembimbing_II_id',
+                'penguji.id as penguji_id',
+                'penguji.penguji_I_id',
+                'penguji.penguji_II_id',
+                'penguji.penguji_III_id',
+                'penguji.ketua_sidang_id',
+            ])
+            ->orderBy('periode.status_prodi')
+            ->orderBy('periode.tipe_ujian')
+            ->orderBy('periode.nama_periode')
+            ->orderBy('mahasiswa.NAMA_MAHASISWA')
+            ->orderBy('penguji.id', 'desc')
+            ->get()
+            ->unique(function ($peserta) {
+                return $peserta->pendaftaran_id . ':' . $peserta->C_NPM . ':' . $peserta->tipe_ujian;
+            })
+            ->values();
+
+        $data->each(function ($peserta) {
+            $peserta->prodi_label = $this->getStatusProdiLabel($peserta->status_prodi);
+            $peserta->tipe_ujian_label = $this->getTipeUjianLabel($peserta->tipe_ujian);
+        });
+
+        $info = $this->buildJadwalTanggalSummary($jadwalTanggal, $data)->first();
+        $dosenByKode = $this->getDosenNamesForJadwalParticipants($data);
+
+        return view('tugasakhir.prodi.daftar_peserta_tanggal', compact('data', 'info', 'dosenByKode'));
+    }
+
     public function temp_daftar_peserta($id)
     {
         $info = DB::select("SELECT * FROM mst_pendaftaran WHERE mst_pendaftaran.pendaftaran_id = ?", [$id]);
@@ -2715,9 +2812,164 @@ class Prodi extends Controller
 
         $jadwalujian->each(function ($jadwal) {
             $jadwal->prodi_label = $this->getStatusProdiLabel($jadwal->status_prodi);
+            $jadwal->tipe_ujian_label = $this->getTipeUjianLabel($jadwal->tipe_ujian);
         });
 
-        return view('tugasakhir.prodi.jadwal', compact('pendaftaran', 'mstpendaftaran', 'jadwalujian'));
+        $pendaftaranIds = $jadwalujian->pluck('pendaftaran_id')->filter()->unique()->values();
+        $registrasiJadwal = $pendaftaranIds->isEmpty()
+            ? collect()
+            : DB::table('trt_reg as registrasi')
+                ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'registrasi.pendaftaran_id')
+                ->join('trt_bimbingan as bimbingan', 'bimbingan.bimbingan_id', '=', 'registrasi.bimbingan_id')
+                ->whereIn('registrasi.pendaftaran_id', $pendaftaranIds)
+                ->whereColumn('registrasi.status', 'periode.tipe_ujian')
+                ->select('registrasi.pendaftaran_id', 'bimbingan.C_NPM')
+                ->distinct()
+                ->get();
+
+        $jadwalPerTanggal = $this->buildJadwalTanggalSummary($jadwalujian, $registrasiJadwal);
+
+        return view('tugasakhir.prodi.jadwal', compact('pendaftaran', 'mstpendaftaran', 'jadwalujian', 'jadwalPerTanggal'));
+    }
+
+    protected function buildJadwalTanggalSummary($jadwalRows, $registrationRows)
+    {
+        $registrationsByPeriod = collect($registrationRows)->groupBy(function ($registration) {
+            return (string) $registration->pendaftaran_id;
+        });
+
+        return collect($jadwalRows)
+            ->groupBy(function ($jadwal) {
+                return Carbon::parse($jadwal->tgl_ujian)->toDateString();
+            })
+            ->map(function ($jadwalTanggal, $tanggal) use ($registrationsByPeriod) {
+                $pendaftaranIds = $jadwalTanggal->pluck('pendaftaran_id')
+                    ->filter()
+                    ->map(function ($id) {
+                        return (int) $id;
+                    })
+                    ->unique()
+                    ->values();
+
+                $pesertaKeys = $pendaftaranIds->flatMap(function ($pendaftaranId) use ($registrationsByPeriod) {
+                    return $registrationsByPeriod->get((string) $pendaftaranId, collect())
+                        ->map(function ($registration) use ($pendaftaranId) {
+                            return $pendaftaranId . ':' . trim((string) $registration->C_NPM);
+                        });
+                })->filter(function ($key) {
+                    return substr($key, -1) !== ':';
+                })->unique();
+
+                $tipeUjian = $jadwalTanggal->pluck('tipe_ujian')
+                    ->map(function ($tipe) {
+                        return (int) $tipe;
+                    })
+                    ->unique()
+                    ->sort()
+                    ->values();
+
+                $statusProdi = $jadwalTanggal->pluck('status_prodi')
+                    ->map(function ($status) {
+                        return (int) $status;
+                    })
+                    ->unique()
+                    ->sort()
+                    ->values();
+
+                return (object) [
+                    'tgl_ujian' => $tanggal,
+                    'tanggal_label' => Carbon::parse($tanggal)->format('d/m/Y'),
+                    'pendaftaran_ids' => $pendaftaranIds,
+                    'nama_periode_list' => $jadwalTanggal->pluck('nama_periode')->filter()->unique()->sort()->values(),
+                    'tipe_ujian_list' => $tipeUjian->map(function ($tipe) {
+                        return (object) [
+                            'kode' => $tipe,
+                            'label' => $this->getTipeUjianLabel($tipe),
+                        ];
+                    })->values(),
+                    'prodi_list' => $statusProdi->map(function ($status) {
+                        return $this->getStatusProdiLabel($status);
+                    })->values(),
+                    'jumlah_peserta' => $pesertaKeys->count(),
+                ];
+            })
+            ->sortByDesc('tgl_ujian')
+            ->values();
+    }
+
+    protected function getDosenNamesForJadwalParticipants($rows)
+    {
+        $columns = [
+            'pembimbing_I_id',
+            'pembimbing_II_id',
+            'penguji_I_id',
+            'penguji_II_id',
+            'penguji_III_id',
+            'ketua_sidang_id',
+        ];
+
+        $kodeDosen = collect($rows)->flatMap(function ($row) use ($columns) {
+            return collect($columns)->map(function ($column) use ($row) {
+                return trim((string) ($row->{$column} ?? ''));
+            });
+        })->filter()->unique()->values();
+
+        if ($kodeDosen->isEmpty()) {
+            return collect();
+        }
+
+        $dosenByKode = Schema::hasTable('t_mst_dosen')
+            ? DB::table('t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $kodeDosen)
+                ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN')
+            : collect();
+
+        $missingKode = $kodeDosen->reject(function ($kode) use ($dosenByKode) {
+            return $dosenByKode->has($kode);
+        });
+
+        if ($missingKode->isNotEmpty() && Schema::hasTable('mig_t_mst_dosen')) {
+            DB::table('mig_t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $missingKode)
+                ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN')
+                ->each(function ($nama, $kode) use ($dosenByKode) {
+                    $dosenByKode->put($kode, $nama);
+                });
+        }
+
+        return $dosenByKode;
+    }
+
+    protected function normalizeTanggalUjian($tanggal)
+    {
+        $tanggal = trim((string) $tanggal);
+        if (!preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $tanggal)) {
+            return null;
+        }
+
+        try {
+            $parsed = Carbon::createFromFormat('Y-m-d', $tanggal);
+        } catch (Exception $e) {
+            return null;
+        }
+
+        return $parsed && $parsed->format('Y-m-d') === $tanggal ? $tanggal : null;
+    }
+
+    protected function getTipeUjianLabel($tipeUjian)
+    {
+        switch ((int) $tipeUjian) {
+            case 0:
+                return 'Proposal';
+            case 1:
+                return 'Seminar Hasil';
+            case 2:
+                return 'Ujian Meja';
+            case 3:
+                return 'Umum';
+            default:
+                return 'Tipe ' . $tipeUjian;
+        }
     }
 
     protected function getStatusProdiLabel($statusProdi)

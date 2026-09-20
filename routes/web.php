@@ -187,6 +187,8 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get('/prodi/pendaftarandel/{id}', 'Prodi@pendaftarandel');
     Route::get('/prodi/syaratdel/{id}', 'Prodi@syaratdel');
     Route::get('/prodi/daftar_peserta/{id}', 'Prodi@daftar_peserta');
+    Route::get('/prodi/daftar_peserta_tanggal/{tanggal}', 'Prodi@daftar_peserta_tanggal')
+        ->where('tanggal', '[0-9]{4}-[0-9]{2}-[0-9]{2}');
     Route::get('/prodi/set_penguji/{pendaftaran_id}/{nim}/{tipe_ujian}', 'Prodi@set_penguji');
     Route::get('/prodi/cetakskpenguji/{pendaftaran_id}/{nim}', 'Prodi@cetakskpenguji');
     Route::get('/prodi/setlevelpembimbing/{dosen}/{level}', 'Prodi@setlevelpembimbing');
