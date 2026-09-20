@@ -40,8 +40,9 @@ class ProdiScheduleDateRecapTest extends TestCase
         $detailView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/daftar_peserta_tanggal.blade.php');
 
         $this->assertStringContainsString("Route::get('/prodi/daftar_peserta_tanggal/{tanggal}', 'Prodi@daftar_peserta_tanggal')", $routes);
-        $this->assertStringContainsString('Rekap Jadwal Ujian per Tanggal', $scheduleView);
+        $this->assertStringContainsString('Jadwal Ujian per Tanggal', $scheduleView);
         $this->assertStringContainsString("url('prodi/daftar_peserta_tanggal/'.\$rekap->tgl_ujian)", $scheduleView);
+        $this->assertStringContainsString("url('prodi/jadwal/tanggal/'.\$rekap->tgl_ujian.'/ruangan')", $scheduleView);
         $this->assertStringContainsString('datatable-jadwal-tanggal', $scheduleView);
         $this->assertStringContainsString("!\$.fn.DataTable.isDataTable('#datatable-jadwal-tanggal')", $scheduleView);
         $this->assertStringContainsString("\$rekap->nama_periode_list->count()}} periode", $scheduleView);
@@ -49,6 +50,20 @@ class ProdiScheduleDateRecapTest extends TestCase
         $this->assertStringContainsString("\$d->pendaftaran_id.'/'.\$d->C_NPM.'/'.\$d->tipe_ujian", $detailView);
         $this->assertStringNotContainsString('hapusJadwalUjianPerMahasiswa', $detailView);
         $this->assertStringNotContainsString('<th>Aksi</th>', $detailView);
+    }
+
+    public function testRoomScheduleBoardProvidesDragResizeAndMobileEditor()
+    {
+        $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
+        $boardView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/jadwal_ruangan_tanggal.blade.php');
+
+        $this->assertStringContainsString("Route::get('/prodi/jadwal/tanggal/{tanggal}/ruangan'", $routes);
+        $this->assertStringContainsString("Route::post('/prodi/jadwal/tanggal/{tanggal}/ruangan'", $routes);
+        $this->assertStringContainsString('schedule-room-track', $boardView);
+        $this->assertStringContainsString("card.setAttribute('draggable', 'true')", $boardView);
+        $this->assertStringContainsString("$(card).resizable({", $boardView);
+        $this->assertStringContainsString('scheduleEditorModal', $boardView);
+        $this->assertStringContainsString('layoutRoom(track)', $boardView);
     }
 }
 

@@ -2723,6 +2723,302 @@ class Prodi extends Controller
         return view('tugasakhir.prodi.daftar_peserta_tanggal', compact('data', 'info', 'dosenByKode'));
     }
 
+    public function jadwal_ruangan_tanggal($tanggal)
+    {
+        $tanggal = $this->normalizeTanggalUjian($tanggal);
+        if (!$tanggal) {
+            return response('Tanggal jadwal ujian tidak valid.', 404);
+        }
+
+        $jadwalTanggal = $this->getJadwalUjianPadaTanggal($tanggal);
+        if ($jadwalTanggal->isEmpty()) {
+            return response('Data jadwal ujian pada tanggal tersebut tidak ditemukan.', 404);
+        }
+
+        $peserta = $this->getPesertaJadwalRuangan($tanggal);
+        $peserta->each(function ($item) {
+            $rentang = $this->parseJamUjianRange($item->jam_ujian);
+            $item->event_key = $item->jadwal_ujian_id . ':' . $item->C_NPM;
+            $item->tipe_ujian_label = $this->getTipeUjianLabel($item->tipe_ujian);
+            $item->prodi_label = $this->getStatusProdiLabel($item->status_prodi);
+            $item->jam_mulai = $rentang ? $this->minutesToExamTime($rentang['start']) : null;
+            $item->jam_mulai_menit = $rentang ? $rentang['start'] : null;
+            $item->jam_selesai = $rentang ? $this->minutesToExamTime($rentang['end']) : null;
+            $item->durasi_menit = $rentang ? $rentang['duration'] : 100;
+            $item->jam_label = $rentang
+                ? $item->jam_mulai . ' - ' . $item->jam_selesai
+                : 'Belum diatur';
+            $item->is_scheduled = $rentang && !empty($item->ruangan) && !empty($item->nama_ruangan);
+        });
+
+        $ruangan = MstRuangan::orderBy('id')->get();
+        $timeline = $this->buildJadwalRuanganTimeline($peserta);
+        $summary = $this->buildJadwalTanggalSummary($jadwalTanggal, $peserta)->first();
+        $scheduledCount = $peserta->filter(function ($item) {
+            return $item->is_scheduled;
+        })->count();
+
+        return view('tugasakhir.prodi.jadwal_ruangan_tanggal', compact(
+            'tanggal',
+            'jadwalTanggal',
+            'peserta',
+            'ruangan',
+            'timeline',
+            'summary',
+            'scheduledCount'
+        ));
+    }
+
+    public function jadwal_ruangan_tanggal_update($tanggal, Request $request)
+    {
+        $tanggal = $this->normalizeTanggalUjian($tanggal);
+        if (!$tanggal) {
+            return response()->json(['message' => 'Tanggal jadwal ujian tidak valid.'], 404);
+        }
+
+        $this->validate($request, [
+            'jadwal_ujian_id' => 'required|integer',
+            'C_NPM' => 'required|string|max:20',
+            'hapus_jadwal' => 'nullable|boolean',
+            'ruangan' => 'required_unless:hapus_jadwal,1|integer',
+            'jam_mulai' => ['required_unless:hapus_jadwal,1', 'regex:/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/'],
+            'durasi_menit' => 'required_unless:hapus_jadwal,1|integer|min:30|max:300',
+        ], [
+            'ruangan.required_unless' => 'Ruangan ujian wajib dipilih.',
+            'jam_mulai.required_unless' => 'Jam mulai ujian wajib diisi.',
+            'jam_mulai.regex' => 'Format jam mulai ujian harus HH:MM.',
+            'durasi_menit.required_unless' => 'Durasi ujian wajib diisi.',
+            'durasi_menit.min' => 'Durasi ujian minimal 30 menit.',
+            'durasi_menit.max' => 'Durasi ujian maksimal 300 menit.',
+        ]);
+
+        $statusProdi = $this->getProdiScope()['status_prodi'];
+        $jadwal = TrtJadwalUjian::join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'trt_jadwal_ujian.pendaftaran_id')
+            ->where('trt_jadwal_ujian.id', (int) $request->jadwal_ujian_id)
+            ->whereDate('trt_jadwal_ujian.tgl_ujian', $tanggal)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('periode.status_prodi', $statusProdi);
+            })
+            ->select([
+                'trt_jadwal_ujian.id',
+                'trt_jadwal_ujian.pendaftaran_id',
+                'periode.tipe_ujian',
+            ])
+            ->first();
+
+        if (!$jadwal) {
+            return response()->json(['message' => 'Jadwal ujian tidak ditemukan atau tidak dapat diakses.'], 404);
+        }
+
+        $nim = trim((string) $request->C_NPM);
+        $pesertaExists = DB::table('trt_reg as registrasi')
+            ->join('trt_bimbingan as bimbingan', 'bimbingan.bimbingan_id', '=', 'registrasi.bimbingan_id')
+            ->where('registrasi.pendaftaran_id', $jadwal->pendaftaran_id)
+            ->where('registrasi.status', $jadwal->tipe_ujian)
+            ->where('bimbingan.C_NPM', $nim)
+            ->exists();
+
+        if (!$pesertaExists) {
+            return response()->json(['message' => 'Mahasiswa bukan peserta pada jadwal ujian ini.'], 422);
+        }
+
+        if ((int) $request->input('hapus_jadwal', 0) === 1) {
+            TrtJadwalUjianPerMhs::where('jadwal_ujian', $jadwal->id)
+                ->where('C_NPM', $nim)
+                ->delete();
+
+            return response()->json([
+                'message' => 'Mahasiswa dikembalikan ke daftar belum dijadwalkan.',
+                'scheduled' => false,
+            ]);
+        }
+
+        $ruangan = MstRuangan::find((int) $request->ruangan);
+        if (!$ruangan) {
+            return response()->json(['message' => 'Ruangan ujian tidak ditemukan.'], 422);
+        }
+
+        $start = $this->examTimeToMinutes($request->jam_mulai);
+        $duration = (int) $request->durasi_menit;
+        if (is_null($start) || $start + $duration > 1440) {
+            return response()->json(['message' => 'Rentang waktu ujian melewati batas hari.'], 422);
+        }
+
+        $end = $start + $duration;
+        $jamMulai = $this->minutesToExamTime($start);
+        $jamSelesai = $this->minutesToExamTime($end);
+        $jamUjian = $jamMulai . ' - ' . $jamSelesai;
+
+        $penjadwalan = TrtJadwalUjianPerMhs::updateOrCreate([
+            'C_NPM' => $nim,
+            'jadwal_ujian' => $jadwal->id,
+        ], [
+            'ruangan' => $ruangan->id,
+            'jam_ujian' => $jamUjian,
+        ]);
+
+        return response()->json([
+            'message' => 'Ruangan dan waktu ujian berhasil disimpan.',
+            'scheduled' => true,
+            'id' => $penjadwalan->id,
+            'ruangan' => (int) $ruangan->id,
+            'nama_ruangan' => $ruangan->nama_ruangan,
+            'jam_mulai' => $jamMulai,
+            'jam_mulai_menit' => $start,
+            'jam_selesai' => $jamSelesai,
+            'durasi_menit' => $duration,
+            'jam_ujian' => $jamUjian,
+        ]);
+    }
+
+    protected function getJadwalUjianPadaTanggal($tanggal)
+    {
+        $statusProdi = $this->getProdiScope()['status_prodi'];
+
+        return TrtJadwalUjian::join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'trt_jadwal_ujian.pendaftaran_id')
+            ->whereDate('trt_jadwal_ujian.tgl_ujian', $tanggal)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('periode.status_prodi', $statusProdi);
+            })
+            ->select([
+                'trt_jadwal_ujian.id as jadwal_ujian_id',
+                'trt_jadwal_ujian.pendaftaran_id',
+                'trt_jadwal_ujian.tgl_ujian',
+                'periode.nama_periode',
+                'periode.tipe_ujian',
+                'periode.status_prodi',
+            ])
+            ->orderBy('periode.status_prodi')
+            ->orderBy('periode.tipe_ujian')
+            ->orderBy('periode.nama_periode')
+            ->get();
+    }
+
+    protected function getPesertaJadwalRuangan($tanggal)
+    {
+        $statusProdi = $this->getProdiScope()['status_prodi'];
+
+        return DB::table('trt_jadwal_ujian as jadwal')
+            ->join('mst_pendaftaran as periode', 'periode.pendaftaran_id', '=', 'jadwal.pendaftaran_id')
+            ->join('trt_reg as registrasi', function ($join) {
+                $join->on('registrasi.pendaftaran_id', '=', 'periode.pendaftaran_id')
+                    ->on('registrasi.status', '=', 'periode.tipe_ujian');
+            })
+            ->join('trt_bimbingan as bimbingan', 'bimbingan.bimbingan_id', '=', 'registrasi.bimbingan_id')
+            ->join('t_mst_mahasiswa as mahasiswa', 'mahasiswa.C_NPM', '=', 'bimbingan.C_NPM')
+            ->leftJoin('trt_jadwal_ujian_per_mhs as penjadwalan', function ($join) {
+                $join->on('penjadwalan.jadwal_ujian', '=', 'jadwal.id')
+                    ->on('penjadwalan.C_NPM', '=', 'bimbingan.C_NPM');
+            })
+            ->leftJoin('mst_ruangan as ruang', 'ruang.id', '=', 'penjadwalan.ruangan')
+            ->whereDate('jadwal.tgl_ujian', $tanggal)
+            ->when(!is_null($statusProdi), function ($query) use ($statusProdi) {
+                $query->where('periode.status_prodi', $statusProdi);
+            })
+            ->select([
+                'jadwal.id as jadwal_ujian_id',
+                'jadwal.pendaftaran_id',
+                'jadwal.tgl_ujian',
+                'periode.nama_periode',
+                'periode.tipe_ujian',
+                'periode.status_prodi',
+                'registrasi.reg_id',
+                'bimbingan.C_NPM',
+                'mahasiswa.NAMA_MAHASISWA',
+                'penjadwalan.id as penjadwalan_id',
+                'penjadwalan.jam_ujian',
+                'penjadwalan.ruangan',
+                'ruang.nama_ruangan',
+            ])
+            ->orderBy('mahasiswa.NAMA_MAHASISWA')
+            ->get()
+            ->unique(function ($item) {
+                return $item->jadwal_ujian_id . ':' . $item->C_NPM;
+            })
+            ->values();
+    }
+
+    protected function parseJamUjianRange($jamUjian, $defaultDuration = 100)
+    {
+        $jamUjian = trim((string) $jamUjian);
+        if ($jamUjian === '' || !preg_match_all('/([01]?\d|2[0-3])[:.]([0-5]\d)/', $jamUjian, $matches, PREG_SET_ORDER)) {
+            return null;
+        }
+
+        $start = ((int) $matches[0][1] * 60) + (int) $matches[0][2];
+        $end = $start + (int) $defaultDuration;
+
+        if (isset($matches[1])) {
+            $candidateEnd = ((int) $matches[1][1] * 60) + (int) $matches[1][2];
+            if ($candidateEnd > $start) {
+                $end = $candidateEnd;
+            }
+        }
+
+        $end = min(1440, $end);
+
+        return [
+            'start' => $start,
+            'end' => $end,
+            'duration' => $end - $start,
+        ];
+    }
+
+    protected function examTimeToMinutes($time)
+    {
+        $time = trim((string) $time);
+        if (!preg_match('/^(?:([01][0-9])|(2[0-3])):([0-5][0-9])$/', $time, $matches)) {
+            return null;
+        }
+
+        return ((int) substr($time, 0, 2) * 60) + (int) substr($time, 3, 2);
+    }
+
+    protected function minutesToExamTime($minutes)
+    {
+        $minutes = max(0, min(1440, (int) $minutes));
+        if ($minutes === 1440) {
+            return '24:00';
+        }
+
+        return sprintf('%02d:%02d', (int) floor($minutes / 60), $minutes % 60);
+    }
+
+    protected function buildJadwalRuanganTimeline($peserta)
+    {
+        $scheduled = collect($peserta)->filter(function ($item) {
+            return $item->is_scheduled;
+        });
+        $starts = $scheduled->pluck('jam_mulai_menit')->filter(function ($value) {
+            return !is_null($value);
+        });
+        $ends = $scheduled->map(function ($item) {
+            return $item->jam_mulai_menit + $item->durasi_menit;
+        });
+
+        $start = $starts->isEmpty() ? 420 : min(420, max(0, (int) $starts->min() - 30));
+        $end = $ends->isEmpty() ? 1080 : max(1080, min(1440, (int) $ends->max() + 30));
+        $start = (int) floor($start / 30) * 30;
+        $end = (int) ceil($end / 30) * 30;
+
+        $labels = collect();
+        for ($minute = $start; $minute <= $end; $minute += 30) {
+            $labels->push([
+                'minute' => $minute,
+                'label' => $this->minutesToExamTime($minute),
+            ]);
+        }
+
+        return [
+            'start' => $start,
+            'end' => $end,
+            'duration' => $end - $start,
+            'slot_minutes' => 10,
+            'pixels_per_minute' => 1.2,
+            'labels' => $labels,
+        ];
+    }
+
     public function temp_daftar_peserta($id)
     {
         $info = DB::select("SELECT * FROM mst_pendaftaran WHERE mst_pendaftaran.pendaftaran_id = ?", [$id]);

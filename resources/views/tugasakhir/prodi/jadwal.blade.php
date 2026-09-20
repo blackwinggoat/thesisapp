@@ -247,7 +247,7 @@
         </div><!-- /.the-box .default -->
         <!-- END DATA TABLE -->
 
-        <h3 class="page-heading">Rekap Jadwal Ujian per Tanggal</h3>
+        <h3 class="page-heading">Jadwal Ujian per Tanggal</h3>
         <div class="the-box">
             <div class="table-responsive">
                 <table class="table table-striped table-hover" id="datatable-jadwal-tanggal">
@@ -261,7 +261,7 @@
                             <th>Nama Periode</th>
                             <th style="width: 150px;">Tipe Ujian</th>
                             <th style="width: 110px;" class="text-center">Jumlah Peserta</th>
-                            <th style="width: 90px;" class="text-center">Aksi</th>
+                            <th style="width: 130px;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -304,6 +304,9 @@
                             <td class="text-center">
                                 <a class="btn btn-primary btn-sm" href="{{ url('prodi/daftar_peserta_tanggal/'.$rekap->tgl_ujian) }}" title="Detail peserta">
                                     <i class="fa fa-users"></i>
+                                </a>
+                                <a class="btn btn-success btn-sm" href="{{ url('prodi/jadwal/tanggal/'.$rekap->tgl_ujian.'/ruangan') }}" title="Atur ruangan dan jam ujian">
+                                    <i class="fa fa-calendar"></i>
                                 </a>
                             </td>
                         </tr>
