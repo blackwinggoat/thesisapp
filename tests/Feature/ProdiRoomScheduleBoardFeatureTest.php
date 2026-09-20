@@ -157,7 +157,7 @@ class ProdiRoomScheduleBoardFeatureTest extends TestCase
             ->count());
     }
 
-    public function testExistingScheduleDurationCanBeExtendedAndShortenedWithoutDuplication()
+    public function testExistingScheduleCanBeResizedFromBothEdgesWithoutDuplication()
     {
         $controller = new TestableProdiRoomScheduleBoardController();
 
@@ -192,6 +192,23 @@ class ProdiRoomScheduleBoardFeatureTest extends TestCase
             'C_NPM' => '13020240001',
             'jadwal_ujian' => 100,
             'jam_ujian' => '08:30 - 09:50',
+        ]);
+
+        $controller->jadwal_ruangan_tanggal_update(
+            '2026-09-20',
+            Request::create('/prodi/jadwal/tanggal/2026-09-20/ruangan', 'POST', [
+                'jadwal_ujian_id' => 100,
+                'C_NPM' => '13020240001',
+                'ruangan' => 1,
+                'jam_mulai' => '08:10',
+                'durasi_menit' => 100,
+            ])
+        );
+
+        $this->assertDatabaseHas('trt_jadwal_ujian_per_mhs', [
+            'C_NPM' => '13020240001',
+            'jadwal_ujian' => 100,
+            'jam_ujian' => '08:10 - 09:50',
         ]);
         $this->assertSame(1, DB::table('trt_jadwal_ujian_per_mhs')
             ->where('C_NPM', '13020240001')

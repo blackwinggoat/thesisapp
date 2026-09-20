@@ -64,8 +64,13 @@ class ProdiScheduleDateRecapTest extends TestCase
         $this->assertStringContainsString('--room-header:', $boardView);
         $this->assertStringContainsString("card.setAttribute('draggable', 'true')", $boardView);
         $this->assertStringContainsString('schedule-duration-handle', $boardView);
+        $this->assertStringContainsString("['start', 'end'].forEach", $boardView);
+        $this->assertStringContainsString("handle.setAttribute('data-resize-edge', edge)", $boardView);
         $this->assertStringContainsString("handle.addEventListener('pointerdown'", $boardView);
         $this->assertStringContainsString("handle.addEventListener('pointermove'", $boardView);
+        $this->assertStringContainsString('dragGrabOffsetMinutes', $boardView);
+        $this->assertStringContainsString('showDropPreview(track, start, data.duration)', $boardView);
+        $this->assertStringContainsString('showTimePreview(start, data.duration', $boardView);
         $this->assertStringContainsString('scheduleEditorModal', $boardView);
         $this->assertStringContainsString('layoutRoom(track)', $boardView);
         $this->assertStringContainsString('parseInt(error.response.status, 10) === 419', $boardView);

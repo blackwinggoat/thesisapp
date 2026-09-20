@@ -181,7 +181,7 @@
         line-height: 1.25;
         min-height: 42px;
         overflow: hidden;
-        padding: 6px 7px 18px;
+        padding: 15px 7px 16px;
         position: absolute;
         transition: box-shadow .15s ease, opacity .15s ease;
         z-index: 3;
@@ -197,7 +197,7 @@
         pointer-events: none;
     }
     .schedule-card.is-dragging {
-        opacity: .45;
+        opacity: .3;
     }
     .schedule-card.exam-proposal { border-left-color: #2980b9; }
     .schedule-card.exam-meja { border-left-color: #c0392b; }
@@ -205,7 +205,7 @@
     .schedule-card.is-unscheduled {
         cursor: grab;
         min-height: 64px;
-        padding-bottom: 6px;
+        padding: 6px 7px;
         position: relative;
         width: 220px;
     }
@@ -234,12 +234,10 @@
     .schedule-duration-handle {
         align-items: center;
         background: #34495e;
-        border-radius: 0 0 3px 0;
-        bottom: 0;
         color: #fff;
         cursor: ns-resize;
         display: flex;
-        height: 14px;
+        height: 11px;
         justify-content: center;
         left: 0;
         opacity: .86;
@@ -250,6 +248,14 @@
         width: 100%;
         z-index: 7;
     }
+    .schedule-duration-handle.is-start {
+        border-radius: 0 3px 0 0;
+        top: 0;
+    }
+    .schedule-duration-handle.is-end {
+        border-radius: 0 0 3px 0;
+        bottom: 0;
+    }
     .schedule-duration-handle:hover,
     .schedule-duration-handle:focus {
         background: #1f7a8c;
@@ -257,13 +263,51 @@
         outline: none;
     }
     .schedule-duration-handle .fa {
-        font-size: 10px;
+        font-size: 8px;
         pointer-events: none;
     }
     .schedule-card.is-resizing {
         box-shadow: 0 4px 12px rgba(30, 45, 60, .28);
         cursor: ns-resize;
         z-index: 9;
+    }
+    .schedule-drop-preview {
+        align-items: center;
+        background: rgba(31, 122, 140, .16);
+        border: 2px dashed #1f7a8c;
+        border-radius: 4px;
+        color: #16535f;
+        display: flex;
+        font-size: 10px;
+        font-weight: 700;
+        justify-content: center;
+        left: 4px;
+        min-height: 32px;
+        padding: 4px;
+        pointer-events: none;
+        position: absolute;
+        text-align: center;
+        width: calc(100% - 8px);
+        z-index: 8;
+    }
+    .schedule-time-preview {
+        background: #263746;
+        border: 1px solid rgba(255, 255, 255, .22);
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(18, 32, 44, .28);
+        color: #fff;
+        display: none;
+        font-size: 11px;
+        font-weight: 700;
+        left: 0;
+        line-height: 1.35;
+        max-width: 230px;
+        padding: 6px 9px;
+        pointer-events: none;
+        position: fixed;
+        top: 0;
+        white-space: nowrap;
+        z-index: 1200;
     }
     .schedule-legend {
         align-items: center;
@@ -408,6 +452,8 @@
     </div>
 </div>
 
+<div class="schedule-time-preview" id="scheduleTimePreview" role="status" aria-live="polite"></div>
+
 <div class="modal fade" id="scheduleEditorModal" tabindex="-1" role="dialog" aria-labelledby="scheduleEditorTitle">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -470,6 +516,11 @@
     var editorCard = null;
     var suppressClick = false;
     var sessionReloadPending = false;
+    var dragGrabOffsetMinutes = 0;
+    var dragPreviewStart = null;
+    var dragPreviewRoomId = null;
+    var dropPreview = null;
+    var timePreview = document.getElementById('scheduleTimePreview');
 
     function examClass(type) {
         type = parseInt(type, 10);
@@ -485,6 +536,52 @@
         var hour = Math.floor(minute / 60);
         var minutes = minute % 60;
         return (hour < 10 ? '0' : '') + hour + ':' + (minutes < 10 ? '0' : '') + minutes;
+    }
+
+    function clampStartMinute(start, duration) {
+        return Math.max(timelineStart, Math.min(timelineEnd - duration, snapMinute(start)));
+    }
+
+    function timeRangeLabel(start, duration) {
+        return minuteToTime(start) + ' - ' + minuteToTime(start + duration) + ' (' + duration + ' menit)';
+    }
+
+    function showTimePreview(start, duration, clientX, clientY, roomName) {
+        if (!timePreview) {
+            return;
+        }
+
+        var label = timeRangeLabel(start, duration);
+        timePreview.textContent = roomName ? roomName + ' | ' + label : label;
+        timePreview.style.display = 'block';
+        timePreview.style.left = Math.max(8, Math.min(window.innerWidth - 240, clientX + 14)) + 'px';
+        timePreview.style.top = Math.max(8, Math.min(window.innerHeight - 48, clientY - 42)) + 'px';
+    }
+
+    function hideTimePreview() {
+        if (timePreview) {
+            timePreview.style.display = 'none';
+        }
+    }
+
+    function showDropPreview(track, start, duration) {
+        if (!dropPreview) {
+            dropPreview = document.createElement('div');
+            dropPreview.className = 'schedule-drop-preview';
+        }
+
+        dropPreview.style.top = ((start - timelineStart) * pixelsPerMinute + 2) + 'px';
+        dropPreview.style.height = Math.max(32, duration * pixelsPerMinute - 4) + 'px';
+        dropPreview.textContent = timeRangeLabel(start, duration);
+        track.appendChild(dropPreview);
+    }
+
+    function hideDropPreview() {
+        if (dropPreview && dropPreview.parentNode) {
+            dropPreview.parentNode.removeChild(dropPreview);
+        }
+        dragPreviewStart = null;
+        dragPreviewRoomId = null;
     }
 
     function getCardData(card) {
@@ -651,10 +748,9 @@
     }
 
     function applyRemovedSchedule(card) {
-        var resizeHandle = card.querySelector('.schedule-duration-handle');
-        if (resizeHandle) {
+        card.querySelectorAll('.schedule-duration-handle').forEach(function (resizeHandle) {
             resizeHandle.parentNode.removeChild(resizeHandle);
-        }
+        });
         card.removeAttribute('data-resize-bound');
         card.setAttribute('data-room-id', '');
         card.setAttribute('data-start-minute', '');
@@ -695,7 +791,7 @@
     }
 
     function moveCard(card, roomId, start, duration) {
-        start = Math.max(timelineStart, Math.min(timelineEnd - duration, snapMinute(start)));
+        start = clampStartMinute(start, duration);
         saveSchedule(card, {
             jadwal_ujian_id: card.getAttribute('data-schedule-id'),
             C_NPM: card.getAttribute('data-nim'),
@@ -713,26 +809,34 @@
         }
         card.setAttribute('data-resize-bound', '1');
 
-        var handle = document.createElement('span');
-        handle.className = 'schedule-duration-handle';
-        handle.setAttribute('role', 'button');
-        handle.setAttribute('aria-label', 'Ubah durasi ujian');
-        handle.setAttribute('title', 'Tarik untuk memperpanjang atau memperpendek durasi');
-        handle.innerHTML = '<i class="fa fa-arrows-v" aria-hidden="true"></i>';
-        card.appendChild(handle);
-
         var pointerId = null;
         var startY = 0;
+        var resizeEdge = null;
+        var originalStart = 0;
+        var originalEnd = 0;
         var originalDuration = 0;
+        var previewStart = 0;
         var previewDuration = 0;
         var resizeData = null;
 
-        function showDuration(duration) {
-            duration = Math.max(30, Math.min(300, timelineEnd - resizeData.start, duration));
-            card.setAttribute('data-duration', duration);
-            card.style.height = Math.max(42, duration * pixelsPerMinute - 4) + 'px';
-            card.querySelector('.schedule-card-time').textContent = minuteToTime(resizeData.start) + ' - ' + minuteToTime(resizeData.start + duration);
+        function showResize(start, duration, event) {
+            start = Math.max(timelineStart, Math.min(timelineEnd - 30, start));
+            duration = Math.max(30, Math.min(300, timelineEnd - start, duration));
+            previewStart = start;
             previewDuration = duration;
+            card.setAttribute('data-start-minute', start);
+            card.setAttribute('data-duration', duration);
+            setCardPosition(card);
+            card.querySelector('.schedule-card-time').textContent = minuteToTime(start) + ' - ' + minuteToTime(start + duration);
+            if (event) {
+                var track = card.closest('.schedule-room-track');
+                showTimePreview(start, duration, event.clientX, event.clientY, track ? track.getAttribute('data-room-name') : '');
+            }
+        }
+
+        function restoreOriginalSchedule() {
+            showResize(originalStart, originalDuration);
+            layoutAllRooms();
         }
 
         function finishResize(event, cancelled) {
@@ -744,10 +848,10 @@
             card.setAttribute('draggable', 'true');
             card.classList.remove('is-resizing');
             pointerId = null;
+            hideTimePreview();
 
-            if (cancelled || previewDuration === originalDuration) {
-                showDuration(originalDuration);
-                layoutAllRooms();
+            if (cancelled || (previewStart === originalStart && previewDuration === originalDuration)) {
+                restoreOriginalSchedule();
                 window.setTimeout(function () { suppressClick = false; }, 200);
                 return;
             }
@@ -756,51 +860,78 @@
                 jadwal_ujian_id: resizeData.scheduleId,
                 C_NPM: resizeData.nim,
                 ruangan: resizeData.roomId,
-                jam_mulai: minuteToTime(resizeData.start),
+                jam_mulai: minuteToTime(previewStart),
                 durasi_menit: previewDuration
             }, function (response) {
                 applySavedSchedule(card, response);
             }, function () {
-                showDuration(originalDuration);
-                layoutAllRooms();
+                restoreOriginalSchedule();
             });
             window.setTimeout(function () { suppressClick = false; }, 200);
         }
 
-        handle.addEventListener('pointerdown', function (event) {
-            if (card.getAttribute('data-saving') === '1') {
-                return;
-            }
-            event.preventDefault();
-            event.stopPropagation();
-            resizeData = getCardData(card);
-            pointerId = event.pointerId;
-            startY = event.clientY;
-            originalDuration = resizeData.duration;
-            previewDuration = originalDuration;
-            suppressClick = true;
-            card.setAttribute('draggable', 'false');
-            card.classList.add('is-resizing');
-            if (handle.setPointerCapture) {
-                handle.setPointerCapture(pointerId);
-            }
-        });
+        ['start', 'end'].forEach(function (edge) {
+            var handle = document.createElement('span');
+            handle.className = 'schedule-duration-handle is-' + edge;
+            handle.setAttribute('data-resize-edge', edge);
+            handle.setAttribute('role', 'button');
+            handle.setAttribute('aria-label', edge === 'start' ? 'Ubah jam mulai ujian' : 'Ubah jam selesai ujian');
+            handle.setAttribute('title', edge === 'start' ? 'Tarik untuk mengubah jam mulai' : 'Tarik untuk mengubah jam selesai');
+            handle.innerHTML = '<i class="fa fa-arrows-v" aria-hidden="true"></i>';
+            card.appendChild(handle);
 
-        handle.addEventListener('pointermove', function (event) {
-            if (pointerId === null || event.pointerId !== pointerId) {
-                return;
-            }
-            event.preventDefault();
-            var deltaMinutes = (event.clientY - startY) / pixelsPerMinute;
-            showDuration(snapMinute(originalDuration + deltaMinutes));
-        });
+            handle.addEventListener('pointerdown', function (event) {
+                if (card.getAttribute('data-saving') === '1') {
+                    return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                resizeData = getCardData(card);
+                pointerId = event.pointerId;
+                startY = event.clientY;
+                resizeEdge = edge;
+                originalStart = resizeData.start;
+                originalDuration = resizeData.duration;
+                originalEnd = originalStart + originalDuration;
+                previewStart = originalStart;
+                previewDuration = originalDuration;
+                suppressClick = true;
+                card.setAttribute('draggable', 'false');
+                card.classList.add('is-resizing');
+                showResize(previewStart, previewDuration, event);
+                if (handle.setPointerCapture) {
+                    handle.setPointerCapture(pointerId);
+                }
+            });
 
-        handle.addEventListener('pointerup', function (event) {
-            finishResize(event, false);
-        });
+            handle.addEventListener('pointermove', function (event) {
+                if (pointerId === null || event.pointerId !== pointerId) {
+                    return;
+                }
+                event.preventDefault();
+                var deltaMinutes = (event.clientY - startY) / pixelsPerMinute;
 
-        handle.addEventListener('pointercancel', function (event) {
-            finishResize(event, true);
+                if (resizeEdge === 'start') {
+                    var minimumStart = Math.max(timelineStart, originalEnd - 300);
+                    var maximumStart = originalEnd - 30;
+                    var nextStart = Math.max(minimumStart, Math.min(maximumStart, snapMinute(originalStart + deltaMinutes)));
+                    showResize(nextStart, originalEnd - nextStart, event);
+                    return;
+                }
+
+                var minimumEnd = originalStart + 30;
+                var maximumEnd = Math.min(timelineEnd, originalStart + 300);
+                var nextEnd = Math.max(minimumEnd, Math.min(maximumEnd, snapMinute(originalEnd + deltaMinutes)));
+                showResize(originalStart, nextEnd - originalStart, event);
+            });
+
+            handle.addEventListener('pointerup', function (event) {
+                finishResize(event, false);
+            });
+
+            handle.addEventListener('pointercancel', function (event) {
+                finishResize(event, true);
+            });
         });
     }
 
@@ -829,6 +960,11 @@
                 draggedCard = card;
                 suppressClick = true;
                 card.classList.add('is-dragging');
+                var data = getCardData(card);
+                var cardRect = card.getBoundingClientRect();
+                dragGrabOffsetMinutes = card.classList.contains('is-unscheduled')
+                    ? 0
+                    : Math.max(0, Math.min(data.duration, (event.clientY - cardRect.top) / pixelsPerMinute));
                 event.dataTransfer.effectAllowed = 'move';
                 event.dataTransfer.setData('text/plain', card.getAttribute('data-event-key'));
             });
@@ -837,6 +973,9 @@
                 document.querySelectorAll('.is-drop-target').forEach(function (target) {
                     target.classList.remove('is-drop-target');
                 });
+                hideDropPreview();
+                hideTimePreview();
+                dragGrabOffsetMinutes = 0;
                 draggedCard = null;
                 window.setTimeout(function () { suppressClick = false; }, 150);
             });
@@ -860,10 +999,26 @@
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
             track.classList.add('is-drop-target');
+            if (!draggedCard) {
+                return;
+            }
+
+            var rect = track.getBoundingClientRect();
+            var data = getCardData(draggedCard);
+            var rawStart = timelineStart + ((event.clientY - rect.top) / pixelsPerMinute) - dragGrabOffsetMinutes;
+            var start = clampStartMinute(rawStart, data.duration);
+            dragPreviewStart = start;
+            dragPreviewRoomId = parseInt(track.getAttribute('data-room-id'), 10);
+            showDropPreview(track, start, data.duration);
+            showTimePreview(start, data.duration, event.clientX, event.clientY, track.getAttribute('data-room-name'));
         });
         track.addEventListener('dragleave', function (event) {
             if (!track.contains(event.relatedTarget)) {
                 track.classList.remove('is-drop-target');
+                if (dropPreview && dropPreview.parentNode === track) {
+                    hideDropPreview();
+                    hideTimePreview();
+                }
             }
         });
         track.addEventListener('drop', function (event) {
@@ -872,10 +1027,15 @@
             if (!draggedCard) {
                 return;
             }
-            var rect = track.getBoundingClientRect();
             var data = getCardData(draggedCard);
-            var start = timelineStart + ((event.clientY - rect.top) / pixelsPerMinute);
-            moveCard(draggedCard, parseInt(track.getAttribute('data-room-id'), 10), start, data.duration);
+            var roomId = parseInt(track.getAttribute('data-room-id'), 10);
+            var rect = track.getBoundingClientRect();
+            var start = dragPreviewRoomId === roomId && dragPreviewStart !== null
+                ? dragPreviewStart
+                : clampStartMinute(timelineStart + ((event.clientY - rect.top) / pixelsPerMinute) - dragGrabOffsetMinutes, data.duration);
+            hideDropPreview();
+            hideTimePreview();
+            moveCard(draggedCard, roomId, start, data.duration);
         });
     });
 
