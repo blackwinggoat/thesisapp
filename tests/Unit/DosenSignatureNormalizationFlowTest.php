@@ -16,8 +16,14 @@ class DosenSignatureNormalizationFlowTest extends TestCase
         $this->assertStringContainsString('->normalize($tanda_tangan)', $controller);
         $this->assertStringContainsString('tandaTanganPerluUnggahUlang', $controller);
         $this->assertStringContainsString('public function hapus_tanda_tangan()', $controller);
+        $this->assertStringContainsString('signatureUploadLimit()', $controller);
+        $this->assertStringContainsString('signatureUploadErrorMessage', $controller);
         $this->assertStringContainsString("Route::delete('/dsn/tanda_tangan', 'dosen@hapus_tanda_tangan')->name('dosen.tanda_tangan.delete');", file_get_contents(__DIR__ . '/../../routes/web.php'));
         $this->assertStringContainsString('signature-preview-frame', $view);
+        $this->assertStringContainsString('signature_upload_form', $view);
+        $this->assertStringContainsString('signature_draw_form', $view);
+        $this->assertStringContainsString('Upload dan Simpan', $view);
+        $this->assertStringContainsString('Simpan Gambar Tanda Tangan', $view);
         $this->assertStringContainsString("route('dosen.tanda_tangan.delete')", $view);
         $this->assertStringContainsString("method_field('DELETE')", $view);
         $this->assertStringContainsString('object-fit: contain', $legacyHonorariumView);

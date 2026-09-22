@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Auth;
 use Exception;
 
@@ -1855,10 +1856,13 @@ class dosen extends Controller
             }
         }
 
+        $signatureUploadLimit = $this->signatureUploadLimit();
+
         return view('tugasakhir.dosen.tanda_tangan', compact(
             'tandaTangan',
             'tandaTanganPreview',
-            'tandaTanganPerluUnggahUlang'
+            'tandaTanganPerluUnggahUlang',
+            'signatureUploadLimit'
         ));
     }
 
@@ -1867,27 +1871,58 @@ class dosen extends Controller
     {
         try {
             $C_KODE_DOSEN = auth()->user()->name;
+            $source = (string) $request->input('sumber_tanda_tangan', '');
+            $uploadLimit = $this->signatureUploadLimit();
             $tanda_tangan = null;
 
-            $request->validate([
-                'upload_ttd' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
-                'ttd_image' => 'nullable|string',
-            ]);
-
-            if ($request->hasFile('upload_ttd')) {
+            if ($source === 'upload') {
                 $file = $request->file('upload_ttd');
-                $tanda_tangan = file_get_contents($file->getRealPath());
-            } elseif ($request->has('ttd_image')) {
+                if (!$file || !$file->isValid()) {
+                    throw new \RuntimeException($this->signatureUploadErrorMessage(
+                        $file ? $file->getError() : UPLOAD_ERR_NO_FILE,
+                        $uploadLimit
+                    ));
+                }
+
+                $validator = Validator::make($request->all(), [
+                    'upload_ttd' => 'required|file|image|mimes:jpeg,jpg,png|max:' . $uploadLimit['kilobytes'],
+                ], [
+                    'upload_ttd.required' => 'Pilih berkas tanda tangan terlebih dahulu.',
+                    'upload_ttd.image' => 'Berkas tanda tangan harus berupa gambar PNG atau JPG.',
+                    'upload_ttd.mimes' => 'Format tanda tangan harus PNG atau JPG.',
+                    'upload_ttd.max' => 'Ukuran berkas tanda tangan maksimal ' . $uploadLimit['label'] . '.',
+                ]);
+                if ($validator->fails()) {
+                    throw new \RuntimeException($validator->errors()->first());
+                }
+
+                $tanda_tangan = @file_get_contents($file->getRealPath());
+                if (!is_string($tanda_tangan) || $tanda_tangan === '') {
+                    throw new \RuntimeException('Berkas tanda tangan tidak dapat dibaca. Pilih berkas PNG atau JPG lain.');
+                }
+            } elseif ($source === 'draw') {
+                $validator = Validator::make($request->all(), [
+                    'ttd_image' => 'required|string',
+                ], [
+                    'ttd_image.required' => 'Gambar tanda tangan terlebih dahulu sebelum disimpan.',
+                ]);
+                if ($validator->fails()) {
+                    throw new \RuntimeException($validator->errors()->first());
+                }
+
                 $dataUrl = $request->input('ttd_image');
                 if (!preg_match('#\Adata:image/(?:png|jpe?g);base64,([A-Za-z0-9+/=\r\n]+)\z#i', trim($dataUrl), $matches)) {
                     throw new \RuntimeException('Format tanda tangan hasil gambar tidak valid.');
                 }
 
                 $tanda_tangan = base64_decode($matches[1], true);
-            }
-
-            if (!is_string($tanda_tangan) || $tanda_tangan === '') {
-                throw new \RuntimeException('Pilih atau gambar tanda tangan terlebih dahulu.');
+                if (!is_string($tanda_tangan) || $tanda_tangan === '') {
+                    throw new \RuntimeException('Gambar tanda tangan tidak dapat dibaca. Silakan gambar ulang.');
+                }
+            } elseif ($this->requestExceedsPostLimit($request)) {
+                throw new \RuntimeException('Ukuran berkas melampaui batas server. Gunakan berkas PNG atau JPG maksimal ' . $uploadLimit['label'] . '.');
+            } else {
+                throw new \RuntimeException('Pilih salah satu cara: upload berkas atau gambar tanda tangan langsung.');
             }
 
             $tanda_tangan = app(DosenSignatureImageService::class)->normalize($tanda_tangan);
@@ -1903,7 +1938,9 @@ class dosen extends Controller
 
             return redirect()->back()->with([
                 'status' => 'success',
-                'message' => 'Tanda tangan berhasil diunggah!',
+                'message' => $source === 'upload'
+                    ? 'Tanda tangan berhasil diunggah dan disimpan.'
+                    : 'Tanda tangan hasil gambar berhasil disimpan.',
             ]);
         } catch (\Throwable $th) {
             return redirect()->back()->with([
@@ -1911,6 +1948,88 @@ class dosen extends Controller
                 'message' => $th->getMessage() ?: 'Terjadi kesalahan saat mengunggah tanda tangan!',
             ]);
         }
+    }
+
+    protected function signatureUploadLimit()
+    {
+        $maxBytes = 5 * 1024 * 1024;
+        $uploadBytes = $this->phpIniSizeToBytes(ini_get('upload_max_filesize'));
+        $postBytes = $this->phpIniSizeToBytes(ini_get('post_max_size'));
+
+        if ($uploadBytes > 0) {
+            $maxBytes = min($maxBytes, $uploadBytes);
+        }
+        if ($postBytes > 0) {
+            // Leave room for multipart form fields when PHP has a smaller POST limit.
+            $maxBytes = min($maxBytes, max(1024, $postBytes - (64 * 1024)));
+        }
+
+        return [
+            'bytes' => $maxBytes,
+            'kilobytes' => max(1, (int) floor($maxBytes / 1024)),
+            'label' => $this->formatSignatureUploadSize($maxBytes),
+        ];
+    }
+
+    protected function requestExceedsPostLimit(Request $request)
+    {
+        $postBytes = $this->phpIniSizeToBytes(ini_get('post_max_size'));
+        $contentLength = (int) $request->server('CONTENT_LENGTH', 0);
+
+        return $postBytes > 0 && $contentLength > $postBytes;
+    }
+
+    protected function signatureUploadErrorMessage($errorCode, array $uploadLimit)
+    {
+        switch ((int) $errorCode) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                return 'Ukuran berkas tanda tangan melampaui batas server. Gunakan PNG atau JPG maksimal ' . $uploadLimit['label'] . '.';
+            case UPLOAD_ERR_PARTIAL:
+                return 'Berkas tanda tangan hanya terunggah sebagian. Periksa koneksi lalu coba kembali.';
+            case UPLOAD_ERR_NO_FILE:
+                return 'Pilih berkas tanda tangan terlebih dahulu.';
+            case UPLOAD_ERR_NO_TMP_DIR:
+            case UPLOAD_ERR_CANT_WRITE:
+                return 'Server tidak dapat menyimpan berkas sementara. Silakan coba kembali beberapa saat lagi.';
+            case UPLOAD_ERR_EXTENSION:
+                return 'Upload tanda tangan dihentikan oleh pengaturan server. Silakan hubungi pengelola aplikasi.';
+            default:
+                return 'Berkas tanda tangan tidak dapat diunggah. Gunakan PNG atau JPG maksimal ' . $uploadLimit['label'] . '.';
+        }
+    }
+
+    protected function phpIniSizeToBytes($value)
+    {
+        $value = trim((string) $value);
+        if ($value === '' || $value === '-1' || $value === '0') {
+            return 0;
+        }
+
+        $unit = strtolower(substr($value, -1));
+        $bytes = (float) $value;
+        if ($unit === 'g') {
+            $bytes *= 1024;
+        }
+        if ($unit === 'g' || $unit === 'm') {
+            $bytes *= 1024;
+        }
+        if ($unit === 'g' || $unit === 'm' || $unit === 'k') {
+            $bytes *= 1024;
+        }
+
+        return (int) round($bytes);
+    }
+
+    protected function formatSignatureUploadSize($bytes)
+    {
+        if ($bytes >= 1024 * 1024) {
+            $megabytes = number_format($bytes / (1024 * 1024), 1, ',', '.');
+
+            return rtrim(rtrim($megabytes, '0'), ',') . ' MB';
+        }
+
+        return max(1, (int) floor($bytes / 1024)) . ' KB';
     }
 
     public function hapus_tanda_tangan()
