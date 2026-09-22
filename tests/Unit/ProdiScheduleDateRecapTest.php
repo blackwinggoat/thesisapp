@@ -56,10 +56,17 @@ class ProdiScheduleDateRecapTest extends TestCase
     {
         $routes = file_get_contents(__DIR__ . '/../../routes/web.php');
         $boardView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/jadwal_ruangan_tanggal.blade.php');
+        $cardView = file_get_contents(__DIR__ . '/../../resources/views/tugasakhir/prodi/_jadwal_ruangan_card.blade.php');
 
         $this->assertStringContainsString("Route::get('/prodi/jadwal/tanggal/{tanggal}/ruangan'", $routes);
         $this->assertStringContainsString("Route::post('/prodi/jadwal/tanggal/{tanggal}/ruangan'", $routes);
         $this->assertStringContainsString('schedule-room-track', $boardView);
+        $this->assertStringContainsString('schedule-workspace', $boardView);
+        $this->assertStringContainsString('Antrean Belum Dijadwalkan', $boardView);
+        $this->assertStringContainsString('id="unscheduledSearch"', $boardView);
+        $this->assertStringContainsString('filterUnscheduledCards()', $boardView);
+        $this->assertStringContainsString('schedule-card-nim', $cardView);
+        $this->assertStringContainsString('schedule-queue-action', $cardView);
         $this->assertStringContainsString('$roomPalette = [', $boardView);
         $this->assertStringContainsString('--room-header:', $boardView);
         $this->assertStringContainsString("card.setAttribute('draggable', 'true')", $boardView);

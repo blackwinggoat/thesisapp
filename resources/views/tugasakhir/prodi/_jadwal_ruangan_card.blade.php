@@ -19,8 +19,15 @@
      data-start-minute="{{ $item->is_scheduled ? $item->jam_mulai_menit : '' }}"
      data-duration="{{ $item->durasi_menit }}"
      style="{{ $cardStyle }}"
-     title="Atur ruangan, jam, dan durasi ujian">
-    <span class="schedule-card-name">{{ $item->NAMA_MAHASISWA }}</span>
-    <span class="schedule-card-meta">{{ $item->C_NPM }} | {{ $item->tipe_ujian_label }}</span>
+     title="{{ $unscheduled ? 'Seret ke jadwal atau klik untuk mengatur' : 'Atur ruangan, jam, dan durasi ujian' }}">
+    @if($unscheduled)
+        <span class="schedule-card-nim">{{ $item->C_NPM }}</span>
+        <span class="schedule-card-name">{{ $item->NAMA_MAHASISWA }}</span>
+        <span class="schedule-card-meta">{{ $item->tipe_ujian_label }} | {{ $item->prodi_label }}</span>
+        <span class="schedule-queue-action" aria-hidden="true"><i class="fa fa-calendar"></i></span>
+    @else
+        <span class="schedule-card-name">{{ $item->NAMA_MAHASISWA }}</span>
+        <span class="schedule-card-meta">{{ $item->C_NPM }} | {{ $item->tipe_ujian_label }}</span>
+    @endif
     <span class="schedule-card-time">{{ $item->jam_label }}</span>
 </div>

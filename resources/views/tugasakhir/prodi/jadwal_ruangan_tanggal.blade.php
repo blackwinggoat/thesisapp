@@ -54,8 +54,14 @@
         background: #f8fafc;
         border: 1px solid #dfe6ed;
         border-radius: 4px;
-        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        max-height: calc(100vh - 220px);
+        min-height: 300px;
         padding: 12px;
+        position: sticky;
+        top: 72px;
         transition: border-color .15s ease, background .15s ease;
     }
     .schedule-unscheduled.is-drop-target {
@@ -71,11 +77,47 @@
         justify-content: space-between;
         margin: 0 0 10px;
     }
+    .schedule-workspace {
+        align-items: start;
+        display: grid;
+        gap: 16px;
+        grid-template-columns: minmax(250px, 285px) minmax(0, 1fr);
+    }
+    .schedule-board-area {
+        min-width: 0;
+    }
+    .schedule-queue-search {
+        margin-bottom: 10px;
+        position: relative;
+    }
+    .schedule-queue-search .fa {
+        color: #7a8895;
+        left: 10px;
+        pointer-events: none;
+        position: absolute;
+        top: 10px;
+    }
+    .schedule-queue-search input {
+        border: 1px solid #ccd6df;
+        border-radius: 4px;
+        font-size: 12px;
+        height: 34px;
+        padding: 6px 10px 6px 30px;
+        width: 100%;
+    }
+    .schedule-queue-search input:focus {
+        border-color: #2f86c7;
+        box-shadow: 0 0 0 2px rgba(47, 134, 199, .12);
+        outline: none;
+    }
     .schedule-pool {
         display: flex;
-        flex-wrap: wrap;
+        flex: 1 1 auto;
+        flex-direction: column;
         gap: 8px;
         min-height: 54px;
+        overflow-y: auto;
+        padding-right: 3px;
     }
     .schedule-pool-empty {
         color: #7b8794;
@@ -204,10 +246,38 @@
     .schedule-card.exam-other { border-left-color: #7f8c8d; }
     .schedule-card.is-unscheduled {
         cursor: grab;
-        min-height: 64px;
-        padding: 6px 7px;
+        min-height: 70px;
+        padding: 9px 34px 9px 10px;
         position: relative;
-        width: 220px;
+        width: 100%;
+    }
+    .schedule-card.is-unscheduled .schedule-card-time {
+        display: none;
+    }
+    .schedule-card-nim {
+        color: #213342;
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .schedule-card.is-unscheduled .schedule-card-name {
+        color: #425465;
+        font-size: 10px;
+        margin-top: 4px;
+    }
+    .schedule-queue-action {
+        align-items: center;
+        background: #eef4f8;
+        border-left: 1px solid #d8e2e9;
+        bottom: 0;
+        color: #2f6f91;
+        display: flex;
+        justify-content: center;
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 30px;
     }
     .schedule-card-name {
         display: block;
@@ -345,6 +415,16 @@
         margin-bottom: 15px;
         padding: 10px 12px;
     }
+    @media (max-width: 991px) {
+        .schedule-workspace {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .schedule-unscheduled {
+            max-height: 260px;
+            min-height: 0;
+            position: static;
+        }
+    }
     @media (max-width: 767px) {
         .schedule-toolbar {
             align-items: stretch;
@@ -359,9 +439,6 @@
         .schedule-stat {
             flex: 1 1 auto;
             justify-content: center;
-        }
-        .schedule-card.is-unscheduled {
-            width: 100%;
         }
         .schedule-board-shell {
             max-height: 68vh;
@@ -392,63 +469,72 @@
             </a>
         </div>
 
-        <div class="schedule-unscheduled" id="unscheduledDropzone">
-            <h3 class="schedule-section-title">
-                <span><i class="fa fa-inbox"></i> Belum Dijadwalkan</span>
-                <span class="badge" id="unscheduledBadge">{{ $unscheduledCount }}</span>
-            </h3>
-            <div class="schedule-pool" id="unscheduledPool">
-                @foreach($peserta->filter(function ($item) { return !$item->is_scheduled; }) as $item)
-                    @include('tugasakhir.prodi._jadwal_ruangan_card', ['item' => $item, 'unscheduled' => true])
-                @endforeach
-                <div class="schedule-pool-empty" id="unscheduledEmpty" style="{{ $unscheduledCount > 0 ? 'display:none;' : '' }}">Semua peserta telah dijadwalkan.</div>
-            </div>
-        </div>
-
-        <div class="schedule-legend" aria-label="Legenda tipe ujian">
-            <span class="schedule-legend-item"><span class="schedule-legend-mark proposal"></span> Proposal</span>
-            <span class="schedule-legend-item"><span class="schedule-legend-mark meja"></span> Ujian Meja</span>
-            <span class="schedule-legend-item"><span class="schedule-legend-mark other"></span> Tipe lain</span>
-        </div>
-
-        @if($ruangan->isEmpty())
-            <div class="schedule-no-room"><i class="fa fa-exclamation-triangle"></i> Master ruangan belum tersedia.</div>
-        @else
-            <div class="schedule-board-shell" id="scheduleBoardShell">
-                <div class="schedule-grid" id="scheduleGrid">
-                    <div class="schedule-corner">Jam</div>
-                    @foreach($ruangan as $roomIndex => $room)
-                        @php $roomColor = $roomPalette[$roomIndex % count($roomPalette)]; @endphp
-                        <div class="schedule-room-header" style="grid-column: {{ $roomIndex + 2 }}; grid-row: 1; --room-header: {{ $roomColor['header'] }};">
-                            <span>{{ $room->nama_ruangan }}</span>
-                            <span class="schedule-room-count" data-room-count="{{ $room->id }}">0</span>
-                        </div>
+        <div class="schedule-workspace">
+            <aside class="schedule-unscheduled" id="unscheduledDropzone">
+                <h3 class="schedule-section-title">
+                    <span><i class="fa fa-inbox"></i> Antrean Belum Dijadwalkan</span>
+                    <span class="badge" id="unscheduledBadge">{{ $unscheduledCount }}</span>
+                </h3>
+                <div class="schedule-queue-search">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                    <input type="search" id="unscheduledSearch" placeholder="Cari NIM atau nama" autocomplete="off" aria-label="Cari mahasiswa belum dijadwalkan">
+                </div>
+                <div class="schedule-pool" id="unscheduledPool">
+                    @foreach($peserta->filter(function ($item) { return !$item->is_scheduled; }) as $item)
+                        @include('tugasakhir.prodi._jadwal_ruangan_card', ['item' => $item, 'unscheduled' => true])
                     @endforeach
+                    <div class="schedule-pool-empty" id="unscheduledEmpty" style="{{ $unscheduledCount > 0 ? 'display:none;' : '' }}">Semua peserta telah dijadwalkan.</div>
+                    <div class="schedule-pool-empty" id="unscheduledSearchEmpty" style="display:none;">Mahasiswa tidak ditemukan.</div>
+                </div>
+            </aside>
 
-                    <div class="schedule-time-axis" style="height: {{ $boardHeight }}px;">
-                        @foreach($timeline['labels'] as $label)
-                            @php
-                                $labelTop = ($label['minute'] - $timeline['start']) * $timeline['pixels_per_minute'];
-                                $labelTop = max(7, min($boardHeight - 7, $labelTop));
-                            @endphp
-                            <span class="schedule-time-label" style="top: {{ $labelTop }}px;">{{ $label['label'] }}</span>
-                        @endforeach
-                    </div>
+            <div class="schedule-board-area">
+                <div class="schedule-legend" aria-label="Legenda tipe ujian">
+                    <span class="schedule-legend-item"><span class="schedule-legend-mark proposal"></span> Proposal</span>
+                    <span class="schedule-legend-item"><span class="schedule-legend-mark meja"></span> Ujian Meja</span>
+                    <span class="schedule-legend-item"><span class="schedule-legend-mark other"></span> Tipe lain</span>
+                </div>
 
-                    @foreach($ruangan as $roomIndex => $room)
-                        @php $roomColor = $roomPalette[$roomIndex % count($roomPalette)]; @endphp
-                        <div class="schedule-room-track"
-                             data-room-id="{{ $room->id }}"
-                             data-room-name="{{ $room->nama_ruangan }}"
-                             style="grid-column: {{ $roomIndex + 2 }}; height: {{ $boardHeight }}px; --room-track: {{ $roomColor['track'] }}; --room-line: {{ $roomColor['line'] }}; --room-border: {{ $roomColor['border'] }};">
-                            @foreach($peserta->filter(function ($item) use ($room) { return $item->is_scheduled && (int) $item->ruangan === (int) $room->id; }) as $item)
-                                @include('tugasakhir.prodi._jadwal_ruangan_card', ['item' => $item, 'unscheduled' => false])
+                @if($ruangan->isEmpty())
+                    <div class="schedule-no-room"><i class="fa fa-exclamation-triangle"></i> Master ruangan belum tersedia.</div>
+                @else
+                    <div class="schedule-board-shell" id="scheduleBoardShell">
+                        <div class="schedule-grid" id="scheduleGrid">
+                            <div class="schedule-corner">Jam</div>
+                            @foreach($ruangan as $roomIndex => $room)
+                                @php $roomColor = $roomPalette[$roomIndex % count($roomPalette)]; @endphp
+                                <div class="schedule-room-header" style="grid-column: {{ $roomIndex + 2 }}; grid-row: 1; --room-header: {{ $roomColor['header'] }};">
+                                    <span>{{ $room->nama_ruangan }}</span>
+                                    <span class="schedule-room-count" data-room-count="{{ $room->id }}">0</span>
+                                </div>
+                            @endforeach
+
+                            <div class="schedule-time-axis" style="height: {{ $boardHeight }}px;">
+                                @foreach($timeline['labels'] as $label)
+                                    @php
+                                        $labelTop = ($label['minute'] - $timeline['start']) * $timeline['pixels_per_minute'];
+                                        $labelTop = max(7, min($boardHeight - 7, $labelTop));
+                                    @endphp
+                                    <span class="schedule-time-label" style="top: {{ $labelTop }}px;">{{ $label['label'] }}</span>
+                                @endforeach
+                            </div>
+
+                            @foreach($ruangan as $roomIndex => $room)
+                                @php $roomColor = $roomPalette[$roomIndex % count($roomPalette)]; @endphp
+                                <div class="schedule-room-track"
+                                     data-room-id="{{ $room->id }}"
+                                     data-room-name="{{ $room->nama_ruangan }}"
+                                     style="grid-column: {{ $roomIndex + 2 }}; height: {{ $boardHeight }}px; --room-track: {{ $roomColor['track'] }}; --room-line: {{ $roomColor['line'] }}; --room-border: {{ $roomColor['border'] }};">
+                                    @foreach($peserta->filter(function ($item) use ($room) { return $item->is_scheduled && (int) $item->ruangan === (int) $room->id; }) as $item)
+                                        @include('tugasakhir.prodi._jadwal_ruangan_card', ['item' => $item, 'unscheduled' => false])
+                                    @endforeach
+                                </div>
                             @endforeach
                         </div>
-                    @endforeach
-                </div>
+                    </div>
+                @endif
             </div>
-        @endif
+        </div>
     </div>
 </div>
 
@@ -521,6 +607,7 @@
     var dragPreviewRoomId = null;
     var dropPreview = null;
     var timePreview = document.getElementById('scheduleTimePreview');
+    var unscheduledSearchInput = document.getElementById('unscheduledSearch');
 
     function examClass(type) {
         type = parseInt(type, 10);
@@ -650,12 +737,36 @@
         window.location.reload();
     }
 
+    function filterUnscheduledCards() {
+        var query = unscheduledSearchInput ? unscheduledSearchInput.value.trim().toLowerCase() : '';
+        var cards = Array.prototype.slice.call(document.querySelectorAll('#unscheduledPool .schedule-card'));
+        var visible = 0;
+
+        cards.forEach(function (card) {
+            var haystack = ((card.getAttribute('data-nim') || '') + ' ' + (card.getAttribute('data-student-name') || '')).toLowerCase();
+            var matches = !query || haystack.indexOf(query) !== -1;
+            card.style.display = matches ? '' : 'none';
+            if (matches) {
+                visible++;
+            }
+        });
+
+        $('#unscheduledSearchEmpty').toggle(cards.length > 0 && visible === 0);
+    }
+
     function updateCounts() {
         var scheduled = document.querySelectorAll('.schedule-room-track .schedule-card').length;
         var unscheduled = document.querySelectorAll('#unscheduledPool .schedule-card').length;
         $('#scheduledParticipantCount').text(scheduled);
         $('#unscheduledParticipantCount, #unscheduledBadge').text(unscheduled);
         $('#unscheduledEmpty').toggle(unscheduled === 0);
+        if (unscheduledSearchInput) {
+            unscheduledSearchInput.disabled = unscheduled === 0;
+            if (unscheduled === 0) {
+                unscheduledSearchInput.value = '';
+            }
+        }
+        filterUnscheduledCards();
 
         document.querySelectorAll('[data-room-count]').forEach(function (counter) {
             var roomId = counter.getAttribute('data-room-count');
@@ -1040,6 +1151,9 @@
     });
 
     var unscheduledDropzone = document.getElementById('unscheduledDropzone');
+    if (unscheduledSearchInput) {
+        unscheduledSearchInput.addEventListener('input', filterUnscheduledCards);
+    }
     unscheduledDropzone.addEventListener('dragover', function (event) {
         if (draggedCard && !draggedCard.classList.contains('is-unscheduled')) {
             event.preventDefault();
