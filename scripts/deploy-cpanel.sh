@@ -9,6 +9,7 @@ SHARED_PATH="${SHARED_PATH:-/home/thesisapp/shared/thesisapps}"
 OFFICIAL_PATH="${OFFICIAL_PATH:-${SHARED_PATH}/official-assets}"
 APPROVAL_FILE="${APPROVAL_FILE:-${SHARED_PATH}/deploy-approved-commit}"
 MIGRATION_APPROVAL_FILE="${MIGRATION_APPROVAL_FILE:-${SHARED_PATH}/deploy-approved-migrations}"
+DOSEN_SIGNATURE_NORMALIZATION_APPROVAL_FILE="${DOSEN_SIGNATURE_NORMALIZATION_APPROVAL_FILE:-${SHARED_PATH}/deploy-approved-dosen-signature-normalization}"
 EXCLUDE_FILE="${EXCLUDE_FILE:-${APP_PATH}/scripts/deploy-excludes.txt}"
 SYNC_SCRIPT="${SYNC_SCRIPT:-${APP_PATH}/scripts/sync-release.php}"
 NORMALIZE_COMPOSER_SCRIPT="${NORMALIZE_COMPOSER_SCRIPT:-${APP_PATH}/scripts/normalize-composer-installed.php}"
@@ -143,6 +144,23 @@ run_approved_migrations() {
     rm -rf -- "$migration_stage"
 }
 
+run_approved_dosen_signature_normalization() {
+    if [[ ! -f "$DOSEN_SIGNATURE_NORMALIZATION_APPROVAL_FILE" ]]; then
+        return 0
+    fi
+
+    local approved_commit
+    approved_commit=$(tr -d '[:space:]' < "$DOSEN_SIGNATURE_NORMALIZATION_APPROVAL_FILE")
+    [[ "$approved_commit" == "$CURRENT_COMMIT" ]] \
+        || fail 'Approved signature-normalization commit does not match the deployment commit.'
+
+    printf 'Normalizing approved lecturer signatures.\n'
+    (
+        cd "$DEPLOY_PATH"
+        "$PHP_BIN" artisan thesis:normalize-dosen-signatures --apply
+    )
+}
+
 TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
 BACKUP_PATH="${BACKUP_ROOT}/${TIMESTAMP}-${CURRENT_COMMIT}"
 BACKUP_MANIFEST="${BACKUP_ROOT}/${TIMESTAMP}-${CURRENT_COMMIT}.json"
@@ -211,6 +229,7 @@ set +e
     "$PHP_BIN" artisan route:clear
     "$PHP_BIN" artisan view:clear
     run_approved_migrations
+    run_approved_dosen_signature_normalization
     "$PHP_BIN" artisan thesis:audit-honorarium-schedules --strict
 
     if [[ "$WAS_DOWN" -eq 0 ]]; then
@@ -236,5 +255,5 @@ if [[ "$DEPLOY_STATUS" -ne 0 ]]; then
     exit "$DEPLOY_STATUS"
 fi
 
-rm -f "$APPROVAL_FILE" "$MIGRATION_APPROVAL_FILE"
+rm -f "$APPROVAL_FILE" "$MIGRATION_APPROVAL_FILE" "$DOSEN_SIGNATURE_NORMALIZATION_APPROVAL_FILE"
 printf 'DEPLOY SUCCESS: %s\n' "$CURRENT_COMMIT"

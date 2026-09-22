@@ -15,13 +15,14 @@ POLL_INTERVAL="${THESISAPPS_DEPLOY_POLL_INTERVAL:-4}"
 DRY_RUN=0
 FORCE=0
 APPROVED_MIGRATIONS=()
+NORMALIZE_DOSEN_SIGNATURES=0
 API_RESPONSE=
 API_ERROR=
 
 usage() {
     cat <<'EOF'
 Usage:
-  scripts/deploy-production.sh [--dry-run] [--force] [--migration MIGRATION_FILE]
+  scripts/deploy-production.sh [--dry-run] [--force] [--migration MIGRATION_FILE] [--normalize-dosen-signatures]
 
 Deploys the exact local origin/main commit through the cPanel UAPI without
 opening cPanel in a browser. The cPanel API token is read from the macOS
@@ -33,6 +34,8 @@ Options:
   --force    Redeploy even when the exact commit is already live.
   --migration Run one explicitly approved migration filename after source sync.
               Repeat this option for multiple migrations.
+  --normalize-dosen-signatures
+              Run the reviewed lecturer-signature normalization after source sync.
 EOF
 }
 
@@ -59,6 +62,10 @@ while [[ $# -gt 0 ]]; do
                 || fail "Migration file does not exist: $2"
             APPROVED_MIGRATIONS+=("$2")
             shift 2
+            ;;
+        --normalize-dosen-signatures)
+            NORMALIZE_DOSEN_SIGNATURES=1
+            shift
             ;;
         --help|-h)
             usage
@@ -209,7 +216,7 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
     exit 0
 fi
 
-if [[ "$FORCE" -eq 0 && ${#APPROVED_MIGRATIONS[@]} -eq 0 && "$LAST_DEPLOY_SHA" == "$TARGET_SHA" && -n "$LAST_DEPLOY_SUCCEEDED" ]]; then
+if [[ "$FORCE" -eq 0 && ${#APPROVED_MIGRATIONS[@]} -eq 0 && "$NORMALIZE_DOSEN_SIGNATURES" -eq 0 && "$LAST_DEPLOY_SHA" == "$TARGET_SHA" && -n "$LAST_DEPLOY_SUCCEEDED" ]]; then
     printf 'DEPLOY NOT NEEDED: production already runs %s.\n' "$TARGET_SHA"
     exit 0
 fi
@@ -243,6 +250,17 @@ if [[ ${#APPROVED_MIGRATIONS[@]} -gt 0 ]]; then
         --data-urlencode "dir=${REMOTE_SHARED}" \
         --data-urlencode 'file=deploy-approved-migrations' \
         --data-urlencode "content=${MIGRATION_CONTENT}" \
+        --data-urlencode 'from_charset=UTF-8' \
+        --data-urlencode 'to_charset=UTF-8' \
+        --data-urlencode 'fallback=0'
+fi
+
+if [[ "$NORMALIZE_DOSEN_SIGNATURES" -eq 1 ]]; then
+    printf 'Approving lecturer-signature normalization for this deployment.\n'
+    api_call Fileman/save_file_content \
+        --data-urlencode "dir=${REMOTE_SHARED}" \
+        --data-urlencode 'file=deploy-approved-dosen-signature-normalization' \
+        --data-urlencode "content=${TARGET_SHA}" \
         --data-urlencode 'from_charset=UTF-8' \
         --data-urlencode 'to_charset=UTF-8' \
         --data-urlencode 'fallback=0'

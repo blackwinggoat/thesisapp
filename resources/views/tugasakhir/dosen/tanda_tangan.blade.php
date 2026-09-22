@@ -26,6 +26,24 @@
 
             <!-- BEGIN DATA TABLE -->
             <h3 class="page-heading">Berita Acara</h3>
+            <style>
+                .signature-preview-frame {
+                    align-items: center;
+                    background: #f8fafc;
+                    border: 1px solid #d8e0e8;
+                    display: flex;
+                    height: 150px;
+                    justify-content: center;
+                    padding: 8px;
+                }
+                .signature-preview-frame img {
+                    display: block;
+                    height: 130px;
+                    max-width: 100%;
+                    object-fit: contain;
+                    width: 100%;
+                }
+            </style>
             <div class="row">
                 <!-- Col 9: Form Upload or DrawPad -->
                 <div class="col-md-9">
@@ -55,15 +73,17 @@
                     <div class="the-box">
                         <h4>Pratinjau Tanda Tangan</h4>
                         {{-- alert if $tandaTangan is false --}}
-                        @if (!$tandaTangan)
+                        @if (!$tandaTangan || $tandaTanganPerluUnggahUlang)
                             <div class="alert alert-danger alert-block square fade in alert-dismissable">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                                Anda belum mengunggah tanda tangan. Silakan unggah tanda tangan Anda.
+                                {{ $tandaTanganPerluUnggahUlang ? 'Tanda tangan lama tidak dapat digunakan. Silakan unggah atau gambar ulang tanda tangan Anda.' : 'Anda belum mengunggah tanda tangan. Silakan unggah tanda tangan Anda.' }}
                             </div>
                         @endif
-                        <img id="ttd_preview"
-                            src="{{ $tandaTangan ? 'data:image/png;base64,' . base64_encode($tandaTangan->tanda_tangan) : asset('gambar/no_image.jpg') }}"
-                            alt="Tanda Tangan" style="width: 100%; height: auto; border: 1px solid #ccc;">
+                        <div class="signature-preview-frame">
+                            <img id="ttd_preview"
+                                src="{{ $tandaTanganPreview ?: asset('gambar/no_image.jpg') }}"
+                                alt="Tanda Tangan">
+                        </div>
                     </div><!-- /.the-box -->
                 </div><!-- /.col-md-3 -->
             </div><!-- /.row -->

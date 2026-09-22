@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Services\DosenSignatureImageService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
@@ -1835,18 +1836,30 @@ class dosen extends Controller
 
     // Tanda Tangan
 
-    public function tanda_tangan()
+    public function tanda_tangan(DosenSignatureImageService $signatureImages)
     {
-        // Misalnya, C_KODE_DOSEN disimpan dalam session atau bisa diganti dengan cara lain sesuai kebutuhan
         $kodeDosen = auth()->user()->name;
-
-        // Query untuk mendapatkan tanda tangan dari database
         $tandaTangan = DB::table('mst_tanda_tangan')
             ->where('C_KODE_DOSEN', $kodeDosen)
-            ->first(); // Mengambil satu record
+            ->first();
 
-        // Melempar data ke view
-        return view('tugasakhir.dosen.tanda_tangan', compact('tandaTangan'));
+        $tandaTanganPreview = '';
+        $tandaTanganPerluUnggahUlang = false;
+        if ($tandaTangan && is_string($tandaTangan->tanda_tangan) && $tandaTangan->tanda_tangan !== '') {
+            try {
+                $signatureImages->inspect($tandaTangan->tanda_tangan);
+                $tandaTanganPreview = Helper::binaryImageDataUri($tandaTangan->tanda_tangan);
+                $tandaTanganPerluUnggahUlang = $tandaTanganPreview === '';
+            } catch (\RuntimeException $exception) {
+                $tandaTanganPerluUnggahUlang = true;
+            }
+        }
+
+        return view('tugasakhir.dosen.tanda_tangan', compact(
+            'tandaTangan',
+            'tandaTanganPreview',
+            'tandaTanganPerluUnggahUlang'
+        ));
     }
 
 
@@ -1856,13 +1869,28 @@ class dosen extends Controller
             $C_KODE_DOSEN = auth()->user()->name;
             $tanda_tangan = null;
 
+            $request->validate([
+                'upload_ttd' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+                'ttd_image' => 'nullable|string',
+            ]);
+
             if ($request->hasFile('upload_ttd')) {
                 $file = $request->file('upload_ttd');
                 $tanda_tangan = file_get_contents($file->getRealPath());
             } elseif ($request->has('ttd_image')) {
                 $dataUrl = $request->input('ttd_image');
-                $tanda_tangan = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $dataUrl));
+                if (!preg_match('#\Adata:image/(?:png|jpe?g);base64,([A-Za-z0-9+/=\r\n]+)\z#i', trim($dataUrl), $matches)) {
+                    throw new \RuntimeException('Format tanda tangan hasil gambar tidak valid.');
+                }
+
+                $tanda_tangan = base64_decode($matches[1], true);
             }
+
+            if (!is_string($tanda_tangan) || $tanda_tangan === '') {
+                throw new \RuntimeException('Pilih atau gambar tanda tangan terlebih dahulu.');
+            }
+
+            $tanda_tangan = app(DosenSignatureImageService::class)->normalize($tanda_tangan);
 
             DB::table('mst_tanda_tangan')->updateOrInsert(
                 ['C_KODE_DOSEN' => $C_KODE_DOSEN],
@@ -1880,7 +1908,7 @@ class dosen extends Controller
         } catch (\Throwable $th) {
             return redirect()->back()->with([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan saat mengunggah tanda tangan!',
+                'message' => $th->getMessage() ?: 'Terjadi kesalahan saat mengunggah tanda tangan!',
             ]);
         }
     }

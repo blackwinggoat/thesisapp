@@ -219,9 +219,9 @@ $dekan = helper::getDekanByTanggal($data[0]['TANGGAL_UJIAN'] ?? null);
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td style="width: 5% !important;">
-                        @if ($data[$i]['TANDA_TANGAN'] != null)
-                            <img src="{{ 'data:image/png;base64,' . base64_encode($data[$i]['TANDA_TANGAN'])}}" alt="Tanda Tangan Dosen" style="height: 20px; object-fit: cover; object-position: center;">
+                    <td style="width: 8% !important;">
+                        @if (!empty($data[$i]['TANDA_TANGAN']) && helper::binaryImageDataUri($data[$i]['TANDA_TANGAN']) !== '')
+                            <img src="{{ helper::binaryImageDataUri($data[$i]['TANDA_TANGAN']) }}" alt="Tanda Tangan Dosen" style="display: block; height: 30px; margin: 0 auto; max-width: 72px; object-fit: contain; width: 100%;">
                         @endif
                     </td>
                 </tr>
