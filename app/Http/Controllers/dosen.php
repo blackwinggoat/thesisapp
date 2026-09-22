@@ -1913,6 +1913,48 @@ class dosen extends Controller
         }
     }
 
+    public function hapus_tanda_tangan()
+    {
+        try {
+            $kodeDosen = auth()->user()->name;
+
+            $deleted = DB::transaction(function () use ($kodeDosen) {
+                $signatureIds = DB::table('mst_tanda_tangan')
+                    ->where('C_KODE_DOSEN', $kodeDosen)
+                    ->pluck('id_tanda_tangan')
+                    ->all();
+
+                // A lecturer who removes a signature should not have a prior normalized copy restored later.
+                if (Schema::hasTable('mst_tanda_tangan_normalization_backups')) {
+                    $backups = DB::table('mst_tanda_tangan_normalization_backups')
+                        ->where('C_KODE_DOSEN', $kodeDosen);
+
+                    if (!empty($signatureIds)) {
+                        $backups->orWhereIn('id_tanda_tangan', $signatureIds);
+                    }
+
+                    $backups->delete();
+                }
+
+                return DB::table('mst_tanda_tangan')
+                    ->where('C_KODE_DOSEN', $kodeDosen)
+                    ->delete();
+            });
+
+            return redirect()->back()->with([
+                'status' => $deleted ? 'success' : 'info',
+                'message' => $deleted
+                    ? 'Tanda tangan telah dihapus. Silakan unggah atau gambar ulang tanda tangan Anda.'
+                    : 'Tidak ada tanda tangan yang tersimpan.',
+            ]);
+        } catch (\Throwable $th) {
+            return redirect()->back()->with([
+                'status' => 'error',
+                'message' => 'Tanda tangan tidak dapat dihapus. Silakan coba kembali.',
+            ]);
+        }
+    }
+
     protected function getHonorariumAssignmentsForDosen($kodeDosen)
     {
         $roles = [

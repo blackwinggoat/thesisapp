@@ -15,9 +15,24 @@ class DosenSignatureNormalizationFlowTest extends TestCase
         $this->assertStringContainsString('DosenSignatureImageService', $controller);
         $this->assertStringContainsString('->normalize($tanda_tangan)', $controller);
         $this->assertStringContainsString('tandaTanganPerluUnggahUlang', $controller);
+        $this->assertStringContainsString('public function hapus_tanda_tangan()', $controller);
+        $this->assertStringContainsString("Route::delete('/dsn/tanda_tangan', 'dosen@hapus_tanda_tangan')->name('dosen.tanda_tangan.delete');", file_get_contents(__DIR__ . '/../../routes/web.php'));
         $this->assertStringContainsString('signature-preview-frame', $view);
+        $this->assertStringContainsString("route('dosen.tanda_tangan.delete')", $view);
+        $this->assertStringContainsString("method_field('DELETE')", $view);
         $this->assertStringContainsString('object-fit: contain', $legacyHonorariumView);
         $this->assertStringNotContainsString('object-fit: cover', $legacyHonorariumView);
+    }
+
+    public function test_signature_removal_clears_the_active_signature_and_its_normalization_backup()
+    {
+        $controller = file_get_contents(__DIR__ . '/../../app/Http/Controllers/dosen.php');
+
+        $this->assertStringContainsString('DB::transaction', $controller);
+        $this->assertStringContainsString("DB::table('mst_tanda_tangan_normalization_backups')", $controller);
+        $this->assertStringContainsString("DB::table('mst_tanda_tangan')", $controller);
+        $this->assertStringContainsString("->where('C_KODE_DOSEN', \$kodeDosen)", $controller);
+        $this->assertStringContainsString('orWhereIn', $controller);
     }
 
     public function test_normalization_command_keeps_an_original_backup_before_replacing_a_signature()

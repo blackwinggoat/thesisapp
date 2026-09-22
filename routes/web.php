@@ -579,6 +579,7 @@ Route::group(['middleware' => 'dosen'], function () {
     // Tanda Tangan
     Route::get('/dsn/tanda_tangan', 'dosen@tanda_tangan');
     Route::post('/dsn/upload_ttd', 'dosen@upload_ttd_post');
+    Route::delete('/dsn/tanda_tangan', 'dosen@hapus_tanda_tangan')->name('dosen.tanda_tangan.delete');
 
     // Honorarium
     Route::get('/dsn/honorarium', 'dosen@honorarium');

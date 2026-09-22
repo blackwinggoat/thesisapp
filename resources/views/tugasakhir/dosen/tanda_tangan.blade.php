@@ -25,7 +25,7 @@
 
 
             <!-- BEGIN DATA TABLE -->
-            <h3 class="page-heading">Berita Acara</h3>
+            <h3 class="page-heading">Tanda Tangan Dosen</h3>
             <style>
                 .signature-preview-frame {
                     align-items: center;
@@ -42,6 +42,15 @@
                     max-width: 100%;
                     object-fit: contain;
                     width: 100%;
+                }
+                .signature-delete-form {
+                    margin-top: 12px;
+                }
+                .signature-delete-note {
+                    color: #6b7280;
+                    font-size: 12px;
+                    line-height: 1.4;
+                    margin: 9px 0 0;
                 }
             </style>
             <div class="row">
@@ -84,6 +93,17 @@
                                 src="{{ $tandaTanganPreview ?: asset('gambar/no_image.jpg') }}"
                                 alt="Tanda Tangan">
                         </div>
+                        @if ($tandaTangan)
+                            <form action="{{ route('dosen.tanda_tangan.delete') }}" method="POST" class="signature-delete-form"
+                                onsubmit="return confirm('Hapus tanda tangan saat ini? Anda perlu mengunggah atau menggambar ulang tanda tangan setelahnya.');">
+                                {{ csrf_field() }}
+                                {{ method_field('DELETE') }}
+                                <button type="submit" class="btn btn-danger btn-block">
+                                    <i class="fa fa-trash"></i> Hapus Tanda Tangan
+                                </button>
+                            </form>
+                            <p class="signature-delete-note">Tanda tangan aktif dan salinan normalisasi lama akan dihapus.</p>
+                        @endif
                     </div><!-- /.the-box -->
                 </div><!-- /.col-md-3 -->
             </div><!-- /.row -->
