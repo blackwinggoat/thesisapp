@@ -4734,6 +4734,61 @@ class Prodi extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
+    public function report_distribusi_penguji(Request $request)
+    {
+        $reportContext = $this->getReportContext();
+        // This report intentionally follows the existing cross-program Studi distribution view.
+        $reportContext['label'] = 'Semua Program Studi';
+        $reportMode = $this->normalizePengujiDistributionMode($request->input('mode'));
+        $reportWarnings = [];
+        $pengujiReport = $this->safeReportSection(
+            'distribusi_penguji',
+            function () use ($request, $reportMode) {
+                return $this->getPengujiDistributionReport(
+                    '%',
+                    $request->input('tahun_ajaran'),
+                    $reportMode
+                );
+            },
+            $this->getEmptyPengujiDistributionReport(),
+            $reportWarnings
+        );
+
+        $reportActionUrl = route('prodi.report_distribusi_penguji');
+        $reportExcelUrl = route('prodi.report_distribusi_penguji_excel');
+        $reportDashboardUrl = url('prodi/report');
+        $reportPageTitle = 'Distribusi Penguji';
+
+        return view('tugasakhir.prodi.report_distribusi_penguji', compact(
+            'reportContext',
+            'reportWarnings',
+            'pengujiReport',
+            'reportActionUrl',
+            'reportExcelUrl',
+            'reportDashboardUrl',
+            'reportPageTitle'
+        ));
+    }
+
+    public function report_distribusi_penguji_excel(Request $request)
+    {
+        $reportMode = $this->normalizePengujiDistributionMode($request->input('mode'));
+        $report = $this->getPengujiDistributionReport(
+            '%',
+            $request->input('tahun_ajaran'),
+            $reportMode
+        );
+        $filenamePrefix = $reportMode === 'lengkap'
+            ? 'distribusi-penguji-rinci-'
+            : 'distribusi-penguji-';
+        $filename = $filenamePrefix . str_replace('/', '-', $report['selected_year']) . '.xls';
+
+        return response()
+            ->view('tugasakhir.prodi.report_distribusi_penguji_excel', compact('report'))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
     public function report_jenis_tugas_akhir(Request $request)
     {
         if ((int) optional(auth()->user())->level === 1) {
@@ -4921,6 +4976,305 @@ class Prodi extends Controller
         return in_array((string) $mode, ['utama', 'lengkap'], true)
             ? (string) $mode
             : 'utama';
+    }
+
+    protected function normalizePengujiDistributionMode($mode)
+    {
+        return in_array((string) $mode, ['ringkas', 'lengkap'], true)
+            ? (string) $mode
+            : 'ringkas';
+    }
+
+    protected function pengujiDistributionRoles()
+    {
+        return [
+            'KS' => [
+                'field' => 'ketua_sidang_id',
+                'label' => 'Ketua Sidang',
+            ],
+            'P1' => [
+                'field' => 'penguji_I_id',
+                'label' => 'Penguji I',
+            ],
+            'P2' => [
+                'field' => 'penguji_II_id',
+                'label' => 'Penguji II',
+            ],
+            'P3' => [
+                'field' => 'penguji_III_id',
+                'label' => 'Penguji III',
+            ],
+        ];
+    }
+
+    protected function newPengujiDistributionQuery($nimLike)
+    {
+        return DB::table('trt_jadwal_ujian as jadwal')
+            ->join('trt_jadwal_ujian_per_mhs as peserta', 'peserta.jadwal_ujian', '=', 'jadwal.id')
+            ->join('trt_reg as registrasi', function ($join) {
+                $join->on('registrasi.C_NPM', '=', 'peserta.C_NPM')
+                    ->on('registrasi.pendaftaran_id', '=', 'jadwal.pendaftaran_id');
+            })
+            ->join('trt_penguji as penguji', function ($join) {
+                $join->on('penguji.C_NPM', '=', 'registrasi.C_NPM')
+                    ->on('penguji.tipe_ujian', '=', 'registrasi.status');
+            })
+            ->join('t_mst_mahasiswa as mahasiswa', 'mahasiswa.C_NPM', '=', 'registrasi.C_NPM')
+            ->where('registrasi.C_NPM', 'LIKE', $nimLike)
+            ->whereNotNull('jadwal.tgl_ujian')
+            ->where('jadwal.tgl_ujian', '<>', '0000-00-00');
+    }
+
+    protected function getPengujiDistributionLecturerNames(array $lecturerCodes)
+    {
+        $lecturerCodes = array_values(array_unique(array_filter(array_map('trim', $lecturerCodes))));
+        if (empty($lecturerCodes)) {
+            return [];
+        }
+
+        $lecturerNames = [];
+        if (Schema::hasTable('t_mst_dosen')) {
+            foreach (DB::table('t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $lecturerCodes)
+                ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN') as $code => $name) {
+                if (trim((string) $name) !== '') {
+                    $lecturerNames[(string) $code] = trim((string) $name);
+                }
+            }
+        }
+
+        if (Schema::hasTable('mig_t_mst_dosen')) {
+            foreach (DB::table('mig_t_mst_dosen')
+                ->whereIn('C_KODE_DOSEN', $lecturerCodes)
+                ->pluck('NAMA_DOSEN', 'C_KODE_DOSEN') as $code => $name) {
+                if (!isset($lecturerNames[(string) $code]) && trim((string) $name) !== '') {
+                    $lecturerNames[(string) $code] = trim((string) $name);
+                }
+            }
+        }
+
+        return $lecturerNames;
+    }
+
+    protected function getPengujiDistributionReport($nimLike, $selectedAcademicYear = null, $mode = 'ringkas')
+    {
+        $mode = $this->normalizePengujiDistributionMode($mode);
+        $isDetailed = $mode === 'lengkap';
+        $roles = $this->pengujiDistributionRoles();
+        $currentAcademicYear = Helper::getSemesterAkademik(Carbon::today())->tahun_akademik;
+        $periodDates = $this->newPengujiDistributionQuery($nimLike)
+            ->distinct()
+            ->pluck('jadwal.tgl_ujian');
+
+        $periodOptions = collect($periodDates)
+            ->filter()
+            ->map(function ($date) {
+                try {
+                    return Helper::getSemesterAkademik($date)->tahun_akademik;
+                } catch (\Throwable $e) {
+                    return null;
+                }
+            })
+            ->filter()
+            ->push($currentAcademicYear)
+            ->unique()
+            ->sortByDesc(function ($value) {
+                return (int) substr($value, 0, 4);
+            })
+            ->values();
+
+        $selectedAcademicYear = preg_match('/^\d{4}\/\d{4}$/', (string) $selectedAcademicYear)
+            ? $selectedAcademicYear
+            : null;
+
+        if (!$selectedAcademicYear || !$periodOptions->contains($selectedAcademicYear)) {
+            $selectedAcademicYear = $periodOptions->first() ?: $currentAcademicYear;
+        }
+
+        $yearParts = explode('/', $selectedAcademicYear);
+        $academicStartYear = (int) $yearParts[0];
+        $ganjilStart = Carbon::create($academicStartYear, 9, 1)->startOfDay();
+        $ganjilEnd = Carbon::create($academicStartYear + 1, 2, 1)->endOfMonth()->endOfDay();
+        $genapStart = Carbon::create($academicStartYear + 1, 3, 1)->startOfDay();
+        $genapEnd = Carbon::create($academicStartYear + 1, 8, 31)->endOfDay();
+
+        $programs = [
+            [
+                'key' => 'ti',
+                'code' => '55201',
+                'label' => 'Teknik Informatika',
+            ],
+            [
+                'key' => 'si',
+                'code' => '57201',
+                'label' => 'Sistem Informasi',
+            ],
+        ];
+
+        if ($nimLike === '130%') {
+            $programs = array_slice($programs, 0, 1);
+        } elseif ($nimLike === '131%') {
+            $programs = array_slice($programs, 1, 1);
+        }
+
+        $assignmentRows = $this->newPengujiDistributionQuery($nimLike)
+            ->whereBetween('jadwal.tgl_ujian', [
+                $ganjilStart->toDateTimeString(),
+                $genapEnd->toDateTimeString(),
+            ])
+            ->select(
+                'jadwal.id as jadwal_ujian_id',
+                'jadwal.tgl_ujian',
+                'registrasi.C_NPM',
+                'registrasi.status as tipe_ujian',
+                'mahasiswa.C_KODE_PRODI',
+                'penguji.ketua_sidang_id',
+                'penguji.penguji_I_id',
+                'penguji.penguji_II_id',
+                'penguji.penguji_III_id'
+            )
+            ->get();
+
+        $lecturerCodes = [];
+        foreach ($assignmentRows as $assignment) {
+            foreach ($roles as $role) {
+                $code = trim((string) $assignment->{$role['field']});
+                if ($code !== '') {
+                    $lecturerCodes[] = $code;
+                }
+            }
+        }
+        $lecturerNames = $this->getPengujiDistributionLecturerNames($lecturerCodes);
+
+        $programKeys = collect($programs)->pluck('key')->all();
+        $grouped = [];
+        foreach ($assignmentRows as $assignment) {
+            try {
+                $semester = Helper::getSemesterAkademik($assignment->tgl_ujian);
+            } catch (\Throwable $e) {
+                continue;
+            }
+
+            if ($semester->tahun_akademik !== $selectedAcademicYear) {
+                continue;
+            }
+
+            $programKey = null;
+            if ((string) $assignment->C_KODE_PRODI === '55201' || substr((string) $assignment->C_NPM, 0, 3) === '130') {
+                $programKey = 'ti';
+            } elseif ((string) $assignment->C_KODE_PRODI === '57201' || substr((string) $assignment->C_NPM, 0, 3) === '131') {
+                $programKey = 'si';
+            }
+
+            if (!$programKey || !in_array($programKey, $programKeys, true)) {
+                continue;
+            }
+
+            $eventKey = implode(':', [
+                (string) $assignment->jadwal_ujian_id,
+                (string) $assignment->C_NPM,
+                (string) $assignment->tipe_ujian,
+            ]);
+            foreach ($roles as $roleKey => $role) {
+                $kodeDosen = trim((string) $assignment->{$role['field']});
+                if ($kodeDosen === '') {
+                    continue;
+                }
+
+                if (!isset($grouped[$kodeDosen])) {
+                    $grouped[$kodeDosen] = [
+                        'kode_dosen' => $kodeDosen,
+                        'nama_dosen' => isset($lecturerNames[$kodeDosen])
+                            ? $lecturerNames[$kodeDosen]
+                            : $kodeDosen,
+                        'penugasan' => [],
+                    ];
+                }
+
+                $grouped[$kodeDosen]['penugasan'][$programKey][$semester->semester][$roleKey][$eventKey] = true;
+            }
+        }
+
+        $rows = collect($grouped)
+            ->sortBy(function ($item) {
+                return strtolower($item['nama_dosen']);
+            })
+            ->values()
+            ->map(function ($item, $index) use ($programs, $roles) {
+                $row = [
+                    'no' => $index + 1,
+                    'kode_dosen' => $item['kode_dosen'],
+                    'nama_dosen' => $item['nama_dosen'],
+                    'role_totals' => array_fill_keys(array_keys($roles), 0),
+                    'total' => 0,
+                    'grand_total' => 0,
+                ];
+
+                foreach ($programs as $program) {
+                    foreach (['Ganjil', 'Genap'] as $semester) {
+                        $row['counts'][$program['key']][$semester] = 0;
+                        foreach ($roles as $roleKey => $role) {
+                            $count = isset($item['penugasan'][$program['key']][$semester][$roleKey])
+                                ? count($item['penugasan'][$program['key']][$semester][$roleKey])
+                                : 0;
+                            $row['role_counts'][$program['key']][$semester][$roleKey] = $count;
+                            $row['counts'][$program['key']][$semester] += $count;
+                            $row['role_totals'][$roleKey] += $count;
+                        }
+                    }
+                }
+
+                $row['total'] = array_sum($row['role_totals']);
+                $row['grand_total'] = $row['total'];
+
+                return $row;
+            })
+            ->all();
+
+        $totalPenugasanByProgram = [];
+        foreach ($programs as $program) {
+            $totalPenugasanByProgram[$program['key']] = array_fill_keys(array_keys($roles), 0);
+            foreach ($roles as $roleKey => $role) {
+                $totalPenugasanByProgram[$program['key']][$roleKey] = collect($rows)->sum(function ($row) use ($program, $roleKey) {
+                    return $row['role_counts'][$program['key']]['Ganjil'][$roleKey]
+                        + $row['role_counts'][$program['key']]['Genap'][$roleKey];
+                });
+            }
+            $totalPenugasanByProgram[$program['key']]['total'] = array_sum($totalPenugasanByProgram[$program['key']]);
+        }
+
+        return [
+            'mode' => $mode,
+            'is_detailed' => $isDetailed,
+            'roles' => $roles,
+            'period_options' => $periodOptions->all(),
+            'selected_year' => $selectedAcademicYear,
+            'awal_label' => 'Awal (' . $ganjilStart->format('M Y') . ' - ' . $ganjilEnd->format('M Y') . ')',
+            'akhir_label' => 'Akhir (' . $genapStart->format('M Y') . ' - ' . $genapEnd->format('M Y') . ')',
+            'programs' => $programs,
+            'rows' => $rows,
+            'total_dosen' => count($rows),
+            'total_penugasan' => collect($rows)->sum('grand_total'),
+            'total_penugasan_by_program' => $totalPenugasanByProgram,
+        ];
+    }
+
+    protected function getEmptyPengujiDistributionReport()
+    {
+        return [
+            'mode' => 'ringkas',
+            'is_detailed' => false,
+            'roles' => $this->pengujiDistributionRoles(),
+            'period_options' => [],
+            'selected_year' => Helper::getSemesterAkademik(Carbon::today())->tahun_akademik,
+            'awal_label' => 'Awal',
+            'akhir_label' => 'Akhir',
+            'programs' => [],
+            'rows' => [],
+            'total_dosen' => 0,
+            'total_penugasan' => 0,
+            'total_penugasan_by_program' => [],
+        ];
     }
 
     protected function getBimbinganDistributionReport($nimLike, $selectedAcademicYear = null, $mode = 'utama')

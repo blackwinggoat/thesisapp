@@ -75,6 +75,7 @@
             <ul class="submenu">
                 <li><a href="{{ url('prodi/report') }}">Dashboard</a></li>
                 <li><a href="{{ url('prodi/report/laporan') }}">Distribusi Bimbingan</a></li>
+                <li><a href="{{ route('prodi.report_distribusi_penguji') }}">Distribusi Penguji</a></li>
                 <li><a href="{{ route('prodi.report_jenis_tugas_akhir') }}">Persebaran Jenis TA</a></li>
             </ul>
         </li>

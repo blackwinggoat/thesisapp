@@ -134,6 +134,10 @@ Route::group(['middleware' => 'kaprodi'], function () {
     Route::get('/prodi/report', 'Prodi@report');
     Route::get('/prodi/report/laporan', 'Prodi@report_laporan')->name('prodi.report_distribusi_bimbingan');
     Route::get('/prodi/report/laporan/excel', 'Prodi@report_laporan_excel')->name('prodi.report_distribusi_bimbingan_excel');
+    Route::get('/prodi/report/distribusi-penguji', 'Prodi@report_distribusi_penguji')
+        ->name('prodi.report_distribusi_penguji');
+    Route::get('/prodi/report/distribusi-penguji/excel', 'Prodi@report_distribusi_penguji_excel')
+        ->name('prodi.report_distribusi_penguji_excel');
     Route::get('/prodi/report/jenis-tugas-akhir', 'Prodi@report_jenis_tugas_akhir')->name('prodi.report_jenis_tugas_akhir');
     Route::get('/prodi/report/jenis-tugas-akhir/pdf', 'Prodi@report_jenis_tugas_akhir_pdf')->name('prodi.report_jenis_tugas_akhir_pdf');
     Route::get('/prodi/laporan_mahasiswa', 'Prodi@laporan_mahasiswa');
