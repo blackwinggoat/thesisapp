@@ -38,7 +38,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Validator;
 use Auth;
 use Exception;
 
@@ -1884,33 +1883,12 @@ class dosen extends Controller
                     ));
                 }
 
-                $validator = Validator::make($request->all(), [
-                    'upload_ttd' => 'required|file|image|mimes:jpeg,jpg,png|max:' . $uploadLimit['kilobytes'],
-                ], [
-                    'upload_ttd.required' => 'Pilih berkas tanda tangan terlebih dahulu.',
-                    'upload_ttd.image' => 'Berkas tanda tangan harus berupa gambar PNG atau JPG.',
-                    'upload_ttd.mimes' => 'Format tanda tangan harus PNG atau JPG.',
-                    'upload_ttd.max' => 'Ukuran berkas tanda tangan maksimal ' . $uploadLimit['label'] . '.',
-                ]);
-                if ($validator->fails()) {
-                    throw new \RuntimeException($validator->errors()->first());
-                }
-
-                $tanda_tangan = @file_get_contents($file->getRealPath());
-                if (!is_string($tanda_tangan) || $tanda_tangan === '') {
-                    throw new \RuntimeException('Berkas tanda tangan tidak dapat dibaca. Pilih berkas PNG atau JPG lain.');
-                }
+                $tanda_tangan = $this->readSignatureUpload($file, $uploadLimit);
             } elseif ($source === 'draw') {
-                $validator = Validator::make($request->all(), [
-                    'ttd_image' => 'required|string',
-                ], [
-                    'ttd_image.required' => 'Gambar tanda tangan terlebih dahulu sebelum disimpan.',
-                ]);
-                if ($validator->fails()) {
-                    throw new \RuntimeException($validator->errors()->first());
+                $dataUrl = trim((string) $request->input('ttd_image', ''));
+                if ($dataUrl === '') {
+                    throw new \RuntimeException('Gambar tanda tangan terlebih dahulu sebelum disimpan.');
                 }
-
-                $dataUrl = $request->input('ttd_image');
                 if (!preg_match('#\Adata:image/(?:png|jpe?g);base64,([A-Za-z0-9+/=\r\n]+)\z#i', trim($dataUrl), $matches)) {
                     throw new \RuntimeException('Format tanda tangan hasil gambar tidak valid.');
                 }
@@ -1943,11 +1921,64 @@ class dosen extends Controller
                     : 'Tanda tangan hasil gambar berhasil disimpan.',
             ]);
         } catch (\Throwable $th) {
+            Log::warning('Dosen signature submission failed', [
+                'dosen_code' => isset($C_KODE_DOSEN) ? $C_KODE_DOSEN : null,
+                'source' => isset($source) ? $source : null,
+                'upload_error' => isset($file) && $file ? (int) $file->getError() : null,
+                'upload_size' => isset($file) && $file ? (int) $file->getSize() : null,
+                'content_length' => (int) $request->server('CONTENT_LENGTH', 0),
+                'exception' => get_class($th),
+                'message' => $th->getMessage(),
+            ]);
+
             return redirect()->back()->with([
                 'status' => 'error',
                 'message' => $th->getMessage() ?: 'Terjadi kesalahan saat mengunggah tanda tangan!',
             ]);
         }
+    }
+
+    /**
+     * Read a valid signature image without relying on hosting MIME guessers.
+     *
+     * Some shared-hosting stacks report an otherwise valid PNG/JPG as a
+     * generic binary upload. The image header is the reliable source here;
+     * normalization below performs a second, stricter decode before storage.
+     */
+    protected function readSignatureUpload($file, array $uploadLimit)
+    {
+        $size = (int) $file->getSize();
+        if ($size <= 0) {
+            throw new \RuntimeException('Berkas tanda tangan kosong. Pilih gambar PNG atau JPG yang lain.');
+        }
+        if ($size > (int) $uploadLimit['bytes']) {
+            throw new \RuntimeException('Ukuran berkas tanda tangan maksimal ' . $uploadLimit['label'] . '.');
+        }
+
+        $path = $file->getRealPath();
+        if (!is_string($path) || $path === '' || !is_readable($path)) {
+            throw new \RuntimeException('Berkas tanda tangan tidak dapat dibaca. Pilih berkas PNG atau JPG lain.');
+        }
+
+        $contents = @file_get_contents($path);
+        if (!is_string($contents) || $contents === '') {
+            throw new \RuntimeException('Berkas tanda tangan tidak dapat dibaca. Pilih berkas PNG atau JPG lain.');
+        }
+
+        $imageInfo = @getimagesizefromstring($contents);
+        $mime = is_array($imageInfo) && isset($imageInfo['mime'])
+            ? strtolower((string) $imageInfo['mime'])
+            : '';
+        if (!in_array($mime, ['image/jpeg', 'image/png'], true)) {
+            $extension = strtolower((string) $file->getClientOriginalExtension());
+            if (in_array($extension, ['heic', 'heif'], true)) {
+                throw new \RuntimeException('File HEIC dari iPhone belum dapat digunakan. Ekspor atau bagikan ulang sebagai JPG atau PNG, lalu unggah kembali.');
+            }
+
+            throw new \RuntimeException('Berkas tanda tangan harus berupa gambar PNG atau JPG yang dapat dibaca.');
+        }
+
+        return $contents;
     }
 
     protected function signatureUploadLimit()

@@ -108,7 +108,7 @@
                                             <label for="upload_ttd">Pilih File PNG atau JPG</label>
                                             <input type="file" class="form-control" id="upload_ttd" name="upload_ttd"
                                                 accept="image/png, image/jpeg">
-                                            <p class="help-block">Ukuran maksimal {{ $signatureUploadLimit['label'] }} mengikuti batas server saat ini.</p>
+                                            <p class="help-block">Ukuran maksimal {{ $signatureUploadLimit['label'] }}. File HEIC dari iPhone perlu diekspor sebagai JPG atau PNG terlebih dahulu.</p>
                                         </div>
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fa fa-upload"></i> Upload dan Simpan
@@ -260,7 +260,10 @@
                 if (!isImage) {
                     uploadInput.value = '';
                     preview.src = preview.getAttribute('data-default-src');
-                    showFeedback(uploadFeedback, 'Gunakan file tanda tangan berformat PNG atau JPG.');
+                    var isHeic = /\.(heic|heif)$/i.test(file.name || '') || file.type === 'image/heic' || file.type === 'image/heif';
+                    showFeedback(uploadFeedback, isHeic
+                        ? 'File HEIC belum dapat digunakan. Ekspor atau bagikan ulang sebagai JPG atau PNG.'
+                        : 'Gunakan file tanda tangan berformat PNG atau JPG.');
                     return;
                 }
                 if (file.size > maxUploadBytes) {

@@ -13,6 +13,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
+class GenericMimeSignatureUpload extends UploadedFile
+{
+    public function getMimeType()
+    {
+        return 'application/octet-stream';
+    }
+}
+
 class DosenSignatureSubmissionTest extends TestCase
 {
     protected $temporaryFiles = [];
@@ -96,6 +104,20 @@ class DosenSignatureSubmissionTest extends TestCase
         $this->assertSame('Pilih berkas tanda tangan terlebih dahulu.', $response->getSession()->get('message'));
     }
 
+    public function testUploadAcceptsPngContentsWhenHostingMimeGuesserIsGeneric()
+    {
+        $response = (new dosen())->upload_ttd_post(Request::create(
+            '/dsn/upload_ttd',
+            'POST',
+            ['sumber_tanda_tangan' => 'upload'],
+            [],
+            ['upload_ttd' => $this->uploadedSignatureFileWithGenericMime()]
+        ));
+
+        $this->assertSame('success', $response->getSession()->get('status'));
+        $this->assertSame(1, DB::table('mst_tanda_tangan')->where('C_KODE_DOSEN', 'DOSEN-01')->count());
+    }
+
     protected function uploadedSignatureFile()
     {
         $path = tempnam(sys_get_temp_dir(), 'thesis-signature-');
@@ -103,6 +125,15 @@ class DosenSignatureSubmissionTest extends TestCase
         $this->temporaryFiles[] = $path;
 
         return new UploadedFile($path, 'tanda-tangan.png', 'image/png', UPLOAD_ERR_OK, true);
+    }
+
+    protected function uploadedSignatureFileWithGenericMime()
+    {
+        $path = tempnam(sys_get_temp_dir(), 'thesis-signature-');
+        file_put_contents($path, $this->signaturePngContents());
+        $this->temporaryFiles[] = $path;
+
+        return new GenericMimeSignatureUpload($path, 'tanda-tangan.png', 'application/octet-stream', UPLOAD_ERR_OK, true);
     }
 
     protected function signaturePngContents()
