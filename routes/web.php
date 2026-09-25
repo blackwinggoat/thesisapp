@@ -707,6 +707,8 @@ Route::group(['middleware' => 'keuangan_fakultas'], function () {
         Route::post('/rekap-pajak-pdf', 'KeuanganFakultas@honorarium_rekap_pajak_pdf')->name('honorarium_rekap_pajak_pdf');
         Route::post('/tandai-terbayar', 'KeuanganFakultas@honorarium_tandai_terbayar')->name('honorarium_tandai_terbayar');
         Route::post('/history/tanda-terima-pdf', 'KeuanganFakultas@honorarium_history_tanda_terima_pdf')->name('honorarium_history_tanda_terima_pdf');
+        Route::post('/history/rekap-harian-pdf', 'KeuanganFakultas@honorarium_history_rekap_harian_pdf')->name('honorarium_history_rekap_harian_pdf');
+        Route::post('/history/rekap-pajak-pdf', 'KeuanganFakultas@honorarium_history_rekap_pajak_pdf')->name('honorarium_history_rekap_pajak_pdf');
         Route::post('/history/kembalikan-belum-terbayar', 'KeuanganFakultas@honorarium_kembalikan_belum_terbayar')->name('honorarium_kembalikan_belum_terbayar');
         Route::get('/history', 'KeuanganFakultas@honorarium_history')->name('honorarium_history');
         Route::get('/history/tanggal/{date}', 'KeuanganFakultas@honorarium_history_detail_tanggal')->name('honorarium_history_detail_tanggal');

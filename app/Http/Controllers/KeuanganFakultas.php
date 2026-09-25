@@ -893,10 +893,22 @@ class KeuanganFakultas extends Controller
         return $this->honorarium_rekap_pdf($request, 'pajak');
     }
 
-    protected function honorarium_rekap_pdf(Request $request, $jenisRekap)
+    public function honorarium_history_rekap_harian_pdf(Request $request)
+    {
+        return $this->honorarium_rekap_pdf($request, 'harian', true);
+    }
+
+    public function honorarium_history_rekap_pajak_pdf(Request $request)
+    {
+        return $this->honorarium_rekap_pdf($request, 'pajak', true);
+    }
+
+    protected function honorarium_rekap_pdf(Request $request, $jenisRekap, $riwayat = false)
     {
         $isRekapPajak = $jenisRekap === 'pajak';
         $namaRekap = $isRekapPajak ? 'rekap pajak honorarium' : 'rekap honorarium harian';
+        $redirectRoute = $riwayat ? 'honorarium_history' : 'honorarium_home';
+        $statusLabel = $riwayat ? 'terbayar' : 'belum terbayar';
         $tanggalInput = collect((array) $request->input('tanggal'))
             ->map(function ($tanggal) {
                 return trim((string) $tanggal);
@@ -904,7 +916,7 @@ class KeuanganFakultas extends Controller
             ->filter()
             ->values();
         if ($tanggalInput->isEmpty()) {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'warning',
                 'message' => 'Pilih minimal satu tanggal ujian untuk membuat ' . $namaRekap . '.',
             ]);
@@ -914,7 +926,7 @@ class KeuanganFakultas extends Controller
             return !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal);
         });
         if ($tanggalTidakValid !== null) {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'danger',
                 'message' => 'Pilihan tanggal ujian tidak valid.',
             ]);
@@ -922,7 +934,7 @@ class KeuanganFakultas extends Controller
 
         $tanggalTerpilih = $tanggalInput->unique()->sort()->values();
         $tanggalSql = $this->honorariumTanggalEfektifSql();
-        $honorariums = $this->honorariumDenganJadwalQuery()
+        $honorariums = ($riwayat ? $this->honorariumLunasDenganJadwalQuery() : $this->honorariumDenganJadwalQuery())
             ->whereIn(DB::raw($tanggalSql), $tanggalTerpilih->all())
             ->select('honorarium.*', DB::raw("{$tanggalSql} as tanggal_ujian"))
             ->orderBy(DB::raw($tanggalSql))
@@ -934,17 +946,17 @@ class KeuanganFakultas extends Controller
             ->values();
 
         if ($honorariums->isEmpty()) {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'info',
-                'message' => 'Tidak ada honorarium belum terbayar pada tanggal yang dipilih.',
+                'message' => 'Tidak ada honorarium ' . $statusLabel . ' pada tanggal yang dipilih.',
             ]);
         }
 
         $belumDitetapkan = $honorariums->filter(function ($honorarium) {
             return $this->honorariumNeedsTypeAssignment($honorarium);
         })->count();
-        if ($belumDitetapkan > 0) {
-            return redirect()->route('honorarium_home')->with([
+        if (!$riwayat && $belumDitetapkan > 0) {
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'warning',
                 'message' => 'Rekap belum dapat dibuat. Tetapkan tipe honorarium untuk ' . $belumDitetapkan
                     . ' data pada tanggal yang dipilih terlebih dahulu.',
@@ -958,7 +970,7 @@ class KeuanganFakultas extends Controller
                 $code = trim((string) $honorarium->{$role});
                 if ($code !== '' && $this->honorariumStatusDapatDicetak(
                     (int) $honorarium->{$definition['status']},
-                    false
+                    $riwayat
                 )) {
                     $kodeDosen->push($code);
                 }
@@ -994,10 +1006,11 @@ class KeuanganFakultas extends Controller
             $honorariums,
             $namaDosen,
             $jumlahPenyesuaianByTanggal,
-            $tandaTanganDosen
+            $tandaTanganDosen,
+            $riwayat
         );
         if ($reports->isEmpty()) {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'warning',
                 'message' => 'Tidak ada penugasan honorarium yang dapat direkap pada tanggal yang dipilih.',
             ]);
@@ -1010,7 +1023,7 @@ class KeuanganFakultas extends Controller
         );
         $dekan = Helper::getDekanByTanggal($generatedAt->format('Y-m-d'));
         if (trim((string) $wakilDekanDua->nama) === '' || trim((string) $dekan->nama) === '') {
-            return redirect()->route('honorarium_home')->with([
+            return redirect()->route($redirectRoute)->with([
                 'status' => 'warning',
                 'message' => 'Master Dekan atau Wakil Dekan II belum lengkap. Lengkapi pejabat fakultas sebelum membuat rekap.',
             ]);
@@ -1087,7 +1100,8 @@ class KeuanganFakultas extends Controller
         $honorariums,
         $namaDosen,
         $jumlahPenyesuaianByTanggal,
-        $tandaTanganDosen = null
+        $tandaTanganDosen = null,
+        $riwayat = false
     )
     {
         $reports = collect();
@@ -1150,7 +1164,7 @@ class KeuanganFakultas extends Controller
                 $code = trim((string) $honorarium->{$role});
                 if ($code === '' || !$this->honorariumStatusDapatDicetak(
                     (int) $honorarium->{$definition['status']},
-                    false
+                    $riwayat
                 )) {
                     continue;
                 }

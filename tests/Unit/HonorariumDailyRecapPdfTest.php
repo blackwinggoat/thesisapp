@@ -20,8 +20,12 @@ class HonorariumDailyRecapPdfTest extends TestCase
 
         $this->assertStringContainsString('honorarium_rekap_harian_pdf', $controller);
         $this->assertStringContainsString('honorarium_rekap_pajak_pdf', $controller);
+        $this->assertStringContainsString('honorarium_history_rekap_harian_pdf', $controller);
+        $this->assertStringContainsString('honorarium_history_rekap_pajak_pdf', $controller);
         $this->assertStringContainsString("honorarium_rekap_pdf(\$request, 'harian')", $controller);
         $this->assertStringContainsString("honorarium_rekap_pdf(\$request, 'pajak')", $controller);
+        $this->assertStringContainsString("honorarium_rekap_pdf(\$request, 'harian', true)", $controller);
+        $this->assertStringContainsString("honorarium_rekap_pdf(\$request, 'pajak', true)", $controller);
         $this->assertStringContainsString('buildHonorariumDailyRecapReports', $controller);
         $this->assertStringContainsString('honorariumDenganJadwalQuery()', $controller);
         $this->assertStringContainsString('honorariumNeedsTypeAssignment', $controller);
@@ -29,6 +33,8 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertStringContainsString('getDekanByTanggal($generatedAt->format', $controller);
         $this->assertStringContainsString("Route::post('/rekap-harian-pdf'", $routes);
         $this->assertStringContainsString("Route::post('/rekap-pajak-pdf'", $routes);
+        $this->assertStringContainsString("Route::post('/history/rekap-harian-pdf'", $routes);
+        $this->assertStringContainsString("Route::post('/history/rekap-pajak-pdf'", $routes);
         $this->assertStringContainsString("Route::get('/verifikasi/rekap-honorarium/{token}'", $routes);
         $this->assertStringContainsString('Tanda Terima Dosen', $listView);
         $this->assertStringContainsString('Rekap Honorarium Harian', $listView);
@@ -271,6 +277,36 @@ class HonorariumDailyRecapPdfTest extends TestCase
         $this->assertSame(42104.0, $report->tax_total_amount);
         $this->assertSame(0.0, $report->tax_total_adjustment);
         $this->assertSame(800000.0, $report->tax_total_received);
+    }
+
+    public function testPaidHistoryRecapIncludesOnlyPaidLecturerAssignments()
+    {
+        $controller = new KeuanganFakultas;
+        $method = new \ReflectionMethod($controller, 'buildHonorariumDailyRecapReports');
+        $method->setAccessible(true);
+        $rows = collect([
+            $this->honorariumRow('13020220001', 'Proposal', [
+                'PU' => ['D1', 200000, 3],
+                'PP' => ['D2', 200000, 1],
+                'P1' => ['D3', 100000, 3],
+            ]),
+        ]);
+
+        $report = $method->invoke(
+            $controller,
+            $rows,
+            collect(['D1' => 'Dosen Satu', 'D2' => 'Dosen Dua', 'D3' => 'Dosen Tiga']),
+            collect(['2026-08-19' => 0]),
+            collect(),
+            true
+        )->first();
+
+        $this->assertSame(2, $report->lecturer_count);
+        $this->assertSame(2, $report->assignment_count);
+        $this->assertSame(300000.0, $report->total_honor);
+        $this->assertNull($report->lecturers->firstWhere('code', 'D2'));
+        $this->assertSame(1, $report->tax_assignment_count);
+        $this->assertSame(200000.0, $report->tax_total_received);
     }
 
     public function testFacultyOfficialMigrationSeedsTheCurrentLeadershipRoles()

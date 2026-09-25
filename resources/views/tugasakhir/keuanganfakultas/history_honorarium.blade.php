@@ -1,5 +1,43 @@
 @extends('tugasakhir.index')
 @section('isi')
+    <style>
+        .honorarium-toolbar {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            margin: -4px;
+        }
+
+        .honorarium-toolbar > * {
+            margin: 4px;
+        }
+
+        .honorarium-toolbar .honorarium-selected-count {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .honorarium-report-actions {
+            display: inline-flex;
+            flex-wrap: wrap;
+        }
+
+        .honorarium-report-actions .btn + .btn {
+            margin-left: 6px;
+        }
+
+        @media (max-width: 767px) {
+            .honorarium-report-actions {
+                display: flex;
+                width: 100%;
+            }
+
+            .honorarium-report-actions .btn {
+                flex: 1 1 0;
+                white-space: normal;
+            }
+        }
+    </style>
     <div class="page-content">
         <div class="container-fluid">
             <h1 class="page-heading thesis-page-heading">Thesis App <small>FIKOM UMI</small></h1>
@@ -27,16 +65,25 @@
             <div class="the-box">
                 <form action="{{ route('honorarium_kembalikan_belum_terbayar') }}" method="POST" id="honorarium-history-form">
                     @csrf
-                    <div class="clearfix" style="margin-bottom: 15px;">
-                        <button type="submit" class="btn btn-warning pull-left" id="restore-honorarium-unpaid" disabled>
+                    <div class="honorarium-toolbar" style="margin-bottom: 15px;">
+                        <button type="submit" class="btn btn-warning" id="restore-honorarium-unpaid" disabled>
                             <i class="fa fa-undo"></i> Kembalikan ke Belum Terbayar
                         </button>
-                        <button type="submit" class="btn btn-danger pull-left" id="download-history-honorarium-pdf"
-                            formaction="{{ route('honorarium_history_tanda_terima_pdf') }}" formtarget="_blank"
-                            style="margin-left: 8px;" disabled>
+                        <button type="submit" class="btn btn-danger" id="download-history-honorarium-pdf"
+                            formaction="{{ route('honorarium_history_tanda_terima_pdf') }}" formtarget="_blank" disabled>
                             <i class="fa fa-file-pdf-o"></i> Tanda Terima Dosen
                         </button>
-                        <span class="text-muted pull-left" id="honorarium-history-selected-count" style="margin: 8px 0 0 10px;">0 tanggal dipilih</span>
+                        <div class="honorarium-report-actions" role="group" aria-label="Unduh rekap honorarium terbayar">
+                            <button type="submit" class="btn btn-danger" id="download-history-honorarium-daily-recap"
+                                formaction="{{ route('honorarium_history_rekap_harian_pdf') }}" formtarget="_blank" disabled>
+                                <i class="fa fa-file-pdf-o"></i> Rekap Honorarium Harian
+                            </button>
+                            <button type="submit" class="btn btn-danger" id="download-history-honorarium-tax-recap"
+                                formaction="{{ route('honorarium_history_rekap_pajak_pdf') }}" formtarget="_blank" disabled>
+                                <i class="fa fa-file-pdf-o"></i> Rekap Pajak Honorarium
+                            </button>
+                        </div>
+                        <span class="honorarium-selected-count" id="honorarium-history-selected-count">0 tanggal dipilih</span>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover" id="honorarium-history-table">
@@ -114,6 +161,8 @@
                 $('#honorarium-history-selected-count').text(selected + ' tanggal dipilih');
                 $('#restore-honorarium-unpaid').prop('disabled', selected === 0);
                 $('#download-history-honorarium-pdf').prop('disabled', selected === 0);
+                $('#download-history-honorarium-daily-recap').prop('disabled', selected === 0);
+                $('#download-history-honorarium-tax-recap').prop('disabled', selected === 0);
                 $('#select-all-history-honorarium')
                     .prop('checked', total > 0 && selected === total)
                     .prop('indeterminate', selected > 0 && selected < total);

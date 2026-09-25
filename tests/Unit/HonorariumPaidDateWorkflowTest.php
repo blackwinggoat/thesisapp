@@ -39,10 +39,14 @@ class HonorariumPaidDateWorkflowTest extends TestCase
         $this->assertStringContainsString("'total_honor' => (float) \$honorariumTanggal->sum('total_honor')", $controller);
         $this->assertStringContainsString('honorarium_history_detail_tanggal', $controller);
         $this->assertStringContainsString('honorarium_history_tanda_terima_pdf', $controller);
+        $this->assertStringContainsString('honorarium_history_rekap_harian_pdf', $controller);
+        $this->assertStringContainsString('honorarium_history_rekap_pajak_pdf', $controller);
         $this->assertStringContainsString('honorarium_kembalikan_belum_terbayar', $controller);
         $this->assertStringContainsString('honorariumStatusPayload($honorarium, 1)', $controller);
         $this->assertStringContainsString('->lockForUpdate()', $controller);
         $this->assertStringContainsString("Route::post('/history/tanda-terima-pdf'", $routes);
+        $this->assertStringContainsString("Route::post('/history/rekap-harian-pdf'", $routes);
+        $this->assertStringContainsString("Route::post('/history/rekap-pajak-pdf'", $routes);
         $this->assertStringContainsString("Route::post('/history/kembalikan-belum-terbayar'", $routes);
         $this->assertStringContainsString("Route::get('/history/tanggal/{date}'", $routes);
         $this->assertStringContainsString('Riwayat Honorarium per Tanggal Ujian', $history);
@@ -50,6 +54,10 @@ class HonorariumPaidDateWorkflowTest extends TestCase
         $this->assertStringContainsString('Lihat Detail', $history);
         $this->assertStringContainsString('name="tanggal[]"', $history);
         $this->assertStringContainsString('Tanda Terima Dosen', $history);
+        $this->assertStringContainsString('Rekap Honorarium Harian', $history);
+        $this->assertStringContainsString('Rekap Pajak Honorarium', $history);
+        $this->assertStringContainsString("route('honorarium_history_rekap_harian_pdf')", $history);
+        $this->assertStringContainsString("route('honorarium_history_rekap_pajak_pdf')", $history);
         $this->assertStringContainsString('Kembalikan ke Belum Terbayar', $history);
         $this->assertStringContainsString('if (result.value)', $history);
         $this->assertStringContainsString('Riwayat Honorarium Tanggal {{ $date }}', $detail);
