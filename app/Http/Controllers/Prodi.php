@@ -27,6 +27,7 @@ use App\TrtPenguji;
 use App\TrtSyaratUjian;
 use App\Services\ProdiJenisTugasAkhirReportService;
 use App\Services\ReportTrendChartSvgRenderer;
+use App\Services\SiakadMahasiswaService;
 use Barryvdh\DomPDF\Facade as PDF;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -102,6 +103,51 @@ class Prodi extends Controller
         }
 
         return $query;
+    }
+
+    protected function resolveSiakadMahasiswaProgram(Request $request)
+    {
+        $scope = $this->getProdiScope();
+        if (!$scope['is_mapped']) {
+            return null;
+        }
+
+        if (!empty($scope['nim_prefix'])) {
+            return $scope['nim_prefix'];
+        }
+
+        $programCode = trim((string) $request->input('kode_prodi', ''));
+
+        return array_key_exists($programCode, SiakadMahasiswaService::programOptions())
+            ? $programCode
+            : null;
+    }
+
+    protected function siakadMahasiswaSyncMessage(array $result, $mode)
+    {
+        $programs = SiakadMahasiswaService::programOptions();
+        $programCode = (string) ($result['program_code'] ?? '');
+        $programLabel = $programs[$programCode]['label'] ?? 'Program Studi';
+        $added = (int) ($result['added'] ?? 0);
+        $alreadyExists = (int) ($result['already_exists'] ?? 0);
+        $ignored = (int) ($result['ignored'] ?? 0);
+
+        if ($mode === 'nim') {
+            $nim = (string) ($result['nim'] ?? '');
+            if ($added > 0) {
+                return 'NIM ' . $nim . ' berhasil ditambahkan dari SIAKAD.';
+            }
+
+            return 'NIM ' . $nim . ' sudah tersedia di Thesis App; data lama tidak diubah.';
+        }
+
+        $message = 'Sinkronisasi ' . $programLabel . ' angkatan ' . ($result['angkatan'] ?? '')
+            . ' selesai: ' . $added . ' mahasiswa baru ditambahkan dan ' . $alreadyExists . ' sudah tersedia.';
+        if ($ignored > 0) {
+            $message .= ' ' . $ignored . ' data SIAKAD dilewati karena formatnya tidak sesuai.';
+        }
+
+        return $message;
     }
 
     protected function applyProdiStatusScope($query, $column = 'status_prodi')
@@ -1685,8 +1731,67 @@ class Prodi extends Controller
             ->appends($request->query());
 
         $scopeMahasiswaLabel = $scope['label'];
+        $siakadPrograms = SiakadMahasiswaService::programOptions();
+        $siakadSyncEnabled = (bool) $scope['is_mapped'];
+        $siakadSyncProgramCode = $scope['nim_prefix'];
+        $siakadSyncNeedsProgramChoice = $siakadSyncEnabled && $siakadSyncProgramCode === null;
 
-        return view('tugasakhir.prodi.mahasiswa', compact('data', 'q', 'statusAkun', 'perPage', 'scopeMahasiswaLabel', 'studentClassFeatureReady'));
+        return view('tugasakhir.prodi.mahasiswa', compact(
+            'data',
+            'q',
+            'statusAkun',
+            'perPage',
+            'scopeMahasiswaLabel',
+            'studentClassFeatureReady',
+            'siakadPrograms',
+            'siakadSyncEnabled',
+            'siakadSyncProgramCode',
+            'siakadSyncNeedsProgramChoice'
+        ));
+    }
+
+    public function sync_mahasiswa_siakad_nim(Request $request, SiakadMahasiswaService $service)
+    {
+        $request->validate([
+            'nim' => 'required|regex:/^[0-9]{11}$/',
+        ]);
+
+        $identity = SiakadMahasiswaService::parseNim($request->input('nim'));
+        $scope = $this->getProdiScope();
+        if (!$identity) {
+            return redirect()->back()->with('error', 'NIM tidak dapat diproses untuk sinkronisasi SIAKAD.');
+        }
+
+        if (!$scope['is_mapped'] || (!empty($scope['nim_prefix']) && $scope['nim_prefix'] !== $identity['program_code'])) {
+            return redirect()->back()->with('error', 'NIM berada di luar program studi yang dapat Anda kelola.');
+        }
+
+        $result = $service->syncByNim($identity['nim']);
+        if (!$result['ok']) {
+            return redirect()->back()->with('error', $result['message']);
+        }
+
+        return redirect()->back()->with('success', $this->siakadMahasiswaSyncMessage($result, 'nim'));
+    }
+
+    public function sync_mahasiswa_siakad_angkatan(Request $request, SiakadMahasiswaService $service)
+    {
+        $request->validate([
+            'angkatan' => 'required|digits:4|integer|min:2000|max:2099',
+            'kode_prodi' => 'nullable|in:130,131',
+        ]);
+
+        $programCode = $this->resolveSiakadMahasiswaProgram($request);
+        if (!$programCode) {
+            return redirect()->back()->with('error', 'Pilih program studi yang valid untuk sinkronisasi angkatan.');
+        }
+
+        $result = $service->syncByCohort($programCode, $request->input('angkatan'));
+        if (!$result['ok']) {
+            return redirect()->back()->with('error', $result['message']);
+        }
+
+        return redirect()->back()->with('success', $this->siakadMahasiswaSyncMessage($result, 'angkatan'));
     }
 
     public function update_jenis_kelas_mahasiswa(Request $request, $nim)

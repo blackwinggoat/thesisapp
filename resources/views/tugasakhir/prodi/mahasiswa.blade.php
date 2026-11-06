@@ -18,6 +18,13 @@
             <!-- BEGIN DATA TABLE -->
             <h3 class="page-heading">Daftar Mahasiswa</h3>
             <div class="the-box">
+                @if ($siakadSyncEnabled ?? false)
+                    <div class="clearfix" style="margin-bottom: 18px;">
+                        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#modalSinkronisasiMahasiswa">
+                            <i class="fa fa-cloud-download"></i> Tambah dari SIAKAD
+                        </button>
+                    </div>
+                @endif
                 <form method="get" action="{{ url('prodi/mahasiswa') }}" class="form-horizontal" style="margin-bottom: 18px;">
                     <div class="row">
                         <div class="col-md-5">
@@ -138,6 +145,62 @@
             <!-- END DATA TABLE -->
         </div><!-- /.container-fluid -->
     </div>
+
+    @if ($siakadSyncEnabled ?? false)
+        <div class="modal fade" id="modalSinkronisasiMahasiswa" tabindex="-1" role="dialog" aria-labelledby="modalSinkronisasiMahasiswaLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="modalSinkronisasiMahasiswaLabel">Tambah Mahasiswa dari SIAKAD</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <h4 style="margin-top: 0;">Per NIM</h4>
+                                <form method="post" action="{{ route('prodi.mahasiswa.siakad.nim') }}">
+                                    {{ csrf_field() }}
+                                    <div class="form-group">
+                                        <label for="siakad-nim">NIM</label>
+                                        <input id="siakad-nim" type="text" name="nim" class="form-control" maxlength="11" inputmode="numeric" pattern="[0-9]{11}" value="{{ preg_match('/^[0-9]{11}$/', old('nim', $q ?? '')) ? old('nim', $q ?? '') : '' }}" placeholder="Contoh: 13020250206" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Cari dan Tambah</button>
+                                </form>
+                            </div>
+                            <div class="col-sm-6" style="border-left: 1px solid #e5e5e5;">
+                                <h4 style="margin-top: 0;">Per Angkatan</h4>
+                                <form method="post" action="{{ route('prodi.mahasiswa.siakad.angkatan') }}" onsubmit="return window.confirm('Tambahkan mahasiswa yang belum ada dari angkatan ini? Data yang sudah tersedia tidak akan diubah.');">
+                                    {{ csrf_field() }}
+                                    @if ($siakadSyncNeedsProgramChoice ?? false)
+                                        <div class="form-group">
+                                            <label for="siakad-kode-prodi">Program Studi</label>
+                                            <select id="siakad-kode-prodi" name="kode_prodi" class="form-control" required>
+                                                <option value="">Pilih program studi</option>
+                                                @foreach ($siakadPrograms as $programCode => $program)
+                                                    <option value="{{ $programCode }}" {{ old('kode_prodi') === $programCode ? 'selected' : '' }}>{{ $program['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    @else
+                                        <input type="hidden" name="kode_prodi" value="{{ $siakadSyncProgramCode }}">
+                                        <div class="form-group">
+                                            <label>Program Studi</label>
+                                            <p class="form-control-static">{{ $siakadPrograms[$siakadSyncProgramCode]['label'] ?? '-' }}</p>
+                                        </div>
+                                    @endif
+                                    <div class="form-group">
+                                        <label for="siakad-angkatan">Angkatan</label>
+                                        <input id="siakad-angkatan" type="text" name="angkatan" class="form-control" maxlength="4" inputmode="numeric" pattern="20[0-9]{2}" value="{{ old('angkatan') }}" placeholder="Contoh: 2025" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-success"><i class="fa fa-users"></i> Tambah Angkatan</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 {{--ModalSetUser--}}

@@ -42,4 +42,14 @@ return [
         'timeout' => (int) env('SIAKAD_IPK_TIMEOUT', 20),
     ],
 
+    'siakad_mahasiswa' => [
+        // Reuse the existing read-only SIAKAD credential when a dedicated one is not set.
+        'api_key' => env('SIAKAD_MAHASISWA_API_KEY', env('SIAKAD_IPK_API_KEY')),
+        'base_url' => env('SIAKAD_MAHASISWA_BASE_URL', env('SIAKAD_IPK_BASE_URL')),
+        'endpoint' => env('SIAKAD_MAHASISWA_ENDPOINT', 'list-mahasiswa'),
+        'timeout' => (int) env('SIAKAD_MAHASISWA_TIMEOUT', env('SIAKAD_IPK_TIMEOUT', 20)),
+        'page_limit' => (int) env('SIAKAD_MAHASISWA_PAGE_LIMIT', 1000),
+        'max_pages' => (int) env('SIAKAD_MAHASISWA_MAX_PAGES', 30),
+    ],
+
 ];
