@@ -24,6 +24,6 @@ class ProdiMahasiswaSiakadSyncFeatureTest extends TestCase
         $this->assertStringContainsString('Tambah dari SIAKAD', $view);
         $this->assertStringContainsString('Tambah Angkatan', $view);
         $this->assertStringContainsString("'siakad_mahasiswa'", $config);
-        $this->assertStringContainsString("env('SIAKAD_MAHASISWA_API_KEY', env('SIAKAD_IPK_API_KEY'))", $config);
+        $this->assertStringContainsString("env('SIAKAD_MAHASISWA_API_KEY') ?: env('SIAKAD_IPK_API_KEY')", $config);
     }
 }
