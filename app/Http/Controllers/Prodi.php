@@ -4128,7 +4128,19 @@ class Prodi extends Controller
             return response('Data peserta SK ujian tidak ditemukan atau belum lengkap.', 404);
         }
 
-        return view('tugasakhir.prodi.detail_skujian', compact("info", "data"));
+        $scheduledNims = TrtJadwalUjianPerMhs::where('jadwal_ujian', $info->id)
+            ->whereNotNull('ruangan')
+            ->whereNotNull('jam_ujian')
+            ->where('jam_ujian', '<>', '')
+            ->pluck('C_NPM')
+            ->map(function ($nim) {
+                return (string) $nim;
+            })
+            ->unique()
+            ->values()
+            ->all();
+
+        return view('tugasakhir.prodi.detail_skujian', compact("info", "data", "scheduledNims"));
     }
 
     public function pengumuman()
@@ -7069,18 +7081,50 @@ class Prodi extends Controller
     {
         $trtjadwalujian = TrtJadwalUjian::join("mst_pendaftaran", "mst_pendaftaran.pendaftaran_id", "=", "trt_jadwal_ujian.pendaftaran_id")
             ->where("trt_jadwal_ujian.pendaftaran_id", $pendaftaran_id)->first();
-        $trtjadwalujianpermhs = TrtJadwalUjianPerMhs::join("mst_ruangan", "mst_ruangan.id", "trt_jadwal_ujian_per_mhs.ruangan")
-            ->where([
-                "C_NPM" => $nim,
-                "jadwal_ujian" => $trtjadwalujian->id
-            ])->first();
-        $trt_bimbingan = trt_bimbingan::where("C_NPM", $nim)->first();
+
+        if (!$trtjadwalujian) {
+            return response('Data jadwal ujian untuk berita acara tidak ditemukan.', 404);
+        }
+
         $mst_pendaftaran = mst_pendaftaran::find($pendaftaran_id);
+        if (!$mst_pendaftaran) {
+            return response('Data periode ujian untuk berita acara tidak ditemukan.', 404);
+        }
+
+        $trtjadwalujianpermhs = TrtJadwalUjianPerMhs::where([
+            "C_NPM" => $nim,
+            "jadwal_ujian" => $trtjadwalujian->id
+        ])->first();
+
+        if (!$trtjadwalujianpermhs || empty($trtjadwalujianpermhs->ruangan) || empty($trtjadwalujianpermhs->jam_ujian)) {
+            return response('Berita acara belum dapat dicetak karena ruang dan jam ujian mahasiswa belum ditetapkan.', 422);
+        }
+
+        $ruanganModel = MstRuangan::find($trtjadwalujianpermhs->ruangan);
+        if (!$ruanganModel) {
+            return response('Berita acara belum dapat dicetak karena ruangan ujian belum valid.', 422);
+        }
+
+        $trt_bimbingan = trt_bimbingan::where("C_NPM", $nim)->first();
+        if (!$trt_bimbingan) {
+            return response('Data bimbingan mahasiswa untuk berita acara belum lengkap.', 404);
+        }
+
+        $mahasiswa = t_mst_mahasiswa::where('C_NPM', $nim)->first();
+        if (!$mahasiswa) {
+            return response('Data mahasiswa untuk berita acara tidak ditemukan.', 404);
+        }
+
         $trt_penguji = TrtPenguji::where([
             "C_NPM" => $nim,
             "tipe_ujian" => $mst_pendaftaran->tipe_ujian
         ])->first();
-        $ruangan = MstRuangan::find($trtjadwalujianpermhs->ruangan)->nama_ruangan;
+
+        if (!$trt_penguji) {
+            return response('Data tim penguji untuk berita acara belum lengkap.', 422);
+        }
+
+        $ruangan = $ruanganModel->nama_ruangan;
         $tgl_ujian = Carbon::parse($trtjadwalujian->tgl_ujian)->formatLocalized("%A, %d %B %Y");
         switch ($mst_pendaftaran->tipe_ujian) {
             case "0":
@@ -7089,9 +7133,13 @@ class Prodi extends Controller
             case "2":
                 $tipe_ujian = "Meja";
                 break;
+            default:
+                $tipe_ujian = "Ujian";
+                break;
         }
         return view("tugasakhir.prodi.cetak_berita_acara", compact(
             "nim",
+            "mahasiswa",
             "trt_bimbingan",
             "trt_penguji",
             "tipe_ujian",

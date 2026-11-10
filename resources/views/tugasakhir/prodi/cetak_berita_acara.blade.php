@@ -204,7 +204,7 @@
             <tr>
                 <th style="width: 150px">Nama</th>
                 <td style="padding-right: 10px">:</td>
-                <td>{{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                <td>{{ ucwords(strtolower($mahasiswa->NAMA_MAHASISWA)) }}
                 </td>
             </tr>
             <tr>
@@ -352,7 +352,7 @@
             <tr>
                 <td>Nama</td>
                 <td>:</td>
-                <td>{{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                <td>{{ ucwords(strtolower($mahasiswa->NAMA_MAHASISWA)) }}
                     / {{ $nim }}</td>
             </tr>
             <tr>
@@ -475,7 +475,7 @@
                 <td>Nama Mahasiswa</td>
                 <td style="padding-right: 10px">:</td>
                 <td colspan="2">
-                    {{ ucwords(strtolower(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA)) }}
+                    {{ ucwords(strtolower($mahasiswa->NAMA_MAHASISWA)) }}
                 </td>
             </tr>
             <tr>
@@ -664,7 +664,7 @@
                     <td style="padding-right: 70px">NAMA MAHASISWA</td>
                     <td style="padding-right: 10px">:</td>
                     <td colspan="2">
-                        {{ strtoupper(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA) }}
+                        {{ strtoupper($mahasiswa->NAMA_MAHASISWA) }}
                     </td>
                 </tr>
                 <tr>
@@ -818,7 +818,7 @@
                         <td style="padding-right: 70px">NAMA MAHASISWA</td>
                         <td style="padding-right: 10px">:</td>
                         <td colspan="2">
-                            {{ strtoupper(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA) }}
+                            {{ strtoupper($mahasiswa->NAMA_MAHASISWA) }}
                         </td>
                     </tr>
                     <tr>
@@ -972,7 +972,7 @@
                         <td style="padding-right: 70px">NAMA MAHASISWA</td>
                         <td style="padding-right: 10px">:</td>
                         <td colspan="2">
-                            {{ strtoupper(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA) }}
+                            {{ strtoupper($mahasiswa->NAMA_MAHASISWA) }}
                         </td>
                     </tr>
                     <tr>
@@ -1127,7 +1127,7 @@
                         <td style="padding-right: 70px">NAMA MAHASISWA</td>
                         <td style="padding-right: 10px">:</td>
                         <td colspan="2">
-                            {{ strtoupper(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA) }}
+                            {{ strtoupper($mahasiswa->NAMA_MAHASISWA) }}
                         </td>
                     </tr>
                     <tr>
@@ -1282,7 +1282,7 @@
                         <td style="padding-right: 70px">NAMA MAHASISWA</td>
                         <td style="padding-right: 10px">:</td>
                         <td colspan="2">
-                            {{ strtoupper(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA) }}
+                            {{ strtoupper($mahasiswa->NAMA_MAHASISWA) }}
                         </td>
                     </tr>
                     <tr>
@@ -1437,7 +1437,7 @@
                         <td style="padding-right: 70px">NAMA MAHASISWA</td>
                         <td style="padding-right: 10px">:</td>
                         <td colspan="2">
-                            {{ strtoupper(\App\Model\t_mst_mahasiswa::where('C_NPM', $nim)->first()->NAMA_MAHASISWA) }}
+                            {{ strtoupper($mahasiswa->NAMA_MAHASISWA) }}
                         </td>
                     </tr>
                     <tr>

@@ -96,7 +96,13 @@
                                         SK Belum Terbit, Silahkan Set Penguji dan Ketua Sidang
                                     @else
                                     <a target="_blank"  href="{{ url("$path/cetakskpenguji/$info->pendaftaran_id/$d->C_NPM")}}" class="btn btn-primary"><i class="fa fa-file-text"></i>SK Penguji</a>
-                                    <a target="_blank" href="{{ url("$path/cetak_berita_acara/$info->pendaftaran_id/$d->C_NPM")}}" class="btn btn-info"><i class="fa fa-file-text"></i>Berita Acara</a>
+                                    @if (in_array((string) $d->C_NPM, $scheduledNims, true))
+                                        <a target="_blank" href="{{ url("$path/cetak_berita_acara/$info->pendaftaran_id/$d->C_NPM")}}" class="btn btn-info"><i class="fa fa-file-text"></i>Berita Acara</a>
+                                    @else
+                                        <span class="text-muted" title="Tetapkan ruang dan jam ujian terlebih dahulu.">
+                                            <i class="fa fa-clock-o"></i> Ruang &amp; jam belum ditetapkan
+                                        </span>
+                                    @endif
                                     @endif
                                     
                                 </td>

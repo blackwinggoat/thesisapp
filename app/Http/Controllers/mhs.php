@@ -620,6 +620,11 @@ class mhs extends Controller
             return response('Data berita acara ujian meja belum lengkap.', 404);
         }
 
+        $mahasiswa = DB::table('t_mst_mahasiswa')->where('C_NPM', $nim)->first();
+        if (!$mahasiswa) {
+            return response('Data mahasiswa untuk berita acara tidak ditemukan.', 404);
+        }
+
         $trt_penguji = TrtPenguji::where([
             "C_NPM" => $nim,
             "tipe_ujian" => $mst_pendaftaran->tipe_ujian
@@ -647,6 +652,7 @@ class mhs extends Controller
 
         return view("tugasakhir.prodi.cetak_berita_acara", compact(
             "nim",
+            "mahasiswa",
             "trt_bimbingan",
             "trt_penguji",
             "tipe_ujian",
