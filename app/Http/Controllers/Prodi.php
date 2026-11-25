@@ -129,6 +129,7 @@ class Prodi extends Controller
         $programCode = (string) ($result['program_code'] ?? '');
         $programLabel = $programs[$programCode]['label'] ?? 'Program Studi';
         $added = (int) ($result['added'] ?? 0);
+        $updated = (int) ($result['updated'] ?? 0);
         $alreadyExists = (int) ($result['already_exists'] ?? 0);
         $ignored = (int) ($result['ignored'] ?? 0);
 
@@ -138,7 +139,35 @@ class Prodi extends Controller
                 return 'NIM ' . $nim . ' berhasil ditambahkan dari SIAKAD.';
             }
 
-            return 'NIM ' . $nim . ' sudah tersedia di Thesis App; data lama tidak diubah.';
+            if ($updated > 0) {
+                $message = 'NIM ' . $nim . ' berhasil diperbarui sesuai data SIAKAD.';
+                $labels = [
+                    'NAMA_MAHASISWA' => 'nama',
+                    'C_KODE_PRODI' => 'program studi',
+                    'TAHUN_MASUK' => 'angkatan',
+                    'JENIS_KELAMIN' => 'jenis kelamin',
+                    'TEMPAT_LAHIR' => 'tempat lahir',
+                    'TGL_LAHIR' => 'tanggal lahir',
+                    'C_KODE_KONSENTRASI' => 'konsentrasi umum',
+                ];
+                $changedLabels = [];
+                foreach ($result['updated_columns'] ?? [] as $column) {
+                    if (isset($labels[$column])) {
+                        $changedLabels[] = $labels[$column];
+                    }
+                }
+                if ($changedLabels) {
+                    $message .= ' Data diperbarui: ' . implode(', ', $changedLabels) . '.';
+                }
+            } else {
+                $message = 'NIM ' . $nim . ' sudah sesuai dengan data SIAKAD; tidak ada perubahan.';
+            }
+
+            if (!empty($result['semester_needs_review'])) {
+                $message .= ' Semester awal masuk perlu diperiksa; SIAKAD tidak menyediakan data semester pada sinkronisasi ini.';
+            }
+
+            return $message;
         }
 
         $message = 'Sinkronisasi ' . $programLabel . ' angkatan ' . ($result['angkatan'] ?? '')

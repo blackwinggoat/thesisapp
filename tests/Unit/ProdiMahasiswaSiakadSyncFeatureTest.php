@@ -22,6 +22,7 @@ class ProdiMahasiswaSiakadSyncFeatureTest extends TestCase
         $this->assertStringContainsString("Route::post('/prodi/mahasiswa/sinkronisasi/angkatan', 'Prodi@sync_mahasiswa_siakad_angkatan')", $routes);
         $this->assertStringContainsString('modalSinkronisasiMahasiswa', $view);
         $this->assertStringContainsString('Tambah dari SIAKAD', $view);
+        $this->assertStringContainsString('Cari dan Tambah / Perbarui', $view);
         $this->assertStringContainsString('Tambah Angkatan', $view);
         $this->assertStringContainsString("'siakad_mahasiswa'", $config);
         $this->assertStringContainsString("env('SIAKAD_MAHASISWA_API_KEY') ?: env('SIAKAD_IPK_API_KEY')", $config);

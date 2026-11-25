@@ -18,6 +18,15 @@
             <!-- BEGIN DATA TABLE -->
             <h3 class="page-heading">Daftar Mahasiswa</h3>
             <div class="the-box">
+                @if (session('success'))
+                    <div class="alert alert-success" role="status">{{ session('success') }}</div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+                @endif
+                @if ($errors->any())
+                    <div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>
+                @endif
                 @if ($siakadSyncEnabled ?? false)
                     <div class="clearfix" style="margin-bottom: 18px;">
                         <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#modalSinkronisasiMahasiswa">
@@ -152,7 +161,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title" id="modalSinkronisasiMahasiswaLabel">Tambah Mahasiswa dari SIAKAD</h4>
+                        <h4 class="modal-title" id="modalSinkronisasiMahasiswaLabel">Tambah / Perbarui Mahasiswa dari SIAKAD</h4>
                     </div>
                     <div class="modal-body">
                         <div class="row">
@@ -164,7 +173,8 @@
                                         <label for="siakad-nim">NIM</label>
                                         <input id="siakad-nim" type="text" name="nim" class="form-control" maxlength="11" inputmode="numeric" pattern="[0-9]{11}" value="{{ preg_match('/^[0-9]{11}$/', old('nim', $q ?? '')) ? old('nim', $q ?? '') : '' }}" placeholder="Contoh: 13020250206" required>
                                     </div>
-                                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Cari dan Tambah</button>
+                                    <p class="text-muted">Mahasiswa baru ditambahkan; identitas mahasiswa yang sudah ada diperbarui sesuai SIAKAD.</p>
+                                    <button type="submit" class="btn btn-primary"><i class="fa fa-refresh"></i> Cari dan Tambah / Perbarui</button>
                                 </form>
                             </div>
                             <div class="col-sm-6" style="border-left: 1px solid #e5e5e5;">

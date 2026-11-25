@@ -4,6 +4,10 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use RuntimeException;
+use Throwable;
 
 class SiakadMahasiswaService
 {
@@ -25,18 +29,6 @@ class SiakadMahasiswaService
             return $this->failure('NIM harus terdiri dari 11 angka dan menggunakan prefix 130 atau 131.');
         }
 
-        if (DB::table('t_mst_mahasiswa')->where('C_NPM', $identity['nim'])->exists()) {
-            return $this->success([
-                'program_code' => $identity['program_code'],
-                'angkatan' => $identity['angkatan'],
-                'source_total' => 0,
-                'added' => 0,
-                'already_exists' => 1,
-                'ignored' => 0,
-                'nim' => $identity['nim'],
-            ]);
-        }
-
         $source = $this->fetchStudents($identity['program_code'], $identity['angkatan']);
         if (!$source['ok']) {
             return $source;
@@ -44,18 +36,24 @@ class SiakadMahasiswaService
 
         $student = null;
         foreach ($source['rows'] as $row) {
-            $candidate = self::normalizeSourceStudent($row, $identity['program_code'], $identity['angkatan']);
-            if ($candidate && $candidate['nim'] === $identity['nim']) {
-                $student = $candidate;
-                break;
+            if (!is_array($row) || trim((string) ($row['nim'] ?? '')) !== $identity['nim']) {
+                continue;
             }
+            $candidate = self::normalizeSourceStudent($row, $identity['program_code'], $identity['angkatan']);
+            if (!$candidate) {
+                return $this->failure('Data mahasiswa dari SIAKAD tidak valid. Tidak ada data yang diubah.');
+            }
+            if ($student !== null && $candidate !== $student) {
+                return $this->failure('SIAKAD mengembalikan data yang berbeda untuk NIM ini. Tidak ada data yang diubah.');
+            }
+            $student = $candidate;
         }
 
         if (!$student) {
             return $this->failure('Mahasiswa tidak ditemukan pada data aktif SIAKAD untuk program studi dan angkatan tersebut.');
         }
 
-        $result = $this->storeStudents([$student], $identity['program_code']);
+        $result = $this->storeStudents([$student], $identity['program_code'], true);
         $result['nim'] = $identity['nim'];
 
         return $result;
@@ -136,7 +134,7 @@ class SiakadMahasiswaService
         }
 
         $name = trim((string) ($row['nama_mahasiswa'] ?? ''));
-        if ($name === '') {
+        if ($name === '' || mb_strlen($name) > 100) {
             return null;
         }
 
@@ -146,8 +144,14 @@ class SiakadMahasiswaService
         }
 
         $birthDate = trim((string) ($row['tgllahir'] ?? ''));
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthDate)) {
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $birthDate, $dateParts)
+            || !checkdate((int) $dateParts[2], (int) $dateParts[3], (int) $dateParts[1])) {
             $birthDate = null;
+        }
+
+        $birthPlace = trim((string) ($row['tempatlahir'] ?? ''));
+        if ($birthPlace === '' || mb_strlen($birthPlace) > 100) {
+            $birthPlace = null;
         }
 
         return [
@@ -156,7 +160,7 @@ class SiakadMahasiswaService
             'program_code' => $identity['program_code'],
             'angkatan' => $identity['angkatan'],
             'gender' => $gender,
-            'birth_place' => trim((string) ($row['tempatlahir'] ?? '')) ?: null,
+            'birth_place' => $birthPlace,
             'birth_date' => $birthDate,
         ];
     }
@@ -201,7 +205,7 @@ class SiakadMahasiswaService
         ];
     }
 
-    protected function storeStudents(array $students, $programCode)
+    protected function storeStudents(array $students, $programCode, $updateExisting = false)
     {
         $students = array_values(array_filter($students, function ($student) use ($programCode) {
             return is_array($student)
@@ -230,44 +234,120 @@ class SiakadMahasiswaService
         $nims = array_column($students, 'nim');
         $timestamp = Carbon::now();
 
-        $stored = DB::transaction(function () use ($students, $nims, $programCode, $timestamp) {
-            $existingNims = DB::table('t_mst_mahasiswa')
-                ->whereIn('C_NPM', $nims)
-                ->lockForUpdate()
-                ->pluck('C_NPM')
-                ->all();
-            $existingIndex = array_fill_keys($existingNims, true);
-            $records = [];
+        try {
+            $stored = DB::transaction(function () use ($students, $nims, $programCode, $timestamp, $updateExisting) {
+                $existing = DB::table('t_mst_mahasiswa')
+                    ->whereIn('C_NPM', $nims)
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('C_NPM');
+                $records = [];
+                $updated = 0;
+                $updatedColumns = [];
+                $semesterNeedsReview = false;
 
-            foreach ($students as $student) {
-                if (isset($existingIndex[$student['nim']])) {
-                    continue;
+                foreach ($students as $student) {
+                    $current = $existing->get($student['nim']);
+                    if ($current) {
+                        if ($updateExisting) {
+                            $semester = trim((string) ($current->THN_SEMESTER_AWAL_MASUK ?? ''));
+                            if ($semester !== '' && substr($semester, 0, 4) !== (string) $student['angkatan']) {
+                                $semesterNeedsReview = true;
+                            }
+                            $changes = $this->changesForExistingStudent($current, $student, $programCode);
+                            if ($changes) {
+                                if (!Schema::hasTable('trt_siakad_mahasiswa_sync_audit')) {
+                                    throw new RuntimeException('Audit sinkronisasi belum tersedia.');
+                                }
+
+                                $before = [];
+                                foreach ($changes as $column => $value) {
+                                    $before[$column] = $current->{$column};
+                                }
+                                $beforeJson = json_encode($before, JSON_UNESCAPED_UNICODE);
+                                $afterJson = json_encode($changes, JSON_UNESCAPED_UNICODE);
+                                if ($beforeJson === false || $afterJson === false) {
+                                    throw new RuntimeException('Audit sinkronisasi tidak dapat disimpan.');
+                                }
+
+                                DB::table('trt_siakad_mahasiswa_sync_audit')->insert([
+                                    'C_NPM' => $student['nim'],
+                                    'user_id' => auth()->id(),
+                                    'before_values' => $beforeJson,
+                                    'after_values' => $afterJson,
+                                    'created_at' => $timestamp,
+                                ]);
+                                DB::table('t_mst_mahasiswa')->where('C_NPM', $student['nim'])->update($changes);
+                                $updated++;
+                                $updatedColumns = array_values(array_unique(array_merge($updatedColumns, array_keys($changes))));
+                            }
+                        }
+                        continue;
+                    }
+
+                    $record = self::buildMasterRecord($student, $programCode, $timestamp);
+                    if ($record && $record['NAMA_MAHASISWA'] !== '') {
+                        $records[] = $record;
+                    }
                 }
 
-                $record = self::buildMasterRecord($student, $programCode, $timestamp);
-                if ($record && $record['NAMA_MAHASISWA'] !== '') {
-                    $records[] = $record;
+                if (!empty($records)) {
+                    DB::table('t_mst_mahasiswa')->insert($records);
                 }
-            }
 
-            if (!empty($records)) {
-                DB::table('t_mst_mahasiswa')->insert($records);
-            }
-
-            return [
-                'added' => count($records),
-                'already_exists' => count($existingNims),
-            ];
-        });
+                return [
+                    'added' => count($records),
+                    'updated' => $updated,
+                    'updated_columns' => $updatedColumns,
+                    'already_exists' => $existing->count(),
+                    'semester_needs_review' => $semesterNeedsReview,
+                ];
+            });
+        } catch (Throwable $exception) {
+            Log::error('Sinkronisasi identitas mahasiswa dari SIAKAD gagal.', [
+                'exception_type' => get_class($exception),
+            ]);
+            return $this->failure('Sinkronisasi gagal. Tidak ada data mahasiswa yang diubah; hubungi administrator.');
+        }
 
         return $this->success([
             'program_code' => $programCode,
             'angkatan' => $students[0]['angkatan'] ?? null,
             'source_total' => count($students),
             'added' => $stored['added'],
+            'updated' => $stored['updated'],
+            'updated_columns' => $stored['updated_columns'],
             'already_exists' => $stored['already_exists'],
+            'semester_needs_review' => $stored['semester_needs_review'],
             'ignored' => 0,
         ]);
+    }
+
+    protected function changesForExistingStudent($current, array $student, $programCode)
+    {
+        $program = self::PROGRAMS[$programCode];
+        $values = [
+            'NAMA_MAHASISWA' => $student['name'],
+            'C_KODE_PRODI' => $program['kode_prodi'],
+            'TAHUN_MASUK' => $student['angkatan'],
+        ];
+        foreach (['gender' => 'JENIS_KELAMIN', 'birth_place' => 'TEMPAT_LAHIR', 'birth_date' => 'TGL_LAHIR'] as $source => $column) {
+            if (!empty($student[$source])) {
+                $values[$column] = $student[$source];
+            }
+        }
+
+        $oldProgram = (string) ($current->C_KODE_PRODI ?? '');
+        $oldConcentration = (string) ($current->C_KODE_KONSENTRASI ?? '');
+        if ($oldProgram !== $program['kode_prodi']
+            && in_array($oldProgram, array_column(self::PROGRAMS, 'kode_prodi'), true)
+            && $oldConcentration === $oldProgram . '-K-GEN') {
+            $values['C_KODE_KONSENTRASI'] = $program['kode_prodi'] . '-K-GEN';
+        }
+
+        return array_filter($values, function ($value, $column) use ($current) {
+            return (string) ($current->{$column} ?? '') !== (string) $value;
+        }, ARRAY_FILTER_USE_BOTH);
     }
 
     protected function fetchStudents($programCode, $angkatan)
